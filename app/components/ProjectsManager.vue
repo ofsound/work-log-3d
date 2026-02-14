@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, type Ref } from 'vue'
-
 import { addDoc } from 'firebase/firestore'
+
+import type { Ref } from 'vue'
 
 const { projectsCollection } = useFirestoreCollections()
 
@@ -32,12 +32,11 @@ const newProjectName = ref('')
 const createProjectDocument = async () => {
   if (newProjectName.value) {
     try {
-      const docRef = await addDoc(projectsCollection, {
+      await addDoc(projectsCollection, {
         name: newProjectName.value,
         slug: slugify(newProjectName.value),
       })
       newProjectName.value = ''
-      console.log('Document added with ID: ', docRef.id)
     } catch (e) {
       console.error('Error adding document: ', e)
     }

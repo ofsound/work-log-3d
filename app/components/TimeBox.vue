@@ -1,9 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-import TimeBoxViewer from '@/components/TimeBoxViewer.vue'
-import TimeBoxEditor from '@/components/TimeBoxEditor.vue'
-
 const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },

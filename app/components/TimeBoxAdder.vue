@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-import { formatToDatetimeLocal } from '@/utils/formatters'
-
 const countUpIsActive = ref(false)
 const countDownIsActive = ref(false)
 

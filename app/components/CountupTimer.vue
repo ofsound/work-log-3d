@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-import { formatSecondsToMinutesSeconds } from '@/utils/formatters'
-
 const emit = defineEmits(['setStartTime', 'setEndTime', 'resetStartAndEndTimes'])
 
 const timerProgress = ref('00:00')

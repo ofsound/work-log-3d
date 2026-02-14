@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { collection, query, where, limit } from 'firebase/firestore'
+import { query, where, limit } from 'firebase/firestore'
 
-const { db } = useFirestoreCollections()
+const { projectsCollection } = useFirestoreCollections()
 
 const route = useRoute()
 const slug = computed(() => {
@@ -10,7 +10,7 @@ const slug = computed(() => {
 })
 
 const projectsQuery = computed(() =>
-  query(collection(db, 'projects'), where('slug', '==', slug.value), limit(1)),
+  query(projectsCollection, where('slug', '==', slug.value), limit(1)),
 )
 const projectSnap = useCollection(projectsQuery, { ssrKey: 'project-slug' })
 

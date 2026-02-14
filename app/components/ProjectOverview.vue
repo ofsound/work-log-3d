@@ -1,70 +1,41 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { doc, query, where, orderBy, type DocumentData } from 'firebase/firestore'
 
-import { doc, type DocumentData } from 'firebase/firestore'
-
-import { useStore } from '@/stores/store'
-
-import { formatMinutesToHoursAndMinutes } from '@/utils/formatters'
-
-const { db, timeBoxesCollection } = useFirestoreCollections()
+const { projectsCollection, timeBoxesCollection } = useFirestoreCollections()
 
 const props = defineProps({
   id: { type: String, required: true },
 })
 
-const project = useDocument(doc(db, 'projects', props.id))
-const timeBoxes = useCollection(timeBoxesCollection)
-
+const project = useDocument(doc(projectsCollection, props.id))
 const store = useStore()
+
+const projectTimeBoxesQuery = computed(() =>
+  query(
+    timeBoxesCollection,
+    where('project', '==', props.id),
+    orderBy('startTime', store.sortOrderReversed ? 'desc' : 'asc'),
+  ),
+)
+const timeBoxes = useCollection(projectTimeBoxesQuery)
 
 const projectOverviewDayObjects = ref<DocumentData[][]>([[]])
 
-const sortedProjectTimeBoxes = computed(() => {
-  const projectTimeBoxes = timeBoxes.value.filter((timeBox) => timeBox.project === props.id)
-
-  return projectTimeBoxes.slice().sort((a, b) => {
-    const aValue = a['startTime']
-    const bValue = b['startTime']
-
-    if (!store.sortOrderReversed) {
-      if (typeof aValue === 'string') {
-        return aValue.localeCompare(bValue)
-      }
-      return aValue - bValue
-    } else {
-      if (typeof aValue === 'string') {
-        return bValue.localeCompare(aValue)
-      }
-      return bValue - aValue
-    }
-  })
-})
-
-const projectTimeBoxesTotalDuration = () => {
+const projectTimeBoxesTotalDuration = computed(() => {
   let projectTotalDuration = 0
-
-  const projectTimeBoxes = timeBoxes.value.filter((timeBox) => timeBox.project === props.id)
-
-  projectTimeBoxes.forEach((timeBox: DocumentData) => {
+  timeBoxes.value.forEach((timeBox: DocumentData) => {
     if (timeBox.endTime && timeBox.startTime) {
       const timeBoxDuration =
         (timeBox.endTime.toDate().valueOf() - timeBox.startTime.toDate().valueOf()) / 60000
       projectTotalDuration += timeBoxDuration
     }
   })
-
   const { hours, minutes } = formatMinutesToHoursAndMinutes(projectTotalDuration)
-
-  if (hours > 0) {
-    return hours + minutes
-  } else {
-    return minutes
-  }
-}
+  return hours > 0 ? hours + minutes : minutes
+})
 
 watch(
-  () => sortedProjectTimeBoxes.value,
+  () => timeBoxes.value,
   (newValue) => {
     projectOverviewDayObjects.value[0] = [] as DocumentData[]
     let projectOverviewDayObjectsIndex = -1
@@ -95,7 +66,7 @@ watch(
       <div
         class="relative top-px ml-4 w-max rounded-md bg-emerald-800 px-1.5 py-0.5 pt-px font-data text-sm tracking-wide text-white"
       >
-        {{ projectTimeBoxesTotalDuration() }} hrs
+        {{ projectTimeBoxesTotalDuration }} hrs
       </div>
     </div>
     <div class="flex-1 overflow-auto px-11 pt-8">

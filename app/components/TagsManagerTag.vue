@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, type Ref } from 'vue'
-
 import { doc, deleteDoc, updateDoc, type DocumentData } from 'firebase/firestore'
 
-import { formatMinutesToHoursAndMinutes } from '@/utils/formatters'
+import DeleteIcon from '@/icons/DeleteIcon.vue'
+import EditIcon from '@/icons/EditIcon.vue'
 
-const { db, timeBoxesCollection } = useFirestoreCollections()
+import type { Ref } from 'vue'
+
+const { tagsCollection, timeBoxesCollection } = useFirestoreCollections()
 const timeBoxes = useCollection(timeBoxesCollection)
 
 const props = defineProps({
@@ -25,27 +26,21 @@ const deleteTagDocument = async () => {
 
   if (confirmed) {
     try {
-      const docRef = doc(db, 'tags', props.id)
-      await deleteDoc(docRef)
-      console.log('Document deleted with ID: ', docRef.id)
+      await deleteDoc(doc(tagsCollection, props.id))
     } catch (e) {
-      console.error('Error adding document: ', e)
+      console.error('Error deleting document: ', e)
     }
-  } else {
-    console.log('Deletion cancelled.')
   }
 }
 
 const renameTagDocument = async () => {
   try {
-    const docRef = doc(db, 'tags', props.id)
-    await updateDoc(docRef, { name: dynamicName.value })
+    await updateDoc(doc(tagsCollection, props.id), { name: dynamicName.value })
     if (myInput.value) {
       myInput.value.blur()
     }
-    console.log('Document deleted with ID: ', docRef.id)
   } catch (e) {
-    console.error('Error adding document: ', e)
+    console.error('Error updating document: ', e)
   }
 }
 

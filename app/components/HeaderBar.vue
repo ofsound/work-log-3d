@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-import { useStore } from '@/stores/store'
+import { signOut } from 'firebase/auth'
 
 import SortAscending from '@/icons/SortAscending.vue'
 import SortDescending from '@/icons/SortDescending.vue'
 
 const store = useStore()
+const router = useRouter()
+const auth = useFirebaseAuth()
 
 const currentTime = ref('')
 
@@ -15,7 +15,13 @@ const updateTime = () => {
 }
 
 updateTime()
-// setInterval(updateTime, 1000)
+
+async function handleSignOut() {
+  if (auth) {
+    await signOut(auth)
+    await router.push('/login')
+  }
+}
 </script>
 
 <template>
@@ -37,6 +43,9 @@ updateTime()
     >
       <SortAscending v-if="!store.sortOrderReversed" />
       <SortDescending v-if="store.sortOrderReversed" />
+    </button>
+    <button class="cursor-pointer text-sm text-gray-300 hover:text-white" @click="handleSignOut">
+      Sign out
     </button>
     <div>{{ currentTime }}</div>
   </div>

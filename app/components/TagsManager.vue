@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, type Ref } from 'vue'
-
 import { addDoc } from 'firebase/firestore'
+
+import type { Ref } from 'vue'
 
 const { tagsCollection } = useFirestoreCollections()
 const allTags = useCollection(tagsCollection)
@@ -32,12 +32,11 @@ const newTagName = ref('')
 const createTagDocument = async () => {
   if (newTagName.value) {
     try {
-      const docRef = await addDoc(tagsCollection, {
+      await addDoc(tagsCollection, {
         name: newTagName.value,
         slug: slugify(newTagName.value),
       })
       newTagName.value = ''
-      console.log('Document added with ID: ', docRef.id)
     } catch (e) {
       console.error('Error adding document: ', e)
     }

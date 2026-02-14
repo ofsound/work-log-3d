@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
 import { doc, updateDoc, addDoc, Timestamp, type DocumentReference } from 'firebase/firestore'
-
-import { formatToDatetimeLocal } from '@/utils/formatters'
 
 const props = defineProps({
   id: { type: String, default: undefined },
@@ -12,7 +9,7 @@ const props = defineProps({
 
 const emit = defineEmits(['toggleEditor'])
 
-const { db, timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
+const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
 const timeBoxEditorRef = ref<HTMLElement | null>(null)
 
@@ -53,10 +50,10 @@ const dynamicTags = ref([])
 
 const dynamicDuration = ref()
 
-let timeBoxRef: DocumentReference
+let timeBoxRef!: DocumentReference
 
 if (props.id) {
-  timeBoxRef = doc(db, 'timeBoxes', props.id)
+  timeBoxRef = doc(timeBoxesCollection, props.id)
   const docBinding = useDocument(timeBoxRef)
 
   const timeBox = docBinding.data
@@ -77,6 +74,8 @@ if (props.id) {
 }
 
 const updateTimeBoxDocument = async () => {
+  if (!props.id) return
+
   const confirmed = window.confirm(`Are you sure you want to update this Time Box?`)
 
   if (confirmed) {
@@ -89,13 +88,11 @@ const updateTimeBoxDocument = async () => {
         tags: dynamicTags.value,
       })
       emit('toggleEditor')
-      console.log('Document updated with ID: ', timeBoxRef.id)
     } catch (e) {
       console.error('Error updating document: ', e)
     }
   } else {
     emit('toggleEditor')
-    console.log('Update cancelled.')
   }
 }
 
@@ -108,14 +105,13 @@ const createTimeBoxDocument = async () => {
     dynamicTags.value
   ) {
     try {
-      const docRef = await addDoc(timeBoxesCollection, {
+      await addDoc(timeBoxesCollection, {
         startTime: Timestamp.fromDate(new Date(dynamicStartTime.value)),
         endTime: Timestamp.fromDate(new Date(dynamicEndTime.value)),
         notes: dynamicNotes.value,
         project: dynamicProject.value,
         tags: dynamicTags.value,
       })
-      console.log('Document added with ID: ', docRef.id)
       timeBoxEditorRef.value!.classList.add('animate-[var(--animate-blink-once)]')
       setTimeout(resetTimeBoxEditor, 100)
     } catch (e) {

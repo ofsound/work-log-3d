@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { DocumentData } from 'firebase/firestore'
 
-import { formatMinutesToHoursAndMinutes } from '@/utils/formatters'
-
 const props = defineProps<{
   tagOverviewDayData: DocumentData[]
 }>()

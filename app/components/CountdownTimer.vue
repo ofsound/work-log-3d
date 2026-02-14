@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-
-import { formatSecondsToMinutesSecondsParts } from '@/utils/formatters'
-
 const emit = defineEmits(['setStartTime', 'setEndTime', 'resetStartAndEndTimes'])
 
 const timerIsRunning = ref(false)

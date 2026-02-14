@@ -1,74 +1,41 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { doc, query, where, orderBy, type DocumentData } from 'firebase/firestore'
 
-import { doc, type DocumentData } from 'firebase/firestore'
-
-import { useStore } from '@/stores/store'
-
-import { formatMinutesToHoursAndMinutes } from '@/utils/formatters'
-
-const { db, timeBoxesCollection } = useFirestoreCollections()
+const { tagsCollection, timeBoxesCollection } = useFirestoreCollections()
 
 const props = defineProps({
   id: { type: String, required: true },
 })
 
-const tag = useDocument(doc(db, 'tags', props.id))
-const timeBoxes = useCollection(timeBoxesCollection)
-
+const tag = useDocument(doc(tagsCollection, props.id))
 const store = useStore()
+
+const tagTimeBoxesQuery = computed(() =>
+  query(
+    timeBoxesCollection,
+    where('tags', 'array-contains', props.id),
+    orderBy('startTime', store.sortOrderReversed ? 'desc' : 'asc'),
+  ),
+)
+const timeBoxes = useCollection(tagTimeBoxesQuery)
 
 const tagOverviewDayObjects = ref<DocumentData[][]>([[]])
 
-const sortedTagTimeBoxes = computed(() => {
-  const tagTimeBoxes = timeBoxes.value.filter((timeBox) => {
-    return timeBox.tags.some((tagID: string) => tagID === props.id)
-  })
-
-  return tagTimeBoxes.slice().sort((a, b) => {
-    const aValue = a['startTime']
-    const bValue = b['startTime']
-
-    if (!store.sortOrderReversed) {
-      if (typeof aValue === 'string') {
-        return aValue.localeCompare(bValue)
-      }
-      return aValue - bValue
-    } else {
-      if (typeof aValue === 'string') {
-        return bValue.localeCompare(aValue)
-      }
-      return bValue - aValue
-    }
-  })
-})
-
-const tagTimeBoxesTotalDuration = () => {
+const tagTimeBoxesTotalDuration = computed(() => {
   let tagTotalDuration = 0
-
-  const tagTimeBoxes = timeBoxes.value.filter((timeBox) => {
-    return timeBox.tags.some((tagID: string) => tagID === props.id)
-  })
-
-  tagTimeBoxes.forEach((timeBox: DocumentData) => {
+  timeBoxes.value.forEach((timeBox: DocumentData) => {
     if (timeBox.endTime && timeBox.startTime) {
       const timeBoxDuration =
         (timeBox.endTime.toDate().valueOf() - timeBox.startTime.toDate().valueOf()) / 60000
       tagTotalDuration += timeBoxDuration
     }
   })
-
   const { hours, minutes } = formatMinutesToHoursAndMinutes(tagTotalDuration)
-
-  if (hours > 0) {
-    return hours + minutes
-  } else {
-    return minutes
-  }
-}
+  return hours > 0 ? hours + minutes : minutes
+})
 
 watch(
-  () => sortedTagTimeBoxes.value,
+  () => timeBoxes.value,
   (newValue) => {
     tagOverviewDayObjects.value[0] = [] as DocumentData[]
     let tagOverviewDayObjectsIndex = -1
@@ -99,7 +66,7 @@ watch(
       <div
         class="relative top-px ml-4 w-max rounded-md bg-emerald-800 px-1.5 py-0.5 pt-px font-data text-sm tracking-wide text-white"
       >
-        {{ tagTimeBoxesTotalDuration() }} hrs
+        {{ tagTimeBoxesTotalDuration }} hrs
       </div>
     </div>
     <div class="flex-1 overflow-auto px-11 pt-8">

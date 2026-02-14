@@ -1,9 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
-import TimeBox from '@/components/TimeBox.vue'
-import { useStore } from '@/stores/store'
-
 const { timeBoxesCollection } = useFirestoreCollections()
 const timeBoxes = useCollection(timeBoxesCollection)
 

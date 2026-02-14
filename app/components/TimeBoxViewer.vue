@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { doc, deleteDoc } from 'firebase/firestore'
 
 import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
-const { db, projectsCollection, tagsCollection } = useFirestoreCollections()
+const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -18,7 +17,7 @@ const emit = defineEmits(['toggleEditor'])
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
 
-const timeBox = useDocument(doc(db, 'timeBoxes', props.id))
+const timeBox = useDocument(doc(timeBoxesCollection, props.id))
 
 const projectName = computed(() => {
   let computedProjectName = ''
@@ -86,14 +85,10 @@ const deleteTimeBoxDocument = async () => {
 
   if (confirmed) {
     try {
-      const docRef = doc(db, 'timeBoxes', props.id)
-      await deleteDoc(docRef)
-      console.log('Document deleted with ID: ', docRef.id)
+      await deleteDoc(doc(timeBoxesCollection, props.id))
     } catch (e) {
-      console.error('Error adding document: ', e)
+      console.error('Error deleting document: ', e)
     }
-  } else {
-    console.log('Deletion cancelled.')
   }
 }
 </script>

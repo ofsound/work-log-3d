@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { collection, query, where, limit } from 'firebase/firestore'
+import { query, where, limit } from 'firebase/firestore'
 
-const { db } = useFirestoreCollections()
+const { tagsCollection } = useFirestoreCollections()
 
 const route = useRoute()
 const slug = computed(() => {
@@ -9,9 +9,7 @@ const slug = computed(() => {
   return Array.isArray(p) ? p[0] : (p ?? '')
 })
 
-const tagsQuery = computed(() =>
-  query(collection(db, 'tags'), where('slug', '==', slug.value), limit(1)),
-)
+const tagsQuery = computed(() => query(tagsCollection, where('slug', '==', slug.value), limit(1)))
 const tagSnap = useCollection(tagsQuery, { ssrKey: 'tag-slug' })
 
 const tag = computed(() => tagSnap.value[0])

@@ -29,6 +29,7 @@ export default defineNuxtConfig({
     ],
   },
   vuefire: {
+    auth: { enabled: true },
     config: {
       apiKey: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_API_KEY ?? '',
       authDomain: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_AUTH_DOMAIN ?? '',
