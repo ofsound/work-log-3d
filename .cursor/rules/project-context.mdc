@@ -1,0 +1,36 @@
+---
+description: Project tech stack, Nuxt MCP usage, import order
+alwaysApply: true
+---
+
+# Project Context
+
+- **Stack**: Vue 3, Nuxt 4, TypeScript, Tailwind CSS, Pinia, nuxt-vuefire (Firebase)
+- **Styling**: Tailwind only; avoid vanilla CSS in `<style>` blocks
+
+## Nuxt MCP Tools
+
+- **`list_documentation_pages`**: Use FIRST when exploring Nuxt/Vue topics (optionally with `version: "4.x"`)
+- **`get_documentation_page`**: Use when you know the doc path (e.g. `/docs/4.x/getting-started/introduction`, `/docs/4.x/directory-structure/app/components`)
+- **`get_getting_started_guide`**: Use for setup and overview
+- **`list_modules`** / **`get_module`**: Use for module discovery and Nuxt 4 compatibility (e.g. `@nuxt/ui`, `@pinia/nuxt`)
+- **`list_deploy_providers`** / **`get_deploy_provider`**: Only when the user asks about deployment
+- **`list_blog_posts`** / **`get_blog_post`**: For Nuxt announcements or "what's new" (e.g. Nuxt 4)
+- Do **not** use playground links for code written to project files
+
+## Firebase MCP
+
+For Firestore, auth, or backend setup: use `firebase_read_resources` (e.g. `firebase://guides/init/firestore`), `firebase_init`, `firebase_get_environment`. Full MCP reference: `.cursor/AGENTS.md`.
+
+## Import Order
+
+When adding or editing explicit imports in `.vue` or `app/` `.ts` files, enforce this order. Use **one blank line between groups**; no blank line between imports within a group.
+
+1. **Vue / Nuxt** — `vue`, `vue-router`, `#imports` or Nuxt auto-imports as needed; `~/`, `@/` for app root
+2. **External packages**
+3. **Project** — `~/components/...` or `@/components/...`, then route/local `./...`, then `~/stores/...`, `~/utils/...`, etc.
+4. **Types** — all `import type { ... }`
+5. **Assets** — `~/assets/...` or `@/assets/...` when present
+6. **Side-effect** — e.g. `import '~/assets/css/main.css'`; must be last
+
+Nuxt auto-imports components, composables, and Vue APIs; this order applies when you write explicit imports (e.g. external libs or non-auto-imported project code). If a module is imported for both type and value, keep one import line and place it by its primary use.

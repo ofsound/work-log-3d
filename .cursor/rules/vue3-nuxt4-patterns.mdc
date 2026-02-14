@@ -1,0 +1,53 @@
+---
+description: Vue 3 and Nuxt 4 best practices — Composition API, composables, data fetching, server
+globs: "**/*.vue,app/**/*.ts,server/**/*.ts"
+alwaysApply: false
+---
+
+# Vue 3 + Nuxt 4 Patterns
+
+## Composition API and script setup
+
+- Use `<script setup lang="ts">` for all components
+- Prefer Composition API: `ref`, `computed`, `watch`, `onMounted`, etc.
+- Nuxt auto-imports Vue APIs and Nuxt composables; avoid redundant imports unless needed for clarity or types
+
+## Components
+
+- Place components in `app/components/` (or `components/`); Nuxt auto-imports them
+- Use PascalCase for component names in templates
+
+## Composables
+
+- Place in `app/composables/` with named export `useXxx`; they are auto-imported
+- Use for shared reactive logic and Nuxt-specific helpers (e.g. `useState`, `useFetch`)
+
+## State
+
+- Prefer Pinia stores for global state
+- Use `useState` for SSR-friendly, request-scoped state when appropriate
+
+## Data fetching
+
+- **Firestore:** Use VueFire `useCollection` / `useDocument` for real-time Firestore data (auto-imported by nuxt-vuefire). See firebase-vuefire rule.
+- **Nitro API / non-Firestore:** Prefer `useFetch` / `useAsyncData` for SSR-safe data loading
+- Use `server/api/` and `defineEventHandler` for backend logic (Nitro)
+
+## Routing
+
+- File-based routing under `app/pages/`
+- Use `<NuxtLink>` for links; use `navigateTo`, `useRouter`, `useRoute` when needed
+
+## Server
+
+- API routes in `server/api/`; server middleware in `server/middleware/`
+- Use `defineEventHandler`, `readBody`, `getQuery`, etc. (Nitro/h3)
+
+## Tailwind
+
+- Prefer utility classes in template
+- Avoid `@apply` in Vue `<style>` unless necessary and with clear scoping (see Nuxt 4 + Tailwind docs)
+
+## Environment and config
+
+- Use `useRuntimeConfig()` and Nitro env as needed; never hardcode secrets

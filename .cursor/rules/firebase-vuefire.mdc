@@ -1,0 +1,29 @@
+---
+description: Firebase and VueFire patterns — Firestore, auth, nuxt-vuefire
+globs: "**/*.vue,app/**/*.ts,server/**/*.ts"
+alwaysApply: false
+---
+
+# Firebase & VueFire (nuxt-vuefire)
+
+## Firestore Data
+
+- Use **VueFire** composables for Firestore: `useCollection`, `useDocument` (auto-imported by nuxt-vuefire)
+- Get Firestore instances via `useFirebaseApp()` then `getFirestore(app)`; share collections in `app/utils/` or composables
+- Prefer `useCollection` / `useDocument` for reactive, real-time Firestore data in components
+- Use `useFetch` / `useAsyncData` for Nitro API routes or non-Firestore data
+
+## Collections and references
+
+- Define collection references (e.g. `collection(db, 'timeBoxes')`) in shared utils; avoid repeating string literals
+- Use `doc(db, collectionName, id)` for document references; `useDocument` returns `{ data, promise }`
+
+## Auth
+
+- When `vuefire.auth.enabled` is true: use `getAuth(useFirebaseApp())` and Firebase Auth composables
+- For SSR with auth: set `GOOGLE_APPLICATION_CREDENTIALS` in `.env` (service account path); never commit `service-account.json`
+
+## Config
+
+- Firebase config lives in `nuxt.config.ts` under `vuefire.config`; use env vars for secrets in production
+- Use Firebase MCP (`firebase_read_resources`, `firebase_init`, etc.) when setting up Firestore, rules, or auth

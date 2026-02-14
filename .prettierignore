@@ -1,0 +1,12 @@
+# Generated / build outputs
+.nuxt
+.output
+.data
+.cache
+dist
+node_modules
+
+# Lockfiles
+package-lock.json
+pnpm-lock.yaml
+bun.lockb

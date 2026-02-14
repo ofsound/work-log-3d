@@ -1,0 +1,10 @@
+---
+description: Tailwind conventions — no space-y/space-x; use flex + gap
+globs: "**/*.vue,app/**/*.ts"
+alwaysApply: false
+---
+
+# Tailwind
+
+- Use Tailwind CSS for styling; avoid vanilla CSS in `<style>` blocks
+- Do **not** use `space-y-*` or `space-x-*`; use flex or grid with `gap-*` instead
