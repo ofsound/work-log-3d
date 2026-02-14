@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { doc, deleteDoc, updateDoc, type DocumentData } from 'firebase/firestore'
+import { doc, deleteDoc, updateDoc } from 'firebase/firestore'
 
 import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
+import type { DocumentData } from 'firebase/firestore'
 import type { Ref } from 'vue'
 
 const { tagsCollection, timeBoxesCollection } = useFirestoreCollections()

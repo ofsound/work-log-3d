@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { doc, query, where, orderBy, type DocumentData } from 'firebase/firestore'
+import { doc, query, where, orderBy } from 'firebase/firestore'
+
+import type { DocumentData } from 'firebase/firestore'
 
 const { tagsCollection, timeBoxesCollection } = useFirestoreCollections()
 

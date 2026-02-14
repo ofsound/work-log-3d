@@ -1,3 +1,5 @@
+import { resolve } from 'node:path'
+
 import tailwindcss from '@tailwindcss/vite'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -38,6 +40,11 @@ export default defineNuxtConfig({
       messagingSenderId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_MESSAGING_SENDER_ID ?? '',
       appId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_APP_ID ?? '',
     },
+    admin: {
+      options: {
+        projectId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_PROJECT_ID ?? '',
+      },
+    },
   },
   typescript: {
     typeCheck: false, // use `npm run typecheck` or `npm run check`
@@ -47,5 +54,15 @@ export default defineNuxtConfig({
   vite: {
     // @ts-expect-error - Tailwind Vite plugin types don't match Nuxt's Vite PluginOption
     plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        // Workaround: nuxt-vuefire marks firebase-admin as optional peer dep; on Vercel build
+        // the resolution can return a stub. Force resolution to the real package.
+        'firebase-admin/auth': resolve(
+          process.cwd(),
+          'node_modules/firebase-admin/lib/esm/auth/index.js',
+        ),
+      },
+    },
   },
 })

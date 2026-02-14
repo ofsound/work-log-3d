@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { doc, updateDoc, addDoc, Timestamp, type DocumentReference } from 'firebase/firestore'
+import { doc, updateDoc, addDoc, Timestamp } from 'firebase/firestore'
+
+import type { DocumentReference } from 'firebase/firestore'
 
 const props = defineProps({
   id: { type: String, default: undefined },
@@ -176,8 +178,6 @@ watch(
 watch(
   () => dynamicDuration.value,
   () => {
-    // lc tempDate: Date
-
     if (dynamicStartTime.value) {
       const tempDate = new Date(dynamicStartTime.value)
       tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value))
