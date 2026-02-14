@@ -38,11 +38,6 @@ export default defineNuxtConfig({
       messagingSenderId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_MESSAGING_SENDER_ID ?? '',
       appId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_APP_ID ?? '',
     },
-    admin: {
-      options: {
-        projectId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_PROJECT_ID ?? '',
-      },
-    },
   },
   typescript: {
     typeCheck: false, // use `npm run typecheck` or `npm run check`

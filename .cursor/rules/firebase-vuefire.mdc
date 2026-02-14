@@ -15,13 +15,12 @@ alwaysApply: false
 
 ## Collections and references
 
-- Define collection references (e.g. `collection(db, 'timeBoxes')`) in shared utils; avoid repeating string literals
-- Use `doc(db, collectionName, id)` for document references; `useDocument` returns `{ data, promise }`
+- Use `useFirestoreCollections()` for user-scoped refs: `users/{uid}/timeBoxes`, `users/{uid}/projects`, `users/{uid}/tags`
+- Use `doc(collectionRef, id)` for document references; `useDocument` returns `{ data, promise }`
 
 ## Auth
 
-- When `vuefire.auth.enabled` is true: use `getAuth(useFirebaseApp())` and Firebase Auth composables
-- For SSR with auth: set `GOOGLE_APPLICATION_CREDENTIALS` in `.env` (service account path); never commit `service-account.json`
+- When `vuefire.auth.enabled` is true: use `useFirebaseAuth()`, `useCurrentUser()`, `getCurrentUser()` (nuxt-vuefire composables)
 
 ## Config
 
