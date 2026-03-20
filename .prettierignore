@@ -4,6 +4,7 @@
 .data
 .cache
 dist
+dist-electron
 node_modules
 
 # Lockfiles

@@ -1,82 +1,49 @@
 <script setup lang="ts">
-const emit = defineEmits(['setStartTime', 'setEndTime', 'resetStartAndEndTimes'])
-
-const timerIsRunning = ref(false)
-const timerIsPaused = ref(false)
-const timerProgress = ref('')
-const secondsProgress = ref('00')
-const timerLength = ref(1800)
-
+const { isReady, snapshot, cancel, pause, resume, startCountdown } = useTimerService()
 const dynamicMinutes = ref('30')
-
-let nowWhenStarted: Date
-
-let timerInterval: ReturnType<typeof setInterval>
+const route = useRoute()
+const hasStartedPomodoro = ref(false)
 
 const startTimer = () => {
-  nowWhenStarted = new Date()
-  updateTime()
-  timerInterval = setInterval(updateTime, 1000)
-  emit('setStartTime', new Date(), 'countdown')
-  timerIsRunning.value = true
+  void startCountdown(Number(dynamicMinutes.value || '0'))
 }
 
-const pauseTimer = () => {
-  timerIsPaused.value = true
-}
-
-const resumeTimer = () => {
-  timerIsPaused.value = false
-}
-
-const cancelTimer = () => {
-  timerIsRunning.value = false
-  emit('resetStartAndEndTimes')
-}
-
-const stopTimer = () => {
-  clearInterval(timerInterval)
-  emit('setEndTime', new Date())
-  timerIsRunning.value = false
-}
-
-const updateTime = () => {
-  const now = new Date()
-
-  const timeElapsedSinceStart = now.valueOf() - nowWhenStarted.valueOf()
-
-  const secondsElapsed = Math.round(timeElapsedSinceStart / 1000)
-
-  if (timerLength.value - secondsElapsed <= 0) {
-    stopTimer()
+const timerIsRunning = computed(
+  () => snapshot.value.mode === 'countdown' && snapshot.value.status === 'running',
+)
+const timerIsPaused = computed(
+  () => snapshot.value.mode === 'countdown' && snapshot.value.status === 'paused',
+)
+const secondsProgress = computed(() => {
+  if (snapshot.value.mode !== 'countdown') {
+    return '00'
   }
 
-  const { formattedMinutes, formattedSeconds } = formatSecondsToMinutesSecondsParts(
-    timerLength.value - secondsElapsed,
-  )
-
-  timerProgress.value = formattedMinutes + ':' + formattedSeconds
-
-  dynamicMinutes.value = formattedMinutes
-
-  secondsProgress.value = formattedSeconds
-}
+  return snapshot.value.display.split(':')[1] ?? '00'
+})
 
 watch(
-  () => dynamicMinutes.value,
-  () => {
-    if (!timerIsRunning.value) {
-      timerLength.value = 60 * parseInt(dynamicMinutes.value)
+  () => snapshot.value,
+  (nextSnapshot) => {
+    if (nextSnapshot.mode === 'countdown') {
+      dynamicMinutes.value = nextSnapshot.display.split(':')[0] ?? dynamicMinutes.value
     }
   },
+  { deep: true },
 )
 
-onMounted(() => {
-  const route = useRoute()
-  if (route.path === '/pomodoro') {
+watch(
+  [isReady, () => route.path, () => snapshot.value.mode],
+  ([ready, path, mode]) => {
+    if (!ready || path !== '/pomodoro' || mode !== null || hasStartedPomodoro.value) {
+      return
+    }
+
+    hasStartedPomodoro.value = true
     startTimer()
-  }
-})
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -86,9 +53,10 @@ onMounted(() => {
     <div
       class="relative h-max rounded-sm border border-gray-300 bg-white px-2.5 py-1 font-data text-5xl font-bold tabular-nums"
     >
-      <TimerCancelButton @click="cancelTimer" />
+      <TimerCancelButton @click="cancel" />
       <div class="flex items-baseline">
         <input
+          v-if="!timerIsRunning && !timerIsPaused"
           id="dynamicMinutes"
           v-model="dynamicMinutes"
           type="text"
@@ -96,14 +64,15 @@ onMounted(() => {
           @keyup.enter="($event.target as HTMLElement).blur()"
           @keyup.esc="($event.target as HTMLElement).blur()"
         />
+        <div v-else class="w-14 text-right">{{ snapshot.display.split(':')[0] }}</div>
         <div class="relative -top-1">:</div>
         {{ secondsProgress }}
       </div>
     </div>
-    <TimerButton v-if="!timerIsRunning" @click="startTimer">Start Timer</TimerButton>
-    <TimerButton v-if="timerIsRunning && !timerIsPaused" @click="pauseTimer"
-      >Pause Timer</TimerButton
+    <TimerButton v-if="!timerIsRunning && !timerIsPaused" @click="startTimer"
+      >Start Timer</TimerButton
     >
-    <TimerButton v-if="timerIsPaused" @click="resumeTimer">Resume Timer </TimerButton>
+    <TimerButton v-if="timerIsRunning && !timerIsPaused" @click="pause">Pause Timer</TimerButton>
+    <TimerButton v-if="timerIsPaused" @click="resume">Resume Timer </TimerButton>
   </div>
 </template>

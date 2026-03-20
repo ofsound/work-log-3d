@@ -1,14 +1,22 @@
 <script setup lang="ts">
+import { getPostAuthRedirect, shouldRedirectToLogin } from '~/utils/auth-navigation'
+
 const user = useCurrentUser()
 const router = useRouter()
 const route = useRoute()
 
 onMounted(() => {
   watch(user, (currentUser, prevUser) => {
-    if (prevUser && !currentUser && route.path !== '/login') {
+    if (
+      shouldRedirectToLogin({
+        currentUser,
+        previousUser: prevUser,
+        routePath: route.path,
+      })
+    ) {
       router.push('/login')
-    } else if (currentUser && typeof route.query.redirect === 'string') {
-      router.push(route.query.redirect)
+    } else if (currentUser) {
+      router.push(getPostAuthRedirect(route.query.redirect))
     }
   })
 })

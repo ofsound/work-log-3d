@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { doc, query, where, orderBy } from 'firebase/firestore'
 
-import type { DocumentData } from 'firebase/firestore'
+import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
+import { toTimeBoxes } from '~/utils/worklog-firebase'
+import { getTotalDurationLabel, groupTimeBoxesByStartDay } from '~~/shared/worklog'
 
 const { tagsCollection, timeBoxesCollection } = useFirestoreCollections()
 
@@ -21,42 +23,9 @@ const tagTimeBoxesQuery = computed(() =>
 )
 const timeBoxes = useCollection(tagTimeBoxesQuery)
 
-const tagOverviewDayObjects = ref<DocumentData[][]>([[]])
-
-const tagTimeBoxesTotalDuration = computed(() => {
-  let tagTotalDuration = 0
-  timeBoxes.value.forEach((timeBox: DocumentData) => {
-    if (timeBox.endTime && timeBox.startTime) {
-      const timeBoxDuration =
-        (timeBox.endTime.toDate().valueOf() - timeBox.startTime.toDate().valueOf()) / 60000
-      tagTotalDuration += timeBoxDuration
-    }
-  })
-  const { hours, minutes } = formatMinutesToHoursAndMinutes(tagTotalDuration)
-  return hours > 0 ? hours + minutes : minutes
-})
-
-watch(
-  () => timeBoxes.value,
-  (newValue) => {
-    tagOverviewDayObjects.value[0] = [] as DocumentData[]
-    let tagOverviewDayObjectsIndex = -1
-    let prevDateString = ''
-    newValue.forEach((timeBox) => {
-      const timeBoxDateString = timeBox.startTime.toDate().toDateString()
-
-      if (timeBoxDateString !== prevDateString) {
-        tagOverviewDayObjectsIndex++
-        tagOverviewDayObjects.value[tagOverviewDayObjectsIndex] = []
-      }
-
-      prevDateString = timeBoxDateString
-
-      const innerArray = tagOverviewDayObjects.value[tagOverviewDayObjectsIndex]
-      innerArray?.push(timeBox)
-    })
-  },
-)
+const tagTimeBoxes = computed(() => toTimeBoxes(timeBoxes.value as FirebaseTimeBoxDocument[]))
+const tagOverviewDayObjects = computed(() => groupTimeBoxesByStartDay(tagTimeBoxes.value))
+const tagTimeBoxesTotalDuration = computed(() => getTotalDurationLabel(tagTimeBoxes.value))
 </script>
 
 <template>

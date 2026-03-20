@@ -2,34 +2,50 @@ import { resolve } from 'node:path'
 
 import tailwindcss from '@tailwindcss/vite'
 
+const isElectronBuild = process.env.NUXT_ELECTRON_BUILD === 'true'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/eslint', '@nuxt/fonts', '@pinia/nuxt', 'nuxt-vuefire'],
-  fonts: {
-    families: [
-      {
-        name: 'National Park',
-        provider: 'google',
-        weights: ['200 800'],
-        subsets: ['latin'],
+  ssr: isElectronBuild ? false : true,
+  app: isElectronBuild
+    ? {
+        baseURL: './',
+        buildAssetsDir: 'assets/',
+      }
+    : undefined,
+  modules: [
+    '@nuxt/eslint',
+    ...(isElectronBuild ? [] : ['@nuxt/fonts']),
+    '@pinia/nuxt',
+    'nuxt-vuefire',
+  ],
+  fonts: isElectronBuild
+    ? undefined
+    : {
+        families: [
+          {
+            name: 'National Park',
+            provider: 'google',
+            weights: ['200 800'],
+            subsets: ['latin'],
+          },
+          {
+            name: 'Lato',
+            provider: 'google',
+            weights: [100, 300, 400, 700, 900],
+            styles: ['normal', 'italic'],
+            subsets: ['latin'],
+          },
+          {
+            name: 'Caveat',
+            provider: 'google',
+            weights: ['400 700'],
+            subsets: ['latin'],
+          },
+        ],
       },
-      {
-        name: 'Lato',
-        provider: 'google',
-        weights: [100, 300, 400, 700, 900],
-        styles: ['normal', 'italic'],
-        subsets: ['latin'],
-      },
-      {
-        name: 'Caveat',
-        provider: 'google',
-        weights: ['400 700'],
-        subsets: ['latin'],
-      },
-    ],
-  },
   vuefire: {
     auth: { enabled: true },
     config: {
@@ -40,11 +56,13 @@ export default defineNuxtConfig({
       messagingSenderId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_MESSAGING_SENDER_ID ?? '',
       appId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_APP_ID ?? '',
     },
-    admin: {
-      options: {
-        projectId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_PROJECT_ID ?? '',
-      },
-    },
+    admin: isElectronBuild
+      ? undefined
+      : {
+          options: {
+            projectId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_PROJECT_ID ?? '',
+          },
+        },
   },
   typescript: {
     typeCheck: false, // use `npm run typecheck` or `npm run check`

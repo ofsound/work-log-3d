@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { doc, query, where, orderBy } from 'firebase/firestore'
 
-import type { DocumentData } from 'firebase/firestore'
+import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
+import { toTimeBoxes } from '~/utils/worklog-firebase'
+import { getTotalDurationLabel, groupTimeBoxesByStartDay } from '~~/shared/worklog'
 
 const { projectsCollection, timeBoxesCollection } = useFirestoreCollections()
 
@@ -21,42 +23,9 @@ const projectTimeBoxesQuery = computed(() =>
 )
 const timeBoxes = useCollection(projectTimeBoxesQuery)
 
-const projectOverviewDayObjects = ref<DocumentData[][]>([[]])
-
-const projectTimeBoxesTotalDuration = computed(() => {
-  let projectTotalDuration = 0
-  timeBoxes.value.forEach((timeBox: DocumentData) => {
-    if (timeBox.endTime && timeBox.startTime) {
-      const timeBoxDuration =
-        (timeBox.endTime.toDate().valueOf() - timeBox.startTime.toDate().valueOf()) / 60000
-      projectTotalDuration += timeBoxDuration
-    }
-  })
-  const { hours, minutes } = formatMinutesToHoursAndMinutes(projectTotalDuration)
-  return hours > 0 ? hours + minutes : minutes
-})
-
-watch(
-  () => timeBoxes.value,
-  (newValue) => {
-    projectOverviewDayObjects.value[0] = [] as DocumentData[]
-    let projectOverviewDayObjectsIndex = -1
-    let prevDateString = ''
-    newValue.forEach((timeBox) => {
-      const timeBoxDateString = timeBox.startTime.toDate().toDateString()
-
-      if (timeBoxDateString !== prevDateString) {
-        projectOverviewDayObjectsIndex++
-        projectOverviewDayObjects.value[projectOverviewDayObjectsIndex] = []
-      }
-
-      prevDateString = timeBoxDateString
-
-      const innerArray = projectOverviewDayObjects.value[projectOverviewDayObjectsIndex]
-      innerArray?.push(timeBox)
-    })
-  },
-)
+const projectTimeBoxes = computed(() => toTimeBoxes(timeBoxes.value as FirebaseTimeBoxDocument[]))
+const projectOverviewDayObjects = computed(() => groupTimeBoxesByStartDay(projectTimeBoxes.value))
+const projectTimeBoxesTotalDuration = computed(() => getTotalDurationLabel(projectTimeBoxes.value))
 </script>
 
 <template>

@@ -1,30 +1,16 @@
 <script setup lang="ts">
-import { addDoc } from 'firebase/firestore'
-
 import type { Ref } from 'vue'
+import type { FirebaseProjectDocument } from '~/utils/worklog-firebase'
+import { toProjects } from '~/utils/worklog-firebase'
+import { sortNamedEntities } from '~~/shared/worklog'
 
+const repositories = useWorklogRepository()
 const { projectsCollection } = useFirestoreCollections()
-
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
 const allProjects = useCollection(projectsCollection)
-
 const myInput: Ref<HTMLInputElement | null> = ref(null)
 
 const sortedAllProjects = computed(() => {
-  return allProjects.value.slice().sort((a, b) => {
-    const aValue = a['name']
-    const bValue = b['name']
-
-    if (typeof aValue === 'string') {
-      return aValue.localeCompare(bValue)
-    }
-    return aValue - bValue
-  })
+  return sortNamedEntities(toProjects(allProjects.value as FirebaseProjectDocument[]))
 })
 
 const newProjectName = ref('')
@@ -32,10 +18,7 @@ const newProjectName = ref('')
 const createProjectDocument = async () => {
   if (newProjectName.value) {
     try {
-      await addDoc(projectsCollection, {
-        name: newProjectName.value,
-        slug: slugify(newProjectName.value),
-      })
+      await repositories.projects.create({ name: newProjectName.value })
       newProjectName.value = ''
     } catch (e) {
       console.error('Error adding document: ', e)

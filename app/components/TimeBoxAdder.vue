@@ -1,45 +1,32 @@
 <script setup lang="ts">
-const countUpIsActive = ref(false)
-const countDownIsActive = ref(false)
+const { snapshot } = useTimerService()
 
-const startTimeFromTimer = ref()
-const endTimeFromTimer = ref()
+const countUpIsActive = computed(() => snapshot.value.mode === 'countup' && snapshot.value.isActive)
+const countDownIsActive = computed(
+  () => snapshot.value.mode === 'countdown' && snapshot.value.isActive,
+)
 
-const setStartTime = (timeFromTimer: Date, source: string) => {
-  startTimeFromTimer.value = formatToDatetimeLocal(timeFromTimer)
-  if (source === 'countup') {
-    countUpIsActive.value = true
-  } else if (source === 'countdown') {
-    countDownIsActive.value = true
+const startTimeFromTimer = computed(() => {
+  if (snapshot.value.startedAtMs === null) {
+    return ''
   }
-}
 
-const setEndTime = (timeFromTimer: Date) => {
-  endTimeFromTimer.value = formatToDatetimeLocal(timeFromTimer)
-}
+  return formatToDatetimeLocal(new Date(snapshot.value.startedAtMs))
+})
 
-const resetStartAndEndTimes = () => {
-  startTimeFromTimer.value = ''
-  endTimeFromTimer.value = ''
-  countUpIsActive.value = false
-  countDownIsActive.value = false
-}
+const endTimeFromTimer = computed(() => {
+  if (snapshot.value.endedAtMs === null) {
+    return ''
+  }
+
+  return formatToDatetimeLocal(new Date(snapshot.value.endedAtMs))
+})
 </script>
 
 <template>
   <div class="flex gap-2 *:flex-1">
-    <CountdownTimer
-      :class="{ 'blur-[2px] grayscale-100': countUpIsActive }"
-      @set-start-time="setStartTime"
-      @set-end-time="setEndTime"
-      @reset-start-and-end-times="resetStartAndEndTimes"
-    />
-    <CountupTimer
-      :class="{ 'blur-[2px] grayscale-100': countDownIsActive }"
-      @set-start-time="setStartTime"
-      @set-end-time="setEndTime"
-      @reset-start-and-end-times="resetStartAndEndTimes"
-    />
+    <CountdownTimer :class="{ 'blur-[2px] grayscale-100': countUpIsActive }" />
+    <CountupTimer :class="{ 'blur-[2px] grayscale-100': countDownIsActive }" />
   </div>
   <TimeBoxEditor
     :start-time-from-timer="startTimeFromTimer"

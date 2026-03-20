@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { doc, updateDoc, addDoc, Timestamp } from 'firebase/firestore'
+import { doc } from 'firebase/firestore'
 
-import type { DocumentReference } from 'firebase/firestore'
+import type {
+  FirebaseProjectDocument,
+  FirebaseTagDocument,
+  FirebaseTimeBoxDocument,
+} from '~/utils/worklog-firebase'
+import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
+import type { TimeBoxInput } from '~~/shared/worklog'
+import { sortNamedEntities } from '~~/shared/worklog'
 
 const props = defineProps({
   id: { type: String, default: undefined },
@@ -11,63 +18,45 @@ const props = defineProps({
 
 const emit = defineEmits(['toggleEditor'])
 
+const repositories = useWorklogRepository()
+const shell = useHostShell()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
 const timeBoxEditorRef = ref<HTMLElement | null>(null)
 
-const dynamicDurationTypingTimer = ref<NodeJS.Timeout>()
+const dynamicDurationTypingTimer = ref<ReturnType<typeof setTimeout>>()
 
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
 
 const sortedAllProjects = computed(() => {
-  return allProjects.value.slice().sort((a, b) => {
-    const aValue = a['name']
-    const bValue = b['name']
-
-    if (typeof aValue === 'string') {
-      return aValue.localeCompare(bValue)
-    }
-    return aValue - bValue
-  })
+  return sortNamedEntities(toProjects(allProjects.value as FirebaseProjectDocument[]))
 })
 
 const sortedAllTags = computed(() => {
-  return allTags.value.slice().sort((a, b) => {
-    const aValue = a['name']
-    const bValue = b['name']
-
-    if (typeof aValue === 'string') {
-      return aValue.localeCompare(bValue)
-    }
-    return aValue - bValue
-  })
+  return sortNamedEntities(toTags(allTags.value as FirebaseTagDocument[]))
 })
 
 const dynamicStartTime = ref('')
 const dynamicEndTime = ref('')
 const dynamicNotes = ref('')
 const dynamicProject = ref('')
-const dynamicTags = ref([])
+const dynamicTags = ref<string[]>([])
 
-const dynamicDuration = ref()
-
-let timeBoxRef!: DocumentReference
+const dynamicDuration = ref<string | number>('')
 
 if (props.id) {
-  timeBoxRef = doc(timeBoxesCollection, props.id)
-  const docBinding = useDocument(timeBoxRef)
-
-  const timeBox = docBinding.data
+  const docBinding = useDocument(doc(timeBoxesCollection, props.id))
 
   docBinding.promise.value
     .then(() => {
-      if (timeBox.value) {
-        dynamicNotes.value = timeBox.value.notes
-        dynamicStartTime.value = formatToDatetimeLocal(timeBox.value.startTime.toDate())
-        dynamicEndTime.value = formatToDatetimeLocal(timeBox.value.endTime.toDate())
-        dynamicProject.value = timeBox.value.project
-        dynamicTags.value = timeBox.value.tags
+      if (docBinding.data.value) {
+        const timeBox = toTimeBox(docBinding.data.value as FirebaseTimeBoxDocument)
+        dynamicNotes.value = timeBox.notes
+        dynamicStartTime.value = timeBox.startTime ? formatToDatetimeLocal(timeBox.startTime) : ''
+        dynamicEndTime.value = timeBox.endTime ? formatToDatetimeLocal(timeBox.endTime) : ''
+        dynamicProject.value = timeBox.project
+        dynamicTags.value = timeBox.tags
       }
     })
     .catch((error) => {
@@ -78,17 +67,11 @@ if (props.id) {
 const updateTimeBoxDocument = async () => {
   if (!props.id) return
 
-  const confirmed = window.confirm(`Are you sure you want to update this Time Box?`)
+  const confirmed = shell.confirm(`Are you sure you want to update this Time Box?`)
 
   if (confirmed) {
     try {
-      await updateDoc(timeBoxRef, {
-        startTime: Timestamp.fromDate(new Date(dynamicStartTime.value)),
-        endTime: Timestamp.fromDate(new Date(dynamicEndTime.value)),
-        notes: dynamicNotes.value,
-        project: dynamicProject.value,
-        tags: dynamicTags.value,
-      })
+      await repositories.timeBoxes.update(props.id, getTimeBoxInput())
       emit('toggleEditor')
     } catch (e) {
       console.error('Error updating document: ', e)
@@ -104,16 +87,10 @@ const createTimeBoxDocument = async () => {
     dynamicEndTime.value &&
     dynamicNotes.value &&
     dynamicProject.value &&
-    dynamicTags.value
+    dynamicTags.value.length > 0
   ) {
     try {
-      await addDoc(timeBoxesCollection, {
-        startTime: Timestamp.fromDate(new Date(dynamicStartTime.value)),
-        endTime: Timestamp.fromDate(new Date(dynamicEndTime.value)),
-        notes: dynamicNotes.value,
-        project: dynamicProject.value,
-        tags: dynamicTags.value,
-      })
+      await repositories.timeBoxes.create(getTimeBoxInput())
       timeBoxEditorRef.value!.classList.add('animate-[var(--animate-blink-once)]')
       setTimeout(resetTimeBoxEditor, 100)
     } catch (e) {
@@ -123,6 +100,14 @@ const createTimeBoxDocument = async () => {
     console.error("A field in the TimeBox isn't filled out.")
   }
 }
+
+const getTimeBoxInput = (): TimeBoxInput => ({
+  startTime: new Date(dynamicStartTime.value),
+  endTime: new Date(dynamicEndTime.value),
+  notes: dynamicNotes.value,
+  project: dynamicProject.value,
+  tags: dynamicTags.value,
+})
 
 const resetTimeBoxEditor = () => {
   dynamicStartTime.value = ''
@@ -180,17 +165,17 @@ watch(
   () => {
     if (dynamicStartTime.value) {
       const tempDate = new Date(dynamicStartTime.value)
-      tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value))
+      tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value || 0))
       dynamicEndTime.value = formatToDatetimeLocal(tempDate)
     } else {
       clearTimeout(dynamicDurationTypingTimer.value)
       dynamicDurationTypingTimer.value = setTimeout(() => {
         const now = new Date()
         const tempDate = new Date(
-          now.setMinutes(now.getMinutes() - parseInt(dynamicDuration.value)),
+          now.setMinutes(now.getMinutes() - parseInt(String(dynamicDuration.value || 0))),
         )
         dynamicStartTime.value = formatToDatetimeLocal(tempDate)
-        tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value))
+        tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value || 0))
         dynamicEndTime.value = formatToDatetimeLocal(tempDate)
       }, 400)
     }

@@ -1,9 +1,19 @@
 <script setup lang="ts">
-import { doc, deleteDoc } from 'firebase/firestore'
+import { doc } from 'firebase/firestore'
 
 import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
+import type {
+  FirebaseProjectDocument,
+  FirebaseTagDocument,
+  FirebaseTimeBoxDocument,
+} from '~/utils/worklog-firebase'
+import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
+import { findProjectName, findTagNames, getDurationMinutesLabel } from '~~/shared/worklog'
+
+const repositories = useWorklogRepository()
+const shell = useHostShell()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
 const props = defineProps({
@@ -17,46 +27,32 @@ const emit = defineEmits(['toggleEditor'])
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
 
-const timeBox = useDocument(doc(timeBoxesCollection, props.id))
+const rawTimeBox = useDocument(doc(timeBoxesCollection, props.id))
+const timeBox = computed(() => {
+  if (!rawTimeBox.value) {
+    return null
+  }
+
+  return toTimeBox(rawTimeBox.value as FirebaseTimeBoxDocument)
+})
 
 const projectName = computed(() => {
-  let computedProjectName = ''
-
-  allProjects.value.forEach((thisProject) => {
-    if (thisProject.id === timeBox.value?.project) {
-      computedProjectName = thisProject.name
-    }
-  })
-  return computedProjectName
+  return findProjectName(
+    toProjects(allProjects.value as FirebaseProjectDocument[]),
+    timeBox.value?.project ?? '',
+  )
 })
 
 const tagNames = computed(() => {
-  const computedTagNames: string[] = []
-
-  allTags.value.forEach((thisTag) => {
-    timeBox.value?.tags?.forEach((thisPropsTag: string) => {
-      if (thisTag.id === thisPropsTag) {
-        computedTagNames.push(thisTag.name)
-      }
-    })
-  })
-
-  return computedTagNames
+  return findTagNames(toTags(allTags.value as FirebaseTagDocument[]), timeBox.value?.tags ?? [])
 })
 
-const timeBoxDuration = computed(() => {
-  let durationString = 0
-
-  if (timeBox.value?.endTime && timeBox.value?.startTime) {
-    durationString =
-      (timeBox.value?.endTime.toDate().valueOf() - timeBox.value?.startTime.toDate().valueOf()) /
-      60000
-  }
-  return durationString + 'm'
-})
+const timeBoxDuration = computed(() =>
+  timeBox.value ? getDurationMinutesLabel(timeBox.value) : '0m',
+)
 
 const startDayFormatted = computed(() => {
-  return timeBox.value?.startTime.toDate().toLocaleDateString([], {
+  return timeBox.value?.startTime?.toLocaleDateString([], {
     weekday: 'short',
     year: '2-digit',
     month: '2-digit',
@@ -65,7 +61,7 @@ const startDayFormatted = computed(() => {
 })
 
 const startTimeFormatted = computed(() => {
-  return timeBox.value?.startTime.toDate().toLocaleTimeString([], {
+  return timeBox.value?.startTime?.toLocaleTimeString([], {
     hourCycle: 'h12',
     hour: 'numeric',
     minute: '2-digit',
@@ -73,7 +69,7 @@ const startTimeFormatted = computed(() => {
 })
 
 const endTimeFormatted = computed(() => {
-  return timeBox.value?.endTime.toDate().toLocaleTimeString([], {
+  return timeBox.value?.endTime?.toLocaleTimeString([], {
     hourCycle: 'h12',
     hour: 'numeric',
     minute: '2-digit',
@@ -81,11 +77,11 @@ const endTimeFormatted = computed(() => {
 })
 
 const deleteTimeBoxDocument = async () => {
-  const confirmed = window.confirm(`Are you sure you want to delete this Session?`)
+  const confirmed = shell.confirm(`Are you sure you want to delete this Session?`)
 
   if (confirmed) {
     try {
-      await deleteDoc(doc(timeBoxesCollection, props.id))
+      await repositories.timeBoxes.remove(props.id)
     } catch (e) {
       console.error('Error deleting document: ', e)
     }

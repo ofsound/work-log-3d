@@ -6,6 +6,8 @@ import {
   GoogleAuthProvider,
 } from 'firebase/auth'
 
+import { getPostAuthRedirect } from '~/utils/auth-navigation'
+
 definePageMeta({
   layout: 'auth',
 })
@@ -25,10 +27,8 @@ const isLoading = ref(false)
 watch(
   user,
   (currentUser) => {
-    if (currentUser && typeof route.query.redirect === 'string') {
-      router.push(route.query.redirect)
-    } else if (currentUser) {
-      router.push('/')
+    if (currentUser) {
+      router.push(getPostAuthRedirect(route.query.redirect))
     }
   },
   { immediate: true },
@@ -44,8 +44,7 @@ async function handleEmailAuth() {
     } else {
       await signInWithEmailAndPassword(auth, email.value, password.value)
     }
-    const redirect = route.query.redirect
-    await router.push(typeof redirect === 'string' ? redirect : '/')
+    await router.push(getPostAuthRedirect(route.query.redirect))
   } catch (e) {
     errorMessage.value = e instanceof Error ? e.message : 'Authentication failed'
   } finally {
@@ -59,8 +58,7 @@ async function handleGoogleSignIn() {
   isLoading.value = true
   try {
     await signInWithPopup(auth, new GoogleAuthProvider())
-    const redirect = route.query.redirect
-    await router.push(typeof redirect === 'string' ? redirect : '/')
+    await router.push(getPostAuthRedirect(route.query.redirect))
   } catch (e) {
     errorMessage.value = e instanceof Error ? e.message : 'Google sign-in failed'
   } finally {

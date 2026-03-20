@@ -1,30 +1,17 @@
 <script setup lang="ts">
-import { addDoc } from 'firebase/firestore'
-
 import type { Ref } from 'vue'
+import type { FirebaseTagDocument } from '~/utils/worklog-firebase'
+import { toTags } from '~/utils/worklog-firebase'
+import { sortNamedEntities } from '~~/shared/worklog'
 
+const repositories = useWorklogRepository()
 const { tagsCollection } = useFirestoreCollections()
 const allTags = useCollection(tagsCollection)
-
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
 
 const myInput: Ref<HTMLInputElement | null> = ref(null)
 
 const sortedAllTags = computed(() => {
-  return allTags.value.slice().sort((a, b) => {
-    const aValue = a['name']
-    const bValue = b['name']
-
-    if (typeof aValue === 'string') {
-      return aValue.localeCompare(bValue)
-    }
-    return aValue - bValue
-  })
+  return sortNamedEntities(toTags(allTags.value as FirebaseTagDocument[]))
 })
 
 const newTagName = ref('')
@@ -32,10 +19,7 @@ const newTagName = ref('')
 const createTagDocument = async () => {
   if (newTagName.value) {
     try {
-      await addDoc(tagsCollection, {
-        name: newTagName.value,
-        slug: slugify(newTagName.value),
-      })
+      await repositories.tags.create({ name: newTagName.value })
       newTagName.value = ''
     } catch (e) {
       console.error('Error adding document: ', e)
