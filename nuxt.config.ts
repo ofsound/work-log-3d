@@ -70,7 +70,6 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
   vite: {
-    // @ts-expect-error - Tailwind Vite plugin types don't match Nuxt's Vite PluginOption
     plugins: [tailwindcss()],
     resolve: {
       alias: {
