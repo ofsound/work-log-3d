@@ -5,6 +5,7 @@ import {
   duplicateTimeBoxToDay,
   formatDateKey,
   getBufferedCalendarRange,
+  getDayRange,
   getIsoWeekNumber,
   getMonthGridRange,
   getStartOfWeek,
@@ -39,10 +40,16 @@ describe('calendar utilities', () => {
   it('computes ISO week numbers and buffered query ranges', () => {
     expect(getIsoWeekNumber(new Date(2026, 2, 21, 12, 0, 0, 0))).toBe(12)
 
+    const dayRange = getDayRange(new Date(2026, 2, 21, 12, 0, 0, 0))
+    const bufferedDayRange = getBufferedCalendarRange('day', new Date(2026, 2, 21, 12, 0, 0, 0))
     const weekRange = getBufferedCalendarRange('week', new Date(2026, 2, 21, 12, 0, 0, 0))
     const monthRange = getBufferedCalendarRange('month', new Date(2026, 2, 21, 12, 0, 0, 0))
     const visibleMonthRange = getMonthGridRange(new Date(2026, 2, 21, 12, 0, 0, 0))
 
+    expect(formatDateKey(dayRange.start)).toBe('2026-03-21')
+    expect(formatDateKey(dayRange.end)).toBe('2026-03-22')
+    expect(formatDateKey(bufferedDayRange.start)).toBe('2026-03-20')
+    expect(formatDateKey(bufferedDayRange.end)).toBe('2026-03-23')
     expect(formatDateKey(weekRange.start)).toBe('2026-03-09')
     expect(formatDateKey(weekRange.end)).toBe('2026-03-30')
     expect(monthRange.start.valueOf()).toBeLessThan(visibleMonthRange.start.valueOf())

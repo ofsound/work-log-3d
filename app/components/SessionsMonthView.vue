@@ -3,13 +3,11 @@ import type { PropType } from 'vue'
 
 import type { TimeBox, TimeBoxInput } from '~~/shared/worklog'
 import {
-  addMinutes,
   buildMonthGridDays,
   formatDateKey,
   getMonthGridRange,
   isSameDay,
   moveTimeBoxToDay,
-  setTimeOnDate,
   splitTimeBoxIntoDaySegments,
 } from '~~/shared/worklog'
 
@@ -26,7 +24,7 @@ const props = defineProps({
   selectedSessionId: { type: String, default: '' },
 })
 
-const emit = defineEmits(['openSession', 'openDay', 'createSession', 'changeSession'])
+const emit = defineEmits(['openSession', 'openDay', 'changeSession'])
 
 const VISIBLE_ROWS = 3
 
@@ -87,17 +85,8 @@ const formatSegmentTime = (date: Date) =>
 
 const isOutsideAnchorMonth = (day: Date) => day.getMonth() !== props.anchorDate.getMonth()
 
-const createDefaultRange = (day: Date) => {
-  const startTime = setTimeOnDate(day, 9, 0)
-
-  return {
-    startTime,
-    endTime: addMinutes(startTime, 60),
-  }
-}
-
 const handleDayClick = (day: Date) => {
-  emit('createSession', createDefaultRange(day))
+  emit('openDay', day)
 }
 
 const handleSegmentDragStart = (timeBox: TimeBox, event: DragEvent) => {

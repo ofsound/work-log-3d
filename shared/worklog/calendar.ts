@@ -110,6 +110,11 @@ export const buildWeekDays = (anchorDate: Date, weekStartsOn = CALENDAR_WEEK_STA
   return Array.from({ length: WEEK_DAY_COUNT }, (_, index) => addDays(start, index))
 }
 
+export const getDayRange = (anchorDate: Date): CalendarRange => ({
+  start: getStartOfDay(anchorDate),
+  end: getEndOfDay(anchorDate),
+})
+
 export const getMonthRange = (anchorDate: Date): CalendarRange => {
   const start = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1)
   const end = new Date(anchorDate.getFullYear(), anchorDate.getMonth() + 1, 1)
@@ -149,9 +154,14 @@ export const getIsoWeekNumber = (date: Date) => {
 }
 
 export const getBufferedCalendarRange = (
-  mode: 'week' | 'month',
+  mode: 'day' | 'week' | 'month',
   anchorDate: Date,
 ): CalendarRange => {
+  if (mode === 'day') {
+    const start = addDays(getStartOfDay(anchorDate), -1)
+    return { start, end: addDays(start, 3) }
+  }
+
   if (mode === 'week') {
     const start = addDays(getStartOfWeek(anchorDate), -WEEK_DAY_COUNT)
     return { start, end: addDays(start, WEEK_DAY_COUNT * 3) }

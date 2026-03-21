@@ -1,6 +1,6 @@
 import { formatDateKey, parseDateKey } from '~~/shared/worklog'
 
-export const SESSION_VIEW_MODES = ['list', 'week', 'month'] as const
+export const SESSION_VIEW_MODES = ['day', 'week', 'month', 'list'] as const
 
 export type SessionsViewMode = (typeof SESSION_VIEW_MODES)[number]
 
@@ -9,7 +9,7 @@ export interface SessionsRouteState {
   date: Date
 }
 
-const defaultMode: SessionsViewMode = 'list'
+const defaultMode: SessionsViewMode = 'day'
 
 const isViewMode = (value: string): value is SessionsViewMode =>
   SESSION_VIEW_MODES.includes(value as SessionsViewMode)

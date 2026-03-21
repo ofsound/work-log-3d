@@ -1,22 +1,30 @@
 <script setup lang="ts">
 import { Timestamp, orderBy, query, where } from 'firebase/firestore'
 
-import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
-import { toProjects, toTimeBoxes } from '~/utils/worklog-firebase'
+import type {
+  FirebaseProjectDocument,
+  FirebaseTagDocument,
+  FirebaseTimeBoxDocument,
+} from '~/utils/worklog-firebase'
+import { toProjects, toTags, toTimeBoxes } from '~/utils/worklog-firebase'
 import { buildSessionsRouteQuery, parseSessionsRouteState } from '~/utils/sessions-route-state'
 import type { TimeBoxInput } from '~~/shared/worklog'
 import {
-  addMinutes,
   addDays,
+  addMinutes,
   addMonths,
   formatToDatetimeLocal,
   getBufferedCalendarRange,
+  getDayRange,
   getEndOfWeek,
   getIsoWeekNumber,
   getMonthGridRange,
   getStartOfWeek,
+  getTimeBoxDurationMinutes,
   getTimeBoxesForDay,
+  getTotalDurationLabel,
   getWorklogErrorMessage,
+  isSameDay,
   setTimeOnDate,
   sortNamedEntities,
   sortTimeBoxesByStart,
@@ -37,16 +45,18 @@ const route = useRoute()
 const router = useRouter()
 
 const repositories = useWorklogRepository()
-const { timeBoxesCollection, projectsCollection } = useFirestoreCollections()
+const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
 const allTimeBoxes = useCollection(timeBoxesCollection)
 const allProjects = useCollection(projectsCollection)
+const allTags = useCollection(tagsCollection)
 
 const store = useStore()
 
-const panelMode = ref<'closed' | 'day' | 'session' | 'create'>('closed')
+const panelMode = ref<'closed' | 'session' | 'create'>('closed')
 const panelDate = ref<Date | null>(null)
 const panelSessionId = ref('')
+const selectedSessionId = ref('')
 const createRange = ref<SessionCreatePayload | null>(null)
 const mutationErrorMessage = ref('')
 
@@ -63,11 +73,12 @@ const sortedTimeBoxes = computed(() => {
   )
 })
 
+const calendarMode = computed(() =>
+  currentMode.value === 'month' ? 'month' : currentMode.value === 'week' ? 'week' : 'day',
+)
+
 const calendarQuery = computed(() => {
-  const bufferedRange = getBufferedCalendarRange(
-    currentMode.value === 'month' ? 'month' : 'week',
-    anchorDate.value,
-  )
+  const bufferedRange = getBufferedCalendarRange(calendarMode.value, anchorDate.value)
 
   return query(
     timeBoxesCollection,
@@ -80,14 +91,20 @@ const calendarQuery = computed(() => {
 
 const calendarTimeBoxes = useCollection(calendarQuery)
 
-const visibleCalendarRange = computed(() =>
-  currentMode.value === 'week'
-    ? {
-        start: getStartOfWeek(anchorDate.value),
-        end: getEndOfWeek(anchorDate.value),
-      }
-    : getMonthGridRange(anchorDate.value),
-)
+const visibleCalendarRange = computed(() => {
+  if (currentMode.value === 'week') {
+    return {
+      start: getStartOfWeek(anchorDate.value),
+      end: getEndOfWeek(anchorDate.value),
+    }
+  }
+
+  if (currentMode.value === 'month') {
+    return getMonthGridRange(anchorDate.value)
+  }
+
+  return getDayRange(anchorDate.value)
+})
 
 const visibleCalendarTimeBoxes = computed(() =>
   toTimeBoxes(calendarTimeBoxes.value as FirebaseTimeBoxDocument[]).filter((timeBox) => {
@@ -105,13 +122,17 @@ const visibleCalendarTimeBoxes = computed(() =>
 const sortedProjects = computed(() =>
   sortNamedEntities(toProjects(allProjects.value as FirebaseProjectDocument[])),
 )
+const sortedTags = computed(() => sortNamedEntities(toTags(allTags.value as FirebaseTagDocument[])))
 
 const projectNameById = computed(() =>
   Object.fromEntries(sortedProjects.value.map((project) => [project.id, project.name])),
 )
+const tagNameById = computed(() =>
+  Object.fromEntries(sortedTags.value.map((tag) => [tag.id, tag.name])),
+)
 
-const panelDayTimeBoxes = computed(() =>
-  panelDate.value ? getTimeBoxesForDay(visibleCalendarTimeBoxes.value, panelDate.value) : [],
+const visibleDayTimeBoxes = computed(() =>
+  getTimeBoxesForDay(visibleCalendarTimeBoxes.value, anchorDate.value),
 )
 
 const createInitialStartTime = computed(() =>
@@ -120,6 +141,12 @@ const createInitialStartTime = computed(() =>
 const createInitialEndTime = computed(() =>
   createRange.value ? formatToDatetimeLocal(createRange.value.endTime) : '',
 )
+
+const daySummary = computed(() => ({
+  count: visibleDayTimeBoxes.value.length,
+  durationLabel: getTotalDurationLabel(visibleDayTimeBoxes.value),
+  projectCount: new Set(visibleDayTimeBoxes.value.map((timeBox) => timeBox.project)).size,
+}))
 
 const weekTitle = computed(() => {
   const start = getStartOfWeek(anchorDate.value)
@@ -136,21 +163,34 @@ const weekTitle = computed(() => {
 })
 
 const pageTitle = computed(() => {
-  if (currentMode.value === 'list') {
-    return 'Sessions'
+  if (currentMode.value === 'day') {
+    return anchorDate.value.toLocaleDateString([], {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
   }
 
   if (currentMode.value === 'week') {
     return weekTitle.value
   }
 
-  return anchorDate.value.toLocaleDateString([], {
-    month: 'long',
-    year: 'numeric',
-  })
+  if (currentMode.value === 'month') {
+    return anchorDate.value.toLocaleDateString([], {
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
+  return 'Sessions'
 })
 
 const pageSubtitle = computed(() => {
+  if (currentMode.value === 'day') {
+    return 'Focused day view'
+  }
+
   if (currentMode.value === 'week') {
     return `Week ${getIsoWeekNumber(anchorDate.value)}`
   }
@@ -178,19 +218,16 @@ const updateRouteState = async (nextState: Partial<ReturnType<typeof parseSessio
 
 const closePanel = () => {
   panelMode.value = 'closed'
-  panelDate.value = null
   panelSessionId.value = ''
   createRange.value = null
 }
 
-const openDayPanel = (day: Date) => {
-  panelMode.value = 'day'
-  panelDate.value = day
-  panelSessionId.value = ''
-  createRange.value = null
+const selectSession = (sessionId: string) => {
+  selectedSessionId.value = sessionId
 }
 
 const openSessionPanel = (sessionId: string) => {
+  selectSession(sessionId)
   panelMode.value = 'session'
   panelSessionId.value = sessionId
   createRange.value = null
@@ -200,31 +237,57 @@ const openCreatePanel = (range: SessionCreatePayload) => {
   panelMode.value = 'create'
   panelDate.value = range.startTime
   panelSessionId.value = ''
+  selectedSessionId.value = ''
   createRange.value = range
 }
 
-const openDayCreatePanel = () => {
-  if (!panelDate.value) {
-    return
-  }
-
-  const startTime = setTimeOnDate(panelDate.value, 9, 0)
-  openCreatePanel({ startTime, endTime: addMinutes(startTime, 60) })
+const roundToSnapMinutes = (date: Date) => {
+  const next = new Date(date.valueOf())
+  next.setSeconds(0, 0)
+  next.setMinutes(Math.round(next.getMinutes() / 10) * 10)
+  return next
 }
 
-const handleModeChange = async (mode: 'list' | 'week' | 'month') => {
+const getSelectedDayTimeBox = () =>
+  visibleDayTimeBoxes.value.find((timeBox) => timeBox.id === selectedSessionId.value) ?? null
+
+const openSuggestedCreatePanel = () => {
+  const selectedTimeBox = getSelectedDayTimeBox()
+  const defaultStart = isSameDay(anchorDate.value, new Date())
+    ? roundToSnapMinutes(new Date())
+    : setTimeOnDate(anchorDate.value, 9, 0)
+
+  const startTime = selectedTimeBox?.startTime
+    ? new Date(selectedTimeBox.startTime.valueOf())
+    : defaultStart
+  const durationMinutes = selectedTimeBox ? getTimeBoxDurationMinutes(selectedTimeBox) || 60 : 60
+
+  openCreatePanel({
+    startTime,
+    endTime: addMinutes(startTime, durationMinutes),
+  })
+}
+
+const handleModeChange = async (mode: 'day' | 'week' | 'month' | 'list') => {
   if (mode === currentMode.value) {
     return
   }
 
+  closePanel()
   await updateRouteState({ mode })
+}
 
-  if (mode === 'list') {
-    closePanel()
-  }
+const handleOpenDay = async (day: Date) => {
+  closePanel()
+  await updateRouteState({ mode: 'day', date: day })
 }
 
 const handleNavigate = async (direction: -1 | 1) => {
+  if (currentMode.value === 'day') {
+    await updateRouteState({ date: addDays(anchorDate.value, direction) })
+    return
+  }
+
   if (currentMode.value === 'week') {
     await updateRouteState({ date: addDays(anchorDate.value, direction * 7) })
     return
@@ -258,6 +321,99 @@ const handlePanelCreated = (sessionId: string) => {
   openSessionPanel(sessionId)
 }
 
+const moveDaySelection = (direction: -1 | 1) => {
+  if (visibleDayTimeBoxes.value.length === 0) {
+    return
+  }
+
+  const currentIndex = visibleDayTimeBoxes.value.findIndex(
+    (timeBox) => timeBox.id === selectedSessionId.value,
+  )
+
+  if (currentIndex === -1) {
+    selectSession(
+      direction > 0
+        ? visibleDayTimeBoxes.value[0]!.id
+        : visibleDayTimeBoxes.value[visibleDayTimeBoxes.value.length - 1]!.id,
+    )
+    return
+  }
+
+  const nextIndex =
+    (currentIndex + direction + visibleDayTimeBoxes.value.length) % visibleDayTimeBoxes.value.length
+
+  selectSession(visibleDayTimeBoxes.value[nextIndex]!.id)
+}
+
+const isEditableTarget = (event: KeyboardEvent) => {
+  const target = event.target
+
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+}
+
+const handleDayKeyboard = (event: KeyboardEvent) => {
+  if (currentMode.value !== 'day' || isEditableTarget(event) || event.metaKey || event.ctrlKey) {
+    return
+  }
+
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    void updateRouteState({ date: addDays(anchorDate.value, event.shiftKey ? -7 : -1) })
+    return
+  }
+
+  if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    void updateRouteState({ date: addDays(anchorDate.value, event.shiftKey ? 7 : 1) })
+    return
+  }
+
+  if (event.key.toLowerCase() === 't') {
+    event.preventDefault()
+    void handleGoToday()
+    return
+  }
+
+  if (event.key.toLowerCase() === 'j') {
+    event.preventDefault()
+    moveDaySelection(1)
+    return
+  }
+
+  if (event.key.toLowerCase() === 'k') {
+    event.preventDefault()
+    moveDaySelection(-1)
+    return
+  }
+
+  if (event.key === 'Enter' && selectedSessionId.value) {
+    event.preventDefault()
+    openSessionPanel(selectedSessionId.value)
+    return
+  }
+
+  if (event.key.toLowerCase() === 'n') {
+    event.preventDefault()
+    openSuggestedCreatePanel()
+    return
+  }
+
+  if (event.key === 'Escape') {
+    event.preventDefault()
+
+    if (panelMode.value !== 'closed') {
+      closePanel()
+      return
+    }
+
+    selectedSessionId.value = ''
+  }
+}
+
 watch(
   currentMode,
   (mode) => {
@@ -267,6 +423,33 @@ watch(
   },
   { immediate: true },
 )
+
+watch(
+  () => [currentMode.value, anchorDate.value.valueOf()],
+  () => {
+    if (currentMode.value === 'day') {
+      closePanel()
+    }
+  },
+)
+
+watch(visibleDayTimeBoxes, (timeBoxes) => {
+  if (
+    currentMode.value === 'day' &&
+    selectedSessionId.value &&
+    !timeBoxes.some((timeBox) => timeBox.id === selectedSessionId.value)
+  ) {
+    selectedSessionId.value = ''
+  }
+})
+
+onMounted(() => {
+  window.addEventListener('keydown', handleDayKeyboard)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleDayKeyboard)
+})
 </script>
 
 <template>
@@ -278,6 +461,23 @@ watch(
           <div class="mt-1 text-sm tracking-[0.22em] text-text-subtle uppercase">
             {{ pageSubtitle }}
           </div>
+          <div v-if="currentMode === 'day'" class="mt-3 flex flex-wrap gap-2">
+            <div
+              class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
+            >
+              {{ daySummary.durationLabel }} hrs
+            </div>
+            <div
+              class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
+            >
+              {{ daySummary.count }} sessions
+            </div>
+            <div
+              class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
+            >
+              {{ daySummary.projectCount }} projects
+            </div>
+          </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
@@ -287,13 +487,13 @@ watch(
             <button
               class="rounded-lg px-4 py-2 text-sm font-semibold transition"
               :class="
-                currentMode === 'list'
+                currentMode === 'day'
                   ? 'bg-header text-header-text'
                   : 'text-text-muted hover:bg-surface'
               "
-              @click="handleModeChange('list')"
+              @click="handleModeChange('day')"
             >
-              List
+              Day
             </button>
             <button
               class="rounded-lg px-4 py-2 text-sm font-semibold transition"
@@ -316,6 +516,17 @@ watch(
               @click="handleModeChange('month')"
             >
               Month
+            </button>
+            <button
+              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+              :class="
+                currentMode === 'list'
+                  ? 'bg-header text-header-text'
+                  : 'text-text-muted hover:bg-surface'
+              "
+              @click="handleModeChange('list')"
+            >
+              List
             </button>
           </div>
 
@@ -353,15 +564,27 @@ watch(
 
     <div v-else class="flex min-h-0 flex-1">
       <div class="min-w-0 flex-1 px-6 py-6">
-        <SessionsWeekView
-          v-if="currentMode === 'week'"
+        <SessionsDayView
+          v-if="currentMode === 'day'"
           :anchor-date="anchorDate"
           :project-name-by-id="projectNameById"
-          :selected-session-id="panelSessionId"
+          :selected-session-id="selectedSessionId"
+          :tag-name-by-id="tagNameById"
+          :time-boxes="visibleDayTimeBoxes"
+          @change-session="persistSessionChange"
+          @create-session="openCreatePanel"
+          @open-session="openSessionPanel"
+        />
+
+        <SessionsWeekView
+          v-else-if="currentMode === 'week'"
+          :anchor-date="anchorDate"
+          :project-name-by-id="projectNameById"
+          :selected-session-id="selectedSessionId"
           :time-boxes="visibleCalendarTimeBoxes"
           @change-session="persistSessionChange"
           @create-session="openCreatePanel"
-          @open-day="openDayPanel"
+          @open-day="handleOpenDay"
           @open-session="openSessionPanel"
         />
 
@@ -369,11 +592,10 @@ watch(
           v-else
           :anchor-date="anchorDate"
           :project-name-by-id="projectNameById"
-          :selected-session-id="panelSessionId"
+          :selected-session-id="selectedSessionId"
           :time-boxes="visibleCalendarTimeBoxes"
           @change-session="persistSessionChange"
-          @create-session="openCreatePanel"
-          @open-day="openDayPanel"
+          @open-day="handleOpenDay"
           @open-session="openSessionPanel"
         />
       </div>
@@ -381,16 +603,12 @@ watch(
       <SessionsSidePanel
         v-if="panelMode !== 'closed'"
         :day="panelDate ?? undefined"
-        :day-time-boxes="panelDayTimeBoxes"
         :initial-end-time="createInitialEndTime"
         :initial-start-time="createInitialStartTime"
         :mode="panelMode"
-        :project-name-by-id="projectNameById"
         :session-id="panelSessionId"
         @close="closePanel"
-        @create-session="openDayCreatePanel"
         @created="handlePanelCreated"
-        @open-session="openSessionPanel"
       />
     </div>
   </div>

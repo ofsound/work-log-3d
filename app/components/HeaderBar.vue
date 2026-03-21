@@ -14,7 +14,7 @@ const currentTime = ref('')
 const showSessionsSort = computed(() => {
   const mode = Array.isArray(route.query.mode) ? route.query.mode[0] : route.query.mode
 
-  return route.path === '/sessions' && (mode === undefined || mode === 'list')
+  return route.path === '/sessions' && mode === 'list'
 })
 
 const updateTime = () => {

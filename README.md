@@ -18,7 +18,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 ## Key Conventions
 
 - Project and tag pages use stable ID-based routes: `/project/:id` and `/tag/:id`
-- `/sessions` is a single route with query-driven calendar state: `mode=list|week|month` and `date=YYYY-MM-DD`
+- `/sessions` is a single route with query-driven calendar state: `mode=day|week|month|list` and `date=YYYY-MM-DD`
 - `slug` is stored for display and backward-compatibility redirects only
 - Projects and tags cannot be deleted while sessions still reference them
 - Shared validation lives in `shared/worklog/validation.ts`
@@ -178,9 +178,10 @@ npm run preview
 
 ## Sessions Views
 
-- `List` remains the default `/sessions` experience and uses the existing reverse-sort toggle
+- `Day` is the default `/sessions` experience and uses a focused single-day timed calendar with keyboard navigation
+- `List` remains available as a reverse-sorted chronological alternate view
 - `Week` uses a Monday-first timed grid with live today/now indicators, drag-to-create, drag-to-move, and resize handles
-- `Month` uses a Monday-first month grid with compact session chips, `+N more` overflow, and drag-to-move between days
+- `Month` uses a Monday-first month grid with compact session chips and day drill-down into Day mode
 - Calendar deep links are preserved with route queries such as `/sessions?mode=week&date=2026-03-21`
 - Week and Month both query Firestore by interval overlap so overnight sessions render in every affected day without changing the stored document shape
 
