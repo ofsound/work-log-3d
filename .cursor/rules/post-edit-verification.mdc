@@ -5,10 +5,14 @@ alwaysApply: true
 
 # Post-Edit Verification
 
-After editing any `.vue` or `.ts` file in `app/`:
+After editing any `.vue` or `.ts` file under **`app/`**, **`electron/`**, or **`scripts/`** (or when changing behavior covered by tests):
 
-1. Run **`npm run check`** — runs typecheck, lint, and format check in one go.
-2. If something fails, fix it. Use **`npm run check:fix`** to auto-fix lint and format where possible.
-3. Do not consider the task complete until `npm run check` passes.
+1. Run **`npm run verify`** — runs `check` (Nuxt typecheck, Electron typecheck, ESLint, Prettier) **and** `vitest run`.
+2. If something fails, fix it. Use **`npm run check:fix`** to auto-fix lint and format where possible; re-run **`npm run verify`** until it passes.
+3. Do not consider the task complete until **`npm run verify`** passes.
+
+For edits that only touch formatting or non-code files, **`npm run check`** may be enough; prefer **`npm run verify`** when tests or cross-layer behavior (app vs Electron) could be affected.
+
+When adding or removing dependencies or cleaning exports, run **`npm run knip`** and resolve or justify any findings.
 
 For Vue components: follow vue-code-quality rule and use Nuxt MCP docs when unsure about best practices.

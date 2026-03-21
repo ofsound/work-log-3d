@@ -40,7 +40,9 @@ bun run dev
 
 ## Lint & type checking
 
-This project uses **ESLint** (`@nuxt/eslint`), **Prettier**, and **TypeScript** (with `vue-tsc`). One command runs all checks:
+This project uses **ESLint** (`@nuxt/eslint`), **Prettier**, and **TypeScript** (with `vue-tsc`). The Nuxt app is typechecked with `nuxi typecheck`; **Electron** main/preload and shared modules use a separate project (`tsconfig.electron.json` via `npm run typecheck:electron`).
+
+One command runs static checks (typecheck for Nuxt + Electron, ESLint, Prettier):
 
 ```bash
 npm run check
@@ -52,7 +54,19 @@ To auto-fix lint and formatting where possible:
 npm run check:fix
 ```
 
-Individual steps: `npm run typecheck`, `npm run lint` / `npm run lint:fix`, `npm run format` / `npm run format:fix`.
+**Full verification** (everything in `check`, plus unit tests):
+
+```bash
+npm run verify
+```
+
+**Unused dependencies and dead exports** ([Knip](https://knip.dev)):
+
+```bash
+npm run knip
+```
+
+Individual steps: `npm run typecheck`, `npm run typecheck:electron`, `npm run lint` / `npm run lint:fix`, `npm run format` / `npm run format:fix`, `npm run test`.
 
 ## Production
 
