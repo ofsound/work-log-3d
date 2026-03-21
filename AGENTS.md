@@ -6,6 +6,8 @@
 2. Treat `AGENTS.md` and `.cursor/rules/` as the source of truth for repo-specific constraints.
 3. If a referenced tool or MCP server is unavailable in the current client, continue with local inspection instead of assuming the tool exists.
 
+**AGENTS.md** vs **`.cursor/rules/`:** This file is the compact invariant summary and verification commands—read it first when bootstrapping a session. **`.cursor/rules/*.mdc`** holds detailed patterns, file globs, and scoped guidance; apply it when your edits match those globs. Splitting content this way keeps one place for “what must never break” without duplicating every pattern in a single file.
+
 ## Core Behavior
 
 - Think before coding. State assumptions when they matter.
@@ -32,6 +34,7 @@
 ## Verification
 
 - Primary check: `npm run verify`
+- Nuxt sets `typescript.typeCheck: false` in `nuxt.config.ts` on purpose so dev builds stay fast; typechecking still runs via `npm run typecheck` (included in `npm run check` and `npm run verify`). Do not turn on in-app typecheck in Nuxt unless you have a deliberate reason.
 - Dependency/unused export hygiene: `npm run knip`
 - Web build when routing/build/assets/config change: `npm run build`
 - Electron build when desktop behavior/config changes: `npm run electron:build`

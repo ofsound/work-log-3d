@@ -1,0 +1,5 @@
+# Build and dependency trees (smaller AI context; avoid noisy indexing)
+dist/
+dist-electron/
+.nuxt/
+node_modules/

@@ -1,0 +1,21 @@
+---
+description: Electron shell and shared worklog — import boundaries and desktop builds
+globs: 'electron/**,shared/**'
+alwaysApply: false
+---
+
+# Electron and `shared/`
+
+## Import boundaries
+
+- **`shared/**`**: Domain logic, validation, and timer behavior shared by the Nuxt app and Electron. Keep it free of Nuxt/Vue and free of direct `electron` imports so the same modules stay usable in the browser build.
+- **`electron/**`**: Main process, preload, tray, and desktop IPC. May import from `shared/**`and other`electron/**`modules. Do **not** import from`app/`(the renderer is the Nuxt build, not source under`app/`).
+- **`app/**`**: Nuxt UI and Firestore. May import from `shared/**`. Do **not** import from `electron/**` (Electron APIs are not available in the web target).
+
+Reuse **`shared/worklog`** for timer and validation logic instead of duplicating it across app and Electron.
+
+## When to run `npm run electron:build`
+
+Run it when changing **desktop** behavior or packaging: Electron main/preload, IPC contracts, tray/window/audio integration, or Electron-related build config. It is heavier than `npm run build`; use the web build alone when you only touch the Nuxt app.
+
+Also run **`npm run typecheck:electron`** (or full `npm run check` / `npm run verify`) when editing `electron/**` or `shared/**`, since those paths are covered by `tsconfig.electron.json`.

@@ -1,6 +1,6 @@
 ---
-description: Vue 3 and Nuxt 4 code quality — TypeScript, script setup, verification, Nuxt MCP
-globs: "**/*.vue,app/**/*.ts"
+description: Vue 3 and Nuxt 4 code quality — TypeScript, script setup, verification, optional Nuxt docs tools
+globs: '**/*.vue,app/**/*.ts'
 alwaysApply: false
 ---
 
@@ -11,6 +11,6 @@ alwaysApply: false
 1. Use **TypeScript** with explicit types; avoid JSDoc for types when TypeScript is available
 2. Use **Vue 3** and **`<script setup>`** only; no Options API unless migrating legacy code
 3. Follow **post-edit verification**: run typecheck, lint, and format (see post-edit-verification rule) and fix all reported issues before finishing
-4. When unsure about Vue or Nuxt best practices or APIs, use the **Nuxt MCP**: `list_documentation_pages` then `get_documentation_page` with the relevant path (e.g. `/docs/4.x/getting-started/data-fetching`)
+4. When unsure about Vue or Nuxt best practices or APIs, **if your client exposes Nuxt documentation MCP tools**, use them to browse the official guides; otherwise use local inspection and the [Nuxt documentation](https://nuxt.com/docs).
 
 Rely on **@nuxt/eslint** (Vue + Nuxt rules); fix all ESLint issues before considering the task complete.
