@@ -10,12 +10,26 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(keys);
     }
 
+    function hasExactMapKeys(value, keys) {
+      return value is map
+        && value.keys().hasAll(keys)
+        && value.keys().hasOnly(keys);
+    }
+
     function isNonEmptyString(value) {
       return value is string && value.size() > 0;
     }
 
     function isNonEmptyList(value) {
       return value is list && value.size() > 0;
+    }
+
+    function isStringList(value) {
+      return value is list;
+    }
+
+    function isTimestampOrNull(value) {
+      return value == null || value is timestamp;
     }
 
     function isProjectDocument() {
@@ -40,6 +54,40 @@ service cloud.firestore {
         && isNonEmptyList(request.resource.data.tags);
     }
 
+    function isReportFilter(value) {
+      return hasExactMapKeys(
+          value,
+          ['dateStart', 'dateEnd', 'projectIds', 'tagIds', 'groupOperator', 'tagOperator']
+        )
+        && isNonEmptyString(value.dateStart)
+        && isNonEmptyString(value.dateEnd)
+        && isStringList(value.projectIds)
+        && isStringList(value.tagIds)
+        && (value.groupOperator == 'intersection' || value.groupOperator == 'union')
+        && (value.tagOperator == 'any' || value.tagOperator == 'all');
+    }
+
+    function isReportDocument() {
+      return hasExactKeys([
+          'title',
+          'summary',
+          'timezone',
+          'filters',
+          'shareToken',
+          'createdAt',
+          'updatedAt',
+          'publishedAt'
+        ])
+        && isNonEmptyString(request.resource.data.title)
+        && request.resource.data.summary is string
+        && isNonEmptyString(request.resource.data.timezone)
+        && isReportFilter(request.resource.data.filters)
+        && request.resource.data.shareToken is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && isTimestampOrNull(request.resource.data.publishedAt);
+    }
+
     match /users/{uid} {
       allow read, write: if isOwner(uid);
     }
@@ -59,6 +107,12 @@ service cloud.firestore {
     match /users/{uid}/timeBoxes/{timeBoxId} {
       allow read: if isOwner(uid);
       allow create, update: if isOwner(uid) && isTimeBoxDocument();
+      allow delete: if isOwner(uid);
+    }
+
+    match /users/{uid}/reports/{reportId} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isReportDocument();
       allow delete: if isOwner(uid);
     }
   }

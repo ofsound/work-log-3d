@@ -1,3 +1,4 @@
+import type { ReportInput } from './reports'
 import type { EntityId, TimeBoxInput } from './types'
 
 export interface ProjectRepository {
@@ -18,8 +19,15 @@ export interface TimeBoxRepository {
   remove(id: EntityId): Promise<void>
 }
 
+export interface ReportRepository {
+  create(input: ReportInput): Promise<EntityId>
+  update(id: EntityId, input: ReportInput): Promise<void>
+  remove(id: EntityId): Promise<void>
+}
+
 export interface WorklogRepositories {
   projects: ProjectRepository
   tags: TagRepository
   timeBoxes: TimeBoxRepository
+  reports: ReportRepository
 }

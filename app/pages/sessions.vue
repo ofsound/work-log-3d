@@ -7,12 +7,17 @@ import type {
   FirebaseTimeBoxDocument,
 } from '~/utils/worklog-firebase'
 import { toProjects, toTags, toTimeBoxes } from '~/utils/worklog-firebase'
-import { buildSessionsRouteQuery, parseSessionsRouteState } from '~/utils/sessions-route-state'
+import {
+  buildSessionsRouteQuery,
+  parseSessionsRouteState,
+  type SessionsViewMode,
+} from '~/utils/sessions-route-state'
 import type { TimeBoxInput } from '~~/shared/worklog'
 import {
   addDays,
   addMinutes,
   addMonths,
+  buildYearHeatmapYears,
   formatToDatetimeLocal,
   getBufferedCalendarRange,
   getDayRange,
@@ -66,12 +71,15 @@ const routeState = computed(() =>
 const currentMode = computed(() => routeState.value.mode)
 const anchorDate = computed(() => routeState.value.date)
 
-const sortedTimeBoxes = computed(() => {
-  return sortTimeBoxesByStart(
-    toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
-    store.sortOrderReversed ? 'desc' : 'asc',
-  )
-})
+const resolvedTimeBoxes = computed(() =>
+  toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
+)
+
+const sortedTimeBoxes = computed(() =>
+  sortTimeBoxesByStart(resolvedTimeBoxes.value, store.sortOrderReversed ? 'desc' : 'asc'),
+)
+
+const yearHeatmapYears = computed(() => buildYearHeatmapYears(resolvedTimeBoxes.value, new Date()))
 
 const calendarMode = computed(() =>
   currentMode.value === 'month' ? 'month' : currentMode.value === 'week' ? 'week' : 'day',
@@ -162,6 +170,17 @@ const weekTitle = computed(() => {
   })}`
 })
 
+const yearTitle = computed(() => {
+  const latestYear = yearHeatmapYears.value[0]?.year
+  const earliestYear = yearHeatmapYears.value.at(-1)?.year
+
+  if (!latestYear || !earliestYear || latestYear === earliestYear) {
+    return String(latestYear ?? new Date().getFullYear())
+  }
+
+  return `${earliestYear}-${latestYear}`
+})
+
 const pageTitle = computed(() => {
   if (currentMode.value === 'day') {
     return anchorDate.value.toLocaleDateString([], {
@@ -183,6 +202,10 @@ const pageTitle = computed(() => {
     })
   }
 
+  if (currentMode.value === 'year') {
+    return yearTitle.value
+  }
+
   return 'Sessions'
 })
 
@@ -197,6 +220,10 @@ const pageSubtitle = computed(() => {
 
   if (currentMode.value === 'month') {
     return 'Month view'
+  }
+
+  if (currentMode.value === 'year') {
+    return 'Contribution calendar'
   }
 
   return `${sortedTimeBoxes.value.length} total sessions`
@@ -268,7 +295,7 @@ const openSuggestedCreatePanel = () => {
   })
 }
 
-const handleModeChange = async (mode: 'day' | 'week' | 'month' | 'list') => {
+const handleModeChange = async (mode: SessionsViewMode) => {
   if (mode === currentMode.value) {
     return
   }
@@ -417,7 +444,7 @@ const handleDayKeyboard = (event: KeyboardEvent) => {
 watch(
   currentMode,
   (mode) => {
-    if (mode === 'list') {
+    if (mode === 'list' || mode === 'year') {
       closePanel()
     }
   },
@@ -520,6 +547,17 @@ onBeforeUnmount(() => {
             <button
               class="rounded-lg px-4 py-2 text-sm font-semibold transition"
               :class="
+                currentMode === 'year'
+                  ? 'bg-header text-header-text'
+                  : 'text-text-muted hover:bg-surface'
+              "
+              @click="handleModeChange('year')"
+            >
+              Year
+            </button>
+            <button
+              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+              :class="
                 currentMode === 'list'
                   ? 'bg-header text-header-text'
                   : 'text-text-muted hover:bg-surface'
@@ -530,7 +568,10 @@ onBeforeUnmount(() => {
             </button>
           </div>
 
-          <div v-if="currentMode !== 'list'" class="flex items-center gap-2">
+          <div
+            v-if="currentMode !== 'list' && currentMode !== 'year'"
+            class="flex items-center gap-2"
+          >
             <button
               class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
               @click="handleNavigate(-1)"
@@ -586,6 +627,13 @@ onBeforeUnmount(() => {
           @create-session="openCreatePanel"
           @open-day="handleOpenDay"
           @open-session="openSessionPanel"
+        />
+
+        <SessionsYearView
+          v-else-if="currentMode === 'year'"
+          :selected-date="anchorDate"
+          :years="yearHeatmapYears"
+          @open-day="handleOpenDay"
         />
 
         <SessionsMonthView

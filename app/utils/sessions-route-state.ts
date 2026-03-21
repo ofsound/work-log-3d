@@ -1,6 +1,6 @@
 import { formatDateKey, parseDateKey } from '~~/shared/worklog'
 
-export const SESSION_VIEW_MODES = ['day', 'week', 'month', 'list'] as const
+export const SESSION_VIEW_MODES = ['day', 'week', 'month', 'year', 'list'] as const
 
 export type SessionsViewMode = (typeof SESSION_VIEW_MODES)[number]
 

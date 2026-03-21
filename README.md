@@ -18,7 +18,8 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 ## Key Conventions
 
 - Project and tag pages use stable ID-based routes: `/project/:id` and `/tag/:id`
-- `/sessions` is a single route with query-driven calendar state: `mode=day|week|month|list` and `date=YYYY-MM-DD`
+- `/sessions` is a single route with query-driven calendar state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`
+- `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - `slug` is stored for display and backward-compatibility redirects only
 - Projects and tags cannot be deleted while sessions still reference them
 - Shared validation lives in `shared/worklog/validation.ts`
@@ -176,14 +177,50 @@ npm run preview
 }
 ```
 
+`users/{uid}/reports/{reportId}`
+
+```ts
+{
+  title: string
+  summary: string
+  timezone: string
+  filters: {
+    dateStart: string
+    dateEnd: string
+    projectIds: string[]
+    tagIds: string[]
+    groupOperator: 'intersection' | 'union'
+    tagOperator: 'any' | 'all'
+  }
+  shareToken: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
+  publishedAt: Timestamp | null
+}
+```
+
+`publicReports/{token}`
+
+Server-managed published report snapshots for anonymous client access. The top-level document stores the frozen report snapshot metadata, while detailed session rows are written to a `sessionRows` subcollection so large reports stay within Firestore document limits.
+
 ## Sessions Views
 
 - `Day` is the default `/sessions` experience and uses a focused single-day timed calendar with keyboard navigation
 - `List` remains available as a reverse-sorted chronological alternate view
 - `Week` uses a Monday-first timed grid with live today/now indicators, drag-to-create, drag-to-move, and resize handles
 - `Month` uses a Monday-first month grid with compact session chips and day drill-down into Day mode
+- `Year` uses a Monday-first contribution heatmap arranged into mini months for every year since the first logged session, with day drill-down into Day mode
 - Calendar deep links are preserved with route queries such as `/sessions?mode=week&date=2026-03-21`
 - Week and Month both query Firestore by interval overlap so overnight sessions render in every affected day without changing the stored document shape
+
+## Reports
+
+- `/reports` lets authenticated users save named report drafts with a date range, timezone, project filters, tag filters, and a plain-text summary
+- Project filtering is union-based because each session stores one project; tag filtering supports `any` or `all`
+- When both project and tag filters are selected, the report can combine them with `intersection` or `union`
+- Reports clamp session totals to the selected date range in the chosen timezone, so overnight sessions are split accurately across days
+- Publishing creates or refreshes a frozen public snapshot at `/r/:token`; unpublishing removes the public snapshot without deleting the private draft
+- Public reports include the summary, total hours, project/tag breakdowns, daily and weekly rollups, and individual session notes
 
 ## Repo Layout
 

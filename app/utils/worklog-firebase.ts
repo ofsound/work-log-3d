@@ -11,10 +11,19 @@ import {
 } from 'firebase/firestore'
 
 import type { CollectionReference, DocumentData } from 'firebase/firestore'
-import type { Project, Tag, TimeBox, TimeBoxInput, WorklogRepositories } from '~~/shared/worklog'
+import type {
+  Project,
+  Report,
+  ReportInput,
+  Tag,
+  TimeBox,
+  TimeBoxInput,
+  WorklogRepositories,
+} from '~~/shared/worklog'
 import {
   createEntityInUseError,
   createNamedEntityPayload,
+  validateReportInput,
   validateTimeBoxInput,
 } from '~~/shared/worklog'
 
@@ -43,6 +52,25 @@ export interface FirebaseTimeBoxDocument {
   tags: string[]
 }
 
+export interface FirebaseReportDocument {
+  id: string
+  title: string
+  summary: string
+  timezone: string
+  filters: {
+    dateStart: string
+    dateEnd: string
+    projectIds: string[]
+    tagIds: string[]
+    groupOperator: 'intersection' | 'union'
+    tagOperator: 'any' | 'all'
+  }
+  shareToken: string
+  createdAt: FirebaseTimestampLike | null
+  updatedAt: FirebaseTimestampLike | null
+  publishedAt: FirebaseTimestampLike | null
+}
+
 export const toProject = (project: FirebaseProjectDocument): Project => ({
   id: project.id,
   name: project.name,
@@ -64,9 +92,29 @@ export const toTimeBox = (timeBox: FirebaseTimeBoxDocument): TimeBox => ({
   tags: timeBox.tags ?? [],
 })
 
+export const toReport = (report: FirebaseReportDocument): Report => ({
+  id: report.id,
+  title: report.title ?? '',
+  summary: report.summary ?? '',
+  timezone: report.timezone ?? 'UTC',
+  filters: {
+    dateStart: report.filters?.dateStart ?? '',
+    dateEnd: report.filters?.dateEnd ?? '',
+    projectIds: report.filters?.projectIds ?? [],
+    tagIds: report.filters?.tagIds ?? [],
+    groupOperator: report.filters?.groupOperator ?? 'intersection',
+    tagOperator: report.filters?.tagOperator ?? 'any',
+  },
+  shareToken: report.shareToken ?? '',
+  createdAt: report.createdAt?.toDate() ?? null,
+  updatedAt: report.updatedAt?.toDate() ?? null,
+  publishedAt: report.publishedAt?.toDate() ?? null,
+})
+
 export const toProjects = (projects: FirebaseProjectDocument[]) => projects.map(toProject)
 export const toTags = (tags: FirebaseTagDocument[]) => tags.map(toTag)
 export const toTimeBoxes = (timeBoxes: FirebaseTimeBoxDocument[]) => timeBoxes.map(toTimeBox)
+export const toReports = (reports: FirebaseReportDocument[]) => reports.map(toReport)
 
 const toTimeBoxPayload = (input: TimeBoxInput) => ({
   ...validateTimeBoxInput(input),
@@ -74,14 +122,27 @@ const toTimeBoxPayload = (input: TimeBoxInput) => ({
   endTime: Timestamp.fromDate(input.endTime),
 })
 
+const toReportPayload = (input: ReportInput) => {
+  const normalized = validateReportInput(input)
+
+  return {
+    title: normalized.title,
+    summary: normalized.summary,
+    timezone: normalized.timezone,
+    filters: normalized.filters,
+  }
+}
+
 export const createFirestoreWorklogRepositories = ({
   projectsCollection,
   tagsCollection,
   timeBoxesCollection,
+  reportsCollection,
 }: {
   projectsCollection: CollectionReference<DocumentData>
   tagsCollection: CollectionReference<DocumentData>
   timeBoxesCollection: CollectionReference<DocumentData>
+  reportsCollection: CollectionReference<DocumentData>
 }): WorklogRepositories => {
   const ensureProjectIsUnused = async (projectId: string) => {
     const snapshot = await getDocs(
@@ -142,6 +203,29 @@ export const createFirestoreWorklogRepositories = ({
       },
       async remove(id: string) {
         await deleteDoc(doc(timeBoxesCollection, id))
+      },
+    },
+    reports: {
+      async create(input: ReportInput) {
+        const now = Timestamp.fromDate(new Date())
+        const report = await addDoc(reportsCollection, {
+          ...toReportPayload(input),
+          shareToken: '',
+          createdAt: now,
+          updatedAt: now,
+          publishedAt: null,
+        })
+
+        return report.id
+      },
+      async update(id: string, input: ReportInput) {
+        await updateDoc(doc(reportsCollection, id), {
+          ...toReportPayload(input),
+          updatedAt: Timestamp.fromDate(new Date()),
+        })
+      },
+      async remove(id: string) {
+        await deleteDoc(doc(reportsCollection, id))
       },
     },
   }

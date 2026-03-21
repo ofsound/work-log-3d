@@ -48,3 +48,13 @@ export const formatDurationMinutesLabel = (totalMinutes: number) => {
 
   return hours > 0 ? `${hours}${minutes}` : minutes
 }
+
+export const formatMinutesAsDecimalHours = (totalMinutes: number) => {
+  const hours = totalMinutes / 60
+
+  if (Number.isInteger(hours)) {
+    return hours.toFixed(0)
+  }
+
+  return hours.toFixed(1)
+}

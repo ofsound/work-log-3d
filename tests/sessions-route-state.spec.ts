@@ -11,11 +11,11 @@ describe('sessions route state', () => {
 
   it('parses supported mode and date query params', () => {
     const state = parseSessionsRouteState({
-      mode: 'week',
+      mode: 'year',
       date: '2026-03-21',
     })
 
-    expect(state.mode).toBe('week')
+    expect(state.mode).toBe('year')
     expect(state.date.getFullYear()).toBe(2026)
     expect(state.date.getMonth()).toBe(2)
     expect(state.date.getDate()).toBe(21)
@@ -56,6 +56,18 @@ describe('sessions route state', () => {
 
     expect(query).toEqual({
       mode: 'list',
+      date: '2026-03-21',
+    })
+  })
+
+  it('keeps explicit year mode in the query', () => {
+    const query = buildSessionsRouteQuery({
+      mode: 'year',
+      date: new Date(2026, 2, 21, 12, 0, 0, 0),
+    })
+
+    expect(query).toEqual({
+      mode: 'year',
       date: '2026-03-21',
     })
   })

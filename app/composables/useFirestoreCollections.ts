@@ -21,5 +21,6 @@ export function useFirestoreCollections() {
     timeBoxesCollection: collection(db, 'users', uid, 'timeBoxes'),
     projectsCollection: collection(db, 'users', uid, 'projects'),
     tagsCollection: collection(db, 'users', uid, 'tags'),
+    reportsCollection: collection(db, 'users', uid, 'reports'),
   }
 }

@@ -1,6 +1,7 @@
 import {
   getLoginRedirectLocation,
   getPostAuthRedirect,
+  isPublicAnonymousPath,
   LOGIN_ROUTE_PATH,
 } from '~/app/utils/auth-navigation'
 
@@ -16,5 +17,11 @@ describe('web auth navigation', () => {
   it('returns a safe post-auth landing path', () => {
     expect(getPostAuthRedirect('/projects')).toBe('/projects')
     expect(getPostAuthRedirect(undefined)).toBe('/')
+  })
+
+  it('allows anonymous access to public report routes', () => {
+    expect(isPublicAnonymousPath('/login')).toBe(true)
+    expect(isPublicAnonymousPath('/r/public-token')).toBe(true)
+    expect(isPublicAnonymousPath('/reports')).toBe(false)
   })
 })

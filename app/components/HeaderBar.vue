@@ -44,6 +44,8 @@ async function handleSignOut() {
     <NuxtLink to="/tags" class="hover:underline">Tags</NuxtLink>
     <div>/</div>
     <NuxtLink to="/sessions" class="hover:underline">Sessions</NuxtLink>
+    <div>/</div>
+    <NuxtLink to="/reports" class="hover:underline">Reports</NuxtLink>
     <div class="ml-auto flex items-center gap-2">
       <button
         v-if="showSessionsSort"

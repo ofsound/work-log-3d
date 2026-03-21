@@ -26,6 +26,33 @@ export interface TimeBoxDaySegmentLayout extends TimeBoxDaySegment {
   laneCount: number
 }
 
+export type YearHeatmapIntensity = 0 | 1 | 2 | 3 | 4 | 5
+
+export interface YearHeatmapCell {
+  date: Date
+  dateKey: string
+  minutes: number
+  hours: number
+  sessionCount: number
+  intensity: YearHeatmapIntensity
+  inactive: boolean
+  isToday: boolean
+}
+
+export interface YearHeatmapMonth {
+  year: number
+  monthIndex: number
+  label: string
+  weeks: Array<Array<YearHeatmapCell | null>>
+}
+
+export interface YearHeatmapYear {
+  year: number
+  months: YearHeatmapMonth[]
+}
+
+export const YEAR_HEATMAP_INTENSITY_THRESHOLDS = [120, 240, 360, 480] as const
+
 const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/
 
 const clampDate = (value: number) => Math.trunc(value)
@@ -268,6 +295,180 @@ export const buildDaySegmentLayouts = (segments: TimeBoxDaySegment[]) => {
     ...layout,
     laneCount: clusterLaneCounts.get(entryClusterId) ?? 1,
   }))
+}
+
+export const getYearHeatmapIntensity = (minutes: number): YearHeatmapIntensity => {
+  if (minutes <= 0) {
+    return 0
+  }
+
+  if (minutes < YEAR_HEATMAP_INTENSITY_THRESHOLDS[0]) {
+    return 1
+  }
+
+  if (minutes < YEAR_HEATMAP_INTENSITY_THRESHOLDS[1]) {
+    return 2
+  }
+
+  if (minutes < YEAR_HEATMAP_INTENSITY_THRESHOLDS[2]) {
+    return 3
+  }
+
+  if (minutes < YEAR_HEATMAP_INTENSITY_THRESHOLDS[3]) {
+    return 4
+  }
+
+  return 5
+}
+
+const buildTimeBoxDaySummaryMap = (
+  timeBoxes: TimeBox[],
+): {
+  daySummaryByKey: Map<
+    string,
+    {
+      date: Date
+      minutes: number
+      sessionCount: number
+    }
+  >
+  firstLoggedDay: Date | null
+} => {
+  const daySummaryByKey = new Map<
+    string,
+    {
+      date: Date
+      minutes: number
+      sessionCount: number
+    }
+  >()
+  let firstLoggedDay: Date | null = null
+
+  timeBoxes.forEach((timeBox) => {
+    if (!timeBox.startTime || !timeBox.endTime) {
+      return
+    }
+
+    splitTimeBoxIntoDaySegments(timeBox, {
+      start: timeBox.startTime,
+      end: timeBox.endTime,
+    }).forEach((segment) => {
+      const date = getStartOfDay(segment.dayStart)
+      const key = formatDateKey(date)
+      const current = daySummaryByKey.get(key) ?? {
+        date,
+        minutes: 0,
+        sessionCount: 0,
+      }
+
+      current.minutes += (segment.segmentEnd.valueOf() - segment.segmentStart.valueOf()) / 60_000
+      current.sessionCount += 1
+      daySummaryByKey.set(key, current)
+
+      if (!firstLoggedDay || date.valueOf() < firstLoggedDay.valueOf()) {
+        firstLoggedDay = date
+      }
+    })
+  })
+
+  return { daySummaryByKey, firstLoggedDay }
+}
+
+const buildYearHeatmapMonth = ({
+  year,
+  monthIndex,
+  daySummaryByKey,
+  firstLoggedDay,
+  today,
+}: {
+  year: number
+  monthIndex: number
+  daySummaryByKey: Map<
+    string,
+    {
+      date: Date
+      minutes: number
+      sessionCount: number
+    }
+  >
+  firstLoggedDay: Date | null
+  today: Date
+}): YearHeatmapMonth => {
+  const monthStart = new Date(year, monthIndex, 1)
+  const monthEnd = new Date(year, monthIndex + 1, 1)
+  const gridStart = getStartOfWeek(monthStart)
+  const gridEnd = getEndOfWeek(addDays(monthEnd, -1))
+  const weeks: Array<Array<YearHeatmapCell | null>> = []
+
+  let cursor = gridStart
+
+  while (cursor.valueOf() < gridEnd.valueOf()) {
+    const week: Array<YearHeatmapCell | null> = []
+
+    for (let index = 0; index < WEEK_DAY_COUNT; index += 1) {
+      const day = cursor
+
+      if (day.getMonth() !== monthIndex) {
+        week.push(null)
+      } else {
+        const date = getStartOfDay(day)
+        const dateKey = formatDateKey(date)
+        const summary = daySummaryByKey.get(dateKey)
+        const inactive =
+          !firstLoggedDay ||
+          date.valueOf() < firstLoggedDay.valueOf() ||
+          date.valueOf() > today.valueOf()
+        const minutes = summary?.minutes ?? 0
+
+        week.push({
+          date,
+          dateKey,
+          minutes,
+          hours: minutes / MINUTES_PER_HOUR,
+          sessionCount: summary?.sessionCount ?? 0,
+          intensity: inactive ? 0 : getYearHeatmapIntensity(minutes),
+          inactive,
+          isToday: isSameDay(date, today),
+        })
+      }
+
+      cursor = addDays(cursor, 1)
+    }
+
+    weeks.push(week)
+  }
+
+  return {
+    year,
+    monthIndex,
+    label: monthStart.toLocaleDateString([], { month: 'long' }),
+    weeks,
+  }
+}
+
+export const buildYearHeatmapYears = (
+  timeBoxes: TimeBox[],
+  today = new Date(),
+): YearHeatmapYear[] => {
+  const normalizedToday = getStartOfDay(today)
+  const { daySummaryByKey, firstLoggedDay } = buildTimeBoxDaySummaryMap(timeBoxes)
+  const firstYear = firstLoggedDay?.getFullYear() ?? normalizedToday.getFullYear()
+  const lastYear = normalizedToday.getFullYear()
+
+  return Array.from({ length: lastYear - firstYear + 1 }, (_, index) => lastYear - index).map(
+    (year) => ({
+      year,
+      months: Array.from({ length: 12 }, (_, monthIndex) =>
+        buildYearHeatmapMonth({
+          year,
+          monthIndex,
+          daySummaryByKey,
+          firstLoggedDay,
+          today: normalizedToday,
+        }),
+      ),
+    }),
+  )
 }
 
 export const sortTimeBoxesByStartAscending = (timeBoxes: TimeBox[]) =>

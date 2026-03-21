@@ -80,6 +80,28 @@ describe('firestore rules', () => {
     )
   })
 
+  it('allows an owner to write a valid report document', async () => {
+    await assertSucceeds(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'reports', 'report-1'), {
+        title: 'March Report',
+        summary: 'Client-ready summary',
+        timezone: 'America/Denver',
+        filters: {
+          dateStart: '2026-03-01',
+          dateEnd: '2026-03-21',
+          projectIds: ['project-1'],
+          tagIds: ['tag-1'],
+          groupOperator: 'intersection',
+          tagOperator: 'any',
+        },
+        shareToken: '',
+        createdAt: Timestamp.fromDate(new Date('2026-03-21T08:00:00.000Z')),
+        updatedAt: Timestamp.fromDate(new Date('2026-03-21T08:00:00.000Z')),
+        publishedAt: null,
+      }),
+    )
+  })
+
   it('rejects malformed timebox documents', async () => {
     await assertFails(
       setDoc(authedDoc(testEnvironment, 'user-1', 'timeBoxes', 'timebox-1'), {
@@ -88,6 +110,28 @@ describe('firestore rules', () => {
         notes: '',
         project: '',
         tags: [],
+      }),
+    )
+  })
+
+  it('rejects malformed report documents', async () => {
+    await assertFails(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'reports', 'report-1'), {
+        title: '',
+        summary: 'Bad report',
+        timezone: '',
+        filters: {
+          dateStart: '',
+          dateEnd: '',
+          projectIds: [],
+          tagIds: [],
+          groupOperator: 'bad',
+          tagOperator: 'any',
+        },
+        shareToken: '',
+        createdAt: Timestamp.fromDate(new Date('2026-03-21T08:00:00.000Z')),
+        updatedAt: Timestamp.fromDate(new Date('2026-03-21T08:00:00.000Z')),
+        publishedAt: null,
       }),
     )
   })
