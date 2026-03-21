@@ -5,10 +5,17 @@ import SortAscending from '@/icons/SortAscending.vue'
 import SortDescending from '@/icons/SortDescending.vue'
 
 const store = useStore()
+const route = useRoute()
 const router = useRouter()
 const auth = useFirebaseAuth()
 
 const currentTime = ref('')
+
+const showSessionsSort = computed(() => {
+  const mode = Array.isArray(route.query.mode) ? route.query.mode[0] : route.query.mode
+
+  return route.path === '/sessions' && (mode === undefined || mode === 'list')
+})
 
 const updateTime = () => {
   currentTime.value = new Date().toLocaleTimeString([], { timeStyle: 'short' })
@@ -39,6 +46,7 @@ async function handleSignOut() {
     <NuxtLink to="/sessions" class="hover:underline">Sessions</NuxtLink>
     <div class="ml-auto flex items-center gap-2">
       <button
+        v-if="showSessionsSort"
         class="cursor-pointer text-header-muted hover:text-header-text"
         @click="store.sortOrderReversed = !store.sortOrderReversed"
       >

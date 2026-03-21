@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { PropType } from 'vue'
+
 import { doc } from 'firebase/firestore'
 
 import type {
@@ -14,9 +16,17 @@ const props = defineProps({
   id: { type: String, default: undefined },
   startTimeFromTimer: { type: String, default: undefined },
   endTimeFromTimer: { type: String, default: undefined },
+  initialStartTime: { type: String, default: undefined },
+  initialEndTime: { type: String, default: undefined },
+  initialNotes: { type: String, default: '' },
+  initialProject: { type: String, default: '' },
+  initialTags: { type: Array as PropType<string[]>, default: () => [] },
+  resetAfterCreate: { type: Boolean, default: true },
+  showCreateCancel: { type: Boolean, default: false },
+  createButtonLabel: { type: String, default: 'Log Session' },
 })
 
-const emit = defineEmits(['toggleEditor'])
+const emit = defineEmits(['toggleEditor', 'saved'])
 
 const repositories = useWorklogRepository()
 const shell = useHostShell()
@@ -46,6 +56,14 @@ const dynamicTags = ref<string[]>([])
 
 const dynamicDuration = ref<string | number>('')
 
+const applyCreateDefaults = () => {
+  dynamicStartTime.value = props.initialStartTime || props.startTimeFromTimer || ''
+  dynamicEndTime.value = props.initialEndTime || props.endTimeFromTimer || ''
+  dynamicNotes.value = props.initialNotes
+  dynamicProject.value = props.initialProject
+  dynamicTags.value = [...props.initialTags]
+}
+
 if (props.id) {
   const docBinding = useDocument(doc(timeBoxesCollection, props.id))
 
@@ -64,6 +82,8 @@ if (props.id) {
     .catch((error: unknown) => {
       mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to load the session.')
     })
+} else {
+  applyCreateDefaults()
 }
 
 const updateTimeBoxDocument = async () => {
@@ -75,6 +95,7 @@ const updateTimeBoxDocument = async () => {
     try {
       mutationErrorMessage.value = ''
       await repositories.timeBoxes.update(props.id, getTimeBoxInput())
+      emit('saved', props.id)
       emit('toggleEditor')
     } catch (error) {
       mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to update the session.')
@@ -88,9 +109,13 @@ const updateTimeBoxDocument = async () => {
 const createTimeBoxDocument = async () => {
   try {
     mutationErrorMessage.value = ''
-    await repositories.timeBoxes.create(getTimeBoxInput())
-    timeBoxEditorRef.value?.classList.add('animate-[var(--animate-blink-once)]')
-    setTimeout(resetTimeBoxEditor, 100)
+    const createdId = await repositories.timeBoxes.create(getTimeBoxInput())
+    emit('saved', createdId)
+
+    if (props.resetAfterCreate) {
+      timeBoxEditorRef.value?.classList.add('animate-[var(--animate-blink-once)]')
+      setTimeout(resetTimeBoxEditor, 100)
+    }
   } catch (error) {
     mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save the session.')
   }
@@ -128,10 +153,12 @@ const timeBoxDuration = () => {
 watch(
   () => props.startTimeFromTimer,
   (newValue) => {
+    if (props.id) return
+
     if (newValue) {
       dynamicStartTime.value = newValue
     } else {
-      dynamicStartTime.value = ''
+      dynamicStartTime.value = props.initialStartTime || ''
     }
     mutationErrorMessage.value = ''
   },
@@ -140,12 +167,29 @@ watch(
 watch(
   () => props.endTimeFromTimer,
   (newValue) => {
+    if (props.id) return
+
     if (newValue) {
       dynamicEndTime.value = newValue
     } else {
-      dynamicEndTime.value = ''
+      dynamicEndTime.value = props.initialEndTime || ''
     }
     mutationErrorMessage.value = ''
+  },
+)
+
+watch(
+  () => [
+    props.initialStartTime,
+    props.initialEndTime,
+    props.initialNotes,
+    props.initialProject,
+    props.initialTags,
+  ],
+  () => {
+    if (!props.id) {
+      applyCreateDefaults()
+    }
   },
 )
 
@@ -289,11 +333,25 @@ onBeforeUnmount(() => {
       </button>
     </div>
   </div>
+  <div v-if="!props.id && props.showCreateCancel" class="mt-6! flex gap-3">
+    <button
+      class="ml-auto block cursor-pointer rounded-md bg-button-secondary px-3 py-1 text-button-secondary-text hover:bg-button-secondary-hover"
+      @click="emit('toggleEditor')"
+    >
+      Cancel
+    </button>
+    <button
+      class="block cursor-pointer rounded-md bg-button-primary px-3 py-1 text-button-primary-text hover:bg-button-primary-hover"
+      @click="createTimeBoxDocument"
+    >
+      {{ createButtonLabel }}
+    </button>
+  </div>
   <button
-    v-if="!props.id"
+    v-if="!props.id && !props.showCreateCancel"
     class="w-full cursor-pointer rounded-sm bg-button-primary p-3 font-bold tracking-wider text-button-primary-text shadow-button-primary hover:brightness-120"
     @click="createTimeBoxDocument"
   >
-    Log Session
+    {{ createButtonLabel }}
   </button>
 </template>

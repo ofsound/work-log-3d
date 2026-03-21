@@ -31,6 +31,14 @@
         { "fieldPath": "tags", "arrayConfig": "CONTAINS" },
         { "fieldPath": "startTime", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "timeBoxes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "startTime", "order": "ASCENDING" },
+        { "fieldPath": "endTime", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

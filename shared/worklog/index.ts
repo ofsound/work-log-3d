@@ -1,3 +1,4 @@
+export * from './calendar'
 export * from './desktop'
 export * from './formatters'
 export * from './repositories'
