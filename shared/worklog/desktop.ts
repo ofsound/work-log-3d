@@ -24,6 +24,9 @@ export type DesktopTrayActionId =
   | 'open_window_to_log_session'
   | 'quit'
 
+export type DesktopTrayVisualMode = 'icon' | 'badge'
+export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
+
 export type DesktopTrayMenuItem =
   | {
       kind: 'status'
@@ -45,6 +48,9 @@ export interface DesktopTrayState {
   title: string
   tooltip: string
   statusLabel: string
+  visualMode: DesktopTrayVisualMode
+  badgeText: string | null
+  badgeVariant: DesktopTrayBadgeVariant | null
   menuItems: DesktopTrayMenuItem[]
 }
 
@@ -102,6 +108,20 @@ const getTimerModeLabel = (mode: TimerSnapshot['mode']) => {
   return 'Timer'
 }
 
+const getDesktopTrayTitle = (snapshot: TimerSnapshot, platform: NodeJS.Platform): string => {
+  if (platform !== 'darwin') {
+    return ''
+  }
+
+  const icon = snapshot.status === 'completed' ? '✓' : '◔'
+
+  if (snapshot.status === 'idle') {
+    return icon
+  }
+
+  return `${icon} ${snapshot.display}`
+}
+
 const createStatusItem = (label: string): DesktopTrayMenuItem => ({
   kind: 'status',
   label,
@@ -129,6 +149,16 @@ const separatorItem: DesktopTrayMenuItem = { kind: 'separator' }
 export const getDesktopTrayStructuralKey = (snapshot: TimerSnapshot): TimerState['status'] =>
   snapshot.status
 
+export const formatDesktopTrayBadgeText = (display: string) => {
+  const [minutes, seconds] = display.split(':')
+
+  if (!minutes || !seconds) {
+    return display.padStart(6, ' ')
+  }
+
+  return `${minutes.padStart(3, ' ')}:${seconds.padStart(2, '0')}`
+}
+
 export const getDesktopTrayState = (
   snapshot: TimerSnapshot,
   platform: NodeJS.Platform = process.platform,
@@ -138,9 +168,12 @@ export const getDesktopTrayState = (
 
     return {
       mode: 'idle',
-      title: '',
+      title: getDesktopTrayTitle(snapshot, platform),
       tooltip: `Work Log: ${statusLabel}`,
       statusLabel,
+      visualMode: 'icon',
+      badgeText: null,
+      badgeVariant: null,
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
@@ -155,19 +188,19 @@ export const getDesktopTrayState = (
   }
 
   const modeLabel = getTimerModeLabel(snapshot.mode)
-  const title =
-    platform === 'darwin' && (snapshot.status === 'running' || snapshot.status === 'paused')
-      ? snapshot.display
-      : ''
+  const badgeText = platform === 'darwin' ? formatDesktopTrayBadgeText(snapshot.display) : null
 
   if (snapshot.status === 'running') {
     const statusLabel = `Running • ${modeLabel} • ${snapshot.display}`
 
     return {
       mode: 'running',
-      title,
+      title: getDesktopTrayTitle(snapshot, platform),
       tooltip: `Work Log: ${statusLabel}`,
       statusLabel,
+      visualMode: 'badge',
+      badgeText,
+      badgeVariant: 'running',
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
@@ -186,9 +219,12 @@ export const getDesktopTrayState = (
 
     return {
       mode: 'paused',
-      title,
+      title: getDesktopTrayTitle(snapshot, platform),
       tooltip: `Work Log: ${statusLabel}`,
       statusLabel,
+      visualMode: 'badge',
+      badgeText,
+      badgeVariant: 'paused',
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
@@ -206,9 +242,12 @@ export const getDesktopTrayState = (
 
   return {
     mode: 'completed',
-    title: '',
+    title: getDesktopTrayTitle(snapshot, platform),
     tooltip: `Work Log: ${statusLabel}`,
     statusLabel,
+    visualMode: 'badge',
+    badgeText,
+    badgeVariant: 'completed',
     menuItems: [
       createStatusItem(statusLabel),
       separatorItem,

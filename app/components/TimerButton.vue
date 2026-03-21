@@ -2,7 +2,7 @@
 
 <template>
   <button
-    class="h-10 cursor-pointer rounded-xl border border-gray-300 bg-white px-3 font-bold tracking-wide hover:border-gray-500 hover:shadow-sm"
+    class="h-10 cursor-pointer rounded-xl border border-button-secondary-border bg-button-secondary px-3 font-bold tracking-wide text-button-secondary-text shadow-control hover:border-border-strong hover:bg-button-secondary-hover"
   >
     <slot>Label</slot>
   </button>

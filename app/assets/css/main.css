@@ -6,12 +6,186 @@
 
 @import 'tailwindcss';
 
-@theme {
+@theme static {
   --font-sans: 'National Park', sans-serif;
   --font-data: 'Lato', sans-serif;
   --font-script: 'Caveat', sans-serif;
 
   --animate-blink-once: blink-once 0.3s ease-in-out forwards;
+
+  --color-app: light-dark(var(--color-white), var(--color-zinc-950));
+  --color-shell: light-dark(var(--color-white), var(--color-zinc-900));
+  --color-surface: light-dark(var(--color-white), var(--color-zinc-900));
+  --color-surface-muted: light-dark(var(--color-gray-100), var(--color-zinc-800));
+  --color-surface-strong: light-dark(
+    color-mix(in srgb, var(--color-zinc-100) 75%, var(--color-zinc-50)),
+    color-mix(in srgb, var(--color-zinc-700) 55%, var(--color-zinc-950))
+  );
+  --color-surface-subtle: light-dark(
+    color-mix(in srgb, var(--color-zinc-100) 45%, var(--color-zinc-50)),
+    color-mix(in srgb, var(--color-zinc-800) 35%, var(--color-zinc-950))
+  );
+  --color-text: light-dark(var(--color-zinc-900), var(--color-zinc-100));
+  --color-text-muted: light-dark(var(--color-gray-600), var(--color-zinc-300));
+  --color-text-subtle: light-dark(var(--color-gray-500), var(--color-zinc-400));
+  --color-text-inverse: light-dark(var(--color-white), var(--color-zinc-950));
+  --color-header: light-dark(var(--color-gray-900), var(--color-zinc-950));
+  --color-header-text: light-dark(var(--color-white), var(--color-zinc-100));
+  --color-header-muted: light-dark(var(--color-gray-300), var(--color-zinc-400));
+  --color-header-toggle: light-dark(
+    color-mix(in srgb, var(--color-white) 10%, transparent),
+    color-mix(in srgb, var(--color-white) 5%, transparent)
+  );
+  --color-header-toggle-border: light-dark(
+    color-mix(in srgb, var(--color-white) 18%, transparent),
+    color-mix(in srgb, var(--color-white) 10%, transparent)
+  );
+  --color-header-toggle-active: light-dark(
+    color-mix(in srgb, var(--color-white) 20%, transparent),
+    color-mix(in srgb, var(--color-slate-200) 18%, transparent)
+  );
+  --color-border: light-dark(var(--color-gray-300), var(--color-zinc-700));
+  --color-border-strong: light-dark(var(--color-gray-400), var(--color-zinc-500));
+  --color-border-subtle: light-dark(
+    color-mix(in srgb, var(--color-gray-400) 20%, transparent),
+    color-mix(in srgb, var(--color-zinc-600) 32%, transparent)
+  );
+  --color-divider: light-dark(
+    color-mix(in srgb, var(--color-black) 20%, transparent),
+    color-mix(in srgb, var(--color-zinc-100) 12%, transparent)
+  );
+  --color-button-primary: light-dark(var(--color-slate-600), var(--color-slate-300));
+  --color-button-primary-hover: light-dark(var(--color-slate-700), var(--color-slate-200));
+  --color-button-primary-text: light-dark(var(--color-white), var(--color-slate-950));
+  --color-button-secondary: light-dark(var(--color-white), var(--color-zinc-900));
+  --color-button-secondary-hover: light-dark(var(--color-gray-50), var(--color-zinc-800));
+  --color-button-secondary-text: light-dark(var(--color-zinc-900), var(--color-zinc-100));
+  --color-button-secondary-border: light-dark(var(--color-gray-300), var(--color-zinc-600));
+  --color-input: light-dark(var(--color-white), var(--color-zinc-950));
+  --color-input-focus: light-dark(var(--color-white), var(--color-zinc-900));
+  --color-input-border: light-dark(var(--color-gray-300), var(--color-zinc-600));
+  --color-link: light-dark(var(--color-slate-600), var(--color-sky-300));
+  --color-link-hover: light-dark(var(--color-slate-800), var(--color-sky-200));
+  --color-danger: light-dark(var(--color-red-700), var(--color-red-400));
+  --color-panel-project: light-dark(var(--color-blue-200), var(--color-blue-950));
+  --color-panel-tag: light-dark(var(--color-purple-200), var(--color-purple-950));
+  --color-panel-editor: light-dark(var(--color-amber-100), var(--color-amber-950));
+  --color-panel-timer: light-dark(var(--color-green-400), var(--color-green-950));
+  --color-panel-session: light-dark(var(--color-slate-100), var(--color-slate-950));
+  --color-panel-day: light-dark(var(--color-gray-100), var(--color-zinc-900));
+  --color-badge-duration: light-dark(var(--color-emerald-800), var(--color-emerald-300));
+  --color-badge-duration-text: light-dark(var(--color-white), var(--color-emerald-950));
+  --color-badge-neutral: light-dark(var(--color-zinc-100), var(--color-zinc-800));
+  --color-badge-neutral-text: light-dark(var(--color-black), var(--color-zinc-100));
+  --color-chip: light-dark(var(--color-gray-300), var(--color-zinc-700));
+  --color-chip-text: light-dark(var(--color-zinc-900), var(--color-zinc-100));
+  --color-hero-start: light-dark(var(--color-cyan-500), var(--color-cyan-700));
+  --color-hero-end: light-dark(var(--color-blue-400), var(--color-blue-700));
+  --color-overview-start: light-dark(var(--color-slate-800), var(--color-slate-900));
+  --color-overview-end: light-dark(var(--color-zinc-900), var(--color-zinc-950));
+
+  --shadow-shell:
+    0 10px 15px -3px
+      light-dark(
+        color-mix(in srgb, var(--color-black) 100%, transparent),
+        color-mix(in srgb, var(--color-black) 85%, transparent)
+      ),
+    0 4px 6px -4px
+      light-dark(
+        color-mix(in srgb, var(--color-black) 100%, transparent),
+        color-mix(in srgb, var(--color-black) 75%, transparent)
+      );
+  --shadow-panel:
+    0 4px 6px -1px
+      light-dark(
+        color-mix(in srgb, var(--color-black) 10%, transparent),
+        color-mix(in srgb, var(--color-black) 85%, transparent)
+      ),
+    0 2px 4px -2px
+      light-dark(
+        color-mix(in srgb, var(--color-black) 10%, transparent),
+        color-mix(in srgb, var(--color-black) 70%, transparent)
+      );
+  --shadow-overview: 0 2px 4px
+    light-dark(
+      color-mix(in srgb, var(--color-gray-700) 40%, transparent),
+      color-mix(in srgb, var(--color-black) 70%, transparent)
+    );
+  --shadow-hero:
+    0 4px 6px -1px
+      light-dark(
+        color-mix(in srgb, var(--color-gray-400) 100%, transparent),
+        color-mix(in srgb, var(--color-black) 75%, transparent)
+      ),
+    0 2px 4px -2px
+      light-dark(
+        color-mix(in srgb, var(--color-gray-400) 100%, transparent),
+        color-mix(in srgb, var(--color-black) 65%, transparent)
+      );
+  --shadow-control: 0 1px 2px 0
+    light-dark(
+      color-mix(in srgb, var(--color-black) 15%, transparent),
+      color-mix(in srgb, var(--color-black) 35%, transparent)
+    );
+  --shadow-button-primary:
+    inset 0 2px 0
+      light-dark(
+        color-mix(in srgb, var(--color-white) 30%, transparent),
+        color-mix(in srgb, var(--color-white) 18%, transparent)
+      ),
+    inset 0 -1px 0
+      light-dark(
+        color-mix(in srgb, var(--color-zinc-950) 10%, transparent),
+        color-mix(in srgb, var(--color-black) 22%, transparent)
+      ),
+    0 3px 4px
+      light-dark(
+        color-mix(in srgb, var(--color-zinc-600) 37%, transparent),
+        color-mix(in srgb, var(--color-black) 60%, transparent)
+      );
+  --text-shadow-hero: 0 1px 1px
+    light-dark(
+      color-mix(in srgb, var(--color-amber-950) 30%, transparent),
+      color-mix(in srgb, var(--color-slate-950) 55%, transparent)
+    );
+  --background-image-shell-grid:
+    linear-gradient(
+      to right,
+      light-dark(
+          color-mix(in srgb, var(--color-neutral-500) 12.5%, transparent),
+          color-mix(in srgb, var(--color-zinc-500) 14%, transparent)
+        )
+        1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      light-dark(
+          color-mix(in srgb, var(--color-neutral-500) 12.5%, transparent),
+          color-mix(in srgb, var(--color-zinc-500) 14%, transparent)
+        )
+        1px,
+      transparent 1px
+    );
+  --background-image-auth-grid:
+    linear-gradient(
+      to right,
+      light-dark(
+          color-mix(in srgb, var(--color-neutral-500) 8.2%, transparent),
+          color-mix(in srgb, var(--color-zinc-500) 12%, transparent)
+        )
+        1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      light-dark(
+          color-mix(in srgb, var(--color-neutral-500) 8.2%, transparent),
+          color-mix(in srgb, var(--color-zinc-500) 12%, transparent)
+        )
+        1px,
+      transparent 1px
+    );
 
   @keyframes blink-once {
     0% {
@@ -23,5 +197,29 @@
     100% {
       opacity: 1;
     }
+  }
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-app);
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-app);
+    color: var(--color-text);
   }
 }

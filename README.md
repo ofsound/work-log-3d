@@ -9,6 +9,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - TypeScript
 - Tailwind CSS v4
 - Pinia
+- @nuxtjs/color-mode
 - Firebase Authentication
 - Firestore via `nuxt-vuefire`
 - Electron
@@ -21,6 +22,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Projects and tags cannot be deleted while sessions still reference them
 - Shared validation lives in `shared/worklog/validation.ts`
 - Firestore rules in `firestore.rules` must match the current document shape
+- Theme preference is stored in `localStorage` per Firebase user, with a guest fallback before auth resolves
 
 ## Setup
 
@@ -43,6 +45,8 @@ If you want SSR auth support for the web target, provide Firebase Admin credenti
 - Set `GOOGLE_APPLICATION_CREDENTIALS` to a service account JSON path, or
 - Provide the equivalent credential configuration in your deployment environment
 
+The demo seeder uses the same Firebase Admin credentials. It resolves an existing auth user by email and rewrites only that user's Firestore subtree.
+
 ## Development
 
 Web app:
@@ -56,6 +60,28 @@ Electron app:
 ```bash
 npm run electron:dev
 ```
+
+Seed the dedicated demo account:
+
+```bash
+npm run seed:demo
+```
+
+Useful options:
+
+```bash
+npm run seed:demo -- --dry-run
+npm run seed:demo -- --end-date 2026-03-21 --seed 240321
+npm run seed:demo -- --email seeds@modernthings.net
+```
+
+By default the seeder:
+
+- resolves `seeds@modernthings.net` with Firebase Auth
+- deletes `users/{uid}/timeBoxes` first, then `projects`, then `tags`
+- writes a deterministic 14-day dataset with 10 projects, 5 tags, and realistic multi-hour daily sessions
+
+The seed command is destructive only within the targeted user's worklog collections. It does not create auth users and it does not use or store the account password.
 
 ## Verification
 

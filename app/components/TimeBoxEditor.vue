@@ -201,12 +201,12 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="timeBoxEditorRef"
-    class="my-4 rounded-sm border border-gray-400/20 bg-amber-100 px-6 py-4 font-data shadow-md grayscale-10 *:my-2"
+    class="my-4 rounded-sm border border-border-subtle bg-panel-editor px-6 py-4 font-data shadow-panel grayscale-10 *:my-2"
   >
     <div class="flex gap-15">
       <input
         v-model="dynamicDuration"
-        class="relative h-max w-21.5 rounded-sm border border-gray-400 bg-white px-2.5 py-1 text-right font-data text-4xl font-bold tabular-nums"
+        class="relative h-max w-21.5 rounded-sm border border-border-strong bg-input px-2.5 py-1 text-right font-data text-4xl font-bold text-text tabular-nums"
         @input="mutationErrorMessage = ''"
       />
       <div class="flex flex-col gap-1">
@@ -232,13 +232,13 @@ onBeforeUnmount(() => {
     <div class="flex py-4">
       <textarea
         v-model="dynamicNotes"
-        class="w-full rounded-sm border border-gray-400 bg-white p-2"
+        class="w-full rounded-sm border border-border-strong bg-input p-2 text-text"
         rows="5"
         placeholder="Enter notes here..."
         @input="mutationErrorMessage = ''"
       ></textarea>
     </div>
-    <div class="flex border-b border-gray-200 py-4">
+    <div class="flex border-b border-border py-4">
       <div class="w-18 font-bold">Project:</div>
       <div class="project-radio-group">
         <label
@@ -271,18 +271,18 @@ onBeforeUnmount(() => {
         </label>
       </div>
     </div>
-    <p v-if="mutationErrorMessage" class="text-sm text-red-700">
+    <p v-if="mutationErrorMessage" class="text-sm text-danger">
       {{ mutationErrorMessage }}
     </p>
     <div v-if="props.id" class="mt-6! flex gap-3">
       <button
-        class="ml-auto block cursor-pointer rounded-md bg-slate-600 px-3 py-1 text-white"
+        class="ml-auto block cursor-pointer rounded-md bg-button-primary px-3 py-1 text-button-primary-text hover:bg-button-primary-hover"
         @click="emit('toggleEditor')"
       >
         Cancel
       </button>
       <button
-        class="block cursor-pointer rounded-md bg-slate-600 px-3 py-1 text-white"
+        class="block cursor-pointer rounded-md bg-button-primary px-3 py-1 text-button-primary-text hover:bg-button-primary-hover"
         @click="updateTimeBoxDocument"
       >
         Update
@@ -291,7 +291,7 @@ onBeforeUnmount(() => {
   </div>
   <button
     v-if="!props.id"
-    class="w-full cursor-pointer rounded-sm bg-slate-600 p-3 font-bold tracking-wider text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(20,20,20,0.1),0_3px_4px_rgba(80,80,80,0.37)] hover:brightness-120"
+    class="w-full cursor-pointer rounded-sm bg-button-primary p-3 font-bold tracking-wider text-button-primary-text shadow-button-primary hover:brightness-120"
     @click="createTimeBoxDocument"
   >
     Log Session

@@ -72,7 +72,7 @@ const applyTrayCosmeticUpdates = (
   tray.setToolTip(trayState.tooltip)
 
   if (platform === 'darwin') {
-    tray.setTitle(trayState.title)
+    tray.setTitle(trayState.title, { fontType: 'monospacedDigit' })
   }
 
   const status = trayState.menuItems[0]
@@ -93,7 +93,7 @@ export const createTrayController = ({
   const tray = new Tray(createTrayIcon(platform))
   let currentMenu = Menu.buildFromTemplate([])
   let lastStructuralKey = ''
-  let lastDisplay = ''
+  let lastCosmeticKey = ''
 
   const popUpMenu = () => {
     tray.popUpContextMenu(currentMenu)
@@ -107,11 +107,12 @@ export const createTrayController = ({
     popUpMenu,
     sync(snapshot) {
       const structuralKey = getDesktopTrayStructuralKey(snapshot)
+      const cosmeticKey = `${snapshot.status}:${snapshot.mode ?? 'timer'}:${snapshot.display}`
 
       if (
         lastStructuralKey !== '' &&
         structuralKey === lastStructuralKey &&
-        snapshot.display === lastDisplay
+        cosmeticKey === lastCosmeticKey
       ) {
         return
       }
@@ -120,22 +121,18 @@ export const createTrayController = ({
 
       if (lastStructuralKey !== '' && structuralKey === lastStructuralKey) {
         applyTrayCosmeticUpdates(tray, currentMenu, trayState, platform)
-        lastDisplay = snapshot.display
+        lastCosmeticKey = cosmeticKey
         return
       }
 
       lastStructuralKey = structuralKey
-      lastDisplay = snapshot.display
+      lastCosmeticKey = cosmeticKey
       currentMenu = Menu.buildFromTemplate(
         trayState.menuItems.map((item) => toMenuItem(item, onAction)),
       )
 
       tray.setContextMenu(currentMenu)
-      tray.setToolTip(trayState.tooltip)
-
-      if (platform === 'darwin') {
-        tray.setTitle(trayState.title)
-      }
+      applyTrayCosmeticUpdates(tray, currentMenu, trayState, platform)
     },
     destroy() {
       tray.destroy()

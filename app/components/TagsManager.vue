@@ -38,27 +38,27 @@ const cancelCreateAndLoseFocus = () => {
 </script>
 
 <template>
-  <div class="my-4 rounded-sm border border-gray-400/30 bg-purple-200 px-6 py-4 shadow-md">
+  <div class="my-4 rounded-sm border border-border-subtle bg-panel-tag px-6 py-4 shadow-panel">
     <div class="mb-2 text-center text-xl font-bold uppercase">Tags</div>
     <TagsManagerTag v-for="item in sortedAllTags" :id="item.id" :key="item.id" :name="item.name" />
     <div class="mt-8 flex">
       <input
         ref="myInput"
         v-model="newTagName"
-        class="mr-4 flex-1 bg-white pl-2 font-bold"
+        class="mr-4 flex-1 bg-input pl-2 font-bold text-text outline-none"
         type="text"
         @input="mutationErrorMessage = ''"
         @keyup.enter="createTagDocument"
         @keyup.esc="cancelCreateAndLoseFocus"
       />
       <button
-        class="ml-auto block w-max cursor-pointer rounded-md bg-slate-600 px-3 py-1 tracking-wide text-white"
+        class="ml-auto block w-max cursor-pointer rounded-md bg-button-primary px-3 py-1 tracking-wide text-button-primary-text hover:bg-button-primary-hover"
         @click="createTagDocument"
       >
         + Create Tag
       </button>
     </div>
-    <p v-if="mutationErrorMessage" class="mt-3 text-sm text-red-700">
+    <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
       {{ mutationErrorMessage }}
     </p>
   </div>

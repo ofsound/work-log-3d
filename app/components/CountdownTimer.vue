@@ -48,10 +48,10 @@ watch(
 
 <template>
   <div
-    class="my-4 flex max-w-90 items-center justify-between rounded-sm border border-gray-400/30 bg-green-400 px-6 py-4 shadow-md"
+    class="my-4 flex max-w-90 items-center justify-between rounded-sm border border-border-subtle bg-panel-timer px-6 py-4 shadow-panel"
   >
     <div
-      class="relative h-max rounded-sm border border-gray-300 bg-white px-2.5 py-1 font-data text-5xl font-bold tabular-nums"
+      class="relative h-max rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 py-1 font-data text-5xl font-bold text-button-secondary-text tabular-nums"
     >
       <TimerCancelButton @click="cancel" />
       <div class="flex items-baseline">
@@ -60,7 +60,7 @@ watch(
           id="dynamicMinutes"
           v-model="dynamicMinutes"
           type="text"
-          class="w-14"
+          class="w-14 bg-transparent text-right outline-none"
           @keyup.enter="($event.target as HTMLElement).blur()"
           @keyup.esc="($event.target as HTMLElement).blur()"
         />

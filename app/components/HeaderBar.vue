@@ -26,7 +26,7 @@ async function handleSignOut() {
 
 <template>
   <div
-    class="fixed z-100 flex w-full max-w-250 gap-3 bg-gray-900 px-4 py-1 tracking-wide text-white"
+    class="fixed z-100 flex w-full max-w-250 items-center gap-3 bg-header px-4 py-1 tracking-wide text-header-text"
   >
     <NuxtLink to="/" class="font-bold hover:underline">WORK LOG</NuxtLink>
     <div>/</div>
@@ -37,16 +37,22 @@ async function handleSignOut() {
     <NuxtLink to="/tags" class="hover:underline">Tags</NuxtLink>
     <div>/</div>
     <NuxtLink to="/sessions" class="hover:underline">Sessions</NuxtLink>
-    <button
-      class="mr-2 ml-auto cursor-pointer"
-      @click="store.sortOrderReversed = !store.sortOrderReversed"
-    >
-      <SortAscending v-if="!store.sortOrderReversed" />
-      <SortDescending v-if="store.sortOrderReversed" />
-    </button>
-    <button class="cursor-pointer text-sm text-gray-300 hover:text-white" @click="handleSignOut">
-      Sign out
-    </button>
-    <div>{{ currentTime }}</div>
+    <div class="ml-auto flex items-center gap-2">
+      <button
+        class="cursor-pointer text-header-muted hover:text-header-text"
+        @click="store.sortOrderReversed = !store.sortOrderReversed"
+      >
+        <SortAscending v-if="!store.sortOrderReversed" />
+        <SortDescending v-if="store.sortOrderReversed" />
+      </button>
+      <ThemeSwitcher />
+      <button
+        class="cursor-pointer text-sm text-header-muted hover:text-header-text"
+        @click="handleSignOut"
+      >
+        Sign out
+      </button>
+      <div class="text-sm text-header-muted">{{ currentTime }}</div>
+    </div>
   </div>
 </template>

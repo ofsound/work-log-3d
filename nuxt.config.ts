@@ -15,7 +15,14 @@ export default defineNuxtConfig({
         buildAssetsDir: 'assets/',
       }
     : undefined,
-  modules: ['@nuxt/eslint', '@pinia/nuxt', 'nuxt-vuefire'],
+  modules: ['@nuxt/eslint', '@pinia/nuxt', '@nuxtjs/color-mode', 'nuxt-vuefire'],
+  colorMode: {
+    classSuffix: '',
+    fallback: 'light',
+    preference: 'system',
+    storage: 'localStorage',
+    storageKey: 'work-log-theme:active',
+  },
   vuefire: {
     auth: { enabled: true },
     config: {

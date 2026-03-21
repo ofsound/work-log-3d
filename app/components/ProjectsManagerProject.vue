@@ -85,14 +85,14 @@ watch(
 </script>
 
 <template>
-  <div class="border-b border-black/20 py-1">
+  <div class="border-b border-divider py-1">
     <div class="flex gap-2">
       <input
         v-if="isNameEditMode"
         ref="myInput"
         v-model="dynamicName"
         type="text"
-        class="flex-1 p-1 font-bold hover:underline focus:bg-white focus:no-underline!"
+        class="flex-1 p-1 font-bold text-text hover:underline focus:bg-input-focus focus:no-underline!"
         @input="mutationErrorMessage = ''"
         @keyup.enter="renameProjectDocument"
         @keyup.esc="cancelRenameAndLoseFocus"
@@ -100,24 +100,30 @@ watch(
       />
       <button
         v-if="!isNameEditMode"
-        class="flex-1 cursor-pointer p-1 text-left font-bold hover:underline"
+        class="flex-1 cursor-pointer p-1 text-left font-bold text-text hover:underline"
         @click="router.push(getProjectPath(id))"
       >
         {{ dynamicName }}
       </button>
       <div
-        class="relative top-1 mt-1.5 mb-3 ml-4 w-max cursor-pointer self-start rounded-md bg-zinc-100 px-1.5 py-0.5 pt-px font-data text-xs tracking-wide text-black"
+        class="relative top-1 mt-1.5 mb-3 ml-4 w-max cursor-pointer self-start rounded-md bg-badge-neutral px-1.5 py-0.5 pt-px font-data text-xs tracking-wide text-badge-neutral-text"
       >
         {{ projectTimeBoxesTotalDuration }} hrs
       </div>
-      <button class="cursor-pointer px-1" @click="isNameEditMode = !isNameEditMode">
+      <button
+        class="cursor-pointer px-1 text-text-subtle hover:text-text"
+        @click="isNameEditMode = !isNameEditMode"
+      >
         <EditIcon />
       </button>
-      <button class="cursor-pointer px-1" @click="deleteProjectDocument">
+      <button
+        class="cursor-pointer px-1 text-text-subtle hover:text-text"
+        @click="deleteProjectDocument"
+      >
         <DeleteIcon />
       </button>
     </div>
-    <p v-if="mutationErrorMessage" class="mt-2 px-1 text-sm text-red-700">
+    <p v-if="mutationErrorMessage" class="mt-2 px-1 text-sm text-danger">
       {{ mutationErrorMessage }}
     </p>
   </div>

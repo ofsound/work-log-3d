@@ -99,15 +99,21 @@ const deleteTimeBoxDocument = async () => {
 <template>
   <div
     v-if="!isMinimized"
-    class="relative my-4 rounded-sm border border-gray-400/20 bg-slate-100 px-6 py-4 shadow-md"
+    class="relative my-4 rounded-sm border border-border-subtle bg-panel-session px-6 py-4 shadow-panel"
   >
-    <button class="absolute right-4 bottom-3 cursor-pointer px-1" @click="emit('toggleEditor')">
+    <button
+      class="absolute right-4 bottom-3 cursor-pointer px-1 text-text-subtle hover:text-text"
+      @click="emit('toggleEditor')"
+    >
       <EditIcon />
     </button>
-    <button class="absolute right-4 cursor-pointer px-1" @click="deleteTimeBoxDocument">
+    <button
+      class="absolute right-4 cursor-pointer px-1 text-text-subtle hover:text-text"
+      @click="deleteTimeBoxDocument"
+    >
       <DeleteIcon />
     </button>
-    <div class="flex items-baseline gap-2 border-b pb-2">
+    <div class="flex items-baseline gap-2 border-b border-border pb-2">
       <div class="w-max rounded-sm text-2xl font-bold">
         {{ timeBoxDuration }}
       </div>
@@ -125,25 +131,22 @@ const deleteTimeBoxDocument = async () => {
       <div
         v-for="thisTag in tagNames"
         :key="thisTag"
-        class="rounded-xl bg-gray-300 px-3 py-0.5 font-data text-sm"
+        class="rounded-xl bg-chip px-3 py-0.5 font-data text-sm text-chip-text"
       >
         <div class="relative -top-px">{{ thisTag }}</div>
       </div>
     </div>
-    <p v-if="mutationErrorMessage" class="mt-3 text-sm text-red-700">
+    <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
       {{ mutationErrorMessage }}
     </p>
   </div>
-  <div
-    v-if="isMinimized"
-    class="mb-2.5 items-baseline gap-2 border-b border-gray-200 last:border-0"
-  >
+  <div v-if="isMinimized" class="mb-2.5 items-baseline gap-2 border-b border-border last:border-0">
     <div v-if="variant !== 'project'" class="font-bold">{{ projectName }}</div>
     <div class="pb-2 font-data">
       {{ timeBox?.notes }}
       <span class="ml-2 text-xs font-bold italic"
-        ><span class="text-gray-400">[</span> {{ timeBoxDuration }}
-        <span class="text-gray-400">]</span></span
+        ><span class="text-text-subtle">[</span> {{ timeBoxDuration }}
+        <span class="text-text-subtle">]</span></span
       >
     </div>
   </div>

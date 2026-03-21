@@ -31,11 +31,11 @@ const projectTimeBoxesTotalDuration = computed(() => getTotalDurationLabel(proje
 <template>
   <div class="flex h-full min-h-0 flex-col">
     <div
-      class="relative z-10 flex h-22 w-full max-w-250 items-center justify-center bg-linear-to-br from-slate-800 to-zinc-900 text-white shadow-sm shadow-gray-700"
+      class="relative z-10 flex h-22 w-full max-w-250 items-center justify-center bg-linear-to-br from-overview-start to-overview-end text-header-text shadow-overview"
     >
       <div class="text-center text-3xl font-bold">{{ project?.name }}</div>
       <div
-        class="relative top-px ml-4 w-max rounded-md bg-emerald-800 px-1.5 py-0.5 pt-px font-data text-sm tracking-wide text-white"
+        class="relative top-px ml-4 w-max rounded-md bg-badge-duration px-1.5 py-0.5 pt-px font-data text-sm tracking-wide text-badge-duration-text"
       >
         {{ projectTimeBoxesTotalDuration }} hrs
       </div>
