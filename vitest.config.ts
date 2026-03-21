@@ -13,7 +13,9 @@ export default defineConfig({
     },
   },
   test: {
+    exclude: ['tests/firestore-rules.spec.ts'],
     environment: 'node',
     globals: true,
+    include: ['tests/**/*.spec.ts'],
   },
 })

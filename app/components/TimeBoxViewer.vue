@@ -10,7 +10,12 @@ import type {
   FirebaseTimeBoxDocument,
 } from '~/utils/worklog-firebase'
 import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
-import { findProjectName, findTagNames, getDurationMinutesLabel } from '~~/shared/worklog'
+import {
+  findProjectName,
+  findTagNames,
+  getDurationMinutesLabel,
+  getWorklogErrorMessage,
+} from '~~/shared/worklog'
 
 const repositories = useWorklogRepository()
 const shell = useHostShell()
@@ -23,6 +28,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['toggleEditor'])
+const mutationErrorMessage = ref('')
 
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
@@ -82,8 +88,9 @@ const deleteTimeBoxDocument = async () => {
   if (confirmed) {
     try {
       await repositories.timeBoxes.remove(props.id)
-    } catch (e) {
-      console.error('Error deleting document: ', e)
+      mutationErrorMessage.value = ''
+    } catch (error) {
+      mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to delete session.')
     }
   }
 }
@@ -123,6 +130,9 @@ const deleteTimeBoxDocument = async () => {
         <div class="relative -top-px">{{ thisTag }}</div>
       </div>
     </div>
+    <p v-if="mutationErrorMessage" class="mt-3 text-sm text-red-700">
+      {{ mutationErrorMessage }}
+    </p>
   </div>
   <div
     v-if="isMinimized"

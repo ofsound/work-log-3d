@@ -1,0 +1,10 @@
+---
+description: Keep docs and agent instructions aligned with the repo
+alwaysApply: true
+---
+
+# Docs Maintenance
+
+- When changing scripts, verification steps, env vars, routing conventions, or Firestore behavior, update `README.md`.
+- When changing repo-specific engineering constraints, update `AGENTS.md` or the relevant `.cursor/rules/*.mdc`.
+- If MCP tools are mentioned, phrase the guidance conditionally. Do not assume a specific client/runtime exposes them.

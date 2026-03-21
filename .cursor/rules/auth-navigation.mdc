@@ -1,0 +1,12 @@
+---
+description: Auth routing ownership for Nuxt pages and middleware
+globs: "app/**/*.vue,app/**/*.ts,tests/**/*.ts"
+alwaysApply: false
+---
+
+# Auth Navigation Ownership
+
+- Route protection belongs in route middleware.
+- Post-login redirect behavior belongs in the login page or auth-specific utilities.
+- Do **not** add app-wide auth watchers in `app.vue` that push users between routes.
+- Keep login redirect helpers pure and testable.

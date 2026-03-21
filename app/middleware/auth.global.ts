@@ -1,11 +1,10 @@
+import { getLoginRedirectLocation, LOGIN_ROUTE_PATH } from '~/utils/auth-navigation'
+
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path === '/login') return
+  if (to.path === LOGIN_ROUTE_PATH) return
 
   const user = await getCurrentUser()
   if (!user) {
-    return navigateTo({
-      path: '/login',
-      query: { redirect: to.fullPath },
-    })
+    return navigateTo(getLoginRedirectLocation(to.fullPath))
   }
 })

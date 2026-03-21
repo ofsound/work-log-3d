@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'National Park', 'Avenir Next', 'Segoe UI', sans-serif;
-  --font-data: 'Lato', 'Avenir Next', 'Segoe UI', sans-serif;
-  --font-script: 'Caveat', 'Bradley Hand', cursive;
+  --font-sans: 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-data: 'SF Mono', 'SFMono-Regular', 'Menlo', monospace;
+  --font-script: 'Bradley Hand', 'Segoe Print', cursive;
 }

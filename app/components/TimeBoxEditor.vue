@@ -8,7 +8,7 @@ import type {
 } from '~/utils/worklog-firebase'
 import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
 import type { TimeBoxInput } from '~~/shared/worklog'
-import { sortNamedEntities } from '~~/shared/worklog'
+import { getWorklogErrorMessage, sortNamedEntities } from '~~/shared/worklog'
 
 const props = defineProps({
   id: { type: String, default: undefined },
@@ -23,6 +23,7 @@ const shell = useHostShell()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
 const timeBoxEditorRef = ref<HTMLElement | null>(null)
+const mutationErrorMessage = ref('')
 
 const dynamicDurationTypingTimer = ref<ReturnType<typeof setTimeout>>()
 
@@ -57,10 +58,11 @@ if (props.id) {
         dynamicEndTime.value = timeBox.endTime ? formatToDatetimeLocal(timeBox.endTime) : ''
         dynamicProject.value = timeBox.project
         dynamicTags.value = timeBox.tags
+        mutationErrorMessage.value = ''
       }
     })
-    .catch((error) => {
-      console.error('Error loading document:', error)
+    .catch((error: unknown) => {
+      mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to load the session.')
     })
 }
 
@@ -71,33 +73,26 @@ const updateTimeBoxDocument = async () => {
 
   if (confirmed) {
     try {
+      mutationErrorMessage.value = ''
       await repositories.timeBoxes.update(props.id, getTimeBoxInput())
       emit('toggleEditor')
-    } catch (e) {
-      console.error('Error updating document: ', e)
+    } catch (error) {
+      mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to update the session.')
     }
   } else {
+    mutationErrorMessage.value = ''
     emit('toggleEditor')
   }
 }
 
 const createTimeBoxDocument = async () => {
-  if (
-    dynamicStartTime.value &&
-    dynamicEndTime.value &&
-    dynamicNotes.value &&
-    dynamicProject.value &&
-    dynamicTags.value.length > 0
-  ) {
-    try {
-      await repositories.timeBoxes.create(getTimeBoxInput())
-      timeBoxEditorRef.value!.classList.add('animate-[var(--animate-blink-once)]')
-      setTimeout(resetTimeBoxEditor, 100)
-    } catch (e) {
-      console.error('Error adding document: ', e)
-    }
-  } else {
-    console.error("A field in the TimeBox isn't filled out.")
+  try {
+    mutationErrorMessage.value = ''
+    await repositories.timeBoxes.create(getTimeBoxInput())
+    timeBoxEditorRef.value?.classList.add('animate-[var(--animate-blink-once)]')
+    setTimeout(resetTimeBoxEditor, 100)
+  } catch (error) {
+    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save the session.')
   }
 }
 
@@ -116,7 +111,8 @@ const resetTimeBoxEditor = () => {
   dynamicProject.value = ''
   dynamicNotes.value = ''
   dynamicTags.value = []
-  timeBoxEditorRef.value!.classList.remove('animate-[var(--animate-blink-once)]')
+  mutationErrorMessage.value = ''
+  timeBoxEditorRef.value?.classList.remove('animate-[var(--animate-blink-once)]')
 }
 
 const timeBoxDuration = () => {
@@ -137,6 +133,7 @@ watch(
     } else {
       dynamicStartTime.value = ''
     }
+    mutationErrorMessage.value = ''
   },
 )
 
@@ -148,6 +145,7 @@ watch(
     } else {
       dynamicEndTime.value = ''
     }
+    mutationErrorMessage.value = ''
   },
 )
 
@@ -194,6 +192,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleEscape)
+  if (dynamicDurationTypingTimer.value) {
+    clearTimeout(dynamicDurationTypingTimer.value)
+  }
 })
 </script>
 
@@ -206,15 +207,25 @@ onBeforeUnmount(() => {
       <input
         v-model="dynamicDuration"
         class="relative h-max w-21.5 rounded-sm border border-gray-400 bg-white px-2.5 py-1 text-right font-data text-4xl font-bold tabular-nums"
+        @input="mutationErrorMessage = ''"
       />
       <div class="flex flex-col gap-1">
         <div class="flex">
           <div class="w-18 font-bold">Start:</div>
-          <input v-model="dynamicStartTime" type="datetime-local" class="font-data" />
+          <input
+            v-model="dynamicStartTime"
+            type="datetime-local"
+            class="font-data"
+            @input="mutationErrorMessage = ''"
+          />
         </div>
         <div class="flex">
           <div class="w-18 font-bold">End:</div>
-          <input v-model="dynamicEndTime" type="datetime-local" />
+          <input
+            v-model="dynamicEndTime"
+            type="datetime-local"
+            @input="mutationErrorMessage = ''"
+          />
         </div>
       </div>
     </div>
@@ -224,6 +235,7 @@ onBeforeUnmount(() => {
         class="w-full rounded-sm border border-gray-400 bg-white p-2"
         rows="5"
         placeholder="Enter notes here..."
+        @input="mutationErrorMessage = ''"
       ></textarea>
     </div>
     <div class="flex border-b border-gray-200 py-4">
@@ -240,6 +252,7 @@ onBeforeUnmount(() => {
             :value="thisProject.id"
             name="projectSelection"
             class="mr-1.5"
+            @change="mutationErrorMessage = ''"
           />
           {{ thisProject.name }}
         </label>
@@ -258,6 +271,9 @@ onBeforeUnmount(() => {
         </label>
       </div>
     </div>
+    <p v-if="mutationErrorMessage" class="text-sm text-red-700">
+      {{ mutationErrorMessage }}
+    </p>
     <div v-if="props.id" class="mt-6! flex gap-3">
       <button
         class="ml-auto block cursor-pointer rounded-md bg-slate-600 px-3 py-1 text-white"

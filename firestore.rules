@@ -1,8 +1,65 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function hasExactKeys(keys) {
+      return request.resource.data.keys().hasAll(keys)
+        && request.resource.data.keys().hasOnly(keys);
+    }
+
+    function isNonEmptyString(value) {
+      return value is string && value.size() > 0;
+    }
+
+    function isNonEmptyList(value) {
+      return value is list && value.size() > 0;
+    }
+
+    function isProjectDocument() {
+      return hasExactKeys(['name', 'slug'])
+        && isNonEmptyString(request.resource.data.name)
+        && isNonEmptyString(request.resource.data.slug);
+    }
+
+    function isTagDocument() {
+      return hasExactKeys(['name', 'slug'])
+        && isNonEmptyString(request.resource.data.name)
+        && isNonEmptyString(request.resource.data.slug);
+    }
+
+    function isTimeBoxDocument() {
+      return hasExactKeys(['startTime', 'endTime', 'notes', 'project', 'tags'])
+        && request.resource.data.startTime is timestamp
+        && request.resource.data.endTime is timestamp
+        && request.resource.data.endTime > request.resource.data.startTime
+        && isNonEmptyString(request.resource.data.notes)
+        && isNonEmptyString(request.resource.data.project)
+        && isNonEmptyList(request.resource.data.tags);
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /users/{uid}/projects/{projectId} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isProjectDocument();
+      allow delete: if isOwner(uid);
+    }
+
+    match /users/{uid}/tags/{tagId} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isTagDocument();
+      allow delete: if isOwner(uid);
+    }
+
+    match /users/{uid}/timeBoxes/{timeBoxId} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isTimeBoxDocument();
+      allow delete: if isOwner(uid);
     }
   }
 }

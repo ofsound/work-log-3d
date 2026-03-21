@@ -1,5 +1,5 @@
 ---
-description: Project tech stack, Nuxt MCP usage, import order
+description: Project tech stack, tool guidance, import order
 alwaysApply: true
 ---
 
@@ -8,19 +8,17 @@ alwaysApply: true
 - **Stack**: Vue 3, Nuxt 4, TypeScript, Tailwind CSS, Pinia, nuxt-vuefire (Firebase)
 - **Styling**: Tailwind only; avoid vanilla CSS in `<style>` blocks
 
-## Nuxt MCP Tools
+## Tool Guidance
 
-- **`list_documentation_pages`**: Use FIRST when exploring Nuxt/Vue topics (optionally with `version: "4.x"`)
-- **`get_documentation_page`**: Use when you know the doc path (e.g. `/docs/4.x/getting-started/introduction`, `/docs/4.x/directory-structure/app/components`)
-- **`get_getting_started_guide`**: Use for setup and overview
-- **`list_modules`** / **`get_module`**: Use for module discovery and Nuxt 4 compatibility (e.g. `@nuxt/ui`, `@pinia/nuxt`)
-- **`list_deploy_providers`** / **`get_deploy_provider`**: Only when the user asks about deployment
-- **`list_blog_posts`** / **`get_blog_post`**: For Nuxt announcements or "what's new" (e.g. Nuxt 4)
-- Do **not** use playground links for code written to project files
+- If your client exposes Nuxt or Firebase MCP tools, use them for framework or backend questions.
+- If those tools are unavailable, fall back to local source inspection and official docs as needed.
+- Do **not** reference `.cursor/AGENTS.md`; this repo's source of truth is `AGENTS.md` plus `.cursor/rules/`.
 
-## Firebase MCP
+## Routing and Data
 
-For Firestore, auth, or backend setup: use `firebase_read_resources` (e.g. `firebase://guides/init/firestore`), `firebase_init`, `firebase_get_environment`. Full MCP reference: `.cursor/AGENTS.md`.
+- Project and tag routes are ID-based: `/project/:id`, `/tag/:id`
+- `slug` is stored for display/backward-compatibility only; do not use it as the primary lookup key
+- Deleting a project or tag must respect active `timeBoxes` references
 
 ## Import Order
 

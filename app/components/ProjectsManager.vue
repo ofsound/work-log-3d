@@ -2,12 +2,13 @@
 import type { Ref } from 'vue'
 import type { FirebaseProjectDocument } from '~/utils/worklog-firebase'
 import { toProjects } from '~/utils/worklog-firebase'
-import { sortNamedEntities } from '~~/shared/worklog'
+import { getWorklogErrorMessage, sortNamedEntities } from '~~/shared/worklog'
 
 const repositories = useWorklogRepository()
 const { projectsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
 const myInput: Ref<HTMLInputElement | null> = ref(null)
+const mutationErrorMessage = ref('')
 
 const sortedAllProjects = computed(() => {
   return sortNamedEntities(toProjects(allProjects.value as FirebaseProjectDocument[]))
@@ -16,20 +17,19 @@ const sortedAllProjects = computed(() => {
 const newProjectName = ref('')
 
 const createProjectDocument = async () => {
-  if (newProjectName.value) {
-    try {
-      await repositories.projects.create({ name: newProjectName.value })
-      newProjectName.value = ''
-    } catch (e) {
-      console.error('Error adding document: ', e)
-    }
-  } else {
-    console.error('Name field empty!')
+  mutationErrorMessage.value = ''
+
+  try {
+    await repositories.projects.create({ name: newProjectName.value })
+    newProjectName.value = ''
+  } catch (error) {
+    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to create project.')
   }
 }
 
 const cancelCreateAndLoseFocus = () => {
   newProjectName.value = ''
+  mutationErrorMessage.value = ''
   if (myInput.value) {
     myInput.value.blur()
   }
@@ -44,7 +44,6 @@ const cancelCreateAndLoseFocus = () => {
       :id="item.id"
       :key="item.id"
       :name="item.name"
-      :slug="item.slug"
     />
     <div class="mt-8 flex">
       <input
@@ -52,6 +51,7 @@ const cancelCreateAndLoseFocus = () => {
         v-model="newProjectName"
         class="mr-4 flex-1 bg-white pl-2 font-bold"
         type="text"
+        @input="mutationErrorMessage = ''"
         @keyup.enter="createProjectDocument"
         @keyup.esc="cancelCreateAndLoseFocus"
       />
@@ -62,5 +62,8 @@ const cancelCreateAndLoseFocus = () => {
         + Create Project
       </button>
     </div>
+    <p v-if="mutationErrorMessage" class="mt-3 text-sm text-red-700">
+      {{ mutationErrorMessage }}
+    </p>
   </div>
 </template>
