@@ -34,7 +34,7 @@ describe('app auth route gate', () => {
     expect(wrapper.find('[data-test="page"]').exists()).toBe(true)
   })
 
-  it('holds protected routes while auth is unresolved', () => {
+  it('renders protected routes while auth is unresolved', () => {
     route.path = '/sessions'
 
     const wrapper = mount(AppRoot, {
@@ -46,10 +46,10 @@ describe('app auth route gate', () => {
       },
     })
 
-    expect(wrapper.find('[data-test="page"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="page"]').exists()).toBe(true)
   })
 
-  it('holds protected routes for anonymous users until redirect completes', () => {
+  it('renders protected routes for anonymous users while redirect is pending', () => {
     route.path = '/sessions'
     currentUser.value = null
 
@@ -62,7 +62,7 @@ describe('app auth route gate', () => {
       },
     })
 
-    expect(wrapper.find('[data-test="page"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="page"]').exists()).toBe(true)
   })
 
   it('renders protected routes once a user is available', () => {

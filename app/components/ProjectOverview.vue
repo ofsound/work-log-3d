@@ -18,11 +18,19 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const rawProject = useDocument(doc(projectsCollection, props.id), {
+const rawProjectSource = computed(() =>
+  projectsCollection.value ? doc(projectsCollection.value, props.id) : null,
+)
+const rawProject = useDocument(rawProjectSource, {
   ssrKey: `project-overview-${props.id}`,
 })
 const store = useStore()
-const timeBoxes = useCollection(query(timeBoxesCollection, where('project', '==', props.id)), {
+const projectTimeBoxesQuery = computed(() =>
+  timeBoxesCollection.value
+    ? query(timeBoxesCollection.value, where('project', '==', props.id))
+    : null,
+)
+const timeBoxes = useCollection(projectTimeBoxesQuery, {
   ssrKey: `project-timeboxes-${props.id}`,
 })
 
@@ -53,7 +61,7 @@ const openProjectEditor = async () => {
 <template>
   <div class="flex h-full min-h-0 flex-col">
     <div
-      class="relative z-10 flex min-h-22 w-full max-w-250 items-center justify-center px-6 py-5 shadow-overview"
+      class="relative z-10 flex min-h-22 w-full items-center justify-center px-6 py-5 shadow-overview"
       :style="headerStyle"
     >
       <button

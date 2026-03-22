@@ -38,7 +38,12 @@ const mutationErrorMessage = ref('')
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
 
-const rawTimeBox = useDocument(doc(timeBoxesCollection, props.id))
+const rawTimeBoxSource = computed(() =>
+  timeBoxesCollection.value ? doc(timeBoxesCollection.value, props.id) : null,
+)
+const rawTimeBox = useDocument(rawTimeBoxSource, {
+  ssrKey: `time-box-viewer-${props.id}`,
+})
 const timeBox = computed(() => {
   if (!rawTimeBox.value) {
     return null

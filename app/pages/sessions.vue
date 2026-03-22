@@ -86,10 +86,14 @@ const calendarMode = computed(() =>
 )
 
 const calendarQuery = computed(() => {
+  if (!timeBoxesCollection.value) {
+    return null
+  }
+
   const bufferedRange = getBufferedCalendarRange(calendarMode.value, anchorDate.value)
 
   return query(
-    timeBoxesCollection,
+    timeBoxesCollection.value,
     where('startTime', '<', Timestamp.fromDate(bufferedRange.end)),
     where('endTime', '>', Timestamp.fromDate(bufferedRange.start)),
     orderBy('startTime', 'asc'),
@@ -97,7 +101,9 @@ const calendarQuery = computed(() => {
   )
 })
 
-const calendarTimeBoxes = useCollection(calendarQuery)
+const calendarTimeBoxes = useCollection(calendarQuery, {
+  ssrKey: 'sessions-calendar-time-boxes',
+})
 
 const visibleCalendarRange = computed(() => {
   if (currentMode.value === 'week') {

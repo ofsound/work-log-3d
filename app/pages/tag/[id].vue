@@ -12,7 +12,9 @@ const requestedTagId = computed(() => {
 })
 
 const legacyTagQuery = computed(() =>
-  query(tagsCollection, where('slug', '==', requestedTagId.value), limit(1)),
+  tagsCollection.value
+    ? query(tagsCollection.value, where('slug', '==', requestedTagId.value), limit(1))
+    : null,
 )
 const legacyTags = useCollection(legacyTagQuery, { ssrKey: 'legacy-tag-route' })
 

@@ -12,7 +12,9 @@ const requestedProjectId = computed(() => {
 })
 
 const legacyProjectQuery = computed(() =>
-  query(projectsCollection, where('slug', '==', requestedProjectId.value), limit(1)),
+  projectsCollection.value
+    ? query(projectsCollection.value, where('slug', '==', requestedProjectId.value), limit(1))
+    : null,
 )
 const legacyProjects = useCollection(legacyProjectQuery, { ssrKey: 'legacy-project-route' })
 

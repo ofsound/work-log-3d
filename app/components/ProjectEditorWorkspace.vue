@@ -27,8 +27,20 @@ const router = useRouter()
 const repositories = useWorklogRepository()
 const { projectsCollection, timeBoxesCollection } = useFirestoreCollections()
 
-const projectDocument = useDocument(doc(projectsCollection, props.id))
-const projectTimeBoxes = useCollection(query(timeBoxesCollection, where('project', '==', props.id)))
+const projectDocumentSource = computed(() =>
+  projectsCollection.value ? doc(projectsCollection.value, props.id) : null,
+)
+const projectDocument = useDocument(projectDocumentSource, {
+  ssrKey: `project-editor-${props.id}`,
+})
+const projectTimeBoxesQuery = computed(() =>
+  timeBoxesCollection.value
+    ? query(timeBoxesCollection.value, where('project', '==', props.id))
+    : null,
+)
+const projectTimeBoxes = useCollection(projectTimeBoxesQuery, {
+  ssrKey: `project-editor-timeboxes-${props.id}`,
+})
 
 const dynamicName = ref('')
 const dynamicNotes = ref('')

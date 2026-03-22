@@ -68,23 +68,30 @@ const applyCreateDefaults = () => {
 }
 
 if (props.id) {
-  const docBinding = useDocument(doc(timeBoxesCollection, props.id))
+  const timeBoxDocumentSource = computed(() =>
+    timeBoxesCollection.value ? doc(timeBoxesCollection.value, props.id) : null,
+  )
+  const docBinding = useDocument(timeBoxDocumentSource, {
+    ssrKey: `time-box-editor-${props.id}`,
+  })
 
-  docBinding.promise.value
-    .then(() => {
-      if (docBinding.data.value) {
-        const timeBox = toTimeBox(docBinding.data.value as FirebaseTimeBoxDocument)
-        dynamicNotes.value = timeBox.notes
-        dynamicStartTime.value = timeBox.startTime ? formatToDatetimeLocal(timeBox.startTime) : ''
-        dynamicEndTime.value = timeBox.endTime ? formatToDatetimeLocal(timeBox.endTime) : ''
-        dynamicProject.value = timeBox.project
-        dynamicTags.value = timeBox.tags
-        mutationErrorMessage.value = ''
+  watch(
+    () => docBinding.data.value,
+    (value) => {
+      if (!value) {
+        return
       }
-    })
-    .catch((error: unknown) => {
-      mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to load the session.')
-    })
+
+      const timeBox = toTimeBox(value as FirebaseTimeBoxDocument)
+      dynamicNotes.value = timeBox.notes
+      dynamicStartTime.value = timeBox.startTime ? formatToDatetimeLocal(timeBox.startTime) : ''
+      dynamicEndTime.value = timeBox.endTime ? formatToDatetimeLocal(timeBox.endTime) : ''
+      dynamicProject.value = timeBox.project
+      dynamicTags.value = timeBox.tags
+      mutationErrorMessage.value = ''
+    },
+    { immediate: true },
+  )
 } else {
   applyCreateDefaults()
 }

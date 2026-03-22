@@ -5,14 +5,6 @@ const router = useRouter()
 const auth = useFirebaseAuth()
 const { hideTags } = useUserSettings()
 
-const currentTime = ref('')
-
-const updateTime = () => {
-  currentTime.value = new Date().toLocaleTimeString([], { timeStyle: 'short' })
-}
-
-updateTime()
-
 async function handleSignOut() {
   if (auth) {
     await signOut(auth)
@@ -23,7 +15,7 @@ async function handleSignOut() {
 
 <template>
   <div
-    class="fixed z-100 flex w-full max-w-250 items-center gap-3 bg-header px-4 py-1 tracking-wide text-header-text"
+    class="fixed z-100 flex w-full items-center gap-3 bg-header px-4 py-1 tracking-wide text-header-text"
   >
     <NuxtLink to="/" class="font-bold hover:underline">WORK LOG</NuxtLink>
     <div>/</div>
@@ -48,7 +40,6 @@ async function handleSignOut() {
       >
         Sign out
       </button>
-      <div class="text-sm text-header-muted">{{ currentTime }}</div>
     </div>
   </div>
 </template>

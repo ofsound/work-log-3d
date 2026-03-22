@@ -11,17 +11,26 @@ const props = defineProps({
   id: { type: String, required: true },
 })
 
-const tag = useDocument(doc(tagsCollection, props.id))
+const tagSource = computed(() =>
+  tagsCollection.value ? doc(tagsCollection.value, props.id) : null,
+)
+const tag = useDocument(tagSource, {
+  ssrKey: `tag-overview-${props.id}`,
+})
 const store = useStore()
 
 const tagTimeBoxesQuery = computed(() =>
-  query(
-    timeBoxesCollection,
-    where('tags', 'array-contains', props.id),
-    orderBy('startTime', store.sortOrderReversed ? 'desc' : 'asc'),
-  ),
+  timeBoxesCollection.value
+    ? query(
+        timeBoxesCollection.value,
+        where('tags', 'array-contains', props.id),
+        orderBy('startTime', store.sortOrderReversed ? 'desc' : 'asc'),
+      )
+    : null,
 )
-const timeBoxes = useCollection(tagTimeBoxesQuery)
+const timeBoxes = useCollection(tagTimeBoxesQuery, {
+  ssrKey: `tag-overview-timeboxes-${props.id}`,
+})
 
 const tagTimeBoxes = computed(() => toTimeBoxes(timeBoxes.value as FirebaseTimeBoxDocument[]))
 const tagOverviewDayObjects = computed(() => groupTimeBoxesByStartDay(tagTimeBoxes.value))
@@ -31,7 +40,7 @@ const tagTimeBoxesTotalDuration = computed(() => getTotalDurationLabel(tagTimeBo
 <template>
   <div class="flex h-full min-h-0 flex-col">
     <div
-      class="relative z-10 flex h-22 w-full max-w-250 items-center justify-center bg-linear-to-br from-overview-start to-overview-end text-header-text shadow-overview"
+      class="relative z-10 flex h-22 w-full items-center justify-center bg-linear-to-br from-overview-start to-overview-end text-header-text shadow-overview"
     >
       <div class="text-center text-3xl font-bold">{{ tag?.name }}</div>
       <div

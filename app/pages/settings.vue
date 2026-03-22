@@ -10,6 +10,7 @@ import {
 const { desktopApi, isDesktop } = useHostRuntime()
 const { applyPreview, clearPreview, defaultSettings, saveSettings, savedSettings } =
   useUserSettings()
+const currentUser = useCurrentUser()
 
 const draft = ref<UserSettings>(cloneUserSettings(savedSettings.value))
 const mutationErrorMessage = ref('')
@@ -24,6 +25,18 @@ const isMutatingDesktopAlert = ref(false)
 
 const isDirty = computed(() => !areUserSettingsEqual(draft.value, savedSettings.value))
 const hasCustomDesktopAlertSound = computed(() => desktopAlertState.value?.source === 'custom')
+
+const accountDisplayName = computed(() => {
+  const u = currentUser.value
+  if (u === undefined || u === null) {
+    return null
+  }
+  return u.displayName?.trim() || null
+})
+
+const accountEmail = computed(() => currentUser.value?.email ?? null)
+const accountPhotoUrl = computed(() => currentUser.value?.photoURL ?? null)
+const accountUid = computed(() => currentUser.value?.uid ?? null)
 
 const syncDraftFromSaved = (settings: UserSettings) => {
   draft.value = cloneUserSettings(settings)
@@ -152,6 +165,53 @@ onBeforeUnmount(() => {
               Appearance and workflow preferences sync with your account. Desktop alert sounds stay
               local to each Electron install.
             </p>
+
+            <div
+              class="mt-4 rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
+              aria-live="polite"
+            >
+              <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Account</div>
+
+              <p v-if="currentUser === undefined" class="mt-2 text-sm text-text-muted">
+                Loading account…
+              </p>
+
+              <div v-else-if="accountUid" class="mt-3 flex gap-4">
+                <img
+                  v-if="accountPhotoUrl"
+                  :src="accountPhotoUrl"
+                  alt=""
+                  class="h-12 w-12 shrink-0 rounded-full border border-border-subtle bg-surface object-cover"
+                  referrerpolicy="no-referrer"
+                />
+                <div class="min-w-0 flex-1">
+                  <div v-if="accountDisplayName" class="font-semibold text-text">
+                    {{ accountDisplayName }}
+                  </div>
+                  <div
+                    v-if="accountEmail"
+                    class="text-sm text-text-muted"
+                    :class="{
+                      'mt-0.5': accountDisplayName,
+                      'font-semibold text-text': !accountDisplayName,
+                    }"
+                  >
+                    {{ accountEmail }}
+                  </div>
+                  <div
+                    v-if="!accountDisplayName && !accountEmail"
+                    class="text-sm font-semibold text-text"
+                  >
+                    Signed-in user
+                  </div>
+                  <div class="mt-1 font-mono text-xs break-all text-text-subtle">
+                    {{ accountUid }}
+                  </div>
+                </div>
+              </div>
+
+              <p v-else class="mt-2 text-sm text-text-muted">No user is signed in.</p>
+            </div>
           </div>
 
           <div class="flex flex-wrap gap-2">

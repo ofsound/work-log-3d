@@ -38,8 +38,12 @@ const isPublishing = ref(false)
 const isUnpublishing = ref(false)
 const isCopyingLink = ref(false)
 
-const reportsQuery = computed(() => query(reportsCollection, orderBy('updatedAt', 'desc')))
-const rawReports = useCollection(reportsQuery)
+const reportsQuery = computed(() =>
+  reportsCollection.value ? query(reportsCollection.value, orderBy('updatedAt', 'desc')) : null,
+)
+const rawReports = useCollection(reportsQuery, {
+  ssrKey: 'reports-workspace-reports',
+})
 const rawProjects = useCollection(projectsCollection)
 const rawTags = useCollection(tagsCollection)
 
@@ -67,19 +71,25 @@ const previewRange = computed(() => {
 const previewQuery = computed(() => {
   const range = previewRange.value
 
+  if (!timeBoxesCollection.value) {
+    return null
+  }
+
   if (!range) {
-    return query(timeBoxesCollection, orderBy('startTime', 'asc'))
+    return query(timeBoxesCollection.value, orderBy('startTime', 'asc'))
   }
 
   return query(
-    timeBoxesCollection,
+    timeBoxesCollection.value,
     where('startTime', '<', Timestamp.fromDate(range.end)),
     where('endTime', '>', Timestamp.fromDate(range.start)),
     orderBy('startTime', 'asc'),
     orderBy('endTime', 'asc'),
   )
 })
-const previewTimeBoxes = useCollection(previewQuery)
+const previewTimeBoxes = useCollection(previewQuery, {
+  ssrKey: 'reports-workspace-preview-time-boxes',
+})
 const previewSnapshot = computed(() => {
   try {
     return buildReportSnapshot({
