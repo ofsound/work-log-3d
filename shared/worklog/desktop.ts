@@ -65,6 +65,14 @@ export interface DesktopCapabilities {
   routeRequests: boolean
 }
 
+export type DesktopAlertSoundSource = 'bundled' | 'custom'
+
+export interface DesktopAlertSoundState {
+  source: DesktopAlertSoundSource
+  fileName: string
+  customFileName: string | null
+}
+
 export const DEFAULT_DESKTOP_CAPABILITIES: DesktopCapabilities = {
   isDesktop: false,
   nativeTimer: false,
@@ -74,6 +82,7 @@ export const DEFAULT_DESKTOP_CAPABILITIES: DesktopCapabilities = {
 export interface DesktopApi {
   getCapabilities(): DesktopCapabilities
   getTimerState(): Promise<TimerState>
+  getAlertSound(): Promise<DesktopAlertSoundState>
   subscribeToTimer(listener: (event: DesktopTimerEvent) => void): () => void
   subscribeToRouteRequest(listener: (path: string) => void): () => void
   startCountup(): Promise<void>
@@ -82,6 +91,9 @@ export interface DesktopApi {
   resumeTimer(): Promise<void>
   stopTimer(): Promise<void>
   cancelTimer(): Promise<void>
+  chooseAlertSound(): Promise<DesktopAlertSoundState>
+  clearAlertSound(): Promise<DesktopAlertSoundState>
+  testAlertSound(): Promise<void>
 }
 
 declare global {

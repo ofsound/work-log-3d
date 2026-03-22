@@ -20,11 +20,13 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Project and tag pages use stable ID-based routes: `/project/:id` and `/tag/:id`
 - `/sessions` is a single route with query-driven state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`; `mode=list` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort`
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
+- `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences and desktop-only alert sound controls
 - `slug` is stored for display and backward-compatibility redirects only
 - Projects and tags cannot be deleted while sessions still reference them
 - Shared validation lives in `shared/worklog/validation.ts`
 - Firestore rules in `firestore.rules` must match the current document shape
 - Theme preference is stored in `localStorage` per Firebase user, with a guest fallback before auth resolves
+- Appearance and workflow settings are stored in Firestore at `users/{uid}/settings/preferences`, while desktop alert sounds stay local to each Electron install
 
 ## Setup
 
@@ -177,6 +179,8 @@ npm run preview
 }
 ```
 
+`tags` may be empty when a user enables the project-first workflow mode and hides tag UI.
+
 `users/{uid}/reports/{reportId}`
 
 ```ts
@@ -199,6 +203,25 @@ npm run preview
 }
 ```
 
+`users/{uid}/settings/preferences`
+
+```ts
+{
+  appearance: {
+    fontImportUrl: string
+    fontFamilies: {
+      ui: string
+      data: string
+      script: string
+    }
+    backgroundPreset: 'grid' | 'dots' | 'crosshatch' | 'aurora'
+  }
+  workflow: {
+    hideTags: boolean
+  }
+}
+```
+
 `publicReports/{token}`
 
 Server-managed published report snapshots for anonymous client access. The top-level document stores the frozen report snapshot metadata, while detailed session rows are written to a `sessionRows` subcollection so large reports stay within Firestore document limits.
@@ -218,6 +241,7 @@ Server-managed published report snapshots for anonymous client access. The top-l
 - `/reports` lets authenticated users save named report drafts with a date range, timezone, project filters, tag filters, and a plain-text summary
 - Project filtering is union-based because each session stores one project; tag filtering supports `any` or `all`
 - When both project and tag filters are selected, the report can combine them with `intersection` or `union`
+- When project-first mode hides tags, existing tag-based report data is preserved but tag editing controls are removed from the authenticated workspace
 - Reports clamp session totals to the selected date range in the chosen timezone, so overnight sessions are split accurately across days
 - Publishing creates or refreshes a frozen public snapshot at `/r/:token`; unpublishing removes the public snapshot without deleting the private draft
 - Public reports include the summary, total hours, project/tag breakdowns, daily and weekly rollups, and individual session notes

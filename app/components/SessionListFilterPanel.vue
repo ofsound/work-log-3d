@@ -25,6 +25,7 @@ const props = defineProps<{
   filters: SessionListFilters
   projects: NamedEntity[]
   tags: NamedEntity[]
+  hideTags?: boolean
   resultCount: number
   totalDurationLabel: string
 }>()
@@ -111,22 +112,40 @@ const activeFilterChips = computed<ActiveFilterChip[]>(() => {
     })
   })
 
-  props.filters.tagIds.forEach((tagId) => {
-    chips.push({
-      id: `tag-${tagId}`,
-      label: `Tag: ${tagNameById.value[tagId] ?? tagId}`,
-      patch: {
-        tagIds: props.filters.tagIds.filter((id) => id !== tagId),
-      },
+  if (props.hideTags) {
+    if (
+      props.filters.tagIds.length > 0 ||
+      props.filters.tagMode === 'all' ||
+      props.filters.untaggedOnly
+    ) {
+      chips.push({
+        id: 'legacy-tags',
+        label: 'Legacy tag filters active',
+        patch: {
+          tagIds: [],
+          tagMode: 'any',
+          untaggedOnly: false,
+        },
+      })
+    }
+  } else {
+    props.filters.tagIds.forEach((tagId) => {
+      chips.push({
+        id: `tag-${tagId}`,
+        label: `Tag: ${tagNameById.value[tagId] ?? tagId}`,
+        patch: {
+          tagIds: props.filters.tagIds.filter((id) => id !== tagId),
+        },
+      })
     })
-  })
 
-  if (props.filters.tagIds.length > 0 && props.filters.tagMode === 'all') {
-    chips.push({
-      id: 'tag-mode',
-      label: 'Tag mode: All',
-      patch: { tagMode: 'any' },
-    })
+    if (props.filters.tagIds.length > 0 && props.filters.tagMode === 'all') {
+      chips.push({
+        id: 'tag-mode',
+        label: 'Tag mode: All',
+        patch: { tagMode: 'any' },
+      })
+    }
   }
 
   if (props.filters.dateStart || props.filters.dateEnd) {
@@ -153,7 +172,7 @@ const activeFilterChips = computed<ActiveFilterChip[]>(() => {
     })
   }
 
-  if (props.filters.untaggedOnly) {
+  if (!props.hideTags && props.filters.untaggedOnly) {
     chips.push({
       id: 'untagged',
       label: 'Untagged only',
@@ -246,7 +265,9 @@ const handleNotesStateChange = (value: string) => {
             :value="filters.query"
             type="text"
             class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-            placeholder="Search notes, projects, and tags"
+            :placeholder="
+              hideTags ? 'Search notes and projects' : 'Search notes, projects, and tags'
+            "
             @input="
               updateFilters({
                 query: ($event.target as HTMLInputElement).value,
@@ -264,6 +285,7 @@ const handleNotesStateChange = (value: string) => {
         />
 
         <SessionListMultiSelect
+          v-if="!hideTags"
           :disabled="filters.untaggedOnly"
           :model-value="filters.tagIds"
           :options="tags.map((tag) => ({ id: tag.id, label: tag.name }))"
@@ -292,9 +314,14 @@ const handleNotesStateChange = (value: string) => {
       </div>
 
       <div
-        class="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.85fr)]"
+        class="grid gap-4"
+        :class="
+          hideTags
+            ? 'xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.85fr)]'
+            : 'xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.85fr)]'
+        "
       >
-        <div class="flex flex-col gap-2">
+        <div v-if="!hideTags" class="flex flex-col gap-2">
           <span class="text-sm font-semibold text-text">Tag matching</span>
           <div
             class="inline-flex rounded-xl border border-border bg-surface-strong p-1 shadow-control"
@@ -432,6 +459,7 @@ const handleNotesStateChange = (value: string) => {
         </div>
 
         <label
+          v-if="!hideTags"
           class="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4 text-sm text-text"
         >
           <input

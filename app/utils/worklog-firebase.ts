@@ -18,6 +18,7 @@ import type {
   Tag,
   TimeBox,
   TimeBoxInput,
+  UserSettings,
   WorklogRepositories,
 } from '~~/shared/worklog'
 import {
@@ -25,6 +26,8 @@ import {
   createNamedEntityPayload,
   validateReportInput,
   validateTimeBoxInput,
+  validateUserSettingsInput,
+  resolveUserSettings,
 } from '~~/shared/worklog'
 
 export interface FirebaseTimestampLike {
@@ -71,6 +74,21 @@ export interface FirebaseReportDocument {
   publishedAt: FirebaseTimestampLike | null
 }
 
+export interface FirebaseUserSettingsDocument {
+  appearance?: {
+    fontImportUrl?: string
+    fontFamilies?: {
+      ui?: string
+      data?: string
+      script?: string
+    }
+    backgroundPreset?: string
+  }
+  workflow?: {
+    hideTags?: boolean
+  }
+}
+
 export const toProject = (project: FirebaseProjectDocument): Project => ({
   id: project.id,
   name: project.name,
@@ -111,6 +129,10 @@ export const toReport = (report: FirebaseReportDocument): Report => ({
   publishedAt: report.publishedAt?.toDate() ?? null,
 })
 
+export const toUserSettings = (
+  settings: FirebaseUserSettingsDocument | null | undefined,
+): UserSettings => resolveUserSettings(settings)
+
 export const toProjects = (projects: FirebaseProjectDocument[]) => projects.map(toProject)
 export const toTags = (tags: FirebaseTagDocument[]) => tags.map(toTag)
 export const toTimeBoxes = (timeBoxes: FirebaseTimeBoxDocument[]) => timeBoxes.map(toTimeBox)
@@ -130,6 +152,25 @@ const toReportPayload = (input: ReportInput) => {
     summary: normalized.summary,
     timezone: normalized.timezone,
     filters: normalized.filters,
+  }
+}
+
+export const toUserSettingsPayload = (input: UserSettings) => {
+  const normalized = validateUserSettingsInput(input)
+
+  return {
+    appearance: {
+      fontImportUrl: normalized.appearance.fontImportUrl,
+      fontFamilies: {
+        ui: normalized.appearance.fontFamilies.ui,
+        data: normalized.appearance.fontFamilies.data,
+        script: normalized.appearance.fontFamilies.script,
+      },
+      backgroundPreset: normalized.appearance.backgroundPreset,
+    },
+    workflow: {
+      hideTags: normalized.workflow.hideTags,
+    },
   }
 }
 

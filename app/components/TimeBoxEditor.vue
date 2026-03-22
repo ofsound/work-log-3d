@@ -30,6 +30,7 @@ const emit = defineEmits(['toggleEditor', 'saved'])
 
 const repositories = useWorklogRepository()
 const shell = useHostShell()
+const { hideTags } = useUserSettings()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
 const timeBoxEditorRef = ref<HTMLElement | null>(null)
@@ -55,6 +56,7 @@ const dynamicProject = ref('')
 const dynamicTags = ref<string[]>([])
 
 const dynamicDuration = ref<string | number>('')
+const showLegacyTagNotice = computed(() => hideTags.value && dynamicTags.value.length > 0)
 
 const applyCreateDefaults = () => {
   dynamicStartTime.value = props.initialStartTime || props.startTimeFromTimer || ''
@@ -302,18 +304,32 @@ onBeforeUnmount(() => {
         </label>
       </div>
     </div>
-    <div class="flex py-4 pb-1">
-      <div class="w-18 font-bold">Tags:</div>
-      <div class="flex gap-4">
-        <label
-          v-for="thisTag in sortedAllTags"
-          :key="thisTag.id"
-          class="flex cursor-pointer gap-2 select-none"
-        >
-          <input v-model="dynamicTags" type="checkbox" :value="thisTag.id" />
-          {{ thisTag.name }}
-        </label>
-      </div>
+    <div
+      class="py-4 pb-1"
+      :class="hideTags ? 'rounded-md border border-border-subtle bg-surface px-3' : 'flex'"
+    >
+      <template v-if="!hideTags">
+        <div class="w-18 font-bold">Tags:</div>
+        <div class="flex gap-4">
+          <label
+            v-for="thisTag in sortedAllTags"
+            :key="thisTag.id"
+            class="flex cursor-pointer gap-2 select-none"
+          >
+            <input v-model="dynamicTags" type="checkbox" :value="thisTag.id" />
+            {{ thisTag.name }}
+          </label>
+        </div>
+      </template>
+      <template v-else>
+        <span v-if="showLegacyTagNotice" class="text-sm text-text-muted">
+          Existing tags on this session are preserved, but tag editing is hidden in project-first
+          mode.
+        </span>
+        <span v-else class="text-sm text-text-muted">
+          Tags are hidden in project-first mode. New sessions will save without tags.
+        </span>
+      </template>
     </div>
     <p v-if="mutationErrorMessage" class="text-sm text-danger">
       {{ mutationErrorMessage }}

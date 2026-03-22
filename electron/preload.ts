@@ -16,6 +16,11 @@ const api: DesktopApi = {
   async getTimerState() {
     return (await ipcRenderer.invoke('timer:getState')) as TimerState
   },
+  async getAlertSound() {
+    return (await ipcRenderer.invoke('desktop:getAlertSound')) as Awaited<
+      ReturnType<DesktopApi['getAlertSound']>
+    >
+  },
   subscribeToTimer(listener) {
     const handler = (_event: IpcRendererEvent, payload: DesktopTimerEvent) => {
       listener(payload)
@@ -55,6 +60,19 @@ const api: DesktopApi = {
   },
   async cancelTimer() {
     await ipcRenderer.invoke('timer:cancel')
+  },
+  async chooseAlertSound() {
+    return (await ipcRenderer.invoke('desktop:chooseAlertSound')) as Awaited<
+      ReturnType<DesktopApi['chooseAlertSound']>
+    >
+  },
+  async clearAlertSound() {
+    return (await ipcRenderer.invoke('desktop:clearAlertSound')) as Awaited<
+      ReturnType<DesktopApi['clearAlertSound']>
+    >
+  },
+  async testAlertSound() {
+    await ipcRenderer.invoke('desktop:testAlertSound')
   },
 }
 

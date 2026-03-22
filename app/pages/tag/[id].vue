@@ -3,6 +3,7 @@ import { limit, query, where } from 'firebase/firestore'
 
 import { getTagPath } from '~/utils/worklog-routes'
 
+const { hideTags } = useUserSettings()
 const { tagsCollection } = useFirestoreCollections()
 const route = useRoute()
 const requestedTagId = computed(() => {
@@ -30,5 +31,16 @@ watchEffect(() => {
 </script>
 
 <template>
-  <TagOverview v-if="tagId" :id="tagId" :key="tagId" />
+  <div
+    v-if="hideTags"
+    class="mx-auto mt-8 max-w-3xl rounded-2xl border border-border-subtle bg-surface px-6 py-6 shadow-panel"
+  >
+    <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Tags hidden</div>
+    <div class="mt-2 text-2xl font-bold text-text">Project-first mode is active</div>
+    <p class="mt-3 text-sm leading-6 text-text-muted">
+      Existing tag data is still stored, but tag detail pages are hidden while tags are disabled in
+      your workflow settings.
+    </p>
+  </div>
+  <TagOverview v-else-if="tagId" :id="tagId" :key="tagId" />
 </template>

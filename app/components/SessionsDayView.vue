@@ -28,6 +28,7 @@ const props = defineProps({
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
   tagNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
+  hideTags: { type: Boolean, default: false },
   selectedSessionId: { type: String, default: '' },
 })
 
@@ -584,7 +585,10 @@ onBeforeUnmount(() => {
                   {{ layout.timeBox.notes }}
                 </div>
 
-                <div v-if="getLayoutDensity(layout) === 'full'" class="mt-3 flex flex-wrap gap-2">
+                <div
+                  v-if="!hideTags && getLayoutDensity(layout) === 'full'"
+                  class="mt-3 flex flex-wrap gap-2"
+                >
                   <div
                     v-for="tagName in getTagNames(layout.timeBox.tags)"
                     :key="tagName"

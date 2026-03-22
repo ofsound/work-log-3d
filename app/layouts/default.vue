@@ -1,12 +1,19 @@
 <script setup lang="ts">
+import { getShellBackgroundStyle } from '~/utils/user-settings'
+
 const user = useCurrentUser()
+const { activeSettings } = useUserSettings()
 
 const isAuthReady = computed(() => user.value !== undefined)
+const shellBackgroundStyle = computed(() =>
+  getShellBackgroundStyle(activeSettings.value.appearance.backgroundPreset),
+)
 </script>
 
 <template>
   <div
-    class="mx-auto h-dvh max-w-250 bg-shell bg-shell-grid bg-size-[15px_15px] text-text shadow-shell"
+    :style="shellBackgroundStyle"
+    class="mx-auto h-dvh max-w-250 bg-shell text-text shadow-shell"
   >
     <HeaderBar />
     <div v-if="isAuthReady" class="h-full pt-8">

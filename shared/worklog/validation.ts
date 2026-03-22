@@ -8,6 +8,7 @@ import {
   type ReportInput,
   type ReportTagOperator,
 } from './reports'
+import { validateUserSettings, type UserSettings } from './settings'
 import type { EntityId, TimeBoxInput } from './types'
 
 export type WorklogErrorCode = 'validation' | 'entity-in-use'
@@ -37,16 +38,6 @@ const requireNonEmptyString = (value: string, label: string) => {
 }
 
 const normalizeOptionalString = (value: string) => value.trim()
-
-const normalizeEntityIds = (values: EntityId[], label: string) => {
-  const normalized = values.map((value) => value.trim()).filter(Boolean)
-
-  if (normalized.length === 0) {
-    throw new WorklogError('validation', `${label} is required.`)
-  }
-
-  return [...new Set(normalized)]
-}
 
 const normalizeOptionalEntityIds = (values: EntityId[]) => {
   const normalized = values.map((value) => value.trim()).filter(Boolean)
@@ -123,7 +114,7 @@ export const validateTimeBoxInput = (input: TimeBoxInput): TimeBoxInput => {
     endTime: cloneDate(input.endTime),
     notes: requireNonEmptyString(input.notes, 'Notes'),
     project: requireNonEmptyString(input.project, 'Project'),
-    tags: normalizeEntityIds(input.tags, 'At least one tag'),
+    tags: normalizeOptionalEntityIds(input.tags),
   }
 }
 
@@ -161,6 +152,16 @@ export const validateReportInput = (input: ReportInput): ReportInput => ({
   timezone: requireTimeZone(input.timezone),
   filters: validateReportFilter(input.filters),
 })
+
+export const validateUserSettingsInput = (input: UserSettings): UserSettings => {
+  try {
+    return validateUserSettings(input)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Settings are invalid.'
+
+    throw new WorklogError('validation', message)
+  }
+}
 
 export const createEntityInUseError = (entityLabel: string) =>
   new WorklogError(

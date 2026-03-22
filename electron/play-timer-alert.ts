@@ -19,18 +19,22 @@ const getPlayer = () => {
   return player
 }
 
-export const playTimerCompleteAlert = (): void => {
-  const soundPath = resolveTimerCompleteSoundPath()
+export const playTimerCompleteAlert = async (userDataPath: string): Promise<void> => {
+  const soundPath = await resolveTimerCompleteSoundPath(userDataPath)
 
   if (!soundPath) {
     shell.beep()
     return
   }
 
-  getPlayer().play(soundPath, (err) => {
-    if (err) {
-      console.error('[worklog] timer alert sound failed', err)
-      shell.beep()
-    }
+  await new Promise<void>((resolve) => {
+    getPlayer().play(soundPath, (err) => {
+      if (err) {
+        console.error('[worklog] timer alert sound failed', err)
+        shell.beep()
+      }
+
+      resolve()
+    })
   })
 }

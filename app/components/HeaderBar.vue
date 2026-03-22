@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { signOut } from 'firebase/auth'
+
 const router = useRouter()
 const auth = useFirebaseAuth()
+const { hideTags } = useUserSettings()
 
 const currentTime = ref('')
 
@@ -28,12 +30,16 @@ async function handleSignOut() {
     <NuxtLink to="/new" class="">&nbsp;✚&nbsp;</NuxtLink>
     <div>/</div>
     <NuxtLink to="/projects" class="hover:underline">Projects</NuxtLink>
-    <div>/</div>
-    <NuxtLink to="/tags" class="hover:underline">Tags</NuxtLink>
+    <template v-if="!hideTags">
+      <div>/</div>
+      <NuxtLink to="/tags" class="hover:underline">Tags</NuxtLink>
+    </template>
     <div>/</div>
     <NuxtLink to="/sessions" class="hover:underline">Sessions</NuxtLink>
     <div>/</div>
     <NuxtLink to="/reports" class="hover:underline">Reports</NuxtLink>
+    <div>/</div>
+    <NuxtLink to="/settings" class="hover:underline">Settings</NuxtLink>
     <div class="ml-auto flex items-center gap-2">
       <ThemeSwitcher />
       <button

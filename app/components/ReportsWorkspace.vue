@@ -25,6 +25,7 @@ import {
 const auth = useFirebaseAuth()
 const user = useCurrentUser()
 const repositories = useWorklogRepository()
+const { hideTags } = useUserSettings()
 const { reportsCollection, projectsCollection, tagsCollection, timeBoxesCollection } =
   useFirestoreCollections()
 
@@ -103,6 +104,9 @@ const shareLink = computed(() => {
   return new URL(getPublicReportPath(token), window.location.origin).toString()
 })
 const canPublish = computed(() => previewSnapshot.value !== null)
+const hasHiddenLegacyTagFilters = computed(
+  () => hideTags.value && draft.value.filters.tagIds.length > 0,
+)
 
 const loadDraftFromSelectedReport = () => {
   if (selectedReport.value) {
@@ -452,7 +456,10 @@ const copyShareLink = async () => {
             </div>
 
             <div class="grid gap-4">
-              <div class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4">
+              <div
+                v-if="!hideTags"
+                class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
+              >
                 <div class="text-sm font-semibold text-text">Group combination</div>
                 <div class="mt-3 grid gap-2 md:grid-cols-2">
                   <label class="flex items-center gap-2 text-sm text-text">
@@ -470,7 +477,10 @@ const copyShareLink = async () => {
                 </div>
               </div>
 
-              <div class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4">
+              <div
+                v-if="!hideTags"
+                class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
+              >
                 <div class="text-sm font-semibold text-text">Tag matching</div>
                 <div class="mt-3 grid gap-2 md:grid-cols-2">
                   <label class="flex items-center gap-2 text-sm text-text">
@@ -509,7 +519,10 @@ const copyShareLink = async () => {
                   </div>
                 </div>
 
-                <div class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4">
+                <div
+                  v-if="!hideTags"
+                  class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
+                >
                   <div class="text-sm font-semibold text-text">Tags</div>
                   <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
                     <label
@@ -532,6 +545,14 @@ const copyShareLink = async () => {
                     </label>
                   </div>
                 </div>
+              </div>
+
+              <div
+                v-if="hasHiddenLegacyTagFilters"
+                class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4 text-sm text-text-muted"
+              >
+                This report still includes legacy tag filters. They remain active for existing data,
+                but tag editing is hidden while project-first mode is on.
               </div>
             </div>
           </div>
@@ -558,6 +579,7 @@ const copyShareLink = async () => {
       >
         <div class="mb-5 text-xs tracking-[0.18em] text-text-subtle uppercase">Preview</div>
         <ReportSnapshotView
+          :hide-tags="hideTags"
           :title="draft.title.trim() || 'Untitled report'"
           :summary="draft.summary"
           :snapshot="previewSnapshot"

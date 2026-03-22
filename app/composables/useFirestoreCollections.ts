@@ -1,5 +1,5 @@
 import { useFirestore } from 'vuefire'
-import { collection } from 'firebase/firestore'
+import { collection, doc } from 'firebase/firestore'
 
 /**
  * Composable for Firestore db and user-scoped collection refs.
@@ -22,5 +22,6 @@ export function useFirestoreCollections() {
     projectsCollection: collection(db, 'users', uid, 'projects'),
     tagsCollection: collection(db, 'users', uid, 'tags'),
     reportsCollection: collection(db, 'users', uid, 'reports'),
+    settingsDocument: doc(db, 'users', uid, 'settings', 'preferences'),
   }
 }

@@ -80,6 +80,18 @@ describe('firestore rules', () => {
     )
   })
 
+  it('allows an owner to write a valid project-only timebox document', async () => {
+    await assertSucceeds(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'timeBoxes', 'timebox-2'), {
+        startTime: Timestamp.fromDate(new Date('2026-03-20T10:00:00.000Z')),
+        endTime: Timestamp.fromDate(new Date('2026-03-20T11:00:00.000Z')),
+        notes: 'Project-only work',
+        project: 'project-1',
+        tags: [],
+      }),
+    )
+  })
+
   it('allows an owner to write a valid report document', async () => {
     await assertSucceeds(
       setDoc(authedDoc(testEnvironment, 'user-1', 'reports', 'report-1'), {
@@ -102,6 +114,26 @@ describe('firestore rules', () => {
     )
   })
 
+  it('allows an owner to write valid user settings', async () => {
+    await assertSucceeds(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
+        appearance: {
+          fontImportUrl:
+            'https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap',
+          fontFamilies: {
+            ui: "'National Park', sans-serif",
+            data: "'Lato', sans-serif",
+            script: "'Caveat', sans-serif",
+          },
+          backgroundPreset: 'dots',
+        },
+        workflow: {
+          hideTags: true,
+        },
+      }),
+    )
+  })
+
   it('rejects malformed timebox documents', async () => {
     await assertFails(
       setDoc(authedDoc(testEnvironment, 'user-1', 'timeBoxes', 'timebox-1'), {
@@ -109,7 +141,7 @@ describe('firestore rules', () => {
         endTime: Timestamp.fromDate(new Date('2026-03-20T08:00:00.000Z')),
         notes: '',
         project: '',
-        tags: [],
+        tags: ['tag-1'],
       }),
     )
   })
@@ -132,6 +164,25 @@ describe('firestore rules', () => {
         createdAt: Timestamp.fromDate(new Date('2026-03-21T08:00:00.000Z')),
         updatedAt: Timestamp.fromDate(new Date('2026-03-21T08:00:00.000Z')),
         publishedAt: null,
+      }),
+    )
+  })
+
+  it('rejects malformed user settings documents', async () => {
+    await assertFails(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
+        appearance: {
+          fontImportUrl: 'https://example.com/not-google-fonts',
+          fontFamilies: {
+            ui: '',
+            data: "'Lato', sans-serif",
+            script: "'Caveat', sans-serif",
+          },
+          backgroundPreset: 'unknown',
+        },
+        workflow: {
+          hideTags: true,
+        },
       }),
     )
   })

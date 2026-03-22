@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
-import { Notification, app, BrowserWindow, ipcMain } from 'electron'
+import { Notification, app, BrowserWindow, dialog, ipcMain } from 'electron'
 
 import type { DesktopTimerEvent, TimerState } from '~/shared/worklog'
 import {
@@ -22,6 +22,11 @@ import {
   syncTimerState,
 } from '~/shared/worklog'
 import type { TrayController } from '~/electron/tray-controller'
+import {
+  clearDesktopAlertSound,
+  getDesktopAlertSoundState,
+  importDesktopAlertSound,
+} from '~/electron/audio-config'
 import { createTrayController } from '~/electron/tray-controller'
 import { playTimerCompleteAlert } from '~/electron/play-timer-alert'
 
@@ -108,7 +113,7 @@ const setTimerState = (nextState: TimerState) => {
   void persistTimerState()
 
   if (shouldPlayTimerAlert(previousStatus, nextState.status)) {
-    playTimerCompleteAlert()
+    void playTimerCompleteAlert(app.getPath('userData'))
   }
 
   if (shouldShowTimerNotification(previousStatus, getTimerSnapshot(nextState, Date.now()))) {
@@ -213,6 +218,9 @@ const openMainWindow = (path?: string) => {
 
 const registerIpc = () => {
   ipcMain.handle('timer:getState', () => timerState)
+  ipcMain.handle('desktop:getAlertSound', async () => {
+    return getDesktopAlertSoundState(app.getPath('userData'))
+  })
   ipcMain.handle('timer:startCountup', () => {
     setTimerState(startCountupTimer(Date.now()))
   })
@@ -230,6 +238,29 @@ const registerIpc = () => {
   })
   ipcMain.handle('timer:cancel', () => {
     setTimerState(cancelTimer())
+  })
+  ipcMain.handle('desktop:chooseAlertSound', async () => {
+    const selection = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [
+        {
+          name: 'Audio',
+          extensions: ['mp3', 'wav', 'aiff', 'aif'],
+        },
+      ],
+    })
+
+    if (selection.canceled || !selection.filePaths[0]) {
+      return getDesktopAlertSoundState(app.getPath('userData'))
+    }
+
+    return importDesktopAlertSound(app.getPath('userData'), selection.filePaths[0])
+  })
+  ipcMain.handle('desktop:clearAlertSound', async () => {
+    return clearDesktopAlertSound(app.getPath('userData'))
+  })
+  ipcMain.handle('desktop:testAlertSound', async () => {
+    await playTimerCompleteAlert(app.getPath('userData'))
   })
 }
 

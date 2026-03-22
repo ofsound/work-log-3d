@@ -22,8 +22,13 @@ vi.mock('firebase/firestore', () => ({
   where,
 }))
 
-const { createFirestoreWorklogRepositories, toReport, toTimeBox } =
-  await import('~/app/utils/worklog-firebase')
+const {
+  createFirestoreWorklogRepositories,
+  toReport,
+  toTimeBox,
+  toUserSettings,
+  toUserSettingsPayload,
+} = await import('~/app/utils/worklog-firebase')
 
 describe('firestore worklog repositories', () => {
   beforeEach(() => {
@@ -79,6 +84,37 @@ describe('firestore worklog repositories', () => {
     expect(report.shareToken).toBe('token-1')
   })
 
+  it('serializes user settings with defaults and exact payload shape', () => {
+    const settings = toUserSettings({
+      appearance: {
+        fontImportUrl:
+          'https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap',
+        fontFamilies: {
+          ui: "'National Park', sans-serif",
+          data: "'Lato', sans-serif",
+        },
+      },
+    })
+
+    expect(settings.appearance.fontFamilies.script).toBe("'Caveat', sans-serif")
+    expect(settings.workflow.hideTags).toBe(false)
+    expect(toUserSettingsPayload(settings)).toEqual({
+      appearance: {
+        fontImportUrl:
+          'https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap',
+        fontFamilies: {
+          ui: "'National Park', sans-serif",
+          data: "'Lato', sans-serif",
+          script: "'Caveat', sans-serif",
+        },
+        backgroundPreset: 'grid',
+      },
+      workflow: {
+        hideTags: false,
+      },
+    })
+  })
+
   it('routes project and timebox writes through repository contracts', async () => {
     addDoc.mockResolvedValue({ id: 'created-id' })
     updateDoc.mockResolvedValue(undefined)
@@ -98,7 +134,7 @@ describe('firestore worklog repositories', () => {
       endTime: new Date('2026-03-20T09:00:00.000Z'),
       notes: ' Notes ',
       project: ' project-1 ',
-      tags: ['tag-1', 'tag-1'],
+      tags: ['tag-1', 'tag-1', ''],
     })
     await repositories.tags.remove('tag-1')
     await repositories.reports.create({
@@ -124,6 +160,12 @@ describe('firestore worklog repositories', () => {
       expect.objectContaining({ name: 'Renamed Project', slug: 'renamed-project' }),
     )
     expect(fromDate).toHaveBeenCalledTimes(3)
+    expect(addDoc).toHaveBeenCalledWith(
+      { id: 'timeBoxes' },
+      expect.objectContaining({
+        tags: ['tag-1'],
+      }),
+    )
     expect(deleteDoc).toHaveBeenCalledWith({ id: 'tag-1' })
     expect(query).toHaveBeenCalledWith(
       { id: 'timeBoxes' },
@@ -180,7 +222,7 @@ describe('firestore worklog repositories', () => {
         endTime: new Date('2026-03-20T08:00:00.000Z'),
         notes: '',
         project: '',
-        tags: [],
+        tags: ['tag-1'],
       }),
     ).rejects.toThrow('End time must be after the start time.')
     expect(addDoc).not.toHaveBeenCalled()

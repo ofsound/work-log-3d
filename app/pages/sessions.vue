@@ -52,6 +52,7 @@ interface SessionCreatePayload {
 
 const route = useRoute()
 const router = useRouter()
+const { hideTags } = useUserSettings()
 
 const repositories = useWorklogRepository()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
@@ -649,6 +650,7 @@ onBeforeUnmount(() => {
       <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <SessionListFilterPanel
           :filters="listFilters"
+          :hide-tags="hideTags"
           :projects="sortedProjects"
           :result-count="listSummary.count"
           :tags="sortedTags"
@@ -664,7 +666,11 @@ onBeforeUnmount(() => {
           <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">No matches</div>
           <div class="mt-2 text-xl font-bold text-text">No sessions match the current filters</div>
           <p class="mt-3 text-sm text-text-muted">
-            Adjust the search, date range, tags, or duration bounds to widen the results.
+            {{
+              hideTags
+                ? 'Adjust the search, date range, project, or duration bounds to widen the results.'
+                : 'Adjust the search, date range, tags, or duration bounds to widen the results.'
+            }}
           </p>
         </div>
 
@@ -684,6 +690,7 @@ onBeforeUnmount(() => {
         <SessionsDayView
           v-if="currentMode === 'day'"
           :anchor-date="anchorDate"
+          :hide-tags="hideTags"
           :project-name-by-id="projectNameById"
           :selected-session-id="selectedSessionId"
           :tag-name-by-id="tagNameById"

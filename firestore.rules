@@ -51,7 +51,7 @@ service cloud.firestore {
         && request.resource.data.endTime > request.resource.data.startTime
         && isNonEmptyString(request.resource.data.notes)
         && isNonEmptyString(request.resource.data.project)
-        && isNonEmptyList(request.resource.data.tags);
+        && isStringList(request.resource.data.tags);
     }
 
     function isReportFilter(value) {
@@ -88,6 +88,28 @@ service cloud.firestore {
         && isTimestampOrNull(request.resource.data.publishedAt);
     }
 
+    function isUserSettingsDocument() {
+      return hasExactKeys(['appearance', 'workflow'])
+        && hasExactMapKeys(request.resource.data.appearance, [
+            'fontImportUrl',
+            'fontFamilies',
+            'backgroundPreset'
+          ])
+        && request.resource.data.appearance.fontImportUrl is string
+        && hasExactMapKeys(request.resource.data.appearance.fontFamilies, ['ui', 'data', 'script'])
+        && isNonEmptyString(request.resource.data.appearance.fontFamilies.ui)
+        && isNonEmptyString(request.resource.data.appearance.fontFamilies.data)
+        && isNonEmptyString(request.resource.data.appearance.fontFamilies.script)
+        && (
+          request.resource.data.appearance.backgroundPreset == 'grid'
+          || request.resource.data.appearance.backgroundPreset == 'dots'
+          || request.resource.data.appearance.backgroundPreset == 'crosshatch'
+          || request.resource.data.appearance.backgroundPreset == 'aurora'
+        )
+        && hasExactMapKeys(request.resource.data.workflow, ['hideTags'])
+        && request.resource.data.workflow.hideTags is bool;
+    }
+
     match /users/{uid} {
       allow read, write: if isOwner(uid);
     }
@@ -114,6 +136,12 @@ service cloud.firestore {
       allow read: if isOwner(uid);
       allow create, update: if isOwner(uid) && isReportDocument();
       allow delete: if isOwner(uid);
+    }
+
+    match /users/{uid}/settings/{settingsId} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && settingsId == 'preferences' && isUserSettingsDocument();
+      allow delete: if false;
     }
   }
 }

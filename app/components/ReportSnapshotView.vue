@@ -10,6 +10,7 @@ const props = defineProps({
   summary: { type: String, default: '' },
   snapshot: { type: Object as PropType<ReportSnapshot | null>, default: null },
   publishedAtIso: { type: String, default: '' },
+  hideTags: { type: Boolean, default: false },
   publicMode: { type: Boolean, default: false },
 })
 
@@ -20,6 +21,11 @@ const publishedAtLabel = computed(() => {
 
   return formatReportDateTime(props.publishedAtIso, props.snapshot.timezone)
 })
+
+const visibleInsights = computed(
+  () =>
+    props.snapshot?.insights.filter((insight) => !props.hideTags || insight.id !== 'top-tag') ?? [],
+)
 </script>
 
 <template>
@@ -70,13 +76,13 @@ const publishedAtLabel = computed(() => {
     </section>
 
     <section
-      v-if="snapshot.insights.length > 0"
+      v-if="visibleInsights.length > 0"
       class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel"
     >
       <div class="text-lg font-bold text-text">Highlights</div>
       <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <article
-          v-for="insight in snapshot.insights"
+          v-for="insight in visibleInsights"
           :key="insight.id"
           class="rounded-xl border border-border-subtle bg-surface-muted px-4 py-4"
         >
@@ -117,7 +123,10 @@ const publishedAtLabel = computed(() => {
         </div>
       </div>
 
-      <div class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <div
+        v-if="!hideTags"
+        class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel"
+      >
         <div class="text-lg font-bold text-text">Hours by tag</div>
         <div class="mt-4 overflow-auto">
           <table class="min-w-full text-left text-sm">
@@ -146,7 +155,10 @@ const publishedAtLabel = computed(() => {
       </div>
     </section>
 
-    <section class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+    <section
+      v-if="!hideTags"
+      class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel"
+    >
       <div class="text-lg font-bold text-text">Project by tag matrix</div>
       <div class="mt-4 overflow-auto">
         <table class="min-w-full text-left text-sm">
@@ -275,7 +287,7 @@ const publishedAtLabel = computed(() => {
                   <div class="mt-3 text-sm leading-6 whitespace-pre-line text-text">
                     {{ session.notes }}
                   </div>
-                  <div class="mt-3 flex flex-wrap gap-2">
+                  <div v-if="!hideTags" class="mt-3 flex flex-wrap gap-2">
                     <div
                       v-for="tagName in session.tagNames"
                       :key="`${session.sessionId}-${tagName}`"

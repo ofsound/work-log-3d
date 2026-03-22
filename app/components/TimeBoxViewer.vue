@@ -20,6 +20,7 @@ import {
 
 const repositories = useWorklogRepository()
 const shell = useHostShell()
+const { hideTags } = useUserSettings()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
 const props = defineProps({
@@ -133,7 +134,7 @@ const deleteTimeBoxDocument = async () => {
     <div class="my-5 font-data">
       <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
     </div>
-    <div class="flex gap-2">
+    <div v-if="!hideTags" class="flex gap-2">
       <div
         v-for="thisTag in tagNames"
         :key="thisTag"
