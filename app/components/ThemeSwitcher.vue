@@ -12,7 +12,7 @@ const options: Array<{ id: ThemePreference; label: string; title: string }> = [
 
 <template>
   <div
-    class="inline-flex items-center rounded-full border border-header-toggle-border bg-header-toggle p-1"
+    class="inline-flex items-center gap-0.5 rounded-full px-1"
     aria-label="Theme mode"
     role="group"
   >

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { signOut } from 'firebase/auth'
 import type { DesktopAlertSoundState, UserSettings } from '~~/shared/worklog'
 import { areUserSettingsEqual, cloneUserSettings, getWorklogErrorMessage } from '~~/shared/worklog'
 
@@ -7,6 +8,8 @@ import {
   USER_SETTINGS_BACKGROUND_OPTIONS,
 } from '~/utils/user-settings'
 
+const router = useRouter()
+const auth = useFirebaseAuth()
 const { desktopApi, isDesktop } = useHostRuntime()
 const { applyPreview, clearPreview, defaultSettings, saveSettings, savedSettings } =
   useUserSettings()
@@ -116,6 +119,13 @@ const handleResetToDefaults = () => {
   saveMessage.value = ''
 }
 
+async function handleSignOut() {
+  if (auth) {
+    await signOut(auth)
+    await router.push('/login')
+  }
+}
+
 watch(
   savedSettings,
   (nextSettings) => {
@@ -190,19 +200,44 @@ onBeforeUnmount(() => {
                   </div>
                   <div
                     v-if="accountEmail"
-                    class="text-sm text-text-muted"
-                    :class="{
-                      'mt-0.5': accountDisplayName,
-                      'font-semibold text-text': !accountDisplayName,
-                    }"
+                    class="flex flex-wrap items-center justify-between gap-2"
+                    :class="accountDisplayName ? 'mt-0.5' : ''"
                   >
-                    {{ accountEmail }}
+                    <div
+                      class="min-w-0 text-sm"
+                      :class="accountDisplayName ? 'text-text-muted' : 'font-semibold text-text'"
+                    >
+                      {{ accountEmail }}
+                    </div>
+                    <button
+                      type="button"
+                      class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                      @click="handleSignOut"
+                    >
+                      Sign out
+                    </button>
                   </div>
                   <div
-                    v-if="!accountDisplayName && !accountEmail"
-                    class="text-sm font-semibold text-text"
+                    v-else-if="accountDisplayName"
+                    class="mt-2 flex flex-wrap items-center justify-end gap-2"
                   >
-                    Signed-in user
+                    <button
+                      type="button"
+                      class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                      @click="handleSignOut"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                  <div v-else class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="text-sm font-semibold text-text">Signed-in user</div>
+                    <button
+                      type="button"
+                      class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                      @click="handleSignOut"
+                    >
+                      Sign out
+                    </button>
                   </div>
                   <div class="mt-1 font-mono text-xs break-all text-text-subtle">
                     {{ accountUid }}
