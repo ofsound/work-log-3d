@@ -46,12 +46,12 @@ export interface YearHeatmapMonth {
   weeks: Array<Array<YearHeatmapCell | null>>
 }
 
-export interface YearHeatmapYear {
-  year: number
-  months: YearHeatmapMonth[]
-}
-
 export const YEAR_HEATMAP_INTENSITY_THRESHOLDS = [120, 240, 360, 480] as const
+
+const getStartOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1)
+
+const compareMonthStart = (left: Date, right: Date) =>
+  left.getFullYear() - right.getFullYear() || left.getMonth() - right.getMonth()
 
 const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/
 
@@ -446,29 +446,43 @@ const buildYearHeatmapMonth = ({
   }
 }
 
-export const buildYearHeatmapYears = (
+/** Months from current month backward to the first month that contains logged time (newest first). */
+export const buildYearHeatmapMonths = (
   timeBoxes: TimeBox[],
   today = new Date(),
-): YearHeatmapYear[] => {
+): YearHeatmapMonth[] => {
   const normalizedToday = getStartOfDay(today)
   const { daySummaryByKey, firstLoggedDay } = buildTimeBoxDaySummaryMap(timeBoxes)
-  const firstYear = firstLoggedDay?.getFullYear() ?? normalizedToday.getFullYear()
-  const lastYear = normalizedToday.getFullYear()
+  const endMonth = getStartOfMonth(normalizedToday)
 
-  return Array.from({ length: lastYear - firstYear + 1 }, (_, index) => lastYear - index).map(
-    (year) => ({
+  const buildOne = (year: number, monthIndex: number) =>
+    buildYearHeatmapMonth({
       year,
-      months: Array.from({ length: 12 }, (_, monthIndex) =>
-        buildYearHeatmapMonth({
-          year,
-          monthIndex,
-          daySummaryByKey,
-          firstLoggedDay,
-          today: normalizedToday,
-        }),
-      ),
-    }),
-  )
+      monthIndex,
+      daySummaryByKey,
+      firstLoggedDay,
+      today: normalizedToday,
+    })
+
+  if (!firstLoggedDay) {
+    return [buildOne(endMonth.getFullYear(), endMonth.getMonth())]
+  }
+
+  const startMonth = getStartOfMonth(firstLoggedDay)
+
+  if (compareMonthStart(endMonth, startMonth) < 0) {
+    return [buildOne(endMonth.getFullYear(), endMonth.getMonth())]
+  }
+
+  const months: YearHeatmapMonth[] = []
+  let cursor = endMonth
+
+  while (compareMonthStart(cursor, startMonth) >= 0) {
+    months.push(buildOne(cursor.getFullYear(), cursor.getMonth()))
+    cursor = addMonths(cursor, -1)
+  }
+
+  return months
 }
 
 export const sortTimeBoxesByStartAscending = (timeBoxes: TimeBox[]) =>
@@ -503,7 +517,7 @@ const createShiftedTimeBoxInput = (timeBox: TimeBox, nextStartTime: Date): TimeB
     Math.round(
       ((timeBox.endTime?.valueOf() ?? nextStartTime.valueOf()) -
         (timeBox.startTime?.valueOf() ?? nextStartTime.valueOf())) /
-        60_000,
+      60_000,
     ),
   )
 

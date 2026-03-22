@@ -18,7 +18,7 @@ import {
   addMinutes,
   addMonths,
   applySessionListFilters,
-  buildYearHeatmapYears,
+  buildYearHeatmapMonths,
   createDefaultSessionListFilters,
   createSessionListItem,
   formatToDatetimeLocal,
@@ -78,7 +78,9 @@ const resolvedTimeBoxes = computed(() =>
   toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
 )
 
-const yearHeatmapYears = computed(() => buildYearHeatmapYears(resolvedTimeBoxes.value, new Date()))
+const yearHeatmapMonths = computed(() =>
+  buildYearHeatmapMonths(resolvedTimeBoxes.value, new Date()),
+)
 
 const calendarMode = computed(() =>
   currentMode.value === 'month' ? 'month' : currentMode.value === 'week' ? 'week' : 'day',
@@ -209,8 +211,8 @@ const weekTitle = computed(() => {
 })
 
 const yearTitle = computed(() => {
-  const latestYear = yearHeatmapYears.value[0]?.year
-  const earliestYear = yearHeatmapYears.value.at(-1)?.year
+  const latestYear = yearHeatmapMonths.value[0]?.year
+  const earliestYear = yearHeatmapMonths.value.at(-1)?.year
 
   if (!latestYear || !earliestYear || latestYear === earliestYear) {
     return String(latestYear ?? new Date().getFullYear())
@@ -717,7 +719,7 @@ onBeforeUnmount(() => {
         <SessionsYearView
           v-else-if="currentMode === 'year'"
           :selected-date="anchorDate"
-          :years="yearHeatmapYears"
+          :months="yearHeatmapMonths"
           @open-day="handleOpenDay"
         />
 

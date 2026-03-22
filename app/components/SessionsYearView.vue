@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
-import type { YearHeatmapCell, YearHeatmapIntensity, YearHeatmapYear } from '~~/shared/worklog'
+import type { YearHeatmapCell, YearHeatmapIntensity, YearHeatmapMonth } from '~~/shared/worklog'
 import { isSameDay } from '~~/shared/worklog'
 
 const props = defineProps({
   selectedDate: { type: Date, required: true },
-  years: { type: Array as PropType<YearHeatmapYear[]>, default: () => [] },
+  months: { type: Array as PropType<YearHeatmapMonth[]>, default: () => [] },
 })
 
 const emit = defineEmits<{
@@ -115,86 +115,86 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
           <span>More</span>
         </div>
 
-        <section
-          v-for="year in years"
-          :key="year.year"
-          class="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4 md:p-5"
-        >
-          <div
-            class="mb-5 flex flex-col gap-1 border-b border-border-subtle pb-4 md:flex-row md:items-end md:justify-between"
-          >
-            <h2 class="font-data text-4xl font-bold tracking-[0.08em] md:text-5xl">
-              {{ year.year }}
-            </h2>
-            <div class="text-sm font-semibold tracking-[0.2em] text-text-subtle uppercase">
-              Contribution calendar
-            </div>
-          </div>
-
+        <section class="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4 md:p-5">
           <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <article
-              v-for="month in year.months"
-              :key="`${year.year}-${month.monthIndex}`"
-              class="rounded-2xl border border-border-subtle bg-surface px-3 py-3 shadow-control"
+            <template
+              v-for="(month, monthIndex) in months"
+              :key="`${month.year}-${month.monthIndex}`"
             >
-              <div class="mb-3 text-lg font-semibold tracking-tight">{{ month.label }}</div>
-
               <div
-                class="mb-2 grid grid-cols-7 gap-1 text-center text-[0.65rem] font-semibold tracking-[0.18em] text-text-subtle uppercase"
+                v-if="monthIndex === 0 || month.year !== months[monthIndex - 1]!.year"
+                class="col-span-full border-b border-border-subtle pb-4"
               >
-                <div v-for="weekday in weekdays" :key="`${month.monthIndex}-${weekday}`">
-                  {{ weekday }}
-                </div>
+                <h2 class="font-data text-3xl font-bold tracking-[0.08em] md:text-4xl">
+                  {{ month.year }}
+                </h2>
               </div>
 
-              <div class="flex flex-col gap-1">
+              <article
+                class="rounded-2xl border border-border-subtle bg-surface px-3 py-3 shadow-control"
+              >
+                <div class="mb-3 text-lg font-semibold tracking-tight">{{ month.label }}</div>
+
                 <div
-                  v-for="(week, weekIndex) in month.weeks"
-                  :key="`${year.year}-${month.monthIndex}-${weekIndex}`"
-                  class="grid grid-cols-7 gap-1"
+                  class="mb-2 grid grid-cols-7 gap-1 text-center text-[0.65rem] font-semibold tracking-[0.18em] text-text-subtle uppercase"
                 >
-                  <template v-for="(cell, dayIndex) in week" :key="dayIndex">
-                    <span
-                      v-if="cell === null"
-                      aria-hidden="true"
-                      class="block aspect-square w-full"
-                    />
-
-                    <button
-                      v-else-if="!cell.inactive"
-                      type="button"
-                      :aria-label="getCellLabel(cell)"
-                      :class="getCellClass(cell)"
-                      :title="getCellLabel(cell)"
-                      @click="emit('openDay', cell.date)"
-                    >
-                      <span
-                        class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
-                        :class="getDayNumberClass(cell)"
-                        aria-hidden="true"
-                      >
-                        {{ cell.date.getDate() }}
-                      </span>
-                    </button>
-
-                    <div
-                      v-else
-                      :aria-label="getCellLabel(cell)"
-                      :class="getCellClass(cell)"
-                      :title="getCellLabel(cell)"
-                    >
-                      <span
-                        class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
-                        :class="getDayNumberClass(cell)"
-                        aria-hidden="true"
-                      >
-                        {{ cell.date.getDate() }}
-                      </span>
-                    </div>
-                  </template>
+                  <div
+                    v-for="weekday in weekdays"
+                    :key="`${month.year}-${month.monthIndex}-${weekday}`"
+                  >
+                    {{ weekday }}
+                  </div>
                 </div>
-              </div>
-            </article>
+
+                <div class="flex flex-col gap-1">
+                  <div
+                    v-for="(week, weekIndex) in month.weeks"
+                    :key="`${month.year}-${month.monthIndex}-${weekIndex}`"
+                    class="grid grid-cols-7 gap-1"
+                  >
+                    <template v-for="(cell, dayIndex) in week" :key="dayIndex">
+                      <span
+                        v-if="cell === null"
+                        aria-hidden="true"
+                        class="block aspect-square w-full"
+                      />
+
+                      <button
+                        v-else-if="!cell.inactive"
+                        type="button"
+                        :aria-label="getCellLabel(cell)"
+                        :class="getCellClass(cell)"
+                        :title="getCellLabel(cell)"
+                        @click="emit('openDay', cell.date)"
+                      >
+                        <span
+                          class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
+                          :class="getDayNumberClass(cell)"
+                          aria-hidden="true"
+                        >
+                          {{ cell.date.getDate() }}
+                        </span>
+                      </button>
+
+                      <div
+                        v-else
+                        :aria-label="getCellLabel(cell)"
+                        :class="getCellClass(cell)"
+                        :title="getCellLabel(cell)"
+                      >
+                        <span
+                          class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
+                          :class="getDayNumberClass(cell)"
+                          aria-hidden="true"
+                        >
+                          {{ cell.date.getDate() }}
+                        </span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </article>
+            </template>
           </div>
         </section>
       </div>

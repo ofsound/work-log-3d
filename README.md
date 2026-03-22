@@ -261,7 +261,7 @@ Server-managed published report snapshots for anonymous client access. The top-l
 - `List` is a live-filter workspace with URL-synced search over notes, project names, and tag names, plus project/tag/date/duration filters and list-specific sorting
 - `Week` uses a Monday-first timed grid with live today/now indicators, drag-to-create, drag-to-move, and resize handles
 - `Month` uses a Monday-first month grid with compact session chips and day drill-down into Day mode
-- `Year` uses a Monday-first contribution heatmap arranged into mini months for every year since the first logged session, with day drill-down into Day mode
+- `Year` uses a Monday-first contribution heatmap in mini months from the current month backward to the first month that has logged sessions (no future months), with day drill-down into Day mode
 - Calendar deep links are preserved with route queries such as `/sessions?mode=week&date=2026-03-21`
 - Week and Month both query Firestore by interval overlap so overnight sessions render in every affected day without changing the stored document shape
 

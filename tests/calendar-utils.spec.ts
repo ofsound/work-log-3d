@@ -2,7 +2,7 @@ import {
   buildDaySegmentLayouts,
   buildMonthGridDays,
   buildWeekDays,
-  buildYearHeatmapYears,
+  buildYearHeatmapMonths,
   duplicateTimeBoxToDay,
   formatDateKey,
   getBufferedCalendarRange,
@@ -112,8 +112,8 @@ describe('calendar utilities', () => {
     expect(resizedEnd.endTime.getMinutes()).toBe(40)
   })
 
-  it('builds year heatmaps for every year since the first logged day', () => {
-    const years = buildYearHeatmapYears(
+  it('builds year heatmap months from current month back to the first month with logged time', () => {
+    const months = buildYearHeatmapMonths(
       [
         {
           ...baseTimeBox,
@@ -124,11 +124,15 @@ describe('calendar utilities', () => {
       new Date(2026, 2, 21, 12, 0, 0, 0),
     )
 
-    expect(years.map((year) => year.year)).toEqual([2026, 2025, 2024, 2023])
+    expect(months).toHaveLength(34)
+    expect(months[0]!.year).toBe(2026)
+    expect(months[0]!.monthIndex).toBe(2)
+    expect(months.at(-1)!.year).toBe(2023)
+    expect(months.at(-1)!.monthIndex).toBe(5)
   })
 
   it('pads year heatmap months Monday-first and keeps leap day cells', () => {
-    const years = buildYearHeatmapYears(
+    const months = buildYearHeatmapMonths(
       [
         {
           ...baseTimeBox,
@@ -138,18 +142,19 @@ describe('calendar utilities', () => {
       ],
       new Date(2024, 2, 3, 12, 0, 0, 0),
     )
-    const february = years[0]!.months[1]!
+    const february = months.find((m) => m.year === 2024 && m.monthIndex === 1)
 
-    expect(february.weeks[0]!.slice(0, 3)).toEqual([null, null, null])
-    expect(february.weeks[0]![3]?.dateKey).toBe('2024-02-01')
+    expect(february).toBeDefined()
+    expect(february!.weeks[0]!.slice(0, 3)).toEqual([null, null, null])
+    expect(february!.weeks[0]![3]?.dateKey).toBe('2024-02-01')
 
-    const leapDay = february.weeks.flat().find((cell) => cell?.dateKey === '2024-02-29')
+    const leapDay = february!.weeks.flat().find((cell) => cell?.dateKey === '2024-02-29')
 
     expect(leapDay?.minutes).toBe(120)
   })
 
   it('splits overnight sessions into separate year heatmap day totals', () => {
-    const years = buildYearHeatmapYears(
+    const months = buildYearHeatmapMonths(
       [
         {
           ...baseTimeBox,
@@ -159,8 +164,8 @@ describe('calendar utilities', () => {
       ],
       new Date(2024, 2, 1, 12, 0, 0, 0),
     )
-    const february = years[0]!.months[1]!
-    const march = years[0]!.months[2]!
+    const february = months.find((m) => m.year === 2024 && m.monthIndex === 1)!
+    const march = months.find((m) => m.year === 2024 && m.monthIndex === 2)!
     const februaryLeapDay = february.weeks.flat().find((cell) => cell?.dateKey === '2024-02-29')
     const marchFirst = march.weeks.flat().find((cell) => cell?.dateKey === '2024-03-01')
 
@@ -180,7 +185,7 @@ describe('calendar utilities', () => {
   })
 
   it('marks days outside the tracked window as inactive while keeping in-range zero days active', () => {
-    const years = buildYearHeatmapYears(
+    const months = buildYearHeatmapMonths(
       [
         {
           ...baseTimeBox,
@@ -190,7 +195,7 @@ describe('calendar utilities', () => {
       ],
       new Date(2024, 2, 12, 12, 0, 0, 0),
     )
-    const march = years[0]!.months[2]!
+    const march = months.find((m) => m.year === 2024 && m.monthIndex === 2)!
     const marchNinth = march.weeks.flat().find((cell) => cell?.dateKey === '2024-03-09')
     const marchEleventh = march.weeks.flat().find((cell) => cell?.dateKey === '2024-03-11')
     const marchThirteenth = march.weeks.flat().find((cell) => cell?.dateKey === '2024-03-13')
@@ -199,5 +204,30 @@ describe('calendar utilities', () => {
     expect(marchEleventh?.inactive).toBe(false)
     expect(marchEleventh?.intensity).toBe(0)
     expect(marchThirteenth?.inactive).toBe(true)
+  })
+
+  it('omits months after today and before the first logged month', () => {
+    const months = buildYearHeatmapMonths(
+      [
+        {
+          ...baseTimeBox,
+          startTime: new Date(2024, 2, 10, 9, 0, 0, 0),
+          endTime: new Date(2024, 2, 10, 10, 0, 0, 0),
+        },
+      ],
+      new Date(2024, 2, 12, 12, 0, 0, 0),
+    )
+
+    expect(months.every((m) => m.year < 2024 || (m.year === 2024 && m.monthIndex <= 2))).toBe(true)
+    expect(months.every((m) => m.year > 2024 || (m.year === 2024 && m.monthIndex >= 2))).toBe(true)
+    expect(months.map((m) => `${m.year}-${m.monthIndex}`)).toEqual(['2024-2'])
+  })
+
+  it('returns only the current month when there are no timeboxes', () => {
+    const months = buildYearHeatmapMonths([], new Date(2026, 2, 21, 12, 0, 0, 0))
+
+    expect(months).toHaveLength(1)
+    expect(months[0]!.year).toBe(2026)
+    expect(months[0]!.monthIndex).toBe(2)
   })
 })
