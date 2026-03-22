@@ -28,19 +28,19 @@ export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
 
 export type DesktopTrayMenuItem =
   | {
-      kind: 'status'
-      label: string
-      enabled: false
-    }
+    kind: 'status'
+    label: string
+    enabled: false
+  }
   | {
-      kind: 'separator'
-    }
+    kind: 'separator'
+  }
   | {
-      kind: 'action'
-      id: DesktopTrayActionId
-      label: string
-      enabled: boolean
-    }
+    kind: 'action'
+    id: DesktopTrayActionId
+    label: string
+    enabled: boolean
+  }
 
 export interface DesktopTrayState {
   mode: TimerState['status']
@@ -188,8 +188,8 @@ export const getDesktopTrayState = (
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
-        createActionItem('start_countup', 'Start Count Up'),
         createActionItem('start_focus', 'Pomodoro (30m)'),
+        createActionItem('start_countup', 'Start Timer'),
         separatorItem,
         createActionItem('show_window', 'Show Window'),
         createActionItem('quit', 'Quit'),
@@ -201,7 +201,7 @@ export const getDesktopTrayState = (
   const badgeText = platform === 'darwin' ? formatDesktopTrayBadgeText(snapshot.display) : null
 
   if (snapshot.status === 'running') {
-    const statusLabel = `Running • ${modeLabel} • ${snapshot.display}`
+    const statusLabel = `Running • ${modeLabel}`
 
     return {
       mode: 'running',
@@ -225,7 +225,7 @@ export const getDesktopTrayState = (
   }
 
   if (snapshot.status === 'paused') {
-    const statusLabel = `Paused • ${modeLabel} • ${snapshot.display}`
+    const statusLabel = `Paused • ${modeLabel}`
 
     return {
       mode: 'paused',
@@ -248,7 +248,7 @@ export const getDesktopTrayState = (
     }
   }
 
-  const statusLabel = `Completed • ${modeLabel} • ${snapshot.display}`
+  const statusLabel = `Completed • ${modeLabel}`
 
   return {
     mode: 'completed',

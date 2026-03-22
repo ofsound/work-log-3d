@@ -539,12 +539,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    class="min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
-  >
-    <div ref="scrollContainerRef" class="h-full overflow-auto">
+  <div class="min-h-0 flex-1 overflow-hidden">
+    <div ref="scrollContainerRef" class="h-full overflow-auto overscroll-contain px-6 py-6">
       <div
-        class="grid min-h-full"
+        class="grid min-h-full overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
         :style="{
           gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(7, ${DAY_COLUMN_WIDTH}px)`,
           minWidth: `${TIME_GUTTER_WIDTH + DAY_COLUMN_WIDTH * 7}px`,

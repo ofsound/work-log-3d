@@ -55,7 +55,7 @@ const handleCreated = (sessionId: string) => {
       </button>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-auto px-4 py-4">
+    <div class="min-h-0 flex-1 overflow-auto overscroll-contain px-4 py-4">
       <div v-if="mode === 'session' && sessionId">
         <TimeBox :id="sessionId" />
       </div>

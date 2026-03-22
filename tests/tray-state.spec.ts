@@ -22,8 +22,8 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Timer idle', enabled: false },
       { kind: 'separator' },
-      { kind: 'action', id: 'start_countup', label: 'Start Count Up', enabled: true },
       { kind: 'action', id: 'start_focus', label: 'Pomodoro (30m)', enabled: true },
+      { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
       { kind: 'action', id: 'quit', label: 'Quit', enabled: true },
@@ -48,9 +48,9 @@ describe('desktop tray state', () => {
     expect(trayState.visualMode).toBe('badge')
     expect(trayState.badgeText).toBe(' 01:05')
     expect(trayState.badgeVariant).toBe('running')
-    expect(trayState.statusLabel).toBe('Running • Count Up • 01:05')
+    expect(trayState.statusLabel).toBe('Running • Count Up')
     expect(trayState.menuItems).toEqual([
-      { kind: 'status', label: 'Running • Count Up • 01:05', enabled: false },
+      { kind: 'status', label: 'Running • Count Up', enabled: false },
       { kind: 'separator' },
       { kind: 'action', id: 'pause', label: 'Pause', enabled: true },
       { kind: 'action', id: 'stop', label: 'Stop', enabled: true },
@@ -69,7 +69,7 @@ describe('desktop tray state', () => {
     expect(trayState.visualMode).toBe('badge')
     expect(trayState.badgeText).toBeNull()
     expect(trayState.badgeVariant).toBe('running')
-    expect(trayState.tooltip).toBe('Work Log: Running • Count Down • 04:00')
+    expect(trayState.tooltip).toBe('Work Log: Running • Count Down')
   })
 
   it('exposes paused badge metadata without changing the tray menu structure', () => {
@@ -81,7 +81,7 @@ describe('desktop tray state', () => {
     expect(trayState.visualMode).toBe('badge')
     expect(trayState.badgeText).toBe(' 01:05')
     expect(trayState.badgeVariant).toBe('paused')
-    expect(trayState.statusLabel).toBe('Paused • Count Up • 01:05')
+    expect(trayState.statusLabel).toBe('Paused • Count Up')
   })
 
   it('exposes the completed tray actions for logging a finished session', () => {
@@ -101,7 +101,7 @@ describe('desktop tray state', () => {
     expect(trayState.badgeText).toBe(' 00:00')
     expect(trayState.badgeVariant).toBe('completed')
     expect(trayState.menuItems).toEqual([
-      { kind: 'status', label: 'Completed • Count Down • 00:00', enabled: false },
+      { kind: 'status', label: 'Completed • Count Down', enabled: false },
       { kind: 'separator' },
       {
         kind: 'action',

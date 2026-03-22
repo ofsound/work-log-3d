@@ -77,20 +77,31 @@ const getToneClass = (intensity: YearHeatmapIntensity, inactive: boolean) => {
 }
 
 const getCellClass = (cell: YearHeatmapCell) => [
-  'block aspect-square w-full rounded-[5px] border transition',
+  'relative block aspect-square w-full rounded-[5px] border transition',
   getToneClass(cell.intensity, cell.inactive),
   cell.inactive ? 'cursor-default' : 'cursor-pointer hover:scale-[1.08] hover:shadow-control',
   cell.isToday ? '[box-shadow:inset_0_0_0_1px_var(--color-danger)]' : '',
   isSelectedCell(cell) ? 'ring-2 ring-link ring-offset-1 ring-offset-surface' : '',
 ]
+
+/** Day-of-month label: theme tokens; stronger on emerald tiles for contrast. */
+const getDayNumberClass = (cell: YearHeatmapCell) => {
+  if (cell.inactive) {
+    return 'text-text-subtle'
+  }
+  if (cell.intensity === 0) {
+    return 'text-text-subtle'
+  }
+  return 'text-text-muted dark:text-text-subtle'
+}
 </script>
 
 <template>
-  <div
-    class="min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
-  >
-    <div class="h-full overflow-auto px-4 py-5 md:px-6">
-      <div class="flex flex-col gap-6">
+  <div class="min-h-0 flex-1 overflow-hidden">
+    <div class="h-full overflow-auto overscroll-contain px-6 py-6">
+      <div
+        class="flex flex-col gap-6 rounded-2xl border border-border bg-surface px-4 py-5 shadow-panel md:px-6"
+      >
         <div class="flex items-center justify-end gap-3 text-xs font-semibold text-text-subtle">
           <span>Less</span>
           <div class="flex items-center gap-1">
@@ -156,14 +167,30 @@ const getCellClass = (cell: YearHeatmapCell) => [
                       :class="getCellClass(cell)"
                       :title="getCellLabel(cell)"
                       @click="emit('openDay', cell.date)"
-                    />
+                    >
+                      <span
+                        class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
+                        :class="getDayNumberClass(cell)"
+                        aria-hidden="true"
+                      >
+                        {{ cell.date.getDate() }}
+                      </span>
+                    </button>
 
                     <div
                       v-else
                       :aria-label="getCellLabel(cell)"
                       :class="getCellClass(cell)"
                       :title="getCellLabel(cell)"
-                    />
+                    >
+                      <span
+                        class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
+                        :class="getDayNumberClass(cell)"
+                        aria-hidden="true"
+                      >
+                        {{ cell.date.getDate() }}
+                      </span>
+                    </div>
                   </template>
                 </div>
               </div>

@@ -525,7 +525,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col">
+  <div class="flex h-full min-h-0 flex-col overflow-hidden">
     <div class="border-b border-border px-6 py-5">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -641,47 +641,52 @@ onBeforeUnmount(() => {
       </p>
     </div>
 
-    <div v-if="currentMode === 'list'" class="h-full overflow-auto px-6 pt-6 pb-4">
-      <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <SessionListFilterPanel
-          :filters="listFilters"
-          :hide-tags="hideTags"
-          :projects="sortedProjects"
-          :result-count="listSummary.count"
-          :tags="sortedTags"
-          :total-duration-label="listSummary.durationLabel"
-          @clear-filters="clearListFilters"
-          @update-filters="updateListFilters"
-        />
-
-        <div
-          v-if="filteredSessionListTimeBoxes.length === 0"
-          class="rounded-2xl border border-dashed border-border-subtle bg-surface px-6 py-10 text-center shadow-panel"
-        >
-          <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">No matches</div>
-          <div class="mt-2 text-xl font-bold text-text">No sessions match the current filters</div>
-          <p class="mt-3 text-sm text-text-muted">
-            {{
-              hideTags
-                ? 'Adjust the search, date range, project, or duration bounds to widen the results.'
-                : 'Adjust the search, date range, tags, or duration bounds to widen the results.'
-            }}
-          </p>
-        </div>
-
-        <div v-else class="pb-4">
-          <TimeBox
-            v-for="item in filteredSessionListTimeBoxes"
-            :id="item.id"
-            :key="item.id"
-            :highlight-tokens="listSearchTokens"
+    <SessionsWorkspaceShell>
+      <div
+        v-if="currentMode === 'list'"
+        class="h-full overflow-auto overscroll-contain px-6 pt-6 pb-2"
+      >
+        <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+          <SessionListFilterPanel
+            :filters="listFilters"
+            :hide-tags="hideTags"
+            :projects="sortedProjects"
+            :result-count="listSummary.count"
+            :tags="sortedTags"
+            :total-duration-label="listSummary.durationLabel"
+            @clear-filters="clearListFilters"
+            @update-filters="updateListFilters"
           />
+
+          <div
+            v-if="filteredSessionListTimeBoxes.length === 0"
+            class="rounded-2xl border border-dashed border-border-subtle bg-surface px-6 py-10 text-center shadow-panel"
+          >
+            <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">No matches</div>
+            <div class="mt-2 text-xl font-bold text-text">
+              No sessions match the current filters
+            </div>
+            <p class="mt-3 text-sm text-text-muted">
+              {{
+                hideTags
+                  ? 'Adjust the search, date range, project, or duration bounds to widen the results.'
+                  : 'Adjust the search, date range, tags, or duration bounds to widen the results.'
+              }}
+            </p>
+          </div>
+
+          <div v-else class="pb-4">
+            <TimeBox
+              v-for="item in filteredSessionListTimeBoxes"
+              :id="item.id"
+              :key="item.id"
+              :highlight-tokens="listSearchTokens"
+            />
+          </div>
         </div>
       </div>
-    </div>
 
-    <div v-else class="flex min-h-0 flex-1">
-      <div class="min-w-0 flex-1 px-6 py-6">
+      <template v-else>
         <SessionsDayView
           v-if="currentMode === 'day'"
           :anchor-date="anchorDate"
@@ -727,18 +732,20 @@ onBeforeUnmount(() => {
           @open-day="handleOpenDay"
           @open-session="openSessionPanel"
         />
-      </div>
+      </template>
 
-      <SessionsSidePanel
-        v-if="panelMode !== 'closed'"
-        :day="panelDate ?? undefined"
-        :initial-end-time="createInitialEndTime"
-        :initial-start-time="createInitialStartTime"
-        :mode="panelMode"
-        :session-id="panelSessionId"
-        @close="closePanel"
-        @created="handlePanelCreated"
-      />
-    </div>
+      <template #aside>
+        <SessionsSidePanel
+          v-if="panelMode !== 'closed'"
+          :day="panelDate ?? undefined"
+          :initial-end-time="createInitialEndTime"
+          :initial-start-time="createInitialStartTime"
+          :mode="panelMode"
+          :session-id="panelSessionId"
+          @close="closePanel"
+          @created="handlePanelCreated"
+        />
+      </template>
+    </SessionsWorkspaceShell>
   </div>
 </template>

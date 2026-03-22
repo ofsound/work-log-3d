@@ -131,11 +131,11 @@ const handleSegmentDragEnd = () => {
 </script>
 
 <template>
-  <div
-    class="min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
-  >
-    <div class="h-full overflow-auto">
-      <div class="min-w-[980px]">
+  <div class="min-h-0 flex-1 overflow-hidden">
+    <div class="h-full overflow-auto overscroll-contain px-6 py-6">
+      <div
+        class="min-w-[980px] overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
+      >
         <div class="grid grid-cols-7 border-b border-border bg-surface-muted">
           <div
             v-for="weekday in weekdays"
