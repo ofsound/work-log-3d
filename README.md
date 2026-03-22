@@ -18,7 +18,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 ## Key Conventions
 
 - Project and tag pages use stable ID-based routes: `/project/:id` and `/tag/:id`
-- `/sessions` is a single route with query-driven calendar state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`
+- `/sessions` is a single route with query-driven state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`; `mode=list` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort`
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - `slug` is stored for display and backward-compatibility redirects only
 - Projects and tags cannot be deleted while sessions still reference them
@@ -206,7 +206,7 @@ Server-managed published report snapshots for anonymous client access. The top-l
 ## Sessions Views
 
 - `Day` is the default `/sessions` experience and uses a focused single-day timed calendar with keyboard navigation
-- `List` remains available as a reverse-sorted chronological alternate view
+- `List` is a live-filter workspace with URL-synced search over notes, project names, and tag names, plus project/tag/date/duration filters and list-specific sorting
 - `Week` uses a Monday-first timed grid with live today/now indicators, drag-to-create, drag-to-move, and resize handles
 - `Month` uses a Monday-first month grid with compact session chips and day drill-down into Day mode
 - `Year` uses a Monday-first contribution heatmap arranged into mini months for every year since the first logged session, with day drill-down into Day mode

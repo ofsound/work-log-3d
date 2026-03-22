@@ -12,27 +12,31 @@ import {
   parseSessionsRouteState,
   type SessionsViewMode,
 } from '~/utils/sessions-route-state'
-import type { TimeBoxInput } from '~~/shared/worklog'
+import type { SessionListFilters, TimeBoxInput } from '~~/shared/worklog'
 import {
   addDays,
   addMinutes,
   addMonths,
+  applySessionListFilters,
   buildYearHeatmapYears,
+  createDefaultSessionListFilters,
+  createSessionListItem,
   formatToDatetimeLocal,
   getBufferedCalendarRange,
   getDayRange,
   getEndOfWeek,
   getIsoWeekNumber,
   getMonthGridRange,
+  getSessionListQueryTokens,
   getStartOfWeek,
   getTimeBoxDurationMinutes,
   getTimeBoxesForDay,
   getTotalDurationLabel,
   getWorklogErrorMessage,
   isSameDay,
+  normalizeSessionListFilters,
   setTimeOnDate,
   sortNamedEntities,
-  sortTimeBoxesByStart,
 } from '~~/shared/worklog'
 
 interface SessionChangePayload {
@@ -56,8 +60,6 @@ const allTimeBoxes = useCollection(timeBoxesCollection)
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
 
-const store = useStore()
-
 const panelMode = ref<'closed' | 'session' | 'create'>('closed')
 const panelDate = ref<Date | null>(null)
 const panelSessionId = ref('')
@@ -70,13 +72,10 @@ const routeState = computed(() =>
 )
 const currentMode = computed(() => routeState.value.mode)
 const anchorDate = computed(() => routeState.value.date)
+const listFilters = computed(() => routeState.value.listFilters)
 
 const resolvedTimeBoxes = computed(() =>
   toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
-)
-
-const sortedTimeBoxes = computed(() =>
-  sortTimeBoxesByStart(resolvedTimeBoxes.value, store.sortOrderReversed ? 'desc' : 'asc'),
 )
 
 const yearHeatmapYears = computed(() => buildYearHeatmapYears(resolvedTimeBoxes.value, new Date()))
@@ -138,6 +137,22 @@ const projectNameById = computed(() =>
 const tagNameById = computed(() =>
   Object.fromEntries(sortedTags.value.map((tag) => [tag.id, tag.name])),
 )
+const listSearchTokens = computed(() => getSessionListQueryTokens(listFilters.value.query))
+const sessionListItems = computed(() =>
+  resolvedTimeBoxes.value.map((timeBox) =>
+    createSessionListItem({
+      timeBox,
+      projectName: projectNameById.value[timeBox.project] ?? '',
+      tagNames: timeBox.tags.map((tagId) => tagNameById.value[tagId] ?? '').filter(Boolean),
+    }),
+  ),
+)
+const filteredSessionListItems = computed(() =>
+  applySessionListFilters(sessionListItems.value, listFilters.value),
+)
+const filteredSessionListTimeBoxes = computed(() =>
+  filteredSessionListItems.value.map((item) => item.timeBox),
+)
 
 const visibleDayTimeBoxes = computed(() =>
   getTimeBoxesForDay(visibleCalendarTimeBoxes.value, anchorDate.value),
@@ -154,6 +169,10 @@ const daySummary = computed(() => ({
   count: visibleDayTimeBoxes.value.length,
   durationLabel: getTotalDurationLabel(visibleDayTimeBoxes.value),
   projectCount: new Set(visibleDayTimeBoxes.value.map((timeBox) => timeBox.project)).size,
+}))
+const listSummary = computed(() => ({
+  count: filteredSessionListTimeBoxes.value.length,
+  durationLabel: getTotalDurationLabel(filteredSessionListTimeBoxes.value),
 }))
 
 const weekTitle = computed(() => {
@@ -226,7 +245,7 @@ const pageSubtitle = computed(() => {
     return 'Contribution calendar'
   }
 
-  return `${sortedTimeBoxes.value.length} total sessions`
+  return `${resolvedTimeBoxes.value.length} total sessions`
 })
 
 const updateRouteState = async (nextState: Partial<ReturnType<typeof parseSessionsRouteState>>) => {
@@ -295,12 +314,39 @@ const openSuggestedCreatePanel = () => {
   })
 }
 
+const updateListFilters = async (nextFilters: Partial<SessionListFilters>) => {
+  await updateRouteState({
+    listFilters: normalizeSessionListFilters({
+      ...listFilters.value,
+      ...nextFilters,
+    }),
+  })
+}
+
+const clearListFilters = async () => {
+  await updateRouteState({
+    listFilters: normalizeSessionListFilters({
+      ...createDefaultSessionListFilters(),
+      sort: listFilters.value.sort,
+    }),
+  })
+}
+
 const handleModeChange = async (mode: SessionsViewMode) => {
   if (mode === currentMode.value) {
     return
   }
 
   closePanel()
+
+  if (mode === 'list') {
+    await updateRouteState({
+      mode,
+      listFilters: createDefaultSessionListFilters(),
+    })
+    return
+  }
+
   await updateRouteState({ mode })
 }
 
@@ -599,8 +645,38 @@ onBeforeUnmount(() => {
       </p>
     </div>
 
-    <div v-if="currentMode === 'list'" class="h-full overflow-auto px-11 pt-8 pb-4">
-      <TimeBox v-for="item in sortedTimeBoxes" :id="item.id" :key="item.id" />
+    <div v-if="currentMode === 'list'" class="h-full overflow-auto px-6 pt-6 pb-4">
+      <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <SessionListFilterPanel
+          :filters="listFilters"
+          :projects="sortedProjects"
+          :result-count="listSummary.count"
+          :tags="sortedTags"
+          :total-duration-label="listSummary.durationLabel"
+          @clear-filters="clearListFilters"
+          @update-filters="updateListFilters"
+        />
+
+        <div
+          v-if="filteredSessionListTimeBoxes.length === 0"
+          class="rounded-2xl border border-dashed border-border-subtle bg-surface px-6 py-10 text-center shadow-panel"
+        >
+          <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">No matches</div>
+          <div class="mt-2 text-xl font-bold text-text">No sessions match the current filters</div>
+          <p class="mt-3 text-sm text-text-muted">
+            Adjust the search, date range, tags, or duration bounds to widen the results.
+          </p>
+        </div>
+
+        <div v-else class="pb-4">
+          <TimeBox
+            v-for="item in filteredSessionListTimeBoxes"
+            :id="item.id"
+            :key="item.id"
+            :highlight-tokens="listSearchTokens"
+          />
+        </div>
+      </div>
     </div>
 
     <div v-else class="flex min-h-0 flex-1">

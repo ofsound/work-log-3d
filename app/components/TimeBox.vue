@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import type { PropType } from 'vue'
+
 const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },
+  highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
 })
 
 const showEditor = ref(false)
@@ -18,6 +21,13 @@ const toggleEditor = () => {
 </script>
 
 <template>
-  <TimeBoxViewer v-if="!showEditor" :id :variant :is-minimized @toggle-editor="toggleEditor" />
+  <TimeBoxViewer
+    v-if="!showEditor"
+    :id
+    :highlight-tokens="highlightTokens"
+    :variant
+    :is-minimized
+    @toggle-editor="toggleEditor"
+  />
   <TimeBoxEditor v-if="showEditor" :id @toggle-editor="toggleEditor" />
 </template>

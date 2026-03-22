@@ -4,6 +4,7 @@ import { doc } from 'firebase/firestore'
 import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
+import type { PropType } from 'vue'
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -25,6 +26,7 @@ const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },
   isMinimized: { type: Boolean, default: false },
+  highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
 })
 
 const emit = defineEmits(['toggleEditor'])
@@ -119,21 +121,27 @@ const deleteTimeBoxDocument = async () => {
       </div>
       <div v-if="variant !== 'project'" class="flex items-baseline gap-2">
         <div class="relative -top-0.5 font-bold">–</div>
-        <div class="relative -top-px text-xl font-bold">{{ projectName }}</div>
+        <div class="relative -top-px text-xl font-bold">
+          <HighlightedText :text="projectName" :tokens="highlightTokens" />
+        </div>
       </div>
     </div>
     <div class="mt-3 font-data">{{ startDayFormatted }}</div>
     <div class="mt-px font-data text-sm italic">
       {{ startTimeFormatted }} &mdash; {{ endTimeFormatted }}
     </div>
-    <div class="my-5 font-data">{{ timeBox?.notes }}</div>
+    <div class="my-5 font-data">
+      <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
+    </div>
     <div class="flex gap-2">
       <div
         v-for="thisTag in tagNames"
         :key="thisTag"
         class="rounded-xl bg-chip px-3 py-0.5 font-data text-sm text-chip-text"
       >
-        <div class="relative -top-px">{{ thisTag }}</div>
+        <div class="relative -top-px">
+          <HighlightedText :text="thisTag" :tokens="highlightTokens" />
+        </div>
       </div>
     </div>
     <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
@@ -141,9 +149,11 @@ const deleteTimeBoxDocument = async () => {
     </p>
   </div>
   <div v-if="isMinimized" class="mb-2.5 items-baseline gap-2 border-b border-border last:border-0">
-    <div v-if="variant !== 'project'" class="font-bold">{{ projectName }}</div>
+    <div v-if="variant !== 'project'" class="font-bold">
+      <HighlightedText :text="projectName" :tokens="highlightTokens" />
+    </div>
     <div class="pb-2 font-data">
-      {{ timeBox?.notes }}
+      <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
       <span class="ml-2 text-xs font-bold italic"
         ><span class="text-text-subtle">[</span> {{ timeBoxDuration }}
         <span class="text-text-subtle">]</span></span
