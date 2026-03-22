@@ -25,7 +25,6 @@ import {
   getBufferedCalendarRange,
   getDayRange,
   getEndOfWeek,
-  getIsoWeekNumber,
   getMonthGridRange,
   getSessionListQueryTokens,
   getStartOfWeek,
@@ -236,26 +235,6 @@ const pageTitle = computed(() => {
   }
 
   return 'Sessions'
-})
-
-const pageSubtitle = computed(() => {
-  if (currentMode.value === 'day') {
-    return 'Focused day view'
-  }
-
-  if (currentMode.value === 'week') {
-    return `Week ${getIsoWeekNumber(anchorDate.value)}`
-  }
-
-  if (currentMode.value === 'month') {
-    return 'Month view'
-  }
-
-  if (currentMode.value === 'year') {
-    return 'Contribution calendar'
-  }
-
-  return `${resolvedTimeBoxes.value.length} total sessions`
 })
 
 const updateRouteState = async (nextState: Partial<ReturnType<typeof parseSessionsRouteState>>) => {
@@ -541,9 +520,6 @@ onBeforeUnmount(() => {
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div class="text-3xl font-bold tracking-tight">{{ pageTitle }}</div>
-          <div class="mt-1 text-sm tracking-[0.22em] text-text-subtle uppercase">
-            {{ pageSubtitle }}
-          </div>
           <div v-if="currentMode === 'day'" class="mt-3 flex flex-wrap gap-2">
             <div
               class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { newTimeboxIconSvg } from '~~/shared/icons/newTimeboxIcon'
+
 const { hideTags } = useUserSettings()
 </script>
 
@@ -8,7 +10,20 @@ const { hideTags } = useUserSettings()
   >
     <NuxtLink to="/" class="font-bold hover:underline">WORK LOG</NuxtLink>
     <div>/</div>
-    <NuxtLink to="/new" class="">&nbsp;✚&nbsp;</NuxtLink>
+    <NuxtLink
+      to="/new"
+      class="flex items-center opacity-80 transition-opacity hover:opacity-100"
+      title="New Timebox (Classic)"
+    >
+      <!-- Static markup from shared/icons/newTimeboxIcon (same source as Electron tray) -->
+      <!-- eslint-disable vue/no-v-html -->
+      <span
+        class="inline-flex h-5 w-5 shrink-0 [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
+        aria-hidden="true"
+        v-html="newTimeboxIconSvg()"
+      />
+      <!-- eslint-enable vue/no-v-html -->
+    </NuxtLink>
     <div>/</div>
     <NuxtLink to="/projects" class="hover:underline">Projects</NuxtLink>
     <template v-if="!hideTags">

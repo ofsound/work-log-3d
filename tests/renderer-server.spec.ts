@@ -1,6 +1,20 @@
 import { join } from 'node:path'
 
-import { resolveRequestFilePath } from '~/electron/renderer-server'
+import { parseRendererPortStateFile, resolveRequestFilePath } from '~/electron/renderer-server'
+
+describe('renderer port state file', () => {
+  it('parses a valid port from JSON', () => {
+    expect(parseRendererPortStateFile('{"port":47821}\n')).toBe(47_821)
+  })
+
+  it('returns undefined for invalid JSON', () => {
+    expect(parseRendererPortStateFile('not json')).toBeUndefined()
+  })
+
+  it('returns undefined when port is out of range', () => {
+    expect(parseRendererPortStateFile('{"port":70000}')).toBeUndefined()
+  })
+})
 
 describe('desktop renderer request paths', () => {
   const rootDir = '/tmp/work-log-renderer'

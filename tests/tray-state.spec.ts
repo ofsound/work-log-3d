@@ -15,7 +15,7 @@ describe('desktop tray state', () => {
     const trayState = getDesktopTrayState(getTimerSnapshot(createIdleTimerState(), 0), 'darwin')
 
     expect(trayState.mode).toBe('idle')
-    expect(trayState.title).toBe('◔')
+    expect(trayState.title).toBe('')
     expect(trayState.visualMode).toBe('icon')
     expect(trayState.badgeText).toBeNull()
     expect(trayState.badgeVariant).toBeNull()
@@ -23,8 +23,7 @@ describe('desktop tray state', () => {
       { kind: 'status', label: 'Timer idle', enabled: false },
       { kind: 'separator' },
       { kind: 'action', id: 'start_countup', label: 'Start Count Up', enabled: true },
-      { kind: 'action', id: 'start_focus', label: 'Start Focus (25m)', enabled: true },
-      { kind: 'action', id: 'start_break', label: 'Start Break (5m)', enabled: true },
+      { kind: 'action', id: 'start_focus', label: 'Pomodoro (30m)', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
       { kind: 'action', id: 'quit', label: 'Quit', enabled: true },
@@ -45,7 +44,7 @@ describe('desktop tray state', () => {
     const trayState = getDesktopTrayState(runningCountup, 'darwin')
 
     expect(trayState.mode).toBe('running')
-    expect(trayState.title).toBe('◔ 01:05')
+    expect(trayState.title).toBe(' 01:05')
     expect(trayState.visualMode).toBe('badge')
     expect(trayState.badgeText).toBe(' 01:05')
     expect(trayState.badgeVariant).toBe('running')
@@ -78,7 +77,7 @@ describe('desktop tray state', () => {
     const trayState = getDesktopTrayState(pausedCountup, 'darwin')
 
     expect(trayState.mode).toBe('paused')
-    expect(trayState.title).toBe('◔ 01:05')
+    expect(trayState.title).toBe(' 01:05')
     expect(trayState.visualMode).toBe('badge')
     expect(trayState.badgeText).toBe(' 01:05')
     expect(trayState.badgeVariant).toBe('paused')

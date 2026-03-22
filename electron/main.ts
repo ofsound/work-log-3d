@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
-import { Notification, app, BrowserWindow, dialog, ipcMain } from 'electron'
+import { Notification, app, BrowserWindow, dialog, ipcMain, session } from 'electron'
 
 import type { DesktopTimerEvent, TimerState } from '~/shared/worklog'
 import {
@@ -40,6 +40,9 @@ let isQuitting = false
 let trayController: TrayController | null = null
 let pendingRouteRequest: string | null = null
 let desktopRendererServer: Awaited<ReturnType<typeof createDesktopRendererServer>> | null = null
+
+/** Retain until `close` so macOS notification delivery is reliable (avoid premature GC). */
+const activeTimerNotifications: Notification[] = []
 
 const getTimerStatePath = () => join(app.getPath('userData'), 'timer-state.json')
 const desktopRendererUrl = process.env.NUXT_DEV_SERVER_URL ?? process.env.ELECTRON_RENDERER_URL
@@ -91,6 +94,34 @@ const clearTimerLoop = () => {
   timerInterval = null
 }
 
+const showTimerCompletionNotification = (payload: { title: string; body: string }) => {
+  if (!Notification.isSupported()) {
+    console.warn('[worklog] desktop notifications are not supported on this platform')
+    return
+  }
+
+  const notification = new Notification(payload)
+  activeTimerNotifications.push(notification)
+  notification.on('close', () => {
+    const index = activeTimerNotifications.indexOf(notification)
+    if (index !== -1) {
+      activeTimerNotifications.splice(index, 1)
+    }
+  })
+  notification.show()
+}
+
+const registerMediaPermissionHandler = () => {
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    if (permission === 'media') {
+      callback(false)
+      return
+    }
+
+    callback(true)
+  })
+}
+
 const ensureTimerLoop = () => {
   if (timerInterval || timerState.status !== 'running') {
     return
@@ -117,16 +148,15 @@ const setTimerState = (nextState: TimerState) => {
   void persistTimerState()
 
   if (shouldPlayTimerAlert(previousStatus, nextState.status)) {
-    const alertWindow = mainWindow ?? createMainWindow()
+    const alertWindow =
+      process.platform === 'darwin' ? (mainWindow ?? null) : (mainWindow ?? createMainWindow())
     void playTimerCompleteAlert(app.getPath('userData'), alertWindow)
   }
 
   if (shouldShowTimerNotification(previousStatus, getTimerSnapshot(nextState, Date.now()))) {
-    const notification = getDesktopTimerNotification(getTimerSnapshot(nextState, Date.now()))
-
-    if (Notification.isSupported()) {
-      new Notification(notification).show()
-    }
+    showTimerCompletionNotification(
+      getDesktopTimerNotification(getTimerSnapshot(nextState, Date.now())),
+    )
   }
 
   emitTimerEvent(previousStatus)
@@ -267,16 +297,20 @@ const registerIpc = () => {
     return clearDesktopAlertSound(app.getPath('userData'))
   })
   ipcMain.handle('desktop:testAlertSound', async () => {
-    const alertWindow = mainWindow ?? createMainWindow()
+    const alertWindow =
+      process.platform === 'darwin' ? (mainWindow ?? null) : (mainWindow ?? createMainWindow())
     await playTimerCompleteAlert(app.getPath('userData'), alertWindow)
   })
 }
 
 app.whenReady().then(async () => {
+  registerMediaPermissionHandler()
   await loadTimerState()
 
   if (!desktopRendererUrl) {
-    desktopRendererServer = await createDesktopRendererServer(join(__dirname, '../renderer'))
+    desktopRendererServer = await createDesktopRendererServer(join(__dirname, '../renderer'), {
+      portStatePath: join(app.getPath('userData'), 'electron-renderer-port.json'),
+    })
   }
 
   trayController = createTrayController({
@@ -286,10 +320,7 @@ app.whenReady().then(async () => {
           setTimerState(startCountupTimer(Date.now()))
           break
         case 'start_focus':
-          setTimerState(startCountdownTimer(25 * 60, Date.now()))
-          break
-        case 'start_break':
-          setTimerState(startCountdownTimer(5 * 60, Date.now()))
+          setTimerState(startCountdownTimer(30 * 60, Date.now()))
           break
         case 'pause':
           setTimerState(pauseTimer(timerState, Date.now()))

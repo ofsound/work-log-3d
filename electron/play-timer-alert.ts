@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { extname } from 'node:path'
 
@@ -5,6 +6,7 @@ import { shell } from 'electron'
 import type { BrowserWindow } from 'electron'
 
 import { resolveTimerCompleteSoundPath } from './audio-config'
+
 const PLAYBACK_TIMEOUT_MS = 15000
 const SOUND_MIME_TYPES: Record<string, string> = {
   '.aif': 'audio/aiff',
@@ -39,6 +41,19 @@ const getSoundDataUrl = async (soundPath: string) => {
 
   return `data:${mimeType};base64,${soundBuffer.toString('base64')}`
 }
+
+const playAlertWithAfplay = (soundPath: string): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const child = spawn('afplay', [soundPath], { stdio: 'ignore' })
+    child.on('error', reject)
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve()
+      } else {
+        reject(new Error(`afplay exited with code ${code}`))
+      }
+    })
+  })
 
 const playAlertThroughWindow = async (window: BrowserWindow, soundPath: string) => {
   await waitForWindowToLoad(window)
@@ -77,6 +92,17 @@ export const playTimerCompleteAlert = async (
   if (!soundPath) {
     shell.beep()
     return
+  }
+
+  if (process.platform === 'darwin') {
+    try {
+      await playAlertWithAfplay(soundPath)
+      return
+    } catch (error) {
+      console.error('[worklog] timer alert sound failed (afplay)', error)
+      shell.beep()
+      return
+    }
   }
 
   if (window) {

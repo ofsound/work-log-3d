@@ -1,4 +1,7 @@
 import { Buffer } from 'node:buffer'
+import { existsSync } from 'node:fs'
+import { dirname, join, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { Menu, Tray, nativeImage } from 'electron'
 
@@ -10,6 +13,7 @@ import {
   getDesktopTrayStructuralKey,
   getDesktopTrayState,
 } from '~/shared/worklog'
+import { newTimeboxIconSvg } from '~/shared/icons/newTimeboxIcon'
 
 export interface TrayController {
   popUpMenu(): void
@@ -22,22 +26,57 @@ interface CreateTrayControllerOptions {
   onAction: (action: DesktopTrayActionId) => void
 }
 
-const createTrayIcon = (platform: NodeJS.Platform) => {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-      <circle cx="9" cy="9" r="7" fill="black" />
-      <path d="M9 4.5v4.7l3 1.8" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-  `.trim()
+const DARWIN_TRAY_ICON_FILENAME = 'tray-iconTemplate.png'
 
-  const icon = nativeImage
-    .createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`)
-    .resize({ width: 18, height: 18 })
+const resolveUnpackedAsarPath = (filePath: string) => {
+  const asarSegment = `${sep}app.asar${sep}`
+  const unpackedSegment = `${sep}app.asar.unpacked${sep}`
 
-  if (platform === 'darwin') {
-    icon.setTemplateImage(true)
+  return filePath.includes(asarSegment) ? filePath.replace(asarSegment, unpackedSegment) : filePath
+}
+
+const resolveBundledTrayIconPath = () => {
+  const mainDir = dirname(fileURLToPath(import.meta.url))
+  const bundled = join(mainDir, 'resources', DARWIN_TRAY_ICON_FILENAME)
+  if (existsSync(bundled)) {
+    return bundled
   }
 
+  const unpacked = resolveUnpackedAsarPath(bundled)
+  if (unpacked !== bundled && existsSync(unpacked)) {
+    return unpacked
+  }
+
+  const dev = join(process.cwd(), 'electron/resources', DARWIN_TRAY_ICON_FILENAME)
+  if (existsSync(dev)) {
+    return dev
+  }
+
+  return null
+}
+
+const createSvgTrayIcon = () => {
+  const svg = newTimeboxIconSvg({ stroke: '#000000' }).trim()
+
+  return nativeImage
+    .createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`)
+    .resize({ width: 18, height: 18 })
+}
+
+const createTrayIcon = (platform: NodeJS.Platform) => {
+  if (platform !== 'darwin') {
+    return createSvgTrayIcon()
+  }
+
+  const trayIconPath = resolveBundledTrayIconPath()
+  const icon = trayIconPath ? nativeImage.createFromPath(trayIconPath) : createSvgTrayIcon()
+  if (icon.isEmpty()) {
+    const fallback = createSvgTrayIcon()
+    fallback.setTemplateImage(true)
+    return fallback
+  }
+
+  icon.setTemplateImage(true)
   return icon
 }
 

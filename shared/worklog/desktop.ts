@@ -15,7 +15,6 @@ export interface DesktopWindowState {
 export type DesktopTrayActionId =
   | 'start_countup'
   | 'start_focus'
-  | 'start_break'
   | 'pause'
   | 'resume'
   | 'stop'
@@ -29,19 +28,19 @@ export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
 
 export type DesktopTrayMenuItem =
   | {
-      kind: 'status'
-      label: string
-      enabled: false
-    }
+    kind: 'status'
+    label: string
+    enabled: false
+  }
   | {
-      kind: 'separator'
-    }
+    kind: 'separator'
+  }
   | {
-      kind: 'action'
-      id: DesktopTrayActionId
-      label: string
-      enabled: boolean
-    }
+    kind: 'action'
+    id: DesktopTrayActionId
+    label: string
+    enabled: boolean
+  }
 
 export interface DesktopTrayState {
   mode: TimerState['status']
@@ -125,7 +124,7 @@ const getDesktopTrayTitle = (snapshot: TimerSnapshot, platform: NodeJS.Platform)
     return ''
   }
 
-  const icon = snapshot.status === 'completed' ? '✓' : '◔'
+  const icon = snapshot.status === 'completed' ? '✓' : ''
 
   if (snapshot.status === 'idle') {
     return icon
@@ -190,8 +189,7 @@ export const getDesktopTrayState = (
         createStatusItem(statusLabel),
         separatorItem,
         createActionItem('start_countup', 'Start Count Up'),
-        createActionItem('start_focus', 'Start Focus (25m)'),
-        createActionItem('start_break', 'Start Break (5m)'),
+        createActionItem('start_focus', 'Pomodoro (30m)'),
         separatorItem,
         createActionItem('show_window', 'Show Window'),
         createActionItem('quit', 'Quit'),
