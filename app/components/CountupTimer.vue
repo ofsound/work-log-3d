@@ -16,17 +16,18 @@ const timerIsRunning = computed(
 
 <template>
   <div
-    class="flex w-full items-center justify-between rounded-sm border border-border-subtle bg-panel-timer px-6 py-4 shadow-panel"
-    style="width: 100%; min-width: 100%"
+    class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm border border-border-subtle bg-panel-timer px-6 py-4 shadow-panel"
   >
     <div
-      class="relative h-max rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 py-1 font-data text-5xl font-bold text-button-secondary-text tabular-nums"
+      class="relative h-max shrink-0 rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 py-1 font-data text-5xl font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
     >
       <TimerCancelButton @click="cancel" />
       {{ timerProgress }}
     </div>
 
-    <TimerButton v-if="!timerIsRunning" @click="startCountup">Start Timer</TimerButton>
-    <TimerButton v-else @click="stop">Stop Timer</TimerButton>
+    <TimerButton v-if="!timerIsRunning" class="shrink-0" @click="startCountup"
+      >Start Timer</TimerButton
+    >
+    <TimerButton v-else class="shrink-0" @click="stop">Stop Timer</TimerButton>
   </div>
 </template>

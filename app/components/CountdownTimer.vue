@@ -48,14 +48,13 @@ watch(
 
 <template>
   <div
-    class="flex w-full items-center justify-between rounded-sm border border-border-subtle bg-panel-timer px-6 py-4 shadow-panel"
-    style="width: 100%; min-width: 100%"
+    class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm border border-border-subtle bg-panel-timer px-6 py-4 shadow-panel"
   >
     <div
-      class="relative h-max rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 py-1 font-data text-5xl font-bold text-button-secondary-text tabular-nums"
+      class="relative h-max shrink-0 rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 py-1 font-data text-5xl font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
     >
       <TimerCancelButton @click="cancel" />
-      <div class="flex items-baseline">
+      <div class="flex flex-nowrap items-baseline">
         <input
           v-if="!timerIsRunning && !timerIsPaused"
           id="dynamicMinutes"
@@ -70,10 +69,12 @@ watch(
         {{ secondsProgress }}
       </div>
     </div>
-    <TimerButton v-if="!timerIsRunning && !timerIsPaused" @click="startTimer"
+    <TimerButton v-if="!timerIsRunning && !timerIsPaused" class="shrink-0" @click="startTimer"
       >Start Timer</TimerButton
     >
-    <TimerButton v-if="timerIsRunning && !timerIsPaused" @click="pause">Pause Timer</TimerButton>
-    <TimerButton v-if="timerIsPaused" @click="resume">Resume Timer </TimerButton>
+    <TimerButton v-if="timerIsRunning && !timerIsPaused" class="shrink-0" @click="pause"
+      >Pause Timer</TimerButton
+    >
+    <TimerButton v-if="timerIsPaused" class="shrink-0" @click="resume">Resume Timer </TimerButton>
   </div>
 </template>

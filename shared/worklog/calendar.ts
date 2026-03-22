@@ -517,7 +517,7 @@ const createShiftedTimeBoxInput = (timeBox: TimeBox, nextStartTime: Date): TimeB
     Math.round(
       ((timeBox.endTime?.valueOf() ?? nextStartTime.valueOf()) -
         (timeBox.startTime?.valueOf() ?? nextStartTime.valueOf())) /
-      60_000,
+        60_000,
     ),
   )
 

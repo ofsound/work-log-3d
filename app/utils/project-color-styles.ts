@@ -99,6 +99,27 @@ export const getProjectHeaderStyle = (colors: ProjectColors): CSSProperties => {
   }
 }
 
+/** Session editor project radios: full gradient when selected, soft gradient when not. */
+export const getProjectPickerOptionStyle = (
+  colors: ProjectColors,
+  selected: boolean,
+): CSSProperties => {
+  if (selected) {
+    return {
+      ...getProjectHeaderStyle(colors),
+      borderColor: toRgba(colors.primary, 0.55),
+    }
+  }
+
+  const endColor = getGradientEndColor(colors)
+
+  return {
+    backgroundImage: `linear-gradient(135deg, ${toRgba(colors.primary, 0.2)}, ${toRgba(endColor, 0.2)})`,
+    borderColor: toRgba(colors.primary, 0.38),
+    color: 'var(--color-text)',
+  }
+}
+
 export const getProjectSwatchStyle = (colors: ProjectColors): CSSProperties => {
   const endColor = getGradientEndColor(colors)
 

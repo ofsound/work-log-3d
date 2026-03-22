@@ -3,7 +3,7 @@ import type { PropType } from 'vue'
 
 import { doc } from 'firebase/firestore'
 
-import { getProjectSoftSurfaceStyle, getProjectSwatchStyle } from '~/utils/project-color-styles'
+import { getProjectPickerOptionStyle } from '~/utils/project-color-styles'
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -58,6 +58,8 @@ const dynamicTags = ref<string[]>([])
 
 const dynamicDuration = ref<string | number>('')
 const showLegacyTagNotice = computed(() => hideTags.value && dynamicTags.value.length > 0)
+
+const projectRadiosTwoColumns = computed(() => sortedAllProjects.value.length > 4)
 
 const applyCreateDefaults = () => {
   dynamicStartTime.value = props.initialStartTime || props.startTimeFromTimer || ''
@@ -295,15 +297,18 @@ onBeforeUnmount(() => {
     </div>
     <div class="flex border-b border-border py-4">
       <div class="w-18 font-bold">Project:</div>
-      <div class="project-radio-group">
+      <div
+        class="project-radio-group min-w-0 flex-1"
+        :class="
+          projectRadiosTwoColumns ? 'grid grid-cols-1 gap-2 sm:grid-cols-2' : 'flex flex-col gap-2'
+        "
+      >
         <label
           v-for="thisProject in sortedAllProjects"
           :key="thisProject.id"
-          class="mb-2 flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 select-none"
+          class="flex cursor-pointer items-center gap-2 rounded-xl border border-solid px-3 py-2 select-none"
           :style="
-            dynamicProject === thisProject.id
-              ? getProjectSoftSurfaceStyle(thisProject.colors)
-              : { borderColor: 'var(--color-border-subtle)' }
+            getProjectPickerOptionStyle(thisProject.colors, dynamicProject === thisProject.id)
           "
         >
           <input
@@ -311,14 +316,10 @@ onBeforeUnmount(() => {
             type="radio"
             :value="thisProject.id"
             name="projectSelection"
-            class="mr-1.5"
+            class="shrink-0"
             @change="mutationErrorMessage = ''"
           />
-          <span
-            class="size-4 rounded-full border border-white/25"
-            :style="getProjectSwatchStyle(thisProject.colors)"
-          ></span>
-          <span>{{ thisProject.name }}</span>
+          <span class="min-w-0 font-medium">{{ thisProject.name }}</span>
         </label>
       </div>
     </div>

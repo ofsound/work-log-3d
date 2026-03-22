@@ -28,19 +28,19 @@ export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
 
 export type DesktopTrayMenuItem =
   | {
-    kind: 'status'
-    label: string
-    enabled: false
-  }
+      kind: 'status'
+      label: string
+      enabled: false
+    }
   | {
-    kind: 'separator'
-  }
+      kind: 'separator'
+    }
   | {
-    kind: 'action'
-    id: DesktopTrayActionId
-    label: string
-    enabled: boolean
-  }
+      kind: 'action'
+      id: DesktopTrayActionId
+      label: string
+      enabled: boolean
+    }
 
 export interface DesktopTrayState {
   mode: TimerState['status']

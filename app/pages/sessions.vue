@@ -551,7 +551,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-col items-end gap-2">
           <div
             class="inline-flex rounded-xl border border-border bg-surface-strong p-1 shadow-control"
           >
@@ -617,19 +617,19 @@ onBeforeUnmount(() => {
             class="flex items-center gap-2"
           >
             <button
-              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2.5 py-1.5 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
               @click="handleNavigate(-1)"
             >
               Prev
             </button>
             <button
-              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2.5 py-1.5 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
               @click="handleGoToday"
             >
               Today
             </button>
             <button
-              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2.5 py-1.5 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
               @click="handleNavigate(1)"
             >
               Next
