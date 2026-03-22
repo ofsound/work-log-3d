@@ -71,12 +71,20 @@ Seed the dedicated demo account:
 npm run seed:demo
 ```
 
+Import the legacy public worklog into the default account:
+
+```bash
+npm run import:legacy
+```
+
 Useful options:
 
 ```bash
 npm run seed:demo -- --dry-run
 npm run seed:demo -- --end-date 2026-03-21 --seed 240321
 npm run seed:demo -- --email seeds@modernthings.net
+npm run import:legacy -- --dry-run
+npm run import:legacy -- --email ben@modernthings.net
 ```
 
 By default the seeder:
@@ -86,6 +94,8 @@ By default the seeder:
 - writes a deterministic 14-day dataset with 10 projects, 5 tags, and realistic multi-hour daily sessions
 
 The seed command is destructive only within the targeted user's worklog collections. It does not create auth users and it does not use or store the account password.
+
+The legacy import uses the same Firebase Admin credentials for the destination project and reads the source dataset from the public Firestore REST API for `work-log-3806c`. It preserves existing target-user data, reuses existing projects and tags when the normalized name matches, and writes legacy sessions with deterministic document IDs so reruns stay additive and idempotent.
 
 ## Verification
 

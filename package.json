@@ -9,6 +9,7 @@
     "electron:build": "node scripts/electron-build.mjs",
     "electron:dev": "node scripts/electron-dev.mjs",
     "generate": "nuxt generate",
+    "import:legacy": "node --import tsx scripts/import-legacy.ts",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "seed:demo": "node --import tsx scripts/seed-demo.ts",
