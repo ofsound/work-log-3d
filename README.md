@@ -159,6 +159,7 @@ npm run electron:dist
 
 `electron:build` only compiles the desktop renderer, preload, and main-process assets into `dist-electron/`.
 `electron:dist` runs that build and then packages an unsigned macOS `.app` bundle into `release/mac-*/Work Log.app` for the current host architecture.
+The packaged macOS app strips unused camera, microphone, audio-capture, and Bluetooth usage-description keys from its final `Info.plist` so the bundle does not advertise permissions the app does not use.
 
 The desktop shell loads the renderer from a fixed localhost origin (`http://127.0.0.1` with a stable port, default `47821`, written to `electron-renderer-port.json` under the app user data directory if a different port had to be chosen). That keeps Firebase Auth’s browser storage keyed to the same origin between launches so you stay signed in after quitting. You can override the port with the `ELECTRON_RENDERER_PORT` environment variable.
 

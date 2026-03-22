@@ -66,6 +66,7 @@
   "build": {
     "appId": "net.modernthings.worklog3d",
     "productName": "Work Log",
+    "afterPack": "./scripts/electron-after-pack.mjs",
     "asar": true,
     "files": [
       "dist-electron/**/*",
