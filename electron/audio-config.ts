@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { basename, dirname, extname, join } from 'node:path'
+import { basename, dirname, extname, join, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { DesktopAlertSoundState } from '~/shared/worklog'
@@ -27,11 +27,23 @@ const getDesktopSettingsPath = (userDataPath: string) =>
 const getDesktopAlertSoundDirectory = (userDataPath: string) =>
   join(userDataPath, CUSTOM_ALERT_SOUND_DIRECTORY)
 
+const resolveUnpackedAsarPath = (filePath: string) => {
+  const asarSegment = `${sep}app.asar${sep}`
+  const unpackedSegment = `${sep}app.asar.unpacked${sep}`
+
+  return filePath.includes(asarSegment) ? filePath.replace(asarSegment, unpackedSegment) : filePath
+}
+
 const resolveBundledTimerCompleteSoundPath = () => {
   const mainDir = dirname(fileURLToPath(import.meta.url))
   const bundled = join(mainDir, 'resources', TIMER_COMPLETE_SOUND_FILENAME)
   if (existsSync(bundled)) {
     return bundled
+  }
+
+  const unpacked = resolveUnpackedAsarPath(bundled)
+  if (unpacked !== bundled && existsSync(unpacked)) {
+    return unpacked
   }
 
   const dev = join(process.cwd(), 'electron/resources', TIMER_COMPLETE_SOUND_FILENAME)

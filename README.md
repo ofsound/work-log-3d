@@ -151,6 +151,15 @@ Electron production build:
 npm run electron:build
 ```
 
+Standalone macOS app bundle for local dogfooding:
+
+```bash
+npm run electron:dist
+```
+
+`electron:build` only compiles the desktop renderer, preload, and main-process assets into `dist-electron/`.
+`electron:dist` runs that build and then packages an unsigned macOS `.app` bundle into `release/mac-*/Work Log.app` for the current host architecture.
+
 Static generate preview:
 
 ```bash

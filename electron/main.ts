@@ -27,6 +27,7 @@ import {
   getDesktopAlertSoundState,
   importDesktopAlertSound,
 } from '~/electron/audio-config'
+import { createDesktopRendererServer } from '~/electron/renderer-server'
 import { createTrayController } from '~/electron/tray-controller'
 import { playTimerCompleteAlert } from '~/electron/play-timer-alert'
 
@@ -36,6 +37,7 @@ let mainWindow: BrowserWindow | null = null
 let isQuitting = false
 let trayController: TrayController | null = null
 let pendingRouteRequest: string | null = null
+let desktopRendererServer: Awaited<ReturnType<typeof createDesktopRendererServer>> | null = null
 
 const getTimerStatePath = () => join(app.getPath('userData'), 'timer-state.json')
 const desktopRendererUrl = process.env.NUXT_DEV_SERVER_URL ?? process.env.ELECTRON_RENDERER_URL
@@ -168,8 +170,10 @@ const createMainWindow = () => {
     flushPendingRouteRequest()
   })
 
-  if (desktopRendererUrl) {
-    void window.loadURL(desktopRendererUrl)
+  const rendererUrl = desktopRendererUrl ?? desktopRendererServer?.url
+
+  if (rendererUrl) {
+    void window.loadURL(rendererUrl)
   } else {
     void window.loadFile(join(__dirname, '../renderer/index.html'))
   }
@@ -266,6 +270,11 @@ const registerIpc = () => {
 
 app.whenReady().then(async () => {
   await loadTimerState()
+
+  if (!desktopRendererUrl) {
+    desktopRendererServer = await createDesktopRendererServer(join(__dirname, '../renderer'))
+  }
+
   trayController = createTrayController({
     onAction(action) {
       switch (action) {
@@ -324,4 +333,5 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   trayController?.destroy()
+  void desktopRendererServer?.close()
 })
