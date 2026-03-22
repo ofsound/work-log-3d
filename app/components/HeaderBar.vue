@@ -9,7 +9,7 @@ const { hideTags } = useUserSettings()
     class="fixed z-100 flex w-full items-center gap-3 bg-header px-4 py-2 tracking-wide text-header-text"
   >
     <NuxtLink to="/" class="font-bold hover:underline">WORK LOG</NuxtLink>
-    <div>/</div>
+    <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>
     <NuxtLink
       to="/new"
       class="flex items-center opacity-80 transition-opacity hover:opacity-100"
@@ -24,17 +24,17 @@ const { hideTags } = useUserSettings()
       />
       <!-- eslint-enable vue/no-v-html -->
     </NuxtLink>
-    <div>/</div>
+    <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>
+    <NuxtLink to="/sessions" class="hover:underline">Sessions</NuxtLink>
+    <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>
     <NuxtLink to="/projects" class="hover:underline">Projects</NuxtLink>
     <template v-if="!hideTags">
-      <div>/</div>
+      <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>
       <NuxtLink to="/tags" class="hover:underline">Tags</NuxtLink>
     </template>
-    <div>/</div>
-    <NuxtLink to="/sessions" class="hover:underline">Sessions</NuxtLink>
-    <div>/</div>
+    <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>
     <NuxtLink to="/reports" class="hover:underline">Reports</NuxtLink>
-    <div class="ml-auto flex items-center gap-4">
+    <div class="ml-auto flex items-center gap-2">
       <ThemeSwitcher />
       <NuxtLink
         to="/settings"

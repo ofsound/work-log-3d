@@ -174,11 +174,24 @@ const createInitialEndTime = computed(() =>
   createRange.value ? formatToDatetimeLocal(createRange.value.endTime) : '',
 )
 
-const daySummary = computed(() => ({
-  count: visibleDayTimeBoxes.value.length,
-  durationLabel: getTotalDurationLabel(visibleDayTimeBoxes.value),
-  projectCount: new Set(visibleDayTimeBoxes.value.map((timeBox) => timeBox.project)).size,
-}))
+const calendarHeaderSummary = computed(() => {
+  const mode = currentMode.value
+  const boxes =
+    mode === 'day'
+      ? visibleDayTimeBoxes.value
+      : mode === 'week' || mode === 'month'
+        ? visibleCalendarTimeBoxes.value
+        : null
+  if (!boxes) {
+    return null
+  }
+
+  return {
+    count: boxes.length,
+    durationLabel: getTotalDurationLabel(boxes),
+    projectCount: new Set(boxes.map((timeBox) => timeBox.project)).size,
+  }
+})
 const listSummary = computed(() => ({
   count: filteredSessionListTimeBoxes.value.length,
   durationLabel: getTotalDurationLabel(filteredSessionListTimeBoxes.value),
@@ -188,14 +201,11 @@ const weekTitle = computed(() => {
   const start = getStartOfWeek(anchorDate.value)
   const end = addDays(getEndOfWeek(anchorDate.value), -1)
 
-  return `${start.toLocaleDateString([], {
-    month: 'short',
-    day: 'numeric',
-  })} - ${end.toLocaleDateString([], {
-    month: start.getMonth() === end.getMonth() ? undefined : 'short',
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'long',
     day: 'numeric',
     year: 'numeric',
-  })}`
+  }).formatRange(start, end)
 })
 
 const yearTitle = computed(() => {
@@ -520,21 +530,21 @@ onBeforeUnmount(() => {
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div class="text-3xl font-bold tracking-tight">{{ pageTitle }}</div>
-          <div v-if="currentMode === 'day'" class="mt-3 flex flex-wrap gap-2">
+          <div v-if="calendarHeaderSummary" class="mt-3 flex flex-wrap gap-2">
             <div
               class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
             >
-              {{ daySummary.durationLabel }} hrs
+              {{ calendarHeaderSummary.durationLabel }} hrs
             </div>
             <div
               class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
             >
-              {{ daySummary.count }} sessions
+              {{ calendarHeaderSummary.count }} sessions
             </div>
             <div
               class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
             >
-              {{ daySummary.projectCount }} projects
+              {{ calendarHeaderSummary.projectCount }} projects
             </div>
           </div>
         </div>
