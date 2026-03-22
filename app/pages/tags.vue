@@ -3,7 +3,7 @@ const { hideTags } = useUserSettings()
 </script>
 
 <template>
-  <div class="h-full overflow-auto px-11 pt-8 pb-4">
+  <div class="h-full w-full overflow-auto px-6 pt-6 pb-6">
     <div
       v-if="hideTags"
       class="mx-auto max-w-3xl rounded-2xl border border-border-subtle bg-surface px-6 py-6 shadow-panel"
@@ -19,6 +19,8 @@ const { hideTags } = useUserSettings()
         .
       </p>
     </div>
-    <TagsManager v-else />
+    <div v-else class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <TagsManager />
+    </div>
   </div>
 </template>

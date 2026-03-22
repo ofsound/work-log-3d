@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { doc, query, where, orderBy } from 'firebase/firestore'
+import { doc, query, where } from 'firebase/firestore'
 
 import { getProjectBadgeStyle, getProjectHeaderStyle } from '~/utils/project-color-styles'
 import { getProjectEditPath } from '~/utils/worklog-routes'
 import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
-import { getTotalDurationLabel, groupTimeBoxesByStartDay } from '~~/shared/worklog'
+import {
+  getTotalDurationLabel,
+  groupTimeBoxesByStartDay,
+  sortTimeBoxesByStart,
+} from '~~/shared/worklog'
 
 const { projectsCollection, timeBoxesCollection } = useFirestoreCollections()
 
@@ -13,22 +17,25 @@ const props = defineProps({
   id: { type: String, required: true },
 })
 
-const rawProject = useDocument(doc(projectsCollection, props.id))
+const router = useRouter()
+const rawProject = useDocument(doc(projectsCollection, props.id), {
+  ssrKey: `project-overview-${props.id}`,
+})
 const store = useStore()
+const timeBoxes = useCollection(query(timeBoxesCollection, where('project', '==', props.id)), {
+  ssrKey: `project-timeboxes-${props.id}`,
+})
 
-const projectTimeBoxesQuery = computed(() =>
-  query(
-    timeBoxesCollection,
-    where('project', '==', props.id),
-    orderBy('startTime', store.sortOrderReversed ? 'desc' : 'asc'),
+const projectTimeBoxes = computed(() =>
+  sortTimeBoxesByStart(
+    toTimeBoxes(timeBoxes.value as FirebaseTimeBoxDocument[]),
+    store.sortOrderReversed ? 'desc' : 'asc',
   ),
 )
-const timeBoxes = useCollection(projectTimeBoxesQuery)
 
 const project = computed(() =>
   rawProject.value ? toProject(rawProject.value as FirebaseProjectDocument) : null,
 )
-const projectTimeBoxes = computed(() => toTimeBoxes(timeBoxes.value as FirebaseTimeBoxDocument[]))
 const projectOverviewDayObjects = computed(() => groupTimeBoxesByStartDay(projectTimeBoxes.value))
 const projectTimeBoxesTotalDuration = computed(() => getTotalDurationLabel(projectTimeBoxes.value))
 const headerStyle = computed(() =>
@@ -37,6 +44,10 @@ const headerStyle = computed(() =>
 const durationBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},
 )
+
+const openProjectEditor = async () => {
+  await router.push(getProjectEditPath(props.id))
+}
 </script>
 
 <template>
@@ -45,12 +56,13 @@ const durationBadgeStyle = computed(() =>
       class="relative z-10 flex min-h-22 w-full max-w-250 items-center justify-center px-6 py-5 shadow-overview"
       :style="headerStyle"
     >
-      <NuxtLink
-        :to="getProjectEditPath(id)"
+      <button
+        type="button"
         class="absolute top-4 right-4 rounded-full border border-white/25 px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase hover:bg-white/10"
+        @click="openProjectEditor"
       >
         Edit Project
-      </NuxtLink>
+      </button>
       <div class="text-center text-3xl font-bold">{{ project?.name }}</div>
       <div
         class="relative top-px ml-4 w-max rounded-md border px-1.5 py-0.5 pt-px font-data text-sm tracking-wide"

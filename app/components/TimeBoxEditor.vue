@@ -248,7 +248,8 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="timeBoxEditorRef"
-    class="my-4 rounded-sm border border-border-subtle bg-panel-editor px-6 py-4 font-data shadow-panel grayscale-10 *:my-2"
+    class="w-full rounded-sm border border-border-subtle bg-panel-editor px-6 py-4 font-data shadow-panel grayscale-10 *:my-2"
+    style="width: 100%; min-width: 100%"
   >
     <div class="flex gap-15">
       <input

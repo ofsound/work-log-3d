@@ -24,12 +24,15 @@ const endTimeFromTimer = computed(() => {
 </script>
 
 <template>
-  <div class="flex gap-2 *:flex-1">
-    <CountdownTimer :class="{ 'blur-[2px] grayscale-100': countUpIsActive }" />
-    <CountupTimer :class="{ 'blur-[2px] grayscale-100': countDownIsActive }" />
+  <div class="flex flex-col gap-6">
+    <div class="grid gap-4 xl:grid-cols-2">
+      <CountdownTimer :class="{ 'blur-[2px] grayscale-100': countUpIsActive }" />
+      <CountupTimer :class="{ 'blur-[2px] grayscale-100': countDownIsActive }" />
+    </div>
+
+    <TimeBoxEditor
+      :start-time-from-timer="startTimeFromTimer"
+      :end-time-from-timer="endTimeFromTimer"
+    />
   </div>
-  <TimeBoxEditor
-    :start-time-from-timer="startTimeFromTimer"
-    :end-time-from-timer="endTimeFromTimer"
-  />
 </template>

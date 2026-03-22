@@ -38,7 +38,10 @@ const cancelCreateAndLoseFocus = () => {
 </script>
 
 <template>
-  <div class="my-4 rounded-sm border border-border-subtle bg-panel-tag px-6 py-4 shadow-panel">
+  <div
+    class="my-4 w-full rounded-sm border border-border-subtle bg-panel-tag px-6 py-4 shadow-panel"
+    style="width: 100%; min-width: 100%"
+  >
     <div class="mb-2 text-center text-xl font-bold uppercase">Tags</div>
     <TagsManagerTag v-for="item in sortedAllTags" :id="item.id" :key="item.id" :name="item.name" />
     <div class="mt-8 flex">
