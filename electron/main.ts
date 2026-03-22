@@ -31,6 +31,8 @@ import { createDesktopRendererServer } from '~/electron/renderer-server'
 import { createTrayController } from '~/electron/tray-controller'
 import { playTimerCompleteAlert } from '~/electron/play-timer-alert'
 
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
+
 let timerState: TimerState = createIdleTimerState()
 let timerInterval: NodeJS.Timeout | null = null
 let mainWindow: BrowserWindow | null = null
@@ -115,7 +117,8 @@ const setTimerState = (nextState: TimerState) => {
   void persistTimerState()
 
   if (shouldPlayTimerAlert(previousStatus, nextState.status)) {
-    void playTimerCompleteAlert(app.getPath('userData'))
+    const alertWindow = mainWindow ?? createMainWindow()
+    void playTimerCompleteAlert(app.getPath('userData'), alertWindow)
   }
 
   if (shouldShowTimerNotification(previousStatus, getTimerSnapshot(nextState, Date.now()))) {
@@ -264,7 +267,8 @@ const registerIpc = () => {
     return clearDesktopAlertSound(app.getPath('userData'))
   })
   ipcMain.handle('desktop:testAlertSound', async () => {
-    await playTimerCompleteAlert(app.getPath('userData'))
+    const alertWindow = mainWindow ?? createMainWindow()
+    await playTimerCompleteAlert(app.getPath('userData'), alertWindow)
   })
 }
 

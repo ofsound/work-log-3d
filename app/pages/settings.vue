@@ -406,7 +406,7 @@ onBeforeUnmount(() => {
               {{
                 isLoadingDesktopAlert
                   ? 'Loading…'
-                  : desktopAlertState?.fileName || 'timer-complete.mp3'
+                  : desktopAlertState?.fileName || 'timer-complete.wav'
               }}
             </div>
             <div class="mt-1 text-sm text-text-muted">

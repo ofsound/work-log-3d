@@ -9,10 +9,6 @@ const generatedRendererDir = join(projectRoot, '.output', 'public')
 const electronRendererDir = join(projectRoot, 'dist-electron', 'renderer')
 const electronAppDir = join(projectRoot, 'dist-electron', 'app')
 const electronPackagedDistDir = join(electronAppDir, 'dist-electron')
-const electronAppNodeModulesDir = join(electronAppDir, 'node_modules')
-
-const getDependencyVersion = (packageJson, dependencyName) =>
-  packageJson.dependencies?.[dependencyName] ?? null
 
 const rewriteRendererAssetPaths = async (directory) => {
   const entries = await readdir(directory, { withFileTypes: true })
@@ -80,28 +76,16 @@ await cp(generatedRendererDir, electronRendererDir, { recursive: true })
 await rewriteRendererAssetPaths(electronRendererDir)
 
 const rootPackageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
-const playSoundPackageJson = JSON.parse(
-  await readFile(join(projectRoot, 'node_modules', 'play-sound', 'package.json'), 'utf8'),
-)
-const findExecPackageJson = JSON.parse(
-  await readFile(join(projectRoot, 'node_modules', 'find-exec', 'package.json'), 'utf8'),
-)
 const electronPackageJson = {
   name: rootPackageJson.name,
   version: rootPackageJson.version,
   description: rootPackageJson.description,
   main: 'dist-electron/main/main.js',
   type: rootPackageJson.type,
-  dependencies: {
-    'find-exec': getDependencyVersion(playSoundPackageJson, 'find-exec'),
-    'play-sound': getDependencyVersion(rootPackageJson, 'play-sound'),
-    'shell-quote': getDependencyVersion(findExecPackageJson, 'shell-quote'),
-  },
 }
 
 await rm(electronAppDir, { force: true, recursive: true })
 await mkdir(electronPackagedDistDir, { recursive: true })
-await mkdir(electronAppNodeModulesDir, { recursive: true })
 
 await Promise.all([
   cp(join(projectRoot, 'dist-electron', 'main'), join(electronPackagedDistDir, 'main'), {
@@ -113,23 +97,6 @@ await Promise.all([
   cp(join(projectRoot, 'dist-electron', 'renderer'), join(electronPackagedDistDir, 'renderer'), {
     recursive: true,
   }),
-  cp(
-    join(projectRoot, 'node_modules', 'play-sound'),
-    join(electronAppNodeModulesDir, 'play-sound'),
-    {
-      recursive: true,
-    },
-  ),
-  cp(join(projectRoot, 'node_modules', 'find-exec'), join(electronAppNodeModulesDir, 'find-exec'), {
-    recursive: true,
-  }),
-  cp(
-    join(projectRoot, 'node_modules', 'shell-quote'),
-    join(electronAppNodeModulesDir, 'shell-quote'),
-    {
-      recursive: true,
-    },
-  ),
   writeFile(
     join(electronAppDir, 'package.json'),
     `${JSON.stringify(electronPackageJson, null, 2)}\n`,

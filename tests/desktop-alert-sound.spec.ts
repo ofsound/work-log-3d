@@ -35,11 +35,11 @@ describe('desktop alert sound config', () => {
 
     expect(await getDesktopAlertSoundState(userDataPath)).toEqual({
       source: 'bundled',
-      fileName: 'timer-complete.mp3',
+      fileName: 'timer-complete.wav',
       customFileName: null,
     })
     await expect(resolveTimerCompleteSoundPath(userDataPath)).resolves.toContain(
-      'timer-complete.mp3',
+      'timer-complete.wav',
     )
   })
 })

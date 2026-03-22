@@ -1,6 +1,6 @@
 # Desktop alert sounds
 
-Place your timer completion sound here as **`timer-complete.mp3`** (or change `TIMER_COMPLETE_SOUND_FILENAME` in [`../audio-config.ts`](../audio-config.ts)).
+Place your timer completion sound here as **`timer-complete.wav`** (or change `TIMER_COMPLETE_SOUND_FILENAME` in [`../audio-config.ts`](../audio-config.ts)).
 
 If the file is missing, the app falls back to the system beep.
 

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import type { DesktopAlertSoundState } from '~/shared/worklog'
 
-const TIMER_COMPLETE_SOUND_FILENAME = 'timer-complete.mp3'
+const TIMER_COMPLETE_SOUND_FILENAME = 'timer-complete.wav'
 const DESKTOP_SETTINGS_FILENAME = 'desktop-settings.json'
 const CUSTOM_ALERT_SOUND_BASENAME = 'timer-alert'
 const CUSTOM_ALERT_SOUND_DIRECTORY = 'sounds'
