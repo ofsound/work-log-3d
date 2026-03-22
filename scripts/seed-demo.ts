@@ -2,6 +2,8 @@ import { applicationDefault, getApps, initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 
+import { getProjectDefaultMetadata } from '../shared/worklog/projects'
+
 import {
   buildDemoSeedDataset,
   DEFAULT_DEMO_SEED,
@@ -175,6 +177,9 @@ const seedNamedEntities = async ({
     batch.set(reference, {
       name: entity.name,
       slug: entity.slug,
+      ...(collectionName === 'projects'
+        ? getProjectDefaultMetadata(Object.keys(idByKey).length - 1)
+        : {}),
     })
   })
 

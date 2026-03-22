@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import type { CSSProperties } from 'vue'
+
 interface SessionListMultiSelectOption {
   id: string
   label: string
+  swatchStyle?: CSSProperties
 }
 
 const props = withDefaults(
@@ -165,6 +168,11 @@ onBeforeUnmount(() => {
             type="checkbox"
             @change="toggleValue(option.id)"
           />
+          <span
+            v-if="option.swatchStyle"
+            class="size-3.5 shrink-0 rounded-full border border-white/25"
+            :style="option.swatchStyle"
+          ></span>
           <span class="min-w-0 truncate">{{ option.label }}</span>
         </label>
       </div>

@@ -17,7 +17,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 
 ## Key Conventions
 
-- Project and tag pages use stable ID-based routes: `/project/:id` and `/tag/:id`
+- Project and tag pages use stable ID-based routes: `/project/:id`, `/project/:id/edit`, and `/tag/:id`
 - `/sessions` is a single route with query-driven state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`; `mode=list` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort`
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences and desktop-only alert sound controls
@@ -165,8 +165,15 @@ npm run preview
 {
   name: string
   slug: string
+  notes: string
+  colors: {
+    primary: string
+    secondary: string | null
+  }
 }
 ```
+
+New projects receive a default curated color pair automatically. Existing legacy projects without saved metadata fall back to a deterministic palette in the UI until they are edited and saved.
 
 `users/{uid}/tags/{tagId}`
 

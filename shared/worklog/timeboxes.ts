@@ -1,5 +1,5 @@
 import { formatDurationMinutesLabel } from './formatters'
-import type { NamedEntity, SortDirection, TimeBox } from './types'
+import type { NamedEntity, Project, SortDirection, TimeBox } from './types'
 
 export const compareNamedEntities = (a: NamedEntity, b: NamedEntity) => {
   return a.name.localeCompare(b.name)
@@ -64,6 +64,10 @@ export const groupTimeBoxesByStartDay = (timeBoxes: TimeBox[]) => {
 
 export const findProjectName = (projects: NamedEntity[], projectId: string) => {
   return projects.find((project) => project.id === projectId)?.name ?? ''
+}
+
+export const findProject = (projects: Project[], projectId: string) => {
+  return projects.find((project) => project.id === projectId) ?? null
 }
 
 export const findTagNames = (tags: NamedEntity[], tagIds: string[]) => {

@@ -9,6 +9,7 @@ import {
   resolveLegacyEntityImports,
   summarizeLegacyDataset,
 } from './import-legacy-data'
+import { getProjectDefaultMetadata } from '../shared/worklog/projects'
 
 process.loadEnvFile?.('.env')
 
@@ -152,6 +153,7 @@ const run = async () => {
     batch.set(db.doc(`users/${uid}/projects/${project.id}`), {
       name: project.name,
       slug: project.slug,
+      ...getProjectDefaultMetadata(projectImport.entitiesToCreate.indexOf(project)),
     })
   })
   tagImport.entitiesToCreate.forEach((tag) => {

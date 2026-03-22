@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
-import type { TimeBox, TimeBoxInput } from '~~/shared/worklog'
+import { getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import type { Project, TimeBox, TimeBoxInput } from '~~/shared/worklog'
 import {
   buildMonthGridDays,
   formatDateKey,
@@ -20,6 +21,7 @@ interface SessionChangePayload {
 const props = defineProps({
   anchorDate: { type: Date, required: true },
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
+  projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
   selectedSessionId: { type: String, default: '' },
 })
@@ -70,6 +72,11 @@ const weekdays = computed(() =>
 )
 
 const getProjectName = (projectId: string) => props.projectNameById[projectId] ?? 'Untitled'
+const getProjectStyle = (projectId: string) => {
+  const project = props.projectById[projectId]
+
+  return project ? getProjectSoftSurfaceStyle(project.colors) : {}
+}
 
 const getDaySegments = (day: Date) => daySegmentsByKey.value.get(formatDateKey(day)) ?? []
 
@@ -166,8 +173,9 @@ const handleSegmentDragEnd = () => {
               <button
                 v-for="segment in getVisibleSegments(day)"
                 :key="segment.id"
-                class="cursor-pointer rounded-md bg-sky-100 px-2 py-1 text-left text-xs text-sky-950 hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-100 dark:hover:bg-sky-900"
+                class="cursor-pointer rounded-md border px-2 py-1 text-left text-xs text-text hover:brightness-97"
                 :class="{ 'ring-2 ring-link': selectedSessionId === segment.timeBox.id }"
+                :style="getProjectStyle(segment.timeBox.project)"
                 draggable="true"
                 @click.stop="emit('openSession', segment.timeBox.id)"
                 @dragstart="handleSegmentDragStart(segment.timeBox, $event)"

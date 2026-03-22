@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
-import type { TimeBox, TimeBoxInput } from '~~/shared/worklog'
+import { getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import type { Project, TimeBox, TimeBoxInput } from '~~/shared/worklog'
 import {
   addMinutes,
   buildDaySegmentLayouts,
@@ -29,6 +30,7 @@ interface SessionChangePayload {
 const props = defineProps({
   anchorDate: { type: Date, required: true },
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
+  projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
   selectedSessionId: { type: String, default: '' },
 })
@@ -432,6 +434,7 @@ const handleResizePointerDown = (timeBox: TimeBox, edge: 'start' | 'end', event:
 }
 
 const getProjectName = (projectId: string) => props.projectNameById[projectId] ?? 'Untitled'
+const getProject = (projectId: string) => props.projectById[projectId]
 
 const formatHourLabel = (hour: number) =>
   new Date(2026, 0, 1, hour).toLocaleTimeString([], {
@@ -458,12 +461,14 @@ const getEventStyle = (layout: (typeof dayLayouts.value)[number][number]) => {
   )
   const width = `calc(${100 / layout.laneCount}% - 0.4rem)`
   const left = `calc(${(100 / layout.laneCount) * layout.lane}% + 0.2rem)`
+  const project = getProject(layout.timeBox.project)
 
   return {
     top: `${top}px`,
     height: `${height}px`,
     left,
     width,
+    ...(project ? getProjectSoftSurfaceStyle(project.colors) : {}),
   }
 }
 
@@ -616,7 +621,7 @@ onBeforeUnmount(() => {
             <div
               v-for="layout in dayLayouts[dayIndex]"
               :key="`${layout.timeBoxId}-${layout.segmentStart.valueOf()}`"
-              class="absolute z-10 cursor-pointer rounded-lg border border-link/30 bg-sky-100 px-2 py-1 text-left text-sky-950 shadow-panel transition hover:border-link hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-100 dark:hover:bg-sky-900"
+              class="absolute z-10 cursor-pointer rounded-lg border px-2 py-1 text-left text-text shadow-panel transition hover:brightness-97"
               :class="{
                 'ring-2 ring-link': selectedSessionId === layout.timeBoxId,
                 'opacity-50':

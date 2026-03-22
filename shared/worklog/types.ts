@@ -1,9 +1,22 @@
 export type EntityId = string
 
+export interface ProjectColors {
+  primary: string
+  secondary: string | null
+}
+
 export interface Project {
   id: EntityId
   name: string
   slug: string
+  notes: string
+  colors: ProjectColors
+}
+
+export interface ProjectInput {
+  name: string
+  notes: string
+  colors: ProjectColors
 }
 
 export interface Tag {

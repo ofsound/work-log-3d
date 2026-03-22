@@ -1,6 +1,7 @@
 export * from './calendar'
 export * from './desktop'
 export * from './formatters'
+export * from './projects'
 export * from './reports'
 export * from './repositories'
 export * from './session-list'

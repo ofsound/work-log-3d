@@ -1,13 +1,20 @@
-import { getProjectPath, getPublicReportPath, getTagPath } from '~/app/utils/worklog-routes'
+import {
+  getProjectEditPath,
+  getProjectPath,
+  getPublicReportPath,
+  getTagPath,
+} from '~/app/utils/worklog-routes'
 
 describe('worklog routes', () => {
   it('builds stable ID-based project and tag routes', () => {
     expect(getProjectPath('project-123')).toBe('/project/project-123')
+    expect(getProjectEditPath('project-123')).toBe('/project/project-123/edit')
     expect(getTagPath('tag-123')).toBe('/tag/tag-123')
   })
 
   it('encodes IDs so route generation is deterministic', () => {
     expect(getProjectPath('project/123')).toBe('/project/project%2F123')
+    expect(getProjectEditPath('project/123')).toBe('/project/project%2F123/edit')
     expect(getTagPath('tag 123')).toBe('/tag/tag%20123')
     expect(getPublicReportPath('report token')).toBe('/r/report%20token')
   })

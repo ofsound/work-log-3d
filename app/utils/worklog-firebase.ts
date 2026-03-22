@@ -3,6 +3,7 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   limit,
   query,
@@ -23,7 +24,11 @@ import type {
 } from '~~/shared/worklog'
 import {
   createEntityInUseError,
+  createProjectPayload,
   createNamedEntityPayload,
+  getProjectDefaultMetadata,
+  resolveProjectColors,
+  resolveProjectNotes,
   validateReportInput,
   validateTimeBoxInput,
   validateUserSettingsInput,
@@ -38,6 +43,11 @@ export interface FirebaseProjectDocument {
   id: string
   name: string
   slug: string
+  notes?: string
+  colors?: {
+    primary?: string
+    secondary?: string | null
+  } | null
 }
 
 export interface FirebaseTagDocument {
@@ -93,6 +103,8 @@ export const toProject = (project: FirebaseProjectDocument): Project => ({
   id: project.id,
   name: project.name,
   slug: project.slug,
+  notes: resolveProjectNotes(project.notes),
+  colors: resolveProjectColors(project.id, project.colors),
 })
 
 export const toTag = (tag: FirebaseTagDocument): Tag => ({
@@ -208,12 +220,41 @@ export const createFirestoreWorklogRepositories = ({
   return {
     projects: {
       async create({ name }: { name: string }) {
-        const project = await addDoc(projectsCollection, createNamedEntityPayload(name, 'Project'))
+        const existingProjects = await getDocs(projectsCollection)
+        const defaults = getProjectDefaultMetadata(existingProjects.size)
+        const project = await addDoc(
+          projectsCollection,
+          createProjectPayload({
+            name,
+            notes: defaults.notes,
+            colors: defaults.colors,
+          }),
+        )
 
         return project.id
       },
       async rename(id: string, name: string) {
-        await updateDoc(doc(projectsCollection, id), createNamedEntityPayload(name, 'Project'))
+        const projectReference = doc(projectsCollection, id)
+        const snapshot = await getDoc(projectReference)
+        const currentProject = toProject({
+          id,
+          name: String(snapshot.get('name') ?? ''),
+          slug: String(snapshot.get('slug') ?? ''),
+          notes: snapshot.get('notes') as string | undefined,
+          colors: snapshot.get('colors') as FirebaseProjectDocument['colors'],
+        })
+
+        await updateDoc(
+          projectReference,
+          createProjectPayload({
+            name,
+            notes: currentProject.notes,
+            colors: currentProject.colors,
+          }),
+        )
+      },
+      async update(id: string, input) {
+        await updateDoc(doc(projectsCollection, id), createProjectPayload(input))
       },
       async remove(id: string) {
         await ensureProjectIsUnused(id)

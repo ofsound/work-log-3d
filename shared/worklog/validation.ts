@@ -1,5 +1,6 @@
 import { formatDateKey, parseDateKey } from './calendar'
 import { slugifyName } from './formatters'
+import { normalizeHexColor } from './projects'
 import {
   REPORT_GROUP_OPERATORS,
   REPORT_TAG_OPERATORS,
@@ -9,7 +10,7 @@ import {
   type ReportTagOperator,
 } from './reports'
 import { validateUserSettings, type UserSettings } from './settings'
-import type { EntityId, TimeBoxInput } from './types'
+import type { EntityId, ProjectInput, TimeBoxInput } from './types'
 
 export type WorklogErrorCode = 'validation' | 'entity-in-use'
 
@@ -38,6 +39,36 @@ const requireNonEmptyString = (value: string, label: string) => {
 }
 
 const normalizeOptionalString = (value: string) => value.trim()
+
+const normalizeNullableHexColor = (value: string | null | undefined, label: string) => {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  const normalized = value.trim()
+
+  if (!normalized) {
+    return null
+  }
+
+  const color = normalizeHexColor(normalized)
+
+  if (!color) {
+    throw new WorklogError('validation', `${label} must be a valid hex color.`)
+  }
+
+  return color
+}
+
+const requireHexColor = (value: string, label: string) => {
+  const normalized = normalizeHexColor(value)
+
+  if (!normalized) {
+    throw new WorklogError('validation', `${label} must be a valid hex color.`)
+  }
+
+  return normalized
+}
 
 const normalizeOptionalEntityIds = (values: EntityId[]) => {
   const normalized = values.map((value) => value.trim()).filter(Boolean)
@@ -93,6 +124,31 @@ export const createNamedEntityPayload = (name: string, label: string) => {
   return {
     name: normalizedName,
     slug,
+  }
+}
+
+export const validateProjectInput = (input: ProjectInput): ProjectInput => ({
+  name: requireNonEmptyString(input.name, 'Project'),
+  notes: normalizeOptionalString(input.notes),
+  colors: {
+    primary: requireHexColor(input.colors.primary, 'Primary color'),
+    secondary: normalizeNullableHexColor(input.colors.secondary, 'Secondary color'),
+  },
+})
+
+export const createProjectPayload = (input: ProjectInput) => {
+  const normalized = validateProjectInput(input)
+  const slug = slugifyName(normalized.name)
+
+  if (!slug) {
+    throw new WorklogError('validation', `Project must include letters or numbers.`)
+  }
+
+  return {
+    name: normalized.name,
+    slug,
+    notes: normalized.notes,
+    colors: normalized.colors,
   }
 }
 

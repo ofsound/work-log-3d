@@ -1,0 +1,123 @@
+import type { CSSProperties } from 'vue'
+
+import type { ProjectColors } from '~~/shared/worklog'
+
+interface RgbColor {
+  red: number
+  green: number
+  blue: number
+}
+
+const hexToRgb = (value: string): RgbColor => {
+  const normalized = value.replace('#', '')
+
+  return {
+    red: Number.parseInt(normalized.slice(0, 2), 16),
+    green: Number.parseInt(normalized.slice(2, 4), 16),
+    blue: Number.parseInt(normalized.slice(4, 6), 16),
+  }
+}
+
+const toRgba = (value: string, alpha: number) => {
+  const rgb = hexToRgb(value)
+
+  return `rgba(${rgb.red}, ${rgb.green}, ${rgb.blue}, ${alpha})`
+}
+
+const mixColors = (left: string, right: string, ratio: number) => {
+  const leftRgb = hexToRgb(left)
+  const rightRgb = hexToRgb(right)
+  const blend = (leftChannel: number, rightChannel: number) =>
+    Math.round(leftChannel * (1 - ratio) + rightChannel * ratio)
+  const toHex = (value: number) => value.toString(16).padStart(2, '0')
+
+  return `#${toHex(blend(leftRgb.red, rightRgb.red))}${toHex(blend(leftRgb.green, rightRgb.green))}${toHex(blend(leftRgb.blue, rightRgb.blue))}`
+}
+
+const getRelativeLuminance = (value: string) => {
+  const rgb = hexToRgb(value)
+  const channels = [rgb.red, rgb.green, rgb.blue].map((channel) => {
+    const normalized = channel / 255
+
+    return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+  })
+
+  return 0.2126 * channels[0]! + 0.7152 * channels[1]! + 0.0722 * channels[2]!
+}
+
+const getContrastRatio = (left: string, right: string) => {
+  const leftLuminance = getRelativeLuminance(left)
+  const rightLuminance = getRelativeLuminance(right)
+  const lighter = Math.max(leftLuminance, rightLuminance)
+  const darker = Math.min(leftLuminance, rightLuminance)
+
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+const getAutoTextColor = (backgrounds: string[]) => {
+  const dark = '#111827'
+  const light = '#f8fafc'
+  const darkScore = Math.min(...backgrounds.map((background) => getContrastRatio(background, dark)))
+  const lightScore = Math.min(
+    ...backgrounds.map((background) => getContrastRatio(background, light)),
+  )
+
+  return lightScore >= darkScore ? light : dark
+}
+
+const getGradientEndColor = (colors: ProjectColors) => {
+  if (colors.secondary) {
+    return colors.secondary
+  }
+
+  return getRelativeLuminance(colors.primary) > 0.45
+    ? mixColors(colors.primary, '#111827', 0.34)
+    : mixColors(colors.primary, '#f8fafc', 0.24)
+}
+
+export const getProjectBadgeStyle = (colors: ProjectColors): CSSProperties => {
+  const textColor = getAutoTextColor([colors.primary])
+
+  return {
+    backgroundColor: colors.primary,
+    borderColor: toRgba(colors.primary, 0.5),
+    color: textColor,
+  }
+}
+
+export const getProjectSoftSurfaceStyle = (colors: ProjectColors): CSSProperties => ({
+  backgroundColor: toRgba(colors.primary, 0.14),
+  borderColor: toRgba(colors.primary, 0.42),
+})
+
+export const getProjectHeaderStyle = (colors: ProjectColors): CSSProperties => {
+  const endColor = getGradientEndColor(colors)
+
+  return {
+    backgroundImage: `linear-gradient(135deg, ${colors.primary}, ${endColor})`,
+    color: getAutoTextColor([colors.primary, endColor]),
+  }
+}
+
+export const getProjectSwatchStyle = (colors: ProjectColors): CSSProperties => {
+  const endColor = getGradientEndColor(colors)
+
+  return {
+    backgroundImage: `linear-gradient(135deg, ${colors.primary}, ${endColor})`,
+  }
+}
+
+export const getProjectAccentTextStyle = (colors: ProjectColors): CSSProperties => ({
+  color: colors.primary,
+})
+
+export const hasLowProjectContrast = (colors: ProjectColors) => {
+  const endColor = getGradientEndColor(colors)
+  const textColor = getAutoTextColor([colors.primary, endColor])
+
+  return (
+    getContrastRatio(colors.primary, endColor) < 1.18 ||
+    getContrastRatio(colors.primary, textColor) < 4.5 ||
+    getContrastRatio(endColor, textColor) < 4.5
+  )
+}

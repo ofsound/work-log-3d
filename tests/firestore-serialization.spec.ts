@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const addDoc = vi.fn()
 const deleteDoc = vi.fn()
 const doc = vi.fn((_collection, id: string) => ({ id }))
+const getDoc = vi.fn()
 const getDocs = vi.fn()
 const limit = vi.fn((value: number) => ({ type: 'limit', value }))
 const query = vi.fn((collection, ...constraints: unknown[]) => ({ collection, constraints }))
@@ -15,6 +16,7 @@ vi.mock('firebase/firestore', () => ({
   addDoc,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   limit,
   query,
@@ -24,6 +26,7 @@ vi.mock('firebase/firestore', () => ({
 
 const {
   createFirestoreWorklogRepositories,
+  toProject,
   toReport,
   toTimeBox,
   toUserSettings,
@@ -36,12 +39,28 @@ describe('firestore worklog repositories', () => {
     deleteDoc.mockReset()
     doc.mockClear()
     fromDate.mockClear()
+    getDoc.mockReset()
     getDocs.mockReset()
     limit.mockClear()
     query.mockClear()
     updateDoc.mockReset()
     where.mockClear()
-    getDocs.mockResolvedValue({ empty: true })
+    getDoc.mockResolvedValue({
+      get: () => undefined,
+    })
+    getDocs.mockResolvedValue({ empty: true, size: 0 })
+  })
+
+  it('hydrates legacy project documents with fallback notes and colors', () => {
+    const project = toProject({
+      id: 'project-legacy',
+      name: 'Legacy Project',
+      slug: 'legacy-project',
+    })
+
+    expect(project.notes).toBe('')
+    expect(project.colors.primary).toMatch(/^#[0-9a-f]{6}$/)
+    expect(project.colors.secondary).toMatch(/^#[0-9a-f]{6}$/)
   })
 
   it('serializes timebox timestamps into plain dates', () => {
@@ -119,6 +138,17 @@ describe('firestore worklog repositories', () => {
     addDoc.mockResolvedValue({ id: 'created-id' })
     updateDoc.mockResolvedValue(undefined)
     deleteDoc.mockResolvedValue(undefined)
+    getDoc.mockResolvedValue({
+      get: (field: string) =>
+        (
+          ({
+            name: 'Saved Project',
+            slug: 'saved-project',
+            notes: 'Existing notes',
+            colors: { primary: '#224466', secondary: '#88aacc' },
+          }) as Record<string, unknown>
+        )[field],
+    })
 
     const repositories = createFirestoreWorklogRepositories({
       projectsCollection: { id: 'projects' } as never,
@@ -129,6 +159,14 @@ describe('firestore worklog repositories', () => {
 
     await repositories.projects.create({ name: '  Focus Time  ' })
     await repositories.projects.rename('project-1', ' Renamed Project ')
+    await repositories.projects.update('project-2', {
+      name: '  Deep Work  ',
+      notes: '  Notes for the edit page  ',
+      colors: {
+        primary: '#ABCDEF',
+        secondary: null,
+      },
+    })
     await repositories.timeBoxes.create({
       startTime: new Date('2026-03-20T08:00:00.000Z'),
       endTime: new Date('2026-03-20T09:00:00.000Z'),
@@ -153,11 +191,39 @@ describe('firestore worklog repositories', () => {
 
     expect(addDoc).toHaveBeenCalledWith(
       { id: 'projects' },
-      expect.objectContaining({ name: 'Focus Time', slug: 'focus-time' }),
+      expect.objectContaining({
+        name: 'Focus Time',
+        slug: 'focus-time',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '#06b6d4',
+        },
+      }),
     )
     expect(updateDoc).toHaveBeenCalledWith(
       { id: 'project-1' },
-      expect.objectContaining({ name: 'Renamed Project', slug: 'renamed-project' }),
+      expect.objectContaining({
+        name: 'Renamed Project',
+        slug: 'renamed-project',
+        notes: 'Existing notes',
+        colors: {
+          primary: '#224466',
+          secondary: '#88aacc',
+        },
+      }),
+    )
+    expect(updateDoc).toHaveBeenCalledWith(
+      { id: 'project-2' },
+      expect.objectContaining({
+        name: 'Deep Work',
+        slug: 'deep-work',
+        notes: 'Notes for the edit page',
+        colors: {
+          primary: '#abcdef',
+          secondary: null,
+        },
+      }),
     )
     expect(fromDate).toHaveBeenCalledTimes(3)
     expect(addDoc).toHaveBeenCalledWith(

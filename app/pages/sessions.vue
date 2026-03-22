@@ -135,6 +135,9 @@ const sortedTags = computed(() => sortNamedEntities(toTags(allTags.value as Fire
 const projectNameById = computed(() =>
   Object.fromEntries(sortedProjects.value.map((project) => [project.id, project.name])),
 )
+const projectById = computed(() =>
+  Object.fromEntries(sortedProjects.value.map((project) => [project.id, project])),
+)
 const tagNameById = computed(() =>
   Object.fromEntries(sortedTags.value.map((tag) => [tag.id, tag.name])),
 )
@@ -691,6 +694,7 @@ onBeforeUnmount(() => {
           v-if="currentMode === 'day'"
           :anchor-date="anchorDate"
           :hide-tags="hideTags"
+          :project-by-id="projectById"
           :project-name-by-id="projectNameById"
           :selected-session-id="selectedSessionId"
           :tag-name-by-id="tagNameById"
@@ -703,6 +707,7 @@ onBeforeUnmount(() => {
         <SessionsWeekView
           v-else-if="currentMode === 'week'"
           :anchor-date="anchorDate"
+          :project-by-id="projectById"
           :project-name-by-id="projectNameById"
           :selected-session-id="selectedSessionId"
           :time-boxes="visibleCalendarTimeBoxes"
@@ -722,6 +727,7 @@ onBeforeUnmount(() => {
         <SessionsMonthView
           v-else
           :anchor-date="anchorDate"
+          :project-by-id="projectById"
           :project-name-by-id="projectNameById"
           :selected-session-id="selectedSessionId"
           :time-boxes="visibleCalendarTimeBoxes"

@@ -5,6 +5,7 @@ import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
 import type { PropType } from 'vue'
+import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -12,6 +13,7 @@ import type {
 } from '~/utils/worklog-firebase'
 import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
 import {
+  findProject,
   findProjectName,
   findTagNames,
   getDurationMinutesLabel,
@@ -51,6 +53,12 @@ const projectName = computed(() => {
     timeBox.value?.project ?? '',
   )
 })
+const project = computed(() =>
+  findProject(
+    toProjects(allProjects.value as FirebaseProjectDocument[]),
+    timeBox.value?.project ?? '',
+  ),
+)
 
 const tagNames = computed(() => {
   return findTagNames(toTags(allTags.value as FirebaseTagDocument[]), timeBox.value?.tags ?? [])
@@ -97,12 +105,20 @@ const deleteTimeBoxDocument = async () => {
     }
   }
 }
+
+const projectSurfaceStyle = computed(() =>
+  project.value ? getProjectSoftSurfaceStyle(project.value.colors) : {},
+)
+const projectBadgeStyle = computed(() =>
+  project.value ? getProjectBadgeStyle(project.value.colors) : {},
+)
 </script>
 
 <template>
   <div
     v-if="!isMinimized"
-    class="relative my-4 rounded-sm border border-border-subtle bg-panel-session px-6 py-4 shadow-panel"
+    class="relative my-4 rounded-sm border bg-panel-session px-6 py-4 shadow-panel"
+    :style="projectSurfaceStyle"
   >
     <button
       class="absolute right-4 bottom-3 cursor-pointer px-1 text-text-subtle hover:text-text"
@@ -122,7 +138,10 @@ const deleteTimeBoxDocument = async () => {
       </div>
       <div v-if="variant !== 'project'" class="flex items-baseline gap-2">
         <div class="relative -top-0.5 font-bold">–</div>
-        <div class="relative -top-px text-xl font-bold">
+        <div
+          class="relative -top-px rounded-full border px-3 py-1 text-sm font-bold"
+          :style="projectBadgeStyle"
+        >
           <HighlightedText :text="projectName" :tokens="highlightTokens" />
         </div>
       </div>
@@ -149,8 +168,12 @@ const deleteTimeBoxDocument = async () => {
       {{ mutationErrorMessage }}
     </p>
   </div>
-  <div v-if="isMinimized" class="mb-2.5 items-baseline gap-2 border-b border-border last:border-0">
-    <div v-if="variant !== 'project'" class="font-bold">
+  <div v-if="isMinimized" class="mb-2.5 rounded-xl border px-3 py-2" :style="projectSurfaceStyle">
+    <div
+      v-if="variant !== 'project'"
+      class="mb-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-bold tracking-[0.16em] uppercase"
+      :style="projectBadgeStyle"
+    >
       <HighlightedText :text="projectName" :tokens="highlightTokens" />
     </div>
     <div class="pb-2 font-data">

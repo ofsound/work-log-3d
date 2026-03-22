@@ -56,6 +56,11 @@ describe('firestore rules', () => {
       setDoc(authedDoc(testEnvironment, 'user-1', 'projects', 'project-1'), {
         name: 'Focus',
         slug: 'focus',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '#06b6d4',
+        },
       }),
     )
   })
@@ -64,6 +69,12 @@ describe('firestore rules', () => {
     await assertFails(
       setDoc(authedDoc(testEnvironment, 'user-1', 'projects', 'project-1'), {
         name: '',
+        slug: 'focus',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: null,
+        },
       }),
     )
   })
@@ -192,6 +203,11 @@ describe('firestore rules', () => {
       setDoc(authContextDoc(testEnvironment, 'user-1', 'user-2', 'projects', 'project-2'), {
         name: 'Shared',
         slug: 'shared',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '#06b6d4',
+        },
       }),
     )
   })

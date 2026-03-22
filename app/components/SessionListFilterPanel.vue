@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { getProjectSoftSurfaceStyle, getProjectSwatchStyle } from '~/utils/project-color-styles'
 import {
   addDays,
   formatDateKey,
   getStartOfWeek,
   type NamedEntity,
+  type Project,
   type SessionListFilters,
   type SessionNotesState,
 } from '~~/shared/worklog'
@@ -12,6 +14,7 @@ interface ActiveFilterChip {
   id: string
   label: string
   patch: Partial<SessionListFilters>
+  style?: Record<string, string>
 }
 
 interface DatePreset {
@@ -23,7 +26,7 @@ interface DatePreset {
 
 const props = defineProps<{
   filters: SessionListFilters
-  projects: NamedEntity[]
+  projects: Project[]
   tags: NamedEntity[]
   hideTags?: boolean
   resultCount: number
@@ -37,6 +40,9 @@ const emit = defineEmits<{
 
 const projectNameById = computed(() =>
   Object.fromEntries(props.projects.map((project) => [project.id, project.name])),
+)
+const projectById = computed(() =>
+  Object.fromEntries(props.projects.map((project) => [project.id, project])),
 )
 const tagNameById = computed(() => Object.fromEntries(props.tags.map((tag) => [tag.id, tag.name])))
 const today = computed(() => new Date())
@@ -103,12 +109,17 @@ const activeFilterChips = computed<ActiveFilterChip[]>(() => {
   }
 
   props.filters.projectIds.forEach((projectId) => {
+    const project = projectById.value[projectId]
+
     chips.push({
       id: `project-${projectId}`,
       label: `Project: ${projectNameById.value[projectId] ?? projectId}`,
       patch: {
         projectIds: props.filters.projectIds.filter((id) => id !== projectId),
       },
+      style: project
+        ? (getProjectSoftSurfaceStyle(project.colors) as Record<string, string>)
+        : undefined,
     })
   })
 
@@ -278,7 +289,13 @@ const handleNotesStateChange = (value: string) => {
 
         <SessionListMultiSelect
           :model-value="filters.projectIds"
-          :options="projects.map((project) => ({ id: project.id, label: project.name }))"
+          :options="
+            projects.map((project) => ({
+              id: project.id,
+              label: project.name,
+              swatchStyle: getProjectSwatchStyle(project.colors),
+            }))
+          "
           label="Projects"
           placeholder="All projects"
           @update:model-value="updateFilters({ projectIds: $event })"
@@ -480,7 +497,8 @@ const handleNotesStateChange = (value: string) => {
           v-for="chip in activeFilterChips"
           :key="chip.id"
           type="button"
-          class="cursor-pointer rounded-full bg-badge-duration px-3 py-1.5 text-xs font-semibold text-badge-duration-text"
+          class="cursor-pointer rounded-full border bg-surface px-3 py-1.5 text-xs font-semibold text-text"
+          :style="chip.style"
           @click="updateFilters(chip.patch)"
         >
           {{ chip.label }} ×

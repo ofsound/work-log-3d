@@ -3,6 +3,7 @@ import type { PropType } from 'vue'
 
 import { doc } from 'firebase/firestore'
 
+import { getProjectSoftSurfaceStyle, getProjectSwatchStyle } from '~/utils/project-color-styles'
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -290,7 +291,12 @@ onBeforeUnmount(() => {
         <label
           v-for="thisProject in sortedAllProjects"
           :key="thisProject.id"
-          class="mb-1 block cursor-pointer select-none"
+          class="mb-2 flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 select-none"
+          :style="
+            dynamicProject === thisProject.id
+              ? getProjectSoftSurfaceStyle(thisProject.colors)
+              : { borderColor: 'var(--color-border-subtle)' }
+          "
         >
           <input
             v-model="dynamicProject"
@@ -300,7 +306,11 @@ onBeforeUnmount(() => {
             class="mr-1.5"
             @change="mutationErrorMessage = ''"
           />
-          {{ thisProject.name }}
+          <span
+            class="size-4 rounded-full border border-white/25"
+            :style="getProjectSwatchStyle(thisProject.colors)"
+          ></span>
+          <span>{{ thisProject.name }}</span>
         </label>
       </div>
     </div>

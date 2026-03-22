@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
-import type { TimeBox, TimeBoxInput } from '~~/shared/worklog'
+import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import type { Project, TimeBox, TimeBoxInput } from '~~/shared/worklog'
 import {
   addMinutes,
   buildDaySegmentLayouts,
@@ -26,6 +27,7 @@ interface SessionChangePayload {
 const props = defineProps({
   anchorDate: { type: Date, required: true },
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
+  projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
   tagNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
   hideTags: { type: Boolean, default: false },
@@ -367,6 +369,7 @@ const handleResizePointerDown = (timeBox: TimeBox, edge: 'start' | 'end', event:
 }
 
 const getProjectName = (projectId: string) => props.projectNameById[projectId] ?? 'Untitled'
+const getProject = (projectId: string) => props.projectById[projectId]
 
 const getTagNames = (tagIds: string[]) =>
   tagIds.map((tagId) => props.tagNameById[tagId]).filter(Boolean)
@@ -390,12 +393,14 @@ const getEventStyle = (layout: (typeof dayLayouts.value)[number]) => {
   )
   const width = `calc(${100 / layout.laneCount}% - 0.75rem)`
   const left = `calc(${(100 / layout.laneCount) * layout.lane}% + 0.375rem)`
+  const project = getProject(layout.timeBox.project)
 
   return {
     top: `${top}px`,
     height: `${height}px`,
     left,
     width,
+    ...(project ? getProjectSoftSurfaceStyle(project.colors) : {}),
   }
 }
 
@@ -435,6 +440,11 @@ const getLayoutDensity = (layout: (typeof dayLayouts.value)[number]) => {
 }
 
 const previewStyle = computed(() => getPreviewStyle())
+const getDurationBadgeStyle = (projectId: string) => {
+  const project = getProject(projectId)
+
+  return project ? getProjectBadgeStyle(project.colors) : {}
+}
 
 watch(
   () => props.anchorDate.valueOf(),
@@ -549,7 +559,7 @@ onBeforeUnmount(() => {
             <div
               v-for="layout in dayLayouts"
               :key="`${layout.timeBoxId}-${layout.segmentStart.valueOf()}`"
-              class="absolute z-10 cursor-pointer rounded-2xl border border-link/25 bg-sky-100/95 px-4 py-3 text-left text-sky-950 shadow-panel transition hover:border-link hover:bg-sky-200 dark:bg-sky-950/95 dark:text-sky-100 dark:hover:bg-sky-900"
+              class="absolute z-10 cursor-pointer rounded-2xl border px-4 py-3 text-left text-text shadow-panel transition hover:brightness-97"
               :class="{ 'ring-2 ring-link': selectedSessionId === layout.timeBoxId }"
               :style="getEventStyle(layout)"
               @pointerdown="handleSessionPointerDown(layout, $event)"
@@ -572,7 +582,8 @@ onBeforeUnmount(() => {
                     </div>
                   </div>
                   <div
-                    class="rounded-full bg-sky-950/10 px-2 py-0.5 text-xs font-semibold dark:bg-sky-100/10"
+                    class="rounded-full border px-2 py-0.5 text-xs font-semibold"
+                    :style="getDurationBadgeStyle(layout.timeBox.project)"
                   >
                     {{ getDurationMinutesLabel(layout.timeBox) }}
                   </div>
@@ -592,7 +603,7 @@ onBeforeUnmount(() => {
                   <div
                     v-for="tagName in getTagNames(layout.timeBox.tags)"
                     :key="tagName"
-                    class="rounded-full bg-sky-950/10 px-2 py-0.5 text-xs font-medium dark:bg-sky-100/10"
+                    class="rounded-full bg-white/55 px-2 py-0.5 text-xs font-medium dark:bg-black/20"
                   >
                     {{ tagName }}
                   </div>
