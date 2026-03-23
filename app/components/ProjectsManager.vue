@@ -1,40 +1,22 @@
 <script setup lang="ts">
-import type { Ref } from 'vue'
+import { computed } from 'vue'
+import { useRouter } from '#imports'
+import { useCollection } from 'vuefire'
+
+import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
 import type { Project } from '~~/shared/worklog'
 import type { FirebaseProjectDocument } from '~/utils/worklog-firebase'
 import { toProjects } from '~/utils/worklog-firebase'
-import { getWorklogErrorMessage, sortNamedEntities } from '~~/shared/worklog'
+import { getProjectNewPath } from '~/utils/worklog-routes'
+import { sortNamedEntities } from '~~/shared/worklog'
 
-const repositories = useWorklogRepository()
 const { projectsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
-const myInput: Ref<HTMLInputElement | null> = ref(null)
-const mutationErrorMessage = ref('')
+const router = useRouter()
 
 const sortedAllProjects = computed<Project[]>(() =>
   sortNamedEntities(toProjects(allProjects.value as FirebaseProjectDocument[])),
 )
-
-const newProjectName = ref('')
-
-const createProjectDocument = async () => {
-  mutationErrorMessage.value = ''
-
-  try {
-    await repositories.projects.create({ name: newProjectName.value })
-    newProjectName.value = ''
-  } catch (error) {
-    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to create project.')
-  }
-}
-
-const cancelCreateAndLoseFocus = () => {
-  newProjectName.value = ''
-  mutationErrorMessage.value = ''
-  if (myInput.value) {
-    myInput.value.blur()
-  }
-}
 </script>
 
 <template>
@@ -46,25 +28,13 @@ const cancelCreateAndLoseFocus = () => {
     <div class="flex flex-col gap-4">
       <ProjectsManagerProject v-for="item in sortedAllProjects" :key="item.id" :project="item" />
     </div>
-    <div class="mt-8 flex">
-      <input
-        ref="myInput"
-        v-model="newProjectName"
-        class="mr-4 flex-1 bg-input pl-2 font-bold text-text outline-none"
-        type="text"
-        @input="mutationErrorMessage = ''"
-        @keyup.enter="createProjectDocument"
-        @keyup.esc="cancelCreateAndLoseFocus"
-      />
+    <div class="mt-8 flex justify-end">
       <button
         class="ml-auto block w-max cursor-pointer rounded-md bg-button-primary px-3 py-1 tracking-wide text-button-primary-text hover:bg-button-primary-hover"
-        @click="createProjectDocument"
+        @click="router.push(getProjectNewPath())"
       >
         + Create Project
       </button>
     </div>
-    <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
-      {{ mutationErrorMessage }}
-    </p>
   </div>
 </template>

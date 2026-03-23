@@ -17,12 +17,13 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 
 ## Key Conventions
 
-- Project and tag pages live at `/project/:segment`, `/project/:segment/edit`, and `/tag/:segment`. In-app links use each entity’s **slug** (`slug || id` fallback); the segment may still be a Firestore document id (e.g. old bookmarks). Sessions still store **project** and **tags** by document id.
+- Project creation lives at `/project/new`; project and tag pages live at `/project/:segment`, `/project/:segment/edit`, and `/tag/:segment`. In-app links use each entity’s **slug** (`slug || id` fallback); the segment may still be a Firestore document id (e.g. old bookmarks). Sessions still store **project** and **tags** by document id.
 - `/project/:segment` is query-driven like `/sessions`: the default `List` mode omits `mode`, `Calendar` persists `mode=calendar`, and both modes preserve `date=YYYY-MM-DD` for the selected project day context
 - `/sessions` is a single route with query-driven state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`; `mode=list` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort`
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences and desktop-only alert sound controls
 - Each project and tag has a `slug` derived from its name; URLs prefer it for readability while Firestore keeps using document ids
+- Project slug `new` is reserved so `/project/new` always points to the create workspace
 - Projects and tags cannot be deleted while sessions still reference them
 - Shared validation lives in `shared/worklog/validation.ts`
 - Firestore rules in `firestore.rules` must match the current document shape
@@ -186,7 +187,7 @@ npm run preview
 }
 ```
 
-New projects receive a default curated color pair automatically. Existing legacy projects without saved metadata fall back to a deterministic palette in the UI until they are edited and saved.
+New projects are created from `/project/new`, where the initial notes and curated color pair are chosen before the first save. Existing legacy projects without saved metadata fall back to a deterministic palette in the UI until they are edited and saved.
 
 `users/{uid}/tags/{tagId}`
 
@@ -268,6 +269,7 @@ Server-managed published report snapshots for anonymous client access. The top-l
 
 ## Project Views
 
+- `/project/new` is a create-only workspace with the same metadata form as edit, but no List/Calendar/Edit tabs until the project has been saved
 - `List` is the default `/project/:segment` experience and keeps the existing grouped-by-day project session history
 - `Calendar` is a long-scroll month stack from the current month back to the first logged month for that project only, with no prev/next navigation
 - Project calendar state is shareable via route queries such as `/project/my-project-slug?mode=calendar&date=2026-03-21`

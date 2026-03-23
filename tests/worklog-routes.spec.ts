@@ -1,6 +1,7 @@
 import {
   getProjectEditPath,
   getProjectEditPathFromProject,
+  getProjectNewPath,
   getProjectPath,
   getProjectPathFromProject,
   getPublicReportPath,
@@ -12,6 +13,7 @@ import {
 
 describe('worklog routes', () => {
   it('builds project and tag routes from URL segments', () => {
+    expect(getProjectNewPath()).toBe('/project/new')
     expect(getProjectPath('my-project')).toBe('/project/my-project')
     expect(getProjectEditPath('my-project')).toBe('/project/my-project/edit')
     expect(getTagPath('focus')).toBe('/tag/focus')

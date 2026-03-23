@@ -45,6 +45,19 @@ describe('project metadata helpers', () => {
     ).toThrow('Primary color must be a valid hex color.')
   })
 
+  it('rejects reserved project routes as generated slugs', () => {
+    expect(() =>
+      createProjectPayload({
+        name: 'New',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '#06b6d4',
+        },
+      }),
+    ).toThrow('Project name would conflict with a reserved project route.')
+  })
+
   it('returns deterministic fallback colors for legacy projects', () => {
     const firstResolution = resolveProjectColors('legacy-project-1', undefined)
     const secondResolution = resolveProjectColors('legacy-project-1', undefined)

@@ -193,7 +193,7 @@ const shuffle = <T>(items: readonly T[], rng: () => number) => {
 
   for (let index = copy.length - 1; index > 0; index -= 1) {
     const swapIndex = randomInt(rng, index + 1)
-      ;[copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]]
+    ;[copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]]
   }
 
   return copy

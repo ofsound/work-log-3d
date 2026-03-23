@@ -27,7 +27,6 @@ import {
   createEntityInUseError,
   createNamedEntityPayload,
   createProjectPayload,
-  getProjectDefaultMetadata,
   resolveProjectColors,
   resolveProjectNotes,
   resolveUserSettings,
@@ -234,18 +233,9 @@ export const createFirestoreWorklogRepositories = ({
 
   return {
     projects: {
-      async create({ name }: { name: string }) {
-        const projectsSnapshot = await getDocs(projectsCollection)
-        const defaults = getProjectDefaultMetadata(projectsSnapshot.size)
-        const payload = createProjectPayload({
-          name,
-          notes: defaults.notes,
-          colors: defaults.colors,
-        })
-
-        if (projectsSnapshot.docs.some((document) => document.get('slug') === payload.slug)) {
-          throw createDuplicateSlugError('project')
-        }
+      async create(input) {
+        const payload = createProjectPayload(input)
+        await assertSlugAvailable(projectsCollection, payload.slug, 'project')
 
         const project = await addDoc(projectsCollection, payload)
 

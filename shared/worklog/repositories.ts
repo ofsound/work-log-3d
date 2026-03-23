@@ -2,7 +2,7 @@ import type { ReportInput } from './reports'
 import type { EntityId, ProjectInput, TimeBoxInput } from './types'
 
 export interface ProjectRepository {
-  create(input: { name: string }): Promise<EntityId>
+  create(input: ProjectInput): Promise<EntityId>
   rename(id: EntityId, name: string): Promise<void>
   update(id: EntityId, input: ProjectInput): Promise<void>
   remove(id: EntityId): Promise<void>

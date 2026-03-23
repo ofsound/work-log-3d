@@ -14,7 +14,10 @@ interface ProjectWorkspaceHeaderBadge {
 }
 
 const props = defineProps({
-  activeMode: { type: String as PropType<ProjectWorkspaceMode>, required: true },
+  activeMode: {
+    type: String as PropType<ProjectWorkspaceMode | null>,
+    default: null,
+  },
   badges: {
     type: Array as PropType<ProjectWorkspaceHeaderBadge[]>,
     default: () => [],
@@ -25,6 +28,10 @@ const props = defineProps({
     default: () => ({}),
   },
   title: { type: String, required: true },
+  tabs: {
+    type: Array as PropType<readonly ProjectWorkspaceTab[]>,
+    default: () => PROJECT_WORKSPACE_TABS,
+  },
 })
 
 const emit = defineEmits<{
@@ -62,10 +69,11 @@ const getModeButtonClassName = (tab: ProjectWorkspaceTab) =>
 
       <div class="flex flex-wrap items-center gap-3 lg:justify-end">
         <div
+          v-if="tabs.length > 0"
           class="inline-flex rounded-xl border border-border bg-surface-strong p-1 shadow-control"
         >
           <button
-            v-for="tab in PROJECT_WORKSPACE_TABS"
+            v-for="tab in tabs"
             :key="tab.id"
             type="button"
             class="rounded-lg px-4 py-2 text-sm font-semibold transition"

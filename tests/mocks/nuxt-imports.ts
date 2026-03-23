@@ -16,6 +16,10 @@ export const definePageMeta = () => {}
 
 export const getCurrentUser = () => getRequiredMock<() => Promise<unknown>>('getCurrentUser')()
 
+export const onBeforeRouteLeave = (guard: unknown) =>
+  getNuxtTestMocks()?.onBeforeRouteLeave &&
+  (getNuxtTestMocks()?.onBeforeRouteLeave as (nextGuard: unknown) => unknown)(guard)
+
 export const useCurrentUser = () => getRequiredMock<() => { value: unknown }>('useCurrentUser')()
 
 export const useFirebaseAuth = () => getRequiredMock<() => unknown>('useFirebaseAuth')()

@@ -157,7 +157,14 @@ describe('firestore worklog repositories', () => {
       reportsCollection: { id: 'reports' } as never,
     })
 
-    await repositories.projects.create({ name: '  Focus Time  ' })
+    await repositories.projects.create({
+      name: '  Focus Time  ',
+      notes: '  Initial setup notes  ',
+      colors: {
+        primary: '#123456',
+        secondary: 'abcdef',
+      },
+    })
     await repositories.projects.rename('project-1', ' Renamed Project ')
     await repositories.projects.update('project-2', {
       name: '  Deep Work  ',
@@ -194,10 +201,10 @@ describe('firestore worklog repositories', () => {
       expect.objectContaining({
         name: 'Focus Time',
         slug: 'focus-time',
-        notes: '',
+        notes: 'Initial setup notes',
         colors: {
-          primary: '#2563eb',
-          secondary: '#06b6d4',
+          primary: '#123456',
+          secondary: '#abcdef',
         },
       }),
     )
@@ -282,9 +289,37 @@ describe('firestore worklog repositories', () => {
       reportsCollection: { id: 'reports' } as never,
     })
 
-    await expect(repositories.projects.create({ name: 'Focus Time' })).rejects.toThrow(
-      'Another project already uses this name.',
-    )
+    await expect(
+      repositories.projects.create({
+        name: 'Focus Time',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '#06b6d4',
+        },
+      }),
+    ).rejects.toThrow('Another project already uses this name.')
+    expect(addDoc).not.toHaveBeenCalled()
+  })
+
+  it('rejects creating a project that would conflict with the reserved new route', async () => {
+    const repositories = createFirestoreWorklogRepositories({
+      projectsCollection: { id: 'projects' } as never,
+      tagsCollection: { id: 'tags' } as never,
+      timeBoxesCollection: { id: 'timeBoxes' } as never,
+      reportsCollection: { id: 'reports' } as never,
+    })
+
+    await expect(
+      repositories.projects.create({
+        name: 'New',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '#06b6d4',
+        },
+      }),
+    ).rejects.toThrow('Project name would conflict with a reserved project route.')
     expect(addDoc).not.toHaveBeenCalled()
   })
 

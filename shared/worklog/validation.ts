@@ -24,6 +24,8 @@ export class WorklogError extends Error {
   }
 }
 
+const RESERVED_PROJECT_SLUGS = new Set(['new'])
+
 const cloneDate = (value: Date) => new Date(value.valueOf())
 
 const isValidDate = (value: Date) => Number.isFinite(value.valueOf())
@@ -142,6 +144,13 @@ export const createProjectPayload = (input: ProjectInput) => {
 
   if (!slug) {
     throw new WorklogError('validation', `Project must include letters or numbers.`)
+  }
+
+  if (RESERVED_PROJECT_SLUGS.has(slug)) {
+    throw new WorklogError(
+      'validation',
+      'Project name would conflict with a reserved project route.',
+    )
   }
 
   return {

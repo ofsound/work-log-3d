@@ -1,5 +1,7 @@
 import type { Project, Tag } from '~~/shared/worklog'
 
+export const getProjectNewPath = () => '/project/new'
+
 export const getProjectPath = (segment: string) => `/project/${encodeURIComponent(segment)}`
 
 export const getProjectEditPath = (segment: string) =>
