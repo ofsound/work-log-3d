@@ -428,8 +428,29 @@ const isEditableTarget = (event: KeyboardEvent) => {
   return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
 }
 
-const handleDayKeyboard = (event: KeyboardEvent) => {
-  if (currentMode.value !== 'day' || isEditableTarget(event) || event.metaKey || event.ctrlKey) {
+const handleCalendarKeyboard = (event: KeyboardEvent) => {
+  if (
+    ['list', 'year'].includes(currentMode.value) ||
+    isEditableTarget(event) ||
+    event.metaKey ||
+    event.ctrlKey
+  ) {
+    return
+  }
+
+  if (event.key === 'Escape') {
+    event.preventDefault()
+
+    if (panelMode.value !== 'closed') {
+      closePanel()
+      return
+    }
+
+    selectedSessionId.value = ''
+    return
+  }
+
+  if (currentMode.value !== 'day') {
     return
   }
 
@@ -474,17 +495,6 @@ const handleDayKeyboard = (event: KeyboardEvent) => {
     openSuggestedCreatePanel()
     return
   }
-
-  if (event.key === 'Escape') {
-    event.preventDefault()
-
-    if (panelMode.value !== 'closed') {
-      closePanel()
-      return
-    }
-
-    selectedSessionId.value = ''
-  }
 }
 
 watch(
@@ -517,11 +527,11 @@ watch(visibleDayTimeBoxes, (timeBoxes) => {
 })
 
 onMounted(() => {
-  window.addEventListener('keydown', handleDayKeyboard)
+  window.addEventListener('keydown', handleCalendarKeyboard)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleDayKeyboard)
+  window.removeEventListener('keydown', handleCalendarKeyboard)
 })
 </script>
 
@@ -692,11 +702,9 @@ onBeforeUnmount(() => {
           v-if="currentMode === 'day'"
           :anchor-date="anchorDate"
           :scroll-align-target="sessionsHeaderRef"
-          :hide-tags="hideTags"
           :project-by-id="projectById"
           :project-name-by-id="projectNameById"
           :selected-session-id="selectedSessionId"
-          :tag-name-by-id="tagNameById"
           :time-boxes="visibleDayTimeBoxes"
           @change-session="persistSessionChange"
           @create-session="openCreatePanel"
