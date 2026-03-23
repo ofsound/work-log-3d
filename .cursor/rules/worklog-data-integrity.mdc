@@ -1,12 +1,12 @@
 ---
 description: Work Log data integrity rules for Firestore entities and routes
-globs: "app/**/*.vue,app/**/*.ts,shared/**/*.ts,tests/**/*.ts,firestore.rules"
+globs: 'app/**/*.vue,app/**/*.ts,shared/**/*.ts,tests/**/*.ts,firestore.rules'
 alwaysApply: false
 ---
 
 # Work Log Data Integrity
 
-- Treat **document IDs** as the stable route key for projects and tags. Slugs are cosmetic only.
+- **Navigation:** build `/project/...` and `/tag/...` links with shared helpers using each entity’s **slug** (`slug || id` fallback). **Data:** treat **document IDs** as the stable keys in Firestore and in `timeBoxes.project` / tag id arrays.
 - Generate routes with shared helpers; do not hand-build `/project/...` or `/tag/...` strings in components.
 - Do **not** delete a project or tag if any `timeBoxes` still reference it. Block the delete and surface a user-facing message.
 - Keep input validation centralized in shared code so UI, repositories, and tests agree on the same rules.

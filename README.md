@@ -17,12 +17,12 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 
 ## Key Conventions
 
-- Project and tag pages use stable ID-based routes: `/project/:id`, `/project/:id/edit`, and `/tag/:id`
-- `/project/:id` is query-driven like `/sessions`: the default `List` mode omits `mode`, `Calendar` persists `mode=calendar`, and both modes preserve `date=YYYY-MM-DD` for the selected project day context
+- Project and tag pages live at `/project/:segment`, `/project/:segment/edit`, and `/tag/:segment`. In-app links use each entity’s **slug** (`slug || id` fallback); the segment may still be a Firestore document id (e.g. old bookmarks). Sessions still store **project** and **tags** by document id.
+- `/project/:segment` is query-driven like `/sessions`: the default `List` mode omits `mode`, `Calendar` persists `mode=calendar`, and both modes preserve `date=YYYY-MM-DD` for the selected project day context
 - `/sessions` is a single route with query-driven state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`; `mode=list` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort`
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences and desktop-only alert sound controls
-- `slug` is stored for display and backward-compatibility redirects only
+- Each project and tag has a `slug` derived from its name; URLs prefer it for readability while Firestore keeps using document ids
 - Projects and tags cannot be deleted while sessions still reference them
 - Shared validation lives in `shared/worklog/validation.ts`
 - Firestore rules in `firestore.rules` must match the current document shape
@@ -268,9 +268,9 @@ Server-managed published report snapshots for anonymous client access. The top-l
 
 ## Project Views
 
-- `List` is the default `/project/:id` experience and keeps the existing grouped-by-day project session history
+- `List` is the default `/project/:segment` experience and keeps the existing grouped-by-day project session history
 - `Calendar` is a long-scroll month stack from the current month back to the first logged month for that project only, with no prev/next navigation
-- Project calendar state is shareable via route queries such as `/project/abc123?mode=calendar&date=2026-03-21`
+- Project calendar state is shareable via route queries such as `/project/my-project-slug?mode=calendar&date=2026-03-21`
 - The project calendar sidebar can open either the selected day’s sessions or an individual session editor without leaving the page
 
 ## Reports

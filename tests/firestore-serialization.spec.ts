@@ -48,7 +48,7 @@ describe('firestore worklog repositories', () => {
     getDoc.mockResolvedValue({
       get: () => undefined,
     })
-    getDocs.mockResolvedValue({ empty: true, size: 0 })
+    getDocs.mockResolvedValue({ empty: true, size: 0, docs: [] })
   })
 
   it('hydrates legacy project documents with fallback notes and colors', () => {
@@ -251,6 +251,60 @@ describe('firestore worklog repositories', () => {
         }),
       }),
     )
+    expect(query).toHaveBeenCalledWith(
+      { id: 'projects' },
+      expect.objectContaining({ field: 'slug', op: '==', value: 'renamed-project' }),
+      expect.objectContaining({ type: 'limit', value: 2 }),
+    )
+    expect(query).toHaveBeenCalledWith(
+      { id: 'projects' },
+      expect.objectContaining({ field: 'slug', op: '==', value: 'deep-work' }),
+      expect.objectContaining({ type: 'limit', value: 2 }),
+    )
+  })
+
+  it('rejects creating a project when another project already has the same slug', async () => {
+    getDocs.mockResolvedValueOnce({
+      empty: false,
+      size: 1,
+      docs: [
+        {
+          id: 'existing',
+          get: (field: string) => (field === 'slug' ? 'focus-time' : undefined),
+        },
+      ],
+    })
+
+    const repositories = createFirestoreWorklogRepositories({
+      projectsCollection: { id: 'projects' } as never,
+      tagsCollection: { id: 'tags' } as never,
+      timeBoxesCollection: { id: 'timeBoxes' } as never,
+      reportsCollection: { id: 'reports' } as never,
+    })
+
+    await expect(repositories.projects.create({ name: 'Focus Time' })).rejects.toThrow(
+      'Another project already uses this name.',
+    )
+    expect(addDoc).not.toHaveBeenCalled()
+  })
+
+  it('rejects creating a tag when another tag already has the same slug', async () => {
+    getDocs.mockResolvedValueOnce({
+      empty: false,
+      docs: [{ id: 't1', get: (field: string) => (field === 'slug' ? 'alpha' : undefined) }],
+    })
+
+    const repositories = createFirestoreWorklogRepositories({
+      projectsCollection: { id: 'projects' } as never,
+      tagsCollection: { id: 'tags' } as never,
+      timeBoxesCollection: { id: 'timeBoxes' } as never,
+      reportsCollection: { id: 'reports' } as never,
+    })
+
+    await expect(repositories.tags.create({ name: 'Alpha' })).rejects.toThrow(
+      'Another tag already uses this name.',
+    )
+    expect(addDoc).not.toHaveBeenCalled()
   })
 
   it('blocks deleting projects or tags that still have sessions', async () => {

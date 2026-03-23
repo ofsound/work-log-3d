@@ -43,7 +43,13 @@ const cancelCreateAndLoseFocus = () => {
     style="width: 100%; min-width: 100%"
   >
     <div class="mb-2 text-center text-xl font-bold uppercase">Tags</div>
-    <TagsManagerTag v-for="item in sortedAllTags" :id="item.id" :key="item.id" :name="item.name" />
+    <TagsManagerTag
+      v-for="item in sortedAllTags"
+      :id="item.id"
+      :key="item.id"
+      :name="item.name"
+      :slug="item.slug"
+    />
     <div class="mt-8 flex">
       <input
         ref="myInput"

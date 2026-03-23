@@ -16,8 +16,8 @@ alwaysApply: true
 
 ## Routing and Data
 
-- Project and tag routes are ID-based: `/project/:id`, `/tag/:id`
-- `slug` is stored for display/backward-compatibility only; do not use it as the primary lookup key
+- Project and tag pages live at `/project/:segment` and `/tag/:segment` where `segment` is usually a **slug** in app-generated links; it may also be a **document id** (e.g. old bookmarks).
+- Prefer slug-based links via `~/utils/worklog-routes` helpers (`getProjectPathFromProject`, `getTagPathFromTag`). Firestore and `timeBoxes` still use **document ids** as the primary keys.
 - Deleting a project or tag must respect active `timeBoxes` references
 
 ## Import Order

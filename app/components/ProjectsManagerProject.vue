@@ -4,7 +4,7 @@ import DeleteIcon from '@/icons/DeleteIcon.vue'
 import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
-import { getProjectEditPath, getProjectPath } from '~/utils/worklog-routes'
+import { getProjectEditPathFromProject, getProjectPathFromProject } from '~/utils/worklog-routes'
 import type { Project, TimeBox } from '~~/shared/worklog'
 import { getTotalDurationLabel, getWorklogErrorMessage } from '~~/shared/worklog'
 
@@ -94,7 +94,7 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
   <div
     class="cursor-pointer rounded-sm border px-3 py-1.5 shadow-control transition-[box-shadow,filter] duration-150 ease-out hover:shadow-[var(--shadow-panel)] hover:brightness-[1.03]"
     :style="rowStyle"
-    @click="router.push(getProjectPath(project.id))"
+    @click="router.push(getProjectPathFromProject(project))"
   >
     <div class="flex gap-2">
       <div class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 p-1 text-left">
@@ -115,7 +115,7 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
       <button
         type="button"
         class="cursor-pointer rounded-md border border-button-secondary-border px-2 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-        @click.stop="router.push(getProjectEditPath(project.id))"
+        @click.stop="router.push(getProjectEditPathFromProject(project))"
       >
         Edit
       </button>

@@ -25,7 +25,7 @@
 
 ## Repo-Specific Invariants
 
-- Project and tag routes are **ID-based**. Slugs are cosmetic and may be used only for backward-compatibility redirects.
+- Project and tag **URLs** use human-readable **slugs** when linking (`getProjectPathFromProject`, `getTagPathFromTag`, etc.); the path segment may still be a document id (e.g. bookmarks). **Firestore** and `timeBoxes` still reference projects and tags by **document id**.
 - Do not delete a project or tag while any `timeBoxes` still reference it.
 - Keep validation centralized in shared code so UI, repositories, and tests use the same rules.
 - Firestore rules must stay aligned with the current document shape for `projects`, `tags`, and `timeBoxes`.

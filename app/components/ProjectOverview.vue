@@ -35,6 +35,12 @@ const props = defineProps({
 
 const route = useRoute()
 const router = useRouter()
+
+const projectPathSegment = computed(() => {
+  const p = route.params.id
+  const raw = Array.isArray(p) ? p[0] : p
+  return raw ?? ''
+})
 const repositories = useWorklogRepository()
 const store = useStore()
 
@@ -132,7 +138,7 @@ const handleWorkspaceModeSelect = async (mode: ProjectWorkspaceMode) => {
     closePanel()
     await router.push(
       buildProjectWorkspaceLocation(
-        props.id,
+        projectPathSegment.value,
         mode,
         routeState.value,
         route.query as Record<string, string | string[] | undefined>,

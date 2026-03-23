@@ -126,6 +126,34 @@ describe('legacy import helpers', () => {
     expect(result.createdCount).toBe(1)
   })
 
+  it('maps legacy entities that share a normalized slug onto one imported project id', () => {
+    const result = resolveLegacyEntityImports({
+      legacyEntities: [
+        { id: 'legacy-project-1', name: 'Foo', slug: 'foo' },
+        { id: 'legacy-project-2', name: 'Foo!', slug: 'foo' },
+      ],
+      existingEntities: [],
+      collectionName: 'projects',
+      label: 'Project',
+    })
+
+    const firstId = buildImportedEntityId('projects', 'legacy-project-1')
+
+    expect(result.idByLegacyId).toEqual({
+      'legacy-project-1': firstId,
+      'legacy-project-2': firstId,
+    })
+    expect(result.entitiesToCreate).toEqual([
+      {
+        id: firstId,
+        name: 'Foo',
+        slug: 'foo',
+      },
+    ])
+    expect(result.createdCount).toBe(1)
+    expect(result.reusedCount).toBe(1)
+  })
+
   it('materializes validated imported timeboxes with deterministic ids', () => {
     const importedTimeBoxes = materializeLegacyImportedTimeBoxes({
       legacyTimeBoxes: [

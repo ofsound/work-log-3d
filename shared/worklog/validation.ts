@@ -12,7 +12,7 @@ import {
 import { validateUserSettings, type UserSettings } from './settings'
 import type { EntityId, ProjectInput, TimeBoxInput } from './types'
 
-export type WorklogErrorCode = 'validation' | 'entity-in-use'
+export type WorklogErrorCode = 'validation' | 'entity-in-use' | 'duplicate-slug'
 
 export class WorklogError extends Error {
   constructor(
@@ -223,6 +223,14 @@ export const createEntityInUseError = (entityLabel: string) =>
   new WorklogError(
     'entity-in-use',
     `Cannot delete this ${entityLabel} while sessions still reference it.`,
+  )
+
+export const createDuplicateSlugError = (entityLabel: 'project' | 'tag') =>
+  new WorklogError(
+    'duplicate-slug',
+    entityLabel === 'project'
+      ? 'Another project already uses this name.'
+      : 'Another tag already uses this name.',
   )
 
 export const getWorklogErrorMessage = (error: unknown, fallbackMessage: string) => {

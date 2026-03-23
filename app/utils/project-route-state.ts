@@ -62,8 +62,9 @@ export const buildProjectRouteQuery = (
   return query
 }
 
+/** `pathSegment` is whatever appears in `/project/:id` (slug or document id). */
 export const buildProjectWorkspaceLocation = (
-  projectId: string,
+  pathSegment: string,
   mode: ProjectWorkspaceMode,
   currentState: ProjectRouteState,
   currentQuery: ProjectRouteQuery = {},
@@ -75,7 +76,7 @@ export const buildProjectWorkspaceLocation = (
   const query = buildProjectRouteQuery(state, currentQuery)
 
   return {
-    path: mode === 'edit' ? getProjectEditPath(projectId) : getProjectPath(projectId),
+    path: mode === 'edit' ? getProjectEditPath(pathSegment) : getProjectPath(pathSegment),
     query,
   }
 }

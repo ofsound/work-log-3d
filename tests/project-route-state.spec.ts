@@ -71,7 +71,7 @@ describe('project route state', () => {
 
   it('builds edit locations while preserving route context', () => {
     const location = buildProjectWorkspaceLocation(
-      'project-123',
+      'client-portal',
       'edit',
       {
         mode: 'calendar',
@@ -81,7 +81,7 @@ describe('project route state', () => {
     )
 
     expect(location).toEqual({
-      path: '/project/project-123/edit',
+      path: '/project/client-portal/edit',
       query: {
         preserved: 'yes',
         mode: 'calendar',
@@ -92,7 +92,7 @@ describe('project route state', () => {
 
   it('builds overview locations from edit while restoring the requested mode', () => {
     const location = buildProjectWorkspaceLocation(
-      'project-123',
+      'client-portal',
       'list',
       {
         mode: 'calendar',
@@ -102,7 +102,7 @@ describe('project route state', () => {
     )
 
     expect(location).toEqual({
-      path: '/project/project-123',
+      path: '/project/client-portal',
       query: {
         preserved: 'yes',
         date: '2026-03-21',

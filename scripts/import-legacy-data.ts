@@ -242,9 +242,11 @@ export const resolveLegacyEntityImports = ({
   label: NamedEntityLabel
 }): ResolvedLegacyEntities => {
   const existingIdByMatchKey = new Map<string, EntityId>()
+  const slugToOwningId = new Map<string, EntityId>()
 
   existingEntities.forEach((entity) => {
     existingIdByMatchKey.set(buildNormalizedEntityMatchKey(entity.name, label), entity.id)
+    slugToOwningId.set(entity.slug, entity.id)
   })
 
   const idByLegacyId: Record<string, EntityId> = {}
@@ -261,6 +263,15 @@ export const resolveLegacyEntityImports = ({
       return
     }
 
+    const ownerForSlug = slugToOwningId.get(entity.slug)
+
+    if (ownerForSlug) {
+      idByLegacyId[entity.id] = ownerForSlug
+      existingIdByMatchKey.set(matchKey, ownerForSlug)
+      reusedCount += 1
+      return
+    }
+
     const importedId = buildImportedEntityId(collectionName, entity.id)
     idByLegacyId[entity.id] = importedId
     entitiesToCreate.push({
@@ -269,6 +280,7 @@ export const resolveLegacyEntityImports = ({
       slug: entity.slug,
     })
     existingIdByMatchKey.set(matchKey, importedId)
+    slugToOwningId.set(entity.slug, importedId)
   })
 
   return {

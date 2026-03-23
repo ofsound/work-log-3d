@@ -3,7 +3,7 @@ import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
 import type { Ref } from 'vue'
-import { getTagPath } from '~/utils/worklog-routes'
+import { getTagPathFromTag } from '~/utils/worklog-routes'
 import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getTotalDurationLabel, getWorklogErrorMessage } from '~~/shared/worklog'
@@ -16,6 +16,7 @@ const timeBoxes = useCollection(timeBoxesCollection)
 const props = defineProps({
   name: { type: String, default: undefined },
   id: { type: String, required: true },
+  slug: { type: String, default: '' },
 })
 
 const router = useRouter()
@@ -105,7 +106,7 @@ watch(
       <button
         v-if="!isNameEditMode"
         class="flex-1 cursor-pointer p-1 text-left font-bold text-text hover:underline"
-        @click="router.push(getTagPath(id))"
+        @click="router.push(getTagPathFromTag({ id: props.id, slug: props.slug }))"
       >
         {{ dynamicName }}
       </button>

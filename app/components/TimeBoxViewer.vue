@@ -6,7 +6,11 @@ import EditIcon from '@/icons/EditIcon.vue'
 
 import type { PropType } from 'vue'
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
-import { getProjectPath, getTagPath } from '~/utils/worklog-routes'
+import {
+  getProjectPath,
+  getProjectPathFromProject,
+  getTagPathFromTag,
+} from '~/utils/worklog-routes'
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -70,10 +74,14 @@ const tagEntries = computed(() => {
   const ids = timeBox.value?.tags ?? []
   const tags = toTags(allTags.value as FirebaseTagDocument[])
 
-  return ids.map((id) => ({
-    id,
-    name: tags.find((tag) => tag.id === id)?.name ?? id,
-  }))
+  return ids.map((id) => {
+    const tag = tags.find((t) => t.id === id)
+    return {
+      id,
+      name: tag?.name ?? id,
+      slug: tag?.slug ?? '',
+    }
+  })
 })
 
 const timeBoxDuration = computed(() =>
@@ -172,7 +180,7 @@ const projectBadgeStyle = computed(() =>
         <div class="relative -top-0.5 font-bold">–</div>
         <NuxtLink
           v-if="timeBox?.project"
-          :to="getProjectPath(timeBox.project)"
+          :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
           class="relative -top-px inline-flex max-w-full min-w-0 items-center rounded-full border px-3 py-1 text-sm font-bold no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
           :style="projectBadgeStyle"
         >
@@ -198,7 +206,7 @@ const projectBadgeStyle = computed(() =>
       <NuxtLink
         v-for="thisTag in tagEntries"
         :key="thisTag.id"
-        :to="getTagPath(thisTag.id)"
+        :to="getTagPathFromTag({ id: thisTag.id, slug: thisTag.slug })"
         class="inline-flex max-w-full min-w-0 items-center rounded-xl bg-chip px-3 py-0.5 font-data text-sm text-chip-text no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <div class="relative -top-px">
@@ -218,7 +226,7 @@ const projectBadgeStyle = computed(() =>
   >
     <NuxtLink
       v-if="variant !== 'project' && timeBox?.project"
-      :to="getProjectPath(timeBox.project)"
+      :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
       class="mb-2 inline-flex max-w-full min-w-0 items-center rounded-full border px-2.5 py-1 text-xs font-bold tracking-[0.16em] uppercase no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
       :style="projectBadgeStyle"
     >

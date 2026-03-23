@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  createDuplicateSlugError,
   createProjectPayload,
   getProjectDefaultMetadata,
+  getWorklogErrorMessage,
   PROJECT_COLOR_PALETTE,
   resolveProjectColors,
   validateProjectInput,
@@ -49,6 +51,18 @@ describe('project metadata helpers', () => {
 
     expect(firstResolution).toEqual(secondResolution)
     expect(PROJECT_COLOR_PALETTE).toContainEqual(firstResolution)
+  })
+
+  it('exposes duplicate slug errors for repository and UI messaging', () => {
+    const projectError = createDuplicateSlugError('project')
+    const tagError = createDuplicateSlugError('tag')
+
+    expect(projectError.code).toBe('duplicate-slug')
+    expect(tagError.code).toBe('duplicate-slug')
+    expect(getWorklogErrorMessage(projectError, 'fallback')).toBe(
+      'Another project already uses this name.',
+    )
+    expect(getWorklogErrorMessage(tagError, 'fallback')).toBe('Another tag already uses this name.')
   })
 
   it('exposes a rotating default metadata palette', () => {

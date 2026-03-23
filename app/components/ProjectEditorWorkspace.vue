@@ -30,6 +30,12 @@ const props = defineProps<{
 
 const route = useRoute()
 const router = useRouter()
+
+const projectPathSegment = computed(() => {
+  const p = route.params.id
+  const raw = Array.isArray(p) ? p[0] : p
+  return raw ?? ''
+})
 const repositories = useWorklogRepository()
 const { confirm } = useConfirmDialog()
 const { projectsCollection, timeBoxesCollection } = useFirestoreCollections()
@@ -183,7 +189,12 @@ const navigateToWorkspaceMode = async (mode: ProjectWorkspaceMode) => {
 
   try {
     await router.push(
-      buildProjectWorkspaceLocation(props.id, mode, routeState.value, routeQuery.value),
+      buildProjectWorkspaceLocation(
+        projectPathSegment.value,
+        mode,
+        routeState.value,
+        routeQuery.value,
+      ),
     )
   } finally {
     allowNextNavigation.value = false
@@ -206,7 +217,7 @@ const saveProject = async () => {
     allowNextNavigation.value = true
     await router.push(
       buildProjectWorkspaceLocation(
-        props.id,
+        projectPathSegment.value,
         routeState.value.mode,
         routeState.value,
         routeQuery.value,

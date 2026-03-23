@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { limit, query, where } from 'firebase/firestore'
 
-import { getTagPath } from '~/utils/worklog-routes'
-
 const { hideTags } = useUserSettings()
 const { tagsCollection } = useFirestoreCollections()
 const route = useRoute()
@@ -19,17 +17,6 @@ const legacyTagQuery = computed(() =>
 const legacyTags = useCollection(legacyTagQuery, { ssrKey: 'legacy-tag-route' })
 
 const tagId = computed(() => legacyTags.value[0]?.id ?? requestedTagId.value)
-
-watchEffect(() => {
-  const legacyTag = legacyTags.value[0]
-
-  if (legacyTag?.id && legacyTag.id !== requestedTagId.value) {
-    void navigateTo(getTagPath(legacyTag.id), {
-      replace: true,
-      redirectCode: 301,
-    })
-  }
-})
 </script>
 
 <template>

@@ -23,16 +23,17 @@ import type {
   WorklogRepositories,
 } from '~~/shared/worklog'
 import {
+  createDuplicateSlugError,
   createEntityInUseError,
-  createProjectPayload,
   createNamedEntityPayload,
+  createProjectPayload,
   getProjectDefaultMetadata,
   resolveProjectColors,
   resolveProjectNotes,
+  resolveUserSettings,
   validateReportInput,
   validateTimeBoxInput,
   validateUserSettingsInput,
-  resolveUserSettings,
 } from '~~/shared/worklog'
 
 export interface FirebaseTimestampLike {
@@ -197,6 +198,20 @@ export const createFirestoreWorklogRepositories = ({
   timeBoxesCollection: CollectionReference<DocumentData>
   reportsCollection: CollectionReference<DocumentData>
 }): WorklogRepositories => {
+  const assertSlugAvailable = async (
+    collection: CollectionReference<DocumentData>,
+    slug: string,
+    entityLabel: 'project' | 'tag',
+    excludeDocumentId?: string,
+  ) => {
+    const snapshot = await getDocs(query(collection, where('slug', '==', slug), limit(2)))
+    const conflicting = snapshot.docs.filter((document) => document.id !== excludeDocumentId)
+
+    if (conflicting.length > 0) {
+      throw createDuplicateSlugError(entityLabel)
+    }
+  }
+
   const ensureProjectIsUnused = async (projectId: string) => {
     const snapshot = await getDocs(
       query(timeBoxesCollection, where('project', '==', projectId), limit(1)),
@@ -220,16 +235,19 @@ export const createFirestoreWorklogRepositories = ({
   return {
     projects: {
       async create({ name }: { name: string }) {
-        const existingProjects = await getDocs(projectsCollection)
-        const defaults = getProjectDefaultMetadata(existingProjects.size)
-        const project = await addDoc(
-          projectsCollection,
-          createProjectPayload({
-            name,
-            notes: defaults.notes,
-            colors: defaults.colors,
-          }),
-        )
+        const projectsSnapshot = await getDocs(projectsCollection)
+        const defaults = getProjectDefaultMetadata(projectsSnapshot.size)
+        const payload = createProjectPayload({
+          name,
+          notes: defaults.notes,
+          colors: defaults.colors,
+        })
+
+        if (projectsSnapshot.docs.some((document) => document.get('slug') === payload.slug)) {
+          throw createDuplicateSlugError('project')
+        }
+
+        const project = await addDoc(projectsCollection, payload)
 
         return project.id
       },
@@ -244,17 +262,29 @@ export const createFirestoreWorklogRepositories = ({
           colors: snapshot.get('colors') as FirebaseProjectDocument['colors'],
         })
 
-        await updateDoc(
-          projectReference,
-          createProjectPayload({
-            name,
-            notes: currentProject.notes,
-            colors: currentProject.colors,
-          }),
-        )
+        const payload = createProjectPayload({
+          name,
+          notes: currentProject.notes,
+          colors: currentProject.colors,
+        })
+
+        if (payload.slug !== currentProject.slug) {
+          await assertSlugAvailable(projectsCollection, payload.slug, 'project', id)
+        }
+
+        await updateDoc(projectReference, payload)
       },
       async update(id: string, input) {
-        await updateDoc(doc(projectsCollection, id), createProjectPayload(input))
+        const projectReference = doc(projectsCollection, id)
+        const snapshot = await getDoc(projectReference)
+        const currentSlug = String(snapshot.get('slug') ?? '')
+        const payload = createProjectPayload(input)
+
+        if (payload.slug !== currentSlug) {
+          await assertSlugAvailable(projectsCollection, payload.slug, 'project', id)
+        }
+
+        await updateDoc(projectReference, payload)
       },
       async remove(id: string) {
         await ensureProjectIsUnused(id)
@@ -263,12 +293,24 @@ export const createFirestoreWorklogRepositories = ({
     },
     tags: {
       async create({ name }: { name: string }) {
-        const tag = await addDoc(tagsCollection, createNamedEntityPayload(name, 'Tag'))
+        const payload = createNamedEntityPayload(name, 'Tag')
+        await assertSlugAvailable(tagsCollection, payload.slug, 'tag')
+
+        const tag = await addDoc(tagsCollection, payload)
 
         return tag.id
       },
       async rename(id: string, name: string) {
-        await updateDoc(doc(tagsCollection, id), createNamedEntityPayload(name, 'Tag'))
+        const tagReference = doc(tagsCollection, id)
+        const snapshot = await getDoc(tagReference)
+        const currentSlug = String(snapshot.get('slug') ?? '')
+        const payload = createNamedEntityPayload(name, 'Tag')
+
+        if (payload.slug !== currentSlug) {
+          await assertSlugAvailable(tagsCollection, payload.slug, 'tag', id)
+        }
+
+        await updateDoc(tagReference, payload)
       },
       async remove(id: string) {
         await ensureTagIsUnused(id)

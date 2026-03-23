@@ -193,7 +193,7 @@ const shuffle = <T>(items: readonly T[], rng: () => number) => {
 
   for (let index = copy.length - 1; index > 0; index -= 1) {
     const swapIndex = randomInt(rng, index + 1)
-    ;[copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]]
+      ;[copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]]
   }
 
   return copy
@@ -377,6 +377,18 @@ export const buildDemoSeedDataset = ({
     TagBlueprint
   >
 
+  const assertUniqueSlugs = (entities: DemoSeedEntity[], label: string) => {
+    const seen = new Set<string>()
+
+    entities.forEach((entity) => {
+      if (seen.has(entity.slug)) {
+        throw new Error(`Demo seed has duplicate ${label} slug: ${entity.slug}`)
+      }
+
+      seen.add(entity.slug)
+    })
+  }
+
   for (let dayOffset = 0; dayOffset < 14; dayOffset += 1) {
     const day = addDays(startDate, dayOffset)
     const durations = randomItem(DAILY_DURATION_TEMPLATES, rng)
@@ -399,9 +411,17 @@ export const buildDemoSeedDataset = ({
     })
   }
 
+  const projects = projectBlueprints.map((project) =>
+    buildEntity(project.name, 'Project', project.key),
+  )
+  const tags = tagBlueprints.map((tag) => buildEntity(tag.name, 'Tag', tag.key))
+
+  assertUniqueSlugs(projects, 'project')
+  assertUniqueSlugs(tags, 'tag')
+
   return {
-    projects: projectBlueprints.map((project) => buildEntity(project.name, 'Project', project.key)),
-    tags: tagBlueprints.map((tag) => buildEntity(tag.name, 'Tag', tag.key)),
+    projects,
+    tags,
     sessions,
   }
 }
