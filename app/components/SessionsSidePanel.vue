@@ -1,19 +1,30 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { PropType } from 'vue'
 
 import CloseIcon from '@/icons/CloseIcon.vue'
 
+import type { Project, TimeBox } from '~~/shared/worklog'
+
 defineProps({
-  mode: { type: String as PropType<'scratchpad' | 'session' | 'create'>, required: true },
+  mode: {
+    type: String as PropType<'scratchpad' | 'overview' | 'session' | 'create'>,
+    required: true,
+  },
   sessionId: { type: String, default: undefined },
+  day: { type: Object as PropType<Date | null>, default: null },
   dateKey: { type: String, default: '' },
   initialStartTime: { type: String, default: '' },
   initialEndTime: { type: String, default: '' },
   persistent: { type: Boolean, default: false },
   overlay: { type: Boolean, default: false },
+  selectedSessionId: { type: String, default: '' },
+  timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
+  projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
+  projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
 })
 
-const emit = defineEmits(['close', 'created', 'showScratchpad'])
+const emit = defineEmits(['close', 'created', 'openSession', 'showOverview', 'showScratchpad'])
 
 const scratchpadPanelRef = ref<{ flushPendingChanges: () => Promise<void> } | null>(null)
 
@@ -40,7 +51,6 @@ defineExpose({
     "
   >
     <div
-      v-if="!persistent || mode === 'session' || mode === 'create'"
       class="flex shrink-0 items-center justify-between gap-3 px-3 py-3"
       :class="overlay ? 'border-b border-white/12 bg-white/10' : 'border-b border-border'"
     >
@@ -58,6 +68,20 @@ defineExpose({
           @click="emit('showScratchpad')"
         >
           Scratchpad
+        </button>
+        <button
+          type="button"
+          class="rounded-lg px-3 py-1.5 text-sm font-semibold transition"
+          :class="
+            mode === 'overview'
+              ? 'bg-header text-header-text'
+              : overlay
+                ? 'text-text-muted hover:bg-white/16'
+                : 'text-text-muted hover:bg-surface'
+          "
+          @click="emit('showOverview')"
+        >
+          Overview
         </button>
         <button
           v-if="mode === 'session' || mode === 'create'"
@@ -86,6 +110,20 @@ defineExpose({
           ref="scratchpadPanelRef"
           :active="mode === 'scratchpad'"
           :date-key="dateKey"
+        />
+      </div>
+
+      <div v-if="mode === 'overview' && day" class="h-full min-w-0 overflow-y-auto pr-1">
+        <DaySessionsOverviewPanel
+          :day="day"
+          empty-message="No sessions on the selected day."
+          :project-by-id="projectById"
+          :project-name-by-id="projectNameById"
+          :selected-session-id="selectedSessionId"
+          show-project-name
+          :time-boxes="timeBoxes"
+          use-project-card-styles
+          @open-session="emit('openSession', $event)"
         />
       </div>
 

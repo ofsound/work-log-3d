@@ -128,7 +128,7 @@ const SessionsSidePanelStub = defineComponent({
     persistent: { type: Boolean, default: false },
     sessionId: { type: String, default: '' },
   },
-  emits: ['close', 'created', 'showScratchpad'],
+  emits: ['close', 'created', 'openSession', 'showOverview', 'showScratchpad'],
   setup(props, { emit, expose }) {
     expose({
       flushScratchpad,
@@ -144,7 +144,14 @@ const SessionsSidePanelStub = defineComponent({
           'data-persistent': String(props.persistent),
           'data-session-id': props.sessionId,
         },
-        [h('button', { 'data-test': 'tab-scratchpad', onClick: () => emit('showScratchpad') })],
+        [
+          h('button', { 'data-test': 'tab-scratchpad', onClick: () => emit('showScratchpad') }),
+          h('button', { 'data-test': 'tab-overview', onClick: () => emit('showOverview') }),
+          h('button', {
+            'data-test': 'open-overview-session',
+            onClick: () => emit('openSession', 'session-1'),
+          }),
+        ],
       )
   },
 })
@@ -259,7 +266,7 @@ describe('sessions day scratchpad', () => {
     expect(wrapper.get('[data-test="side-panel"]').attributes('data-date-key')).toBe('2026-03-23')
   })
 
-  it('switches to the session tab and back to scratchpad', async () => {
+  it('switches to overview, opens a session from it, and can switch back to scratchpad', async () => {
     const wrapper = mount(SessionsPage, {
       global: {
         stubs: {
@@ -276,7 +283,12 @@ describe('sessions day scratchpad', () => {
     })
 
     await flushPendingWork()
-    await wrapper.get('[data-test="open-session"]').trigger('click')
+    await wrapper.get('[data-test="tab-overview"]').trigger('click')
+    await flushPendingWork()
+
+    expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('overview')
+
+    await wrapper.get('[data-test="open-overview-session"]').trigger('click')
     await flushPendingWork()
 
     expect(flushScratchpad).toHaveBeenCalled()
@@ -289,7 +301,7 @@ describe('sessions day scratchpad', () => {
     expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('scratchpad')
   })
 
-  it('returns to scratchpad on Escape and after day navigation', async () => {
+  it('returns to the remembered overview tab on Escape and after day navigation', async () => {
     const wrapper = mount(SessionsPage, {
       global: {
         stubs: {
@@ -306,13 +318,15 @@ describe('sessions day scratchpad', () => {
     })
 
     await flushPendingWork()
-    await wrapper.get('[data-test="open-session"]').trigger('click')
+    await wrapper.get('[data-test="tab-overview"]').trigger('click')
+    await flushPendingWork()
+    await wrapper.get('[data-test="open-overview-session"]').trigger('click')
     await flushPendingWork()
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await flushPendingWork()
 
-    expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('scratchpad')
+    expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('overview')
 
     const nextButton = wrapper.findAll('button').find((button) => button.text() === 'Next')
 
@@ -322,7 +336,7 @@ describe('sessions day scratchpad', () => {
 
     expect(routerReplace).toHaveBeenCalled()
     expect(wrapper.get('[data-test="side-panel"]').attributes('data-date-key')).toBe('2026-03-24')
-    expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('scratchpad')
+    expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('overview')
   })
 
   it('omits the scratchpad on narrow screens but keeps existing session panel behavior', async () => {

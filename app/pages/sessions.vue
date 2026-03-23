@@ -62,7 +62,8 @@ interface SessionCreatePreview {
   createdSessionId: string | null
 }
 
-type PanelMode = 'closed' | 'scratchpad' | 'session' | 'create'
+type DaySidebarTab = 'scratchpad' | 'overview'
+type PanelMode = 'closed' | DaySidebarTab | 'session' | 'create'
 
 const route = useRoute()
 const router = useRouter()
@@ -78,6 +79,7 @@ const allTags = useCollection(tagsCollection)
 const panelMode = ref<PanelMode>('closed')
 const panelSessionId = ref('')
 const selectedSessionId = ref('')
+const daySidebarTab = ref<DaySidebarTab>('scratchpad')
 const createRange = ref<SessionCreatePayload | null>(null)
 const createPreview = ref<SessionCreatePreview | null>(null)
 const mutationErrorMessage = ref('')
@@ -338,11 +340,16 @@ const resetPanelState = (
   mode: PanelMode,
   options: {
     preserveCreatePreview?: boolean
+    rememberDayTab?: boolean
   } = {},
 ) => {
   panelMode.value = mode
   panelSessionId.value = ''
   createRange.value = null
+
+  if ((mode === 'scratchpad' || mode === 'overview') && options.rememberDayTab !== false) {
+    daySidebarTab.value = mode
+  }
 
   if (!options.preserveCreatePreview) {
     createPreview.value = null
@@ -359,7 +366,10 @@ const flushScratchpadIfNeeded = async () => {
 
 const closePanel = async () => {
   await flushScratchpadIfNeeded()
-  resetPanelState(isPersistentScratchpad.value ? 'scratchpad' : 'closed')
+  selectedSessionId.value = ''
+  resetPanelState(isPersistentScratchpad.value ? daySidebarTab.value : 'closed', {
+    rememberDayTab: false,
+  })
 }
 
 const selectSession = (sessionId: string) => {
@@ -429,6 +439,16 @@ const openScratchpadPanel = async () => {
   await flushScratchpadIfNeeded()
   selectedSessionId.value = ''
   resetPanelState('scratchpad')
+}
+
+const openOverviewPanel = async () => {
+  if (!isPersistentScratchpad.value) {
+    return
+  }
+
+  await flushScratchpadIfNeeded()
+  selectedSessionId.value = ''
+  resetPanelState('overview')
 }
 
 const openSuggestedCreatePanel = async () => {
@@ -586,6 +606,11 @@ const handleCalendarKeyboard = (event: KeyboardEvent) => {
 
     if (isPersistentScratchpad.value) {
       if (panelMode.value !== 'scratchpad' || selectedSessionId.value) {
+        if (daySidebarTab.value === 'overview') {
+          void openOverviewPanel()
+          return
+        }
+
         void openScratchpadPanel()
       }
       return
@@ -657,12 +682,12 @@ watch(
 
     if (mode === 'day' && desktop) {
       if (panelMode.value === 'closed') {
-        panelMode.value = 'scratchpad'
+        panelMode.value = daySidebarTab.value
       }
       return
     }
 
-    if (panelMode.value === 'scratchpad') {
+    if (panelMode.value === 'scratchpad' || panelMode.value === 'overview') {
       resetPanelState('closed')
     }
   },
@@ -674,7 +699,9 @@ watch(
   () => {
     if (currentMode.value === 'day') {
       selectedSessionId.value = ''
-      resetPanelState(isPersistentScratchpad.value ? 'scratchpad' : 'closed')
+      resetPanelState(isPersistentScratchpad.value ? daySidebarTab.value : 'closed', {
+        rememberDayTab: false,
+      })
     }
   },
 )
@@ -934,15 +961,22 @@ onBeforeUnmount(() => {
         <SessionsSidePanel
           v-if="panelMode !== 'closed'"
           ref="sessionsSidePanelRef"
+          :day="anchorDate"
           :date-key="scratchpadDateKey"
           :initial-end-time="createInitialEndTime"
           :initial-start-time="createInitialStartTime"
           :mode="panelMode"
           :overlay="shouldOverlaySidePanel"
           :persistent="isPersistentScratchpad"
+          :project-by-id="projectById"
+          :project-name-by-id="projectNameById"
+          :selected-session-id="selectedSessionId"
           :session-id="panelSessionId"
+          :time-boxes="visibleDayTimeBoxes"
           @close="closePanel"
           @created="handlePanelCreated"
+          @open-session="openSessionPanel"
+          @show-overview="openOverviewPanel"
           @show-scratchpad="openScratchpadPanel"
         />
       </template>
