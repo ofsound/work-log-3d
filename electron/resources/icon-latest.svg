@@ -1,0 +1,57 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient (mapped from #bg in icon.svg) -->
+    <linearGradient id="bgGrad" x1="96" y1="96" x2="928" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Clock Face Radial Gradient (mapped from the dark inner rectangle #0F172A in icon.svg) -->
+    <radialGradient id="faceGrad" cx="10" cy="11" r="12" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="40%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+    
+    <!-- Inner border stroke (mapped from #panelStroke in icon.svg) -->
+    <linearGradient id="borderGrad" x1="100" y1="100" x2="924" y2="924" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A5F3FC" stop-opacity="0.62" />
+      <stop offset="100%" stop-color="#34D399" stop-opacity="0.42" />
+    </linearGradient>
+
+    <!-- Clock accents (mapped from #stroke in icon.svg) -->
+    <linearGradient id="clockStrokeGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#67E8F9" />
+      <stop offset="50%" stop-color="#2DD4BF" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+
+    <!-- Original softShadow -->
+    <filter id="softShadow" x="146" y="152" width="732" height="744" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+      <feOffset dy="22" />
+      <feGaussianBlur stdDeviation="30" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0117647 0 0 0 0 0.0941176 0 0 0 0 0.231373 0 0 0 0.42 0" />
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1" />
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape" />
+    </filter>
+  </defs>
+
+  <g>
+    <!-- Background square gradients and inner border -->
+    <rect x="96" y="96" width="832" height="832" rx="184" fill="url(#bgGrad)" />
+    <rect x="100" y="100" width="824" height="824" rx="180" fill="none" stroke="url(#borderGrad)" stroke-width="4" />
+
+    <g filter="url(#softShadow)">
+      <g transform="translate(262, 262) scale(22)" stroke="url(#clockStrokeGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="14" r="8" fill="url(#faceGrad)" />
+        <line x1="12" y1="2" x2="12" y2="6" />
+        <line x1="9.5" y1="1.5" x2="14.5" y2="1.5" stroke-width="3" />
+        <line x1="12" y1="10" x2="12" y2="14" />
+        <line x1="4.5" y1="6.5" x2="6.34" y2="8.34" />
+      </g>
+    </g>
+  </g>
+</svg>

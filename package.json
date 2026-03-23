@@ -89,7 +89,7 @@
     "npmRebuild": false,
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "electron/resources/icon.png",
+      "icon": "electron/resources/icon-latest-gradient.png",
       "target": [
         "dir"
       ]
