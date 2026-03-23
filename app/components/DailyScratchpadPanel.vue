@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { doc } from 'firebase/firestore'
-import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
@@ -21,10 +20,17 @@ const props = defineProps({
   dateKey: { type: String, required: true },
 })
 
+const currentUser = useCurrentUser()
 const repositories = useWorklogRepository()
 const { dailyNotesCollection } = useFirestoreCollections()
 
 const AUTO_SAVE_DELAY_MS = 1200
+const RETRYABLE_SCRATCHPAD_ERROR_CODES = new Set([
+  'permission-denied',
+  'unauthenticated',
+  'unavailable',
+])
+const RETRY_DELAYS_MS = [250, 500, 1000]
 
 const saveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle')
 const saveErrorMessage = ref('')
@@ -39,10 +45,49 @@ const pendingRemoteContent = ref<DailyNoteContentNode | null>(null)
 const currentSavePromise = ref<Promise<void> | null>(null)
 
 const isDirty = computed(() => currentEditorJson.value !== syncedEditorJson.value)
+const canPersistScratchpad = computed(() =>
+  Boolean(currentUser.value?.uid && dailyNotesCollection.value),
+)
+const isDocumentReady = computed(() => Boolean(dailyNotesCollection.value))
 const noteDocumentSource = computed(() =>
   dailyNotesCollection.value ? doc(dailyNotesCollection.value, props.dateKey) : null,
 )
 const rawDailyNote = useDocument(noteDocumentSource)
+
+const wait = (delayMs: number) => new Promise<void>((resolve) => setTimeout(resolve, delayMs))
+
+const getScratchpadErrorCode = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  typeof (error as { code: unknown }).code === 'string'
+    ? ((error as { code: string }).code.split('/').at(-1) ?? '')
+    : ''
+
+const runScratchpadOperation = async (
+  operation: () => Promise<void>,
+  fallbackMessage: string,
+): Promise<boolean> => {
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      await operation()
+      return true
+    } catch (error) {
+      const code = getScratchpadErrorCode(error)
+
+      if (attempt < RETRY_DELAYS_MS.length && RETRYABLE_SCRATCHPAD_ERROR_CODES.has(code)) {
+        await wait(RETRY_DELAYS_MS[attempt]!)
+        continue
+      }
+
+      saveStatus.value = 'error'
+      saveErrorMessage.value = getWorklogErrorMessage(error, fallbackMessage)
+      return false
+    }
+  }
+
+  return false
+}
 
 const editor = useEditor({
   editable: props.active,
@@ -52,11 +97,11 @@ const editor = useEditor({
       heading: {
         levels: [1, 2, 3],
       },
-    }),
-    Link.configure({
-      autolink: true,
-      openOnClick: false,
-      protocols: ['http', 'https', 'mailto'],
+      link: {
+        autolink: true,
+        openOnClick: false,
+        protocols: ['http', 'https', 'mailto'],
+      },
     }),
     TaskList,
     TaskItem.configure({
@@ -69,7 +114,7 @@ const editor = useEditor({
   editorProps: {
     attributes: {
       class:
-        'daily-scratchpad-editor min-h-88 rounded-2xl border border-border-subtle bg-panel-editor px-4 py-4 font-data text-sm text-text shadow-panel focus:outline-none',
+        'daily-scratchpad-editor h-full min-h-full rounded-md border border-border-subtle bg-white px-4 py-4 font-data text-base text-text shadow-panel focus:outline-none dark:bg-panel-editor',
     },
   },
   onUpdate: ({ editor: currentEditor }) => {
@@ -115,7 +160,7 @@ const applyRemoteNote = (content: DailyNoteContentNode, updatedAt: Date | null) 
 const persistEditorContent = async ({ force }: { force: boolean }) => {
   clearSaveTimer()
 
-  if (!editor.value) {
+  if (!editor.value || !canPersistScratchpad.value) {
     return
   }
 
@@ -135,17 +180,19 @@ const persistEditorContent = async ({ force }: { force: boolean }) => {
   saveStatus.value = 'saving'
   saveErrorMessage.value = ''
 
-  const savePromise = repositories.dailyNotes
-    .upsert(props.dateKey, { content })
-    .then(() => {
+  const savePromise = runScratchpadOperation(
+    () => repositories.dailyNotes.upsert(props.dateKey, { content }),
+    'Unable to save the scratchpad.',
+  )
+    .then((saved) => {
+      if (!saved) {
+        return
+      }
+
       syncedEditorJson.value = contentJson
       currentEditorJson.value = contentJson
       lastSavedAt.value = new Date()
       saveStatus.value = 'saved'
-    })
-    .catch((error) => {
-      saveStatus.value = 'error'
-      saveErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save the scratchpad.')
     })
     .finally(async () => {
       currentSavePromise.value = null
@@ -173,20 +220,20 @@ const scheduleAutoSave = () => {
 }
 
 const ensureNoteDocument = async () => {
+  if (!canPersistScratchpad.value) {
+    return
+  }
+
   if (isEnsuringNote.value) {
     return
   }
 
   isEnsuringNote.value = true
-
-  try {
-    await repositories.dailyNotes.ensure(props.dateKey)
-  } catch (error) {
-    saveStatus.value = 'error'
-    saveErrorMessage.value = getWorklogErrorMessage(error, 'Unable to load the scratchpad.')
-  } finally {
-    isEnsuringNote.value = false
-  }
+  await runScratchpadOperation(
+    () => repositories.dailyNotes.ensure(props.dateKey),
+    'Unable to load the scratchpad.',
+  )
+  isEnsuringNote.value = false
 }
 
 const flushPendingChanges = async () => {
@@ -247,7 +294,7 @@ watch(
 )
 
 watch(
-  () => props.dateKey,
+  () => [props.dateKey, noteDocumentSource.value?.id ?? '', currentUser.value?.uid ?? ''],
   async () => {
     pendingRemoteContent.value = null
     clearSaveTimer()
@@ -262,6 +309,10 @@ watch(
 watch(
   rawDailyNote,
   (value) => {
+    if (!isDocumentReady.value) {
+      return
+    }
+
     const nextNote = toDailyNote(
       props.dateKey,
       value as FirebaseDailyNoteDocument | null | undefined,
@@ -404,8 +455,8 @@ defineExpose({
       </button>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-auto overscroll-contain pb-4">
-      <EditorContent v-if="editor" :editor="editor" />
+    <div class="min-h-0 flex-1 pb-4">
+      <EditorContent v-if="editor" class="h-full" :editor="editor" />
     </div>
   </div>
 </template>

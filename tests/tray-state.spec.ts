@@ -103,6 +103,9 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Completed • Count Down', enabled: false },
       { kind: 'separator' },
+      { kind: 'action', id: 'start_focus', label: 'Pomodoro (30m)', enabled: true },
+      { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
+      { kind: 'separator' },
       {
         kind: 'action',
         id: 'open_window_to_log_session',

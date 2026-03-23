@@ -295,6 +295,7 @@
 
 @layer components {
   .daily-scratchpad-editor {
+    height: 100%;
     min-height: 22rem;
     line-height: 1.65;
   }

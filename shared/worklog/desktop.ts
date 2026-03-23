@@ -28,19 +28,19 @@ export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
 
 export type DesktopTrayMenuItem =
   | {
-      kind: 'status'
-      label: string
-      enabled: false
-    }
+    kind: 'status'
+    label: string
+    enabled: false
+  }
   | {
-      kind: 'separator'
-    }
+    kind: 'separator'
+  }
   | {
-      kind: 'action'
-      id: DesktopTrayActionId
-      label: string
-      enabled: boolean
-    }
+    kind: 'action'
+    id: DesktopTrayActionId
+    label: string
+    enabled: boolean
+  }
 
 export interface DesktopTrayState {
   mode: TimerState['status']
@@ -260,6 +260,9 @@ export const getDesktopTrayState = (
     badgeVariant: 'completed',
     menuItems: [
       createStatusItem(statusLabel),
+      separatorItem,
+      createActionItem('start_focus', 'Pomodoro (30m)'),
+      createActionItem('start_countup', 'Start Timer'),
       separatorItem,
       createActionItem('open_window_to_log_session', 'Open Window to Log Session'),
       createActionItem('reset', 'Reset'),

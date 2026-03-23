@@ -83,6 +83,7 @@ const createPreview = ref<SessionCreatePreview | null>(null)
 const mutationErrorMessage = ref('')
 const sessionsHeaderRef = ref<HTMLElement | null>(null)
 const sessionsSidePanelRef = ref<{ flushScratchpad: () => Promise<void> } | null>(null)
+const hasMounted = ref(false)
 const isDesktop = useMediaQuery('(min-width: 1024px)', false)
 
 const routeState = computed(() =>
@@ -92,7 +93,9 @@ const currentMode = computed(() => routeState.value.mode)
 const anchorDate = computed(() => routeState.value.date)
 const listFilters = computed(() => routeState.value.listFilters)
 const scratchpadDateKey = computed(() => formatDateKey(anchorDate.value))
-const isPersistentScratchpad = computed(() => currentMode.value === 'day' && isDesktop.value)
+const isPersistentScratchpad = computed(
+  () => currentMode.value === 'day' && hasMounted.value && isDesktop.value,
+)
 
 const resolvedTimeBoxes = computed(() =>
   toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
@@ -595,8 +598,13 @@ const handleCalendarKeyboard = (event: KeyboardEvent) => {
 }
 
 watch(
-  () => [currentMode.value, isDesktop.value],
-  ([mode, desktop]) => {
+  () => [currentMode.value, isDesktop.value, hasMounted.value],
+  ([mode, desktop, mounted]) => {
+    if (!mounted) {
+      resetPanelState('closed')
+      return
+    }
+
     if (mode === 'day' && desktop) {
       if (panelMode.value === 'closed') {
         panelMode.value = 'scratchpad'
@@ -650,6 +658,7 @@ watch(resolvedTimeBoxes, (timeBoxes) => {
 })
 
 onMounted(() => {
+  hasMounted.value = true
   window.addEventListener('keydown', handleCalendarKeyboard)
 })
 
