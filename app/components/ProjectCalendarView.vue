@@ -7,7 +7,7 @@ import {
   type MonthGridSegmentEntry,
   MONTH_GRID_VISIBLE_ROWS,
 } from '~/utils/month-grid'
-import { getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import type { Project, TimeBox, TimeBoxInput, YearHeatmapMonth } from '~~/shared/worklog'
 import {
   formatDateKey,
@@ -55,6 +55,9 @@ const monthEntries = computed(() =>
 
 const projectStyle = computed(() =>
   props.project ? getProjectSoftSurfaceStyle(props.project.colors) : {},
+)
+const durationBadgeStyle = computed(() =>
+  props.project ? getProjectBadgeStyle(props.project.colors) : {},
 )
 
 const getDaySegments = (segmentsByKey: Map<string, MonthGridSegmentEntry[]>, day: Date) =>
@@ -174,9 +177,12 @@ const handleSegmentDragEnd = () => {
                 @dragend="handleSegmentDragEnd"
               >
                 <span class="font-semibold">{{ formatSegmentTime(segment.segmentStart) }}</span>
-                <span class="ml-1 text-text-subtle"
-                  >[{{ getSegmentDuration(segment.timeBox) }}]</span
+                <span
+                  class="ml-1 shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                  :style="durationBadgeStyle"
                 >
+                  {{ getSegmentDuration(segment.timeBox) }}
+                </span>
               </button>
 
               <button
