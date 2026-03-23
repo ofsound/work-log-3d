@@ -1,0 +1,45 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient from icon-new -->
+    <linearGradient id="bgGrad" x1="96" y1="96" x2="928" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E6EA3" />
+      <stop offset="100%" stop-color="#0A2D4A" />
+    </linearGradient>
+
+    <!-- Clock Face Radial Gradient from icon-new -->
+    <radialGradient id="faceGrad" cx="10" cy="11" r="12" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C2E4FF" />
+      <stop offset="40%" stop-color="#81C4FF" />
+      <stop offset="100%" stop-color="#3A92DF" />
+    </radialGradient>
+
+    <!-- Original softShadow from icon-alt -->
+    <filter id="softShadow" x="146" y="152" width="732" height="744" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+      <feOffset dy="22" />
+      <feGaussianBlur stdDeviation="30" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0117647 0 0 0 0 0.0941176 0 0 0 0 0.231373 0 0 0 0.42 0" />
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1" />
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape" />
+    </filter>
+  </defs>
+
+  <g>
+    <!-- Background square gradients and inner border from icon-new -->
+    <rect x="96" y="96" width="832" height="832" rx="184" fill="url(#bgGrad)" />
+    <rect x="100" y="100" width="824" height="824" rx="180" fill="none" stroke="#3D9EE4" stroke-opacity="0.4" stroke-width="4" />
+
+    <!-- Original red drawing composition from icon-alt -->
+    <g filter="url(#softShadow)">
+      <g transform="translate(262, 262) scale(22)" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="14" r="8" fill="url(#faceGrad)" />
+        <line x1="12" y1="2" x2="12" y2="6" />
+        <line x1="9.5" y1="1.5" x2="14.5" y2="1.5" stroke-width="3" />
+        <line x1="12" y1="10" x2="12" y2="14" />
+        <line x1="4.5" y1="6.5" x2="6.34" y2="8.34" />
+      </g>
+    </g>
+  </g>
+</svg>
