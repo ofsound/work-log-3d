@@ -33,9 +33,11 @@ describe('desktop tray state', () => {
   it('uses structural key from timer status only so menu shape can skip rebuilds while time ticks', () => {
     const runningA = getTimerSnapshot(startCountupTimer(0), 65_000)
     const runningB = getTimerSnapshot(startCountupTimer(0), 125_000)
+    const runningCountdown = getTimerSnapshot(startCountdownTimer(300, 60_000), 120_000)
 
-    expect(getDesktopTrayStructuralKey(runningA)).toBe('running')
-    expect(getDesktopTrayStructuralKey(runningB)).toBe('running')
+    expect(getDesktopTrayStructuralKey(runningA)).toBe('running:countup')
+    expect(getDesktopTrayStructuralKey(runningB)).toBe('running:countup')
+    expect(getDesktopTrayStructuralKey(runningCountdown)).toBe('running:countdown')
     expect(getDesktopTrayStructuralKey(getTimerSnapshot(createIdleTimerState(), 0))).toBe('idle')
   })
 
@@ -61,6 +63,36 @@ describe('desktop tray state', () => {
     ])
   })
 
+  it('includes add-time actions for active countdown tray menus', () => {
+    const runningCountdown = getTimerSnapshot(startCountdownTimer(300, 0), 60_000)
+    const pausedCountdown = getTimerSnapshot(pauseTimer(startCountdownTimer(300, 0), 60_000), 0)
+
+    expect(getDesktopTrayState(runningCountdown, 'darwin').menuItems).toContainEqual({
+      kind: 'action',
+      id: 'add_countdown_5_minutes',
+      label: '+5 min',
+      enabled: true,
+    })
+    expect(getDesktopTrayState(runningCountdown, 'darwin').menuItems).toContainEqual({
+      kind: 'action',
+      id: 'add_countdown_10_minutes',
+      label: '+10 min',
+      enabled: true,
+    })
+    expect(getDesktopTrayState(pausedCountdown, 'darwin').menuItems).toContainEqual({
+      kind: 'action',
+      id: 'add_countdown_5_minutes',
+      label: '+5 min',
+      enabled: true,
+    })
+    expect(getDesktopTrayState(pausedCountdown, 'darwin').menuItems).toContainEqual({
+      kind: 'action',
+      id: 'add_countdown_10_minutes',
+      label: '+10 min',
+      enabled: true,
+    })
+  })
+
   it('falls back to tooltip-only timing on non-mac platforms', () => {
     const runningCountdown = getTimerSnapshot(startCountdownTimer(300, 0), 60_000)
     const trayState = getDesktopTrayState(runningCountdown, 'win32')
@@ -70,6 +102,18 @@ describe('desktop tray state', () => {
     expect(trayState.badgeText).toBeNull()
     expect(trayState.badgeVariant).toBe('running')
     expect(trayState.tooltip).toBe('Work Log: Running • Count Down')
+    expect(trayState.menuItems).toContainEqual({
+      kind: 'action',
+      id: 'add_countdown_5_minutes',
+      label: '+5 min',
+      enabled: true,
+    })
+    expect(trayState.menuItems).toContainEqual({
+      kind: 'action',
+      id: 'add_countdown_10_minutes',
+      label: '+10 min',
+      enabled: true,
+    })
   })
 
   it('exposes paused badge metadata without changing the tray menu structure', () => {
@@ -82,6 +126,18 @@ describe('desktop tray state', () => {
     expect(trayState.badgeText).toBe(' 01:05')
     expect(trayState.badgeVariant).toBe('paused')
     expect(trayState.statusLabel).toBe('Paused • Count Up')
+    expect(trayState.menuItems).not.toContainEqual({
+      kind: 'action',
+      id: 'add_countdown_5_minutes',
+      label: '+5 min',
+      enabled: true,
+    })
+    expect(trayState.menuItems).not.toContainEqual({
+      kind: 'action',
+      id: 'add_countdown_10_minutes',
+      label: '+10 min',
+      enabled: true,
+    })
   })
 
   it('exposes the completed tray actions for logging a finished session', () => {

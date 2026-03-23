@@ -15,6 +15,8 @@ export interface DesktopWindowState {
 export type DesktopTrayActionId =
   | 'start_countup'
   | 'start_focus'
+  | 'add_countdown_5_minutes'
+  | 'add_countdown_10_minutes'
   | 'pause'
   | 'resume'
   | 'stop'
@@ -86,6 +88,7 @@ export interface DesktopApi {
   subscribeToRouteRequest(listener: (path: string) => void): () => void
   startCountup(): Promise<void>
   startCountdown(durationSeconds: number): Promise<void>
+  addCountdownTime(durationSeconds: number): Promise<void>
   pauseTimer(): Promise<void>
   resumeTimer(): Promise<void>
   stopTimer(): Promise<void>
@@ -152,13 +155,23 @@ const createActionItem = (
 
 const separatorItem: DesktopTrayMenuItem = { kind: 'separator' }
 
+const createCountdownAdjustmentItems = (): DesktopTrayMenuItem[] => [
+  createActionItem('add_countdown_5_minutes', '+5 min'),
+  createActionItem('add_countdown_10_minutes', '+10 min'),
+]
+
 /**
  * Identifies tray **menu structure** (which actions exist). When this is unchanged, only
  * time-derived labels/tooltip/title need updating — not a full `Menu.buildFromTemplate`.
- * Extend this if menu items ever depend on fields beyond `snapshot.status`.
+ * Running and paused menus also depend on timer mode because countdowns expose add-time actions.
  */
-export const getDesktopTrayStructuralKey = (snapshot: TimerSnapshot): TimerState['status'] =>
-  snapshot.status
+export const getDesktopTrayStructuralKey = (snapshot: TimerSnapshot): string => {
+  if (snapshot.status === 'running' || snapshot.status === 'paused') {
+    return `${snapshot.status}:${snapshot.mode ?? 'timer'}`
+  }
+
+  return snapshot.status
+}
 
 export const formatDesktopTrayBadgeText = (display: string) => {
   const [minutes, seconds] = display.split(':')
@@ -202,6 +215,7 @@ export const getDesktopTrayState = (
 
   if (snapshot.status === 'running') {
     const statusLabel = `Running • ${modeLabel}`
+    const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
 
     return {
       mode: 'running',
@@ -215,6 +229,7 @@ export const getDesktopTrayState = (
         createStatusItem(statusLabel),
         separatorItem,
         createActionItem('pause', 'Pause'),
+        ...countdownActions,
         createActionItem('stop', 'Stop'),
         createActionItem('reset', 'Reset'),
         separatorItem,
@@ -226,6 +241,7 @@ export const getDesktopTrayState = (
 
   if (snapshot.status === 'paused') {
     const statusLabel = `Paused • ${modeLabel}`
+    const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
 
     return {
       mode: 'paused',
@@ -239,6 +255,7 @@ export const getDesktopTrayState = (
         createStatusItem(statusLabel),
         separatorItem,
         createActionItem('resume', 'Resume'),
+        ...countdownActions,
         createActionItem('stop', 'Stop'),
         createActionItem('reset', 'Reset'),
         separatorItem,

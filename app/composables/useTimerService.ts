@@ -1,5 +1,6 @@
 import type { TimerState } from '~~/shared/worklog'
 import {
+  addCountdownSeconds,
   cancelTimer,
   createIdleTimerState,
   getTimerSnapshot,
@@ -113,6 +114,19 @@ export function useTimerService() {
     timerState.value = resumeTimer(timerState.value, timerNow.value)
   }
 
+  const addCountdownMinutes = async (minutes: number) => {
+    const durationSeconds = minutes * 60
+
+    if (desktopApi) {
+      await ensureDesktopSync()
+      await desktopApi.addCountdownTime(durationSeconds)
+      return
+    }
+
+    timerNow.value = Date.now()
+    timerState.value = addCountdownSeconds(timerState.value, durationSeconds)
+  }
+
   const stop = async () => {
     if (desktopApi) {
       await ensureDesktopSync()
@@ -143,6 +157,7 @@ export function useTimerService() {
     snapshot,
     startCountup,
     startCountdown,
+    addCountdownMinutes,
     pause,
     resume,
     stop,

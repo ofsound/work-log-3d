@@ -124,6 +124,27 @@ export const resumeTimer = (state: TimerState, nowMs: number): TimerState => {
   }
 }
 
+export const addCountdownSeconds = (state: TimerState, seconds: number): TimerState => {
+  if (
+    state.mode !== 'countdown' ||
+    state.durationSeconds === null ||
+    (state.status !== 'running' && state.status !== 'paused')
+  ) {
+    return state
+  }
+
+  const addedSeconds = Math.max(0, Math.trunc(seconds))
+
+  if (addedSeconds === 0) {
+    return state
+  }
+
+  return {
+    ...state,
+    durationSeconds: state.durationSeconds + addedSeconds,
+  }
+}
+
 export const completeTimer = (state: TimerState, nowMs: number): TimerState => {
   if (state.startedAtMs === null) {
     return createIdleTimerState()

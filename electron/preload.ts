@@ -49,6 +49,9 @@ const api: DesktopApi = {
   async startCountdown(durationSeconds) {
     await ipcRenderer.invoke('timer:startCountdown', durationSeconds)
   },
+  async addCountdownTime(durationSeconds) {
+    await ipcRenderer.invoke('timer:addCountdownTime', durationSeconds)
+  },
   async pauseTimer() {
     await ipcRenderer.invoke('timer:pause')
   },

@@ -1,4 +1,5 @@
 import {
+  addCountdownSeconds,
   cancelTimer,
   createIdleTimerState,
   getTimerSnapshot,
@@ -42,5 +43,31 @@ describe('timer state', () => {
     expect(restored).toEqual(started)
 
     expect(cancelTimer()).toEqual(createIdleTimerState())
+  })
+
+  it('adds time to a running countdown', () => {
+    const started = startCountdownTimer(300, 0)
+    const updated = addCountdownSeconds(started, 5 * 60)
+
+    expect(getTimerSnapshot(updated, 60_000).remainingSeconds).toBe(540)
+    expect(getTimerSnapshot(updated, 60_000).display).toBe('09:00')
+  })
+
+  it('adds time to a paused countdown without affecting elapsed time', () => {
+    const started = startCountdownTimer(300, 0)
+    const paused = pauseTimer(started, 60_000)
+    const updated = addCountdownSeconds(paused, 10 * 60)
+    const snapshot = getTimerSnapshot(updated, 120_000)
+
+    expect(snapshot.elapsedSeconds).toBe(60)
+    expect(snapshot.remainingSeconds).toBe(840)
+    expect(snapshot.display).toBe('14:00')
+  })
+
+  it('ignores add-time requests for non-countdown timer states', () => {
+    expect(addCountdownSeconds(createIdleTimerState(), 300)).toEqual(createIdleTimerState())
+
+    const countup = startCountupTimer(0)
+    expect(addCountdownSeconds(countup, 300)).toBe(countup)
   })
 })

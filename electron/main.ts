@@ -5,9 +5,13 @@ import { Notification, app, BrowserWindow, dialog, ipcMain, session } from 'elec
 
 import type { DesktopTimerEvent, TimerState } from '~/shared/worklog'
 import {
+  addCountdownSeconds,
+  cancelTimer,
   createIdleTimerState,
   getDesktopTimerNotification,
   getTimerSnapshot,
+  pauseTimer,
+  resumeTimer,
   reviveTimerState,
   serializeTimerState,
   shouldHideWindowOnClose,
@@ -15,10 +19,7 @@ import {
   shouldShowTimerNotification,
   startCountdownTimer,
   startCountupTimer,
-  pauseTimer,
-  resumeTimer,
   stopTimer,
-  cancelTimer,
   syncTimerState,
 } from '~/shared/worklog'
 import type { TrayController } from '~/electron/tray-controller'
@@ -264,6 +265,9 @@ const registerIpc = () => {
   ipcMain.handle('timer:startCountdown', (_event, durationSeconds: number) => {
     setTimerState(startCountdownTimer(durationSeconds, Date.now()))
   })
+  ipcMain.handle('timer:addCountdownTime', (_event, durationSeconds: number) => {
+    setTimerState(addCountdownSeconds(timerState, durationSeconds))
+  })
   ipcMain.handle('timer:pause', () => {
     setTimerState(pauseTimer(timerState, Date.now()))
   })
@@ -326,6 +330,12 @@ app.whenReady().then(async () => {
           break
         case 'pause':
           setTimerState(pauseTimer(timerState, Date.now()))
+          break
+        case 'add_countdown_5_minutes':
+          setTimerState(addCountdownSeconds(timerState, 5 * 60))
+          break
+        case 'add_countdown_10_minutes':
+          setTimerState(addCountdownSeconds(timerState, 10 * 60))
           break
         case 'resume':
           setTimerState(resumeTimer(timerState, Date.now()))
