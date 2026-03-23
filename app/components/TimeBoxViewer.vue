@@ -124,9 +124,13 @@ const requestDeleteSession = async () => {
   }
 }
 
-const projectSurfaceStyle = computed(() =>
-  project.value ? getProjectSoftSurfaceStyle(project.value.colors) : {},
-)
+const projectSurfaceStyle = computed(() => {
+  if (props.variant === 'project') {
+    return {}
+  }
+
+  return project.value ? getProjectSoftSurfaceStyle(project.value.colors) : {}
+})
 const projectBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},
 )
@@ -199,7 +203,12 @@ const projectBadgeStyle = computed(() =>
       {{ mutationErrorMessage }}
     </p>
   </div>
-  <div v-if="isMinimized" class="mb-2.5 rounded-xl border px-3 py-2" :style="projectSurfaceStyle">
+  <div
+    v-if="isMinimized"
+    class="mb-2.5 rounded-xl border px-3 py-2"
+    :class="variant === 'project' ? 'border-border-subtle bg-surface-subtle' : ''"
+    :style="variant === 'project' ? {} : projectSurfaceStyle"
+  >
     <NuxtLink
       v-if="variant !== 'project' && timeBox?.project"
       :to="getProjectPath(timeBox.project)"

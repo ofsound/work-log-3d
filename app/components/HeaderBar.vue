@@ -18,7 +18,7 @@ const { hideTags } = useUserSettings()
       <!-- Static markup from shared/icons/newTimeboxIcon (same source as Electron tray) -->
       <!-- eslint-disable vue/no-v-html -->
       <span
-        class="inline-flex h-5 w-5 shrink-0 [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
+        class="inline-flex size-[18px] shrink-0 [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
         aria-hidden="true"
         v-html="newTimeboxIconSvg()"
       />
@@ -50,7 +50,7 @@ const { hideTags } = useUserSettings()
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
-          class="h-5 w-5"
+          class="size-[18px]"
           aria-hidden="true"
         >
           <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />

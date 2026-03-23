@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import { getProjectBadgeStyle } from '~/utils/project-color-styles'
 import type { ProjectColors, TimeBox } from '~~/shared/worklog'
 import { getTotalDurationLabel } from '~~/shared/worklog'
 
@@ -11,9 +11,6 @@ const props = defineProps<{
 const dayDuration = computed(() => getTotalDurationLabel(props.projectOverviewDayData))
 const dayBadgeStyle = computed(() =>
   props.projectColors ? getProjectBadgeStyle(props.projectColors) : {},
-)
-const surfaceStyle = computed(() =>
-  props.projectColors ? getProjectSoftSurfaceStyle(props.projectColors) : {},
 )
 </script>
 
@@ -36,8 +33,7 @@ const surfaceStyle = computed(() =>
       {{ dayDuration }} hrs
     </div>
     <div
-      class="relative my-4 rounded-sm border bg-panel-day px-6 pt-6 pb-3.5 shadow-panel"
-      :style="surfaceStyle"
+      class="relative my-4 rounded-sm border border-border-subtle bg-panel-day px-6 pt-6 pb-3.5 shadow-panel"
     >
       <TimeBox
         v-for="item in projectOverviewDayData"
