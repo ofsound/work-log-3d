@@ -228,8 +228,8 @@ export const getDesktopTrayState = (
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
-        createActionItem('pause', 'Pause'),
         ...countdownActions,
+        createActionItem('pause', 'Pause'),
         createActionItem('stop', 'Stop'),
         createActionItem('reset', 'Reset'),
         separatorItem,

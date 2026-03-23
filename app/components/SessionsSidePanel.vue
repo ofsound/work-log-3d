@@ -33,7 +33,10 @@ defineExpose({
   <aside
     class="flex h-full w-full max-w-108 shrink-0 flex-col border-l border-border bg-surface-strong shadow-panel"
   >
-    <div class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-3 py-3">
+    <div
+      v-if="!persistent || mode === 'session' || mode === 'create'"
+      class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-3 py-3"
+    >
       <div v-if="persistent" class="flex min-w-0 flex-wrap items-center gap-2">
         <button
           type="button"
