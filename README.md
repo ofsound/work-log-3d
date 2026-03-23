@@ -18,6 +18,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 ## Key Conventions
 
 - Project and tag pages use stable ID-based routes: `/project/:id`, `/project/:id/edit`, and `/tag/:id`
+- `/project/:id` is query-driven like `/sessions`: the default `List` mode omits `mode`, `Calendar` persists `mode=calendar`, and both modes preserve `date=YYYY-MM-DD` for the selected project day context
 - `/sessions` is a single route with query-driven state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`; `mode=list` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort`
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences and desktop-only alert sound controls
@@ -264,6 +265,13 @@ Server-managed published report snapshots for anonymous client access. The top-l
 - `Year` uses a Monday-first contribution heatmap in mini months from the current month backward to the first month that has logged sessions (no future months), with day drill-down into Day mode
 - Calendar deep links are preserved with route queries such as `/sessions?mode=week&date=2026-03-21`
 - Week and Month both query Firestore by interval overlap so overnight sessions render in every affected day without changing the stored document shape
+
+## Project Views
+
+- `List` is the default `/project/:id` experience and keeps the existing grouped-by-day project session history
+- `Calendar` is a long-scroll month stack from the current month back to the first logged month for that project only, with no prev/next navigation
+- Project calendar state is shareable via route queries such as `/project/abc123?mode=calendar&date=2026-03-21`
+- The project calendar sidebar can open either the selected day’s sessions or an individual session editor without leaving the page
 
 ## Reports
 

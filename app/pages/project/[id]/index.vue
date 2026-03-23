@@ -24,10 +24,16 @@ watchEffect(() => {
   const legacyProject = legacyProjects.value[0]
 
   if (legacyProject?.id && legacyProject.id !== requestedProjectId.value) {
-    void navigateTo(getProjectPath(legacyProject.id), {
-      replace: true,
-      redirectCode: 301,
-    })
+    void navigateTo(
+      {
+        path: getProjectPath(legacyProject.id),
+        query: route.query,
+      },
+      {
+        replace: true,
+        redirectCode: 301,
+      },
+    )
   }
 })
 </script>

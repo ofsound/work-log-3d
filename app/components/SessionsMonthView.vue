@@ -2,15 +2,13 @@
 import type { PropType } from 'vue'
 
 import { getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
-import type { Project, TimeBox, TimeBoxInput } from '~~/shared/worklog'
 import {
-  buildMonthGridDays,
-  formatDateKey,
-  getMonthGridRange,
-  isSameDay,
-  moveTimeBoxToDay,
-  splitTimeBoxIntoDaySegments,
-} from '~~/shared/worklog'
+  buildMonthGridDaySegments,
+  getMonthGridWeekdays,
+  MONTH_GRID_VISIBLE_ROWS,
+} from '~/utils/month-grid'
+import type { Project, TimeBox, TimeBoxInput } from '~~/shared/worklog'
+import { formatDateKey, isSameDay, moveTimeBoxToDay } from '~~/shared/worklog'
 
 interface SessionChangePayload {
   id: string
@@ -28,48 +26,13 @@ const props = defineProps({
 
 const emit = defineEmits(['openSession', 'openDay', 'changeSession'])
 
-const VISIBLE_ROWS = 3
-
-const gridRange = computed(() => getMonthGridRange(props.anchorDate))
-const gridDays = computed(() => buildMonthGridDays(props.anchorDate))
-
-const daySegmentsByKey = computed(() => {
-  const map = new Map<
-    string,
-    Array<{
-      id: string
-      timeBox: TimeBox
-      segmentStart: Date
-      segmentEnd: Date
-    }>
-  >()
-
-  props.timeBoxes.forEach((timeBox) => {
-    splitTimeBoxIntoDaySegments(timeBox, gridRange.value).forEach((segment) => {
-      const key = formatDateKey(segment.dayStart)
-      const current = map.get(key) ?? []
-
-      current.push({
-        id: `${timeBox.id}-${segment.segmentStart.valueOf()}`,
-        timeBox,
-        segmentStart: segment.segmentStart,
-        segmentEnd: segment.segmentEnd,
-      })
-      current.sort((left, right) => left.segmentStart.valueOf() - right.segmentStart.valueOf())
-      map.set(key, current)
-    })
-  })
-
-  return map
-})
+const monthGrid = computed(() => buildMonthGridDaySegments(props.timeBoxes, props.anchorDate))
+const gridDays = computed(() => monthGrid.value.gridDays)
+const daySegmentsByKey = computed(() => monthGrid.value.segmentsByKey)
 
 const dragState = ref<{ timeBox: TimeBox; duplicate: boolean } | null>(null)
 
-const weekdays = computed(() =>
-  Array.from({ length: 7 }, (_, index) =>
-    gridDays.value[index]!.toLocaleDateString([], { weekday: 'short' }),
-  ),
-)
+const weekdays = computed(() => getMonthGridWeekdays(props.anchorDate))
 
 const getProjectName = (projectId: string) => props.projectNameById[projectId] ?? 'Untitled'
 const getProjectStyle = (projectId: string) => {
@@ -80,9 +43,10 @@ const getProjectStyle = (projectId: string) => {
 
 const getDaySegments = (day: Date) => daySegmentsByKey.value.get(formatDateKey(day)) ?? []
 
-const getVisibleSegments = (day: Date) => getDaySegments(day).slice(0, VISIBLE_ROWS)
+const getVisibleSegments = (day: Date) => getDaySegments(day).slice(0, MONTH_GRID_VISIBLE_ROWS)
 
-const getHiddenCount = (day: Date) => Math.max(0, getDaySegments(day).length - VISIBLE_ROWS)
+const getHiddenCount = (day: Date) =>
+  Math.max(0, getDaySegments(day).length - MONTH_GRID_VISIBLE_ROWS)
 
 const formatSegmentTime = (date: Date) =>
   date.toLocaleTimeString([], {
