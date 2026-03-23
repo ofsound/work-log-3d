@@ -42,8 +42,10 @@ const cancelCreateAndLoseFocus = () => {
     class="my-4 w-full rounded-sm border border-border-subtle bg-panel-project px-6 py-4 shadow-panel"
     style="width: 100%; min-width: 100%"
   >
-    <div class="mb-2 text-center text-xl font-bold uppercase">Projects</div>
-    <ProjectsManagerProject v-for="item in sortedAllProjects" :key="item.id" :project="item" />
+    <div class="mb-8 text-center text-xl font-bold uppercase">Projects</div>
+    <div class="flex flex-col gap-4">
+      <ProjectsManagerProject v-for="item in sortedAllProjects" :key="item.id" :project="item" />
+    </div>
     <div class="mt-8 flex">
       <input
         ref="myInput"

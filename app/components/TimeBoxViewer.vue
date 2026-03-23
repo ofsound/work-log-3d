@@ -6,6 +6,7 @@ import EditIcon from '@/icons/EditIcon.vue'
 
 import type { PropType } from 'vue'
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import { getProjectPath, getTagPath } from '~/utils/worklog-routes'
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -15,7 +16,6 @@ import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
 import {
   findProject,
   findProjectName,
-  findTagNames,
   getDurationMinutesLabel,
   getWorklogErrorMessage,
 } from '~~/shared/worklog'
@@ -66,8 +66,14 @@ const project = computed(() =>
   ),
 )
 
-const tagNames = computed(() => {
-  return findTagNames(toTags(allTags.value as FirebaseTagDocument[]), timeBox.value?.tags ?? [])
+const tagEntries = computed(() => {
+  const ids = timeBox.value?.tags ?? []
+  const tags = toTags(allTags.value as FirebaseTagDocument[])
+
+  return ids.map((id) => ({
+    id,
+    name: tags.find((tag) => tag.id === id)?.name ?? id,
+  }))
 })
 
 const timeBoxDuration = computed(() =>
@@ -153,7 +159,16 @@ const projectBadgeStyle = computed(() =>
       </div>
       <div v-if="variant !== 'project'" class="flex items-baseline gap-2">
         <div class="relative -top-0.5 font-bold">–</div>
+        <NuxtLink
+          v-if="timeBox?.project"
+          :to="getProjectPath(timeBox.project)"
+          class="relative -top-px inline-flex max-w-full min-w-0 items-center rounded-full border px-3 py-1 text-sm font-bold no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+          :style="projectBadgeStyle"
+        >
+          <HighlightedText :text="projectName" :tokens="highlightTokens" />
+        </NuxtLink>
         <div
+          v-else
           class="relative -top-px rounded-full border px-3 py-1 text-sm font-bold"
           :style="projectBadgeStyle"
         >
@@ -168,24 +183,33 @@ const projectBadgeStyle = computed(() =>
     <div class="my-5 font-data">
       <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
     </div>
-    <div v-if="!hideTags" class="flex gap-2">
-      <div
-        v-for="thisTag in tagNames"
-        :key="thisTag"
-        class="rounded-xl bg-chip px-3 py-0.5 font-data text-sm text-chip-text"
+    <div v-if="!hideTags" class="flex flex-wrap gap-2">
+      <NuxtLink
+        v-for="thisTag in tagEntries"
+        :key="thisTag.id"
+        :to="getTagPath(thisTag.id)"
+        class="inline-flex max-w-full min-w-0 items-center rounded-xl bg-chip px-3 py-0.5 font-data text-sm text-chip-text no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <div class="relative -top-px">
-          <HighlightedText :text="thisTag" :tokens="highlightTokens" />
+          <HighlightedText :text="thisTag.name" :tokens="highlightTokens" />
         </div>
-      </div>
+      </NuxtLink>
     </div>
     <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
       {{ mutationErrorMessage }}
     </p>
   </div>
   <div v-if="isMinimized" class="mb-2.5 rounded-xl border px-3 py-2" :style="projectSurfaceStyle">
+    <NuxtLink
+      v-if="variant !== 'project' && timeBox?.project"
+      :to="getProjectPath(timeBox.project)"
+      class="mb-2 inline-flex max-w-full min-w-0 items-center rounded-full border px-2.5 py-1 text-xs font-bold tracking-[0.16em] uppercase no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+      :style="projectBadgeStyle"
+    >
+      <HighlightedText :text="projectName" :tokens="highlightTokens" />
+    </NuxtLink>
     <div
-      v-if="variant !== 'project'"
+      v-else-if="variant !== 'project'"
       class="mb-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-bold tracking-[0.16em] uppercase"
       :style="projectBadgeStyle"
     >

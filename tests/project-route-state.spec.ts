@@ -1,4 +1,8 @@
-import { buildProjectRouteQuery, parseProjectRouteState } from '~/app/utils/project-route-state'
+import {
+  buildProjectRouteQuery,
+  buildProjectWorkspaceLocation,
+  parseProjectRouteState,
+} from '~/app/utils/project-route-state'
 
 describe('project route state', () => {
   it('defaults to list mode and the fallback date', () => {
@@ -62,6 +66,47 @@ describe('project route state', () => {
 
     expect(query).toEqual({
       date: '2026-03-21',
+    })
+  })
+
+  it('builds edit locations while preserving route context', () => {
+    const location = buildProjectWorkspaceLocation(
+      'project-123',
+      'edit',
+      {
+        mode: 'calendar',
+        date: new Date(2026, 2, 21, 12, 0, 0, 0),
+      },
+      { preserved: 'yes' },
+    )
+
+    expect(location).toEqual({
+      path: '/project/project-123/edit',
+      query: {
+        preserved: 'yes',
+        mode: 'calendar',
+        date: '2026-03-21',
+      },
+    })
+  })
+
+  it('builds overview locations from edit while restoring the requested mode', () => {
+    const location = buildProjectWorkspaceLocation(
+      'project-123',
+      'list',
+      {
+        mode: 'calendar',
+        date: new Date(2026, 2, 21, 12, 0, 0, 0),
+      },
+      { preserved: 'yes' },
+    )
+
+    expect(location).toEqual({
+      path: '/project/project-123',
+      query: {
+        preserved: 'yes',
+        date: '2026-03-21',
+      },
     })
   })
 })

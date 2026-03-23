@@ -3,11 +3,12 @@ import { doc, query, where } from 'firebase/firestore'
 
 import { getProjectBadgeStyle, getProjectHeaderStyle } from '~/utils/project-color-styles'
 import {
+  buildProjectWorkspaceLocation,
   buildProjectRouteQuery,
   parseProjectRouteState,
   type ProjectViewMode,
+  type ProjectWorkspaceMode,
 } from '~/utils/project-route-state'
-import { getProjectEditPath } from '~/utils/worklog-routes'
 import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
 import type { TimeBoxInput } from '~~/shared/worklog'
@@ -86,6 +87,16 @@ const headerStyle = computed(() =>
 const durationBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},
 )
+const headerBadges = computed(() => [
+  {
+    label: `${projectTimeBoxesTotalDuration.value} hrs`,
+    style: durationBadgeStyle.value as Record<string, string>,
+  },
+  {
+    label: `${rawProjectTimeBoxes.value.length} sessions`,
+    variant: 'outline' as const,
+  },
+])
 
 const updateRouteState = async (nextState: Partial<ReturnType<typeof parseProjectRouteState>>) => {
   mutationErrorMessage.value = ''
@@ -107,10 +118,6 @@ const closePanel = () => {
   selectedSessionId.value = ''
 }
 
-const openProjectEditor = async () => {
-  await router.push(getProjectEditPath(props.id))
-}
-
 const handleModeChange = async (mode: ProjectViewMode) => {
   if (mode === currentMode.value) {
     return
@@ -118,6 +125,23 @@ const handleModeChange = async (mode: ProjectViewMode) => {
 
   closePanel()
   await updateRouteState({ mode })
+}
+
+const handleWorkspaceModeSelect = async (mode: ProjectWorkspaceMode) => {
+  if (mode === 'edit') {
+    closePanel()
+    await router.push(
+      buildProjectWorkspaceLocation(
+        props.id,
+        mode,
+        routeState.value,
+        route.query as Record<string, string | string[] | undefined>,
+      ),
+    )
+    return
+  }
+
+  await handleModeChange(mode)
 }
 
 const openDayPanel = async (day: Date) => {
@@ -206,63 +230,14 @@ watch(rawProjectTimeBoxes, (timeBoxList) => {
 
 <template>
   <div class="flex h-full min-h-0 flex-col overflow-hidden">
-    <div
-      class="relative z-10 border-b border-border px-6 py-5 shadow-overview"
-      :style="headerStyle"
-    >
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="text-3xl font-bold tracking-tight">{{ project?.name }}</div>
-          <div
-            class="relative top-px w-max rounded-md border px-1.5 py-0.5 pt-px font-data text-sm tracking-wide"
-            :style="durationBadgeStyle"
-          >
-            {{ projectTimeBoxesTotalDuration }} hrs
-          </div>
-        </div>
-
-        <div class="flex flex-col items-start gap-3 sm:items-end">
-          <div
-            class="inline-flex rounded-xl border border-border bg-surface-strong p-1 shadow-control"
-          >
-            <button
-              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-              :class="
-                currentMode === 'list'
-                  ? 'bg-header text-header-text'
-                  : 'text-text-muted hover:bg-surface'
-              "
-              @click="handleModeChange('list')"
-            >
-              List
-            </button>
-            <button
-              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-              :class="
-                currentMode === 'calendar'
-                  ? 'bg-header text-header-text'
-                  : 'text-text-muted hover:bg-surface'
-              "
-              @click="handleModeChange('calendar')"
-            >
-              Calendar
-            </button>
-          </div>
-
-          <button
-            type="button"
-            class="rounded-full border border-white/25 px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase hover:bg-white/10"
-            @click="openProjectEditor"
-          >
-            Edit Project
-          </button>
-        </div>
-      </div>
-
-      <p v-if="mutationErrorMessage" class="mt-4 text-sm text-danger">
-        {{ mutationErrorMessage }}
-      </p>
-    </div>
+    <ProjectWorkspaceHeader
+      :active-mode="currentMode"
+      :badges="headerBadges"
+      :error-message="mutationErrorMessage"
+      :header-style="headerStyle as Record<string, string>"
+      :title="project?.name ?? 'Loading project'"
+      @select-mode="handleWorkspaceModeSelect"
+    />
 
     <SessionsWorkspaceShell>
       <div v-if="currentMode === 'list'" class="flex-1 overflow-auto px-11 pt-8">
