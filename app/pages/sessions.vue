@@ -49,6 +49,11 @@ interface SessionCreatePayload {
   endTime: Date
 }
 
+interface SessionCreatePreview {
+  range: SessionCreatePayload
+  createdSessionId: string | null
+}
+
 const route = useRoute()
 const router = useRouter()
 const { hideTags } = useUserSettings()
@@ -64,6 +69,7 @@ const panelMode = ref<'closed' | 'session' | 'create'>('closed')
 const panelSessionId = ref('')
 const selectedSessionId = ref('')
 const createRange = ref<SessionCreatePayload | null>(null)
+const createPreview = ref<SessionCreatePreview | null>(null)
 const mutationErrorMessage = ref('')
 const sessionsHeaderRef = ref<HTMLElement | null>(null)
 
@@ -175,6 +181,7 @@ const createInitialStartTime = computed(() =>
 const createInitialEndTime = computed(() =>
   createRange.value ? formatToDatetimeLocal(createRange.value.endTime) : '',
 )
+const createPreviewRange = computed(() => createPreview.value?.range ?? null)
 
 const calendarHeaderSummary = computed(() => {
   const mode = currentMode.value
@@ -267,17 +274,27 @@ const closePanel = () => {
   panelMode.value = 'closed'
   panelSessionId.value = ''
   createRange.value = null
+  createPreview.value = null
 }
 
 const selectSession = (sessionId: string) => {
   selectedSessionId.value = sessionId
 }
 
-const openSessionPanel = (sessionId: string) => {
+const openSessionPanel = (
+  sessionId: string,
+  options: {
+    preserveCreatePreview?: boolean
+  } = {},
+) => {
   selectSession(sessionId)
   panelMode.value = 'session'
   panelSessionId.value = sessionId
   createRange.value = null
+
+  if (!options.preserveCreatePreview) {
+    createPreview.value = null
+  }
 }
 
 const openCreatePanel = (range: SessionCreatePayload) => {
@@ -285,6 +302,26 @@ const openCreatePanel = (range: SessionCreatePayload) => {
   panelSessionId.value = ''
   selectedSessionId.value = ''
   createRange.value = range
+  createPreview.value = {
+    range,
+    createdSessionId: null,
+  }
+}
+
+const markCreatePreviewSaved = (sessionId: string) => {
+  if (!createPreview.value) {
+    return
+  }
+
+  if (resolvedTimeBoxes.value.some((timeBox) => timeBox.id === sessionId)) {
+    createPreview.value = null
+    return
+  }
+
+  createPreview.value = {
+    ...createPreview.value,
+    createdSessionId: sessionId,
+  }
 }
 
 const roundToSnapMinutes = (date: Date) => {
@@ -391,7 +428,8 @@ const persistSessionChange = async ({ id, input, duplicate }: SessionChangePaylo
 }
 
 const handlePanelCreated = (sessionId: string) => {
-  openSessionPanel(sessionId)
+  markCreatePreviewSaved(sessionId)
+  openSessionPanel(sessionId, { preserveCreatePreview: true })
 }
 
 const moveDaySelection = (direction: -1 | 1) => {
@@ -523,6 +561,18 @@ watch(visibleDayTimeBoxes, (timeBoxes) => {
     !timeBoxes.some((timeBox) => timeBox.id === selectedSessionId.value)
   ) {
     selectedSessionId.value = ''
+  }
+})
+
+watch(resolvedTimeBoxes, (timeBoxes) => {
+  const preview = createPreview.value
+
+  if (!preview?.createdSessionId) {
+    return
+  }
+
+  if (timeBoxes.some((timeBox) => timeBox.id === preview.createdSessionId)) {
+    createPreview.value = null
   }
 })
 
@@ -701,6 +751,7 @@ onBeforeUnmount(() => {
         <SessionsDayView
           v-if="currentMode === 'day'"
           :anchor-date="anchorDate"
+          :create-preview-range="createPreviewRange"
           :scroll-align-target="sessionsHeaderRef"
           :project-by-id="projectById"
           :project-name-by-id="projectNameById"
@@ -714,6 +765,7 @@ onBeforeUnmount(() => {
         <SessionsWeekView
           v-else-if="currentMode === 'week'"
           :anchor-date="anchorDate"
+          :create-preview-range="createPreviewRange"
           :scroll-align-target="sessionsHeaderRef"
           :project-by-id="projectById"
           :project-name-by-id="projectNameById"

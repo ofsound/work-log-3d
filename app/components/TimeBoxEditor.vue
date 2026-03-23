@@ -61,12 +61,33 @@ const showLegacyTagNotice = computed(() => hideTags.value && dynamicTags.value.l
 
 const projectRadiosTwoColumns = computed(() => sortedAllProjects.value.length > 4)
 
+function timeBoxDuration() {
+  const date1 = new Date(dynamicStartTime.value)
+  const date2 = new Date(dynamicEndTime.value)
+
+  const differenceInMilliseconds = date2.getTime() - date1.getTime()
+  const differenceInMinutes = differenceInMilliseconds / (1000 * 60)
+
+  return differenceInMinutes
+}
+
+function syncDynamicDurationFromTimes() {
+  if (!dynamicStartTime.value || !dynamicEndTime.value) {
+    dynamicDuration.value = ''
+    return
+  }
+
+  const durationMinutes = timeBoxDuration()
+  dynamicDuration.value = Number.isFinite(durationMinutes) ? durationMinutes : ''
+}
+
 const applyCreateDefaults = () => {
   dynamicStartTime.value = props.initialStartTime || props.startTimeFromTimer || ''
   dynamicEndTime.value = props.initialEndTime || props.endTimeFromTimer || ''
   dynamicNotes.value = props.initialNotes
   dynamicProject.value = props.initialProject
   dynamicTags.value = [...props.initialTags]
+  syncDynamicDurationFromTimes()
 }
 
 if (props.id) {
@@ -90,6 +111,7 @@ if (props.id) {
       dynamicEndTime.value = timeBox.endTime ? formatToDatetimeLocal(timeBox.endTime) : ''
       dynamicProject.value = timeBox.project
       dynamicTags.value = timeBox.tags
+      syncDynamicDurationFromTimes()
       mutationErrorMessage.value = ''
     },
     { immediate: true },
@@ -157,16 +179,6 @@ const resetTimeBoxEditor = () => {
   timeBoxEditorRef.value?.classList.remove('animate-[var(--animate-blink-once)]')
 }
 
-const timeBoxDuration = () => {
-  const date1 = new Date(dynamicStartTime.value)
-  const date2 = new Date(dynamicEndTime.value)
-
-  const differenceInMilliseconds = date2.getTime() - date1.getTime()
-  const differenceInMinutes = differenceInMilliseconds / (1000 * 60)
-
-  return differenceInMinutes
-}
-
 watch(
   () => props.startTimeFromTimer,
   (newValue) => {
@@ -213,9 +225,7 @@ watch(
 watch(
   () => [dynamicStartTime.value, dynamicEndTime.value],
   () => {
-    if (dynamicStartTime.value && dynamicEndTime.value) {
-      dynamicDuration.value = timeBoxDuration()
-    }
+    syncDynamicDurationFromTimes()
   },
 )
 

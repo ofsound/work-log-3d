@@ -33,7 +33,7 @@ const props = defineProps({
   flushTop: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['toggleEditor'])
+const emit = defineEmits(['toggleEditor', 'deleted'])
 const mutationErrorMessage = ref('')
 
 const allProjects = useCollection(projectsCollection)
@@ -117,10 +117,17 @@ const requestDeleteSession = async () => {
   }
 
   try {
+    // Close the sidebar before awaiting delete so Firestore never paints a frame with a
+    // missing document (0m / empty placeholders) while the panel is still open.
+    emit('deleted')
     await repositories.timeBoxes.remove(props.id)
-    mutationErrorMessage.value = ''
   } catch (error) {
-    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to delete session.')
+    await confirm({
+      title: 'Unable to delete session',
+      message: getWorklogErrorMessage(error, 'Unable to delete session.'),
+      confirmLabel: 'OK',
+      variant: 'primary',
+    })
   }
 }
 

@@ -95,7 +95,7 @@ const getSessionNotes = (timeBox: TimeBox) => {
           <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Session</div>
           <div class="mt-1 text-lg font-bold tracking-tight">{{ dayTitle }}</div>
         </div>
-        <TimeBox :id="sessionId" flush-top />
+        <TimeBox :id="sessionId" flush-top @deleted="emit('close')" />
       </div>
 
       <div v-else class="flex flex-col gap-4 pb-4">

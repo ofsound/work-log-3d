@@ -34,7 +34,7 @@ const handleCreated = (sessionId: string) => {
 
     <div class="min-h-0 flex-1 overflow-auto overscroll-contain px-4 pb-4">
       <div v-if="mode === 'session' && sessionId">
-        <TimeBox :id="sessionId" flush-top />
+        <TimeBox :id="sessionId" flush-top @deleted="emit('close')" />
       </div>
 
       <div v-else class="pb-4">

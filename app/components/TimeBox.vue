@@ -8,6 +8,8 @@ const props = defineProps({
   flushTop: { type: Boolean, default: false },
 })
 
+const emit = defineEmits(['deleted'])
+
 const showEditor = ref(false)
 
 const isMinimized = ref(false)
@@ -29,6 +31,7 @@ const toggleEditor = () => {
     :highlight-tokens="highlightTokens"
     :variant
     :is-minimized
+    @deleted="emit('deleted')"
     @toggle-editor="toggleEditor"
   />
   <TimeBoxEditor v-if="showEditor" :id @toggle-editor="toggleEditor" />

@@ -36,8 +36,17 @@ interface PreviewEvent {
   duplicate: boolean
 }
 
+interface SessionCreateRange {
+  startTime: Date
+  endTime: Date
+}
+
 const props = defineProps({
   activeDate: { type: Date, required: true },
+  createPreviewRange: {
+    type: Object as PropType<SessionCreateRange | null>,
+    default: null,
+  },
   days: { type: Array as PropType<Date[]>, required: true },
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
   projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
@@ -532,7 +541,17 @@ const getEventStyle = (layout: TimeBoxDaySegmentLayout) => {
 }
 
 const previewStyle = computed(() => {
-  const preview = previewEvent.value
+  const preview =
+    previewEvent.value ??
+    (props.createPreviewRange
+      ? {
+          input: {
+            startTime: props.createPreviewRange.startTime,
+            endTime: props.createPreviewRange.endTime,
+          },
+          duplicate: false,
+        }
+      : null)
 
   if (!preview) {
     return null

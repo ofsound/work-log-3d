@@ -9,8 +9,17 @@ interface SessionChangePayload {
   duplicate: boolean
 }
 
+interface SessionCreateRange {
+  startTime: Date
+  endTime: Date
+}
+
 const props = defineProps({
   anchorDate: { type: Date, required: true },
+  createPreviewRange: {
+    type: Object as PropType<SessionCreateRange | null>,
+    default: null,
+  },
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
   projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
@@ -30,6 +39,7 @@ const days = computed(() => [props.anchorDate])
 <template>
   <SessionsTimedGrid
     :active-date="anchorDate"
+    :create-preview-range="createPreviewRange"
     :days="days"
     :project-by-id="projectById"
     :project-name-by-id="projectNameById"
