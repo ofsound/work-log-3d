@@ -360,37 +360,23 @@ onBeforeRouteLeave(async () => {
                 </div>
               </div>
 
-              <div class="flex flex-col gap-3">
+              <div class="flex flex-col gap-2">
                 <div class="flex items-center justify-between gap-3">
                   <span class="text-sm font-semibold text-text">Palette presets</span>
-                  <span class="text-xs text-text-subtle"
-                    >Preset swatches plus freeform editing</span
-                  >
+                  <span class="text-xs text-text-subtle">Tap a swatch</span>
                 </div>
 
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div class="flex flex-wrap gap-2">
                   <button
                     v-for="(palette, index) in PROJECT_COLOR_PALETTE"
                     :key="`${palette.primary}-${palette.secondary}`"
                     type="button"
-                    class="cursor-pointer rounded-2xl border border-border-subtle px-3 py-3 text-left shadow-control hover:bg-surface-muted"
-                    :style="getProjectSoftSurfaceStyle(palette)"
+                    class="size-9 shrink-0 cursor-pointer rounded-full border border-white/25 shadow-control transition-[box-shadow,filter] duration-150 ease-out hover:shadow-[var(--shadow-panel)] hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+                    :style="getProjectSwatchStyle(palette)"
+                    :aria-label="`Apply color preset ${index + 1}`"
+                    :title="`${palette.primary}${palette.secondary ? ` / ${palette.secondary}` : ''}`"
                     @click="applyPalette(palette)"
-                  >
-                    <div class="flex items-center gap-3">
-                      <div
-                        class="size-9 rounded-full border border-white/25"
-                        :style="getProjectSwatchStyle(palette)"
-                      ></div>
-                      <div>
-                        <div class="text-sm font-semibold text-text">Preset {{ index + 1 }}</div>
-                        <div class="font-data text-xs text-text-subtle">
-                          {{ palette.primary
-                          }}<span v-if="palette.secondary"> / {{ palette.secondary }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
+                  />
                 </div>
               </div>
 

@@ -116,7 +116,7 @@ const handleSegmentDragEnd = () => {
 
 <template>
   <div class="min-h-0 flex-1 overflow-auto overscroll-contain px-6 py-6">
-    <div class="mx-auto flex w-fit min-w-[980px] flex-col gap-6">
+    <div class="flex w-full min-w-[980px] flex-col gap-6">
       <section
         v-for="month in monthEntries"
         :key="`${month.year}-${month.monthIndex}`"
