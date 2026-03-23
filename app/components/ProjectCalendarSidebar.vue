@@ -104,12 +104,12 @@ const getSessionNotes = (timeBox: TimeBox) => {
           <div class="mt-1 text-lg font-bold tracking-tight">{{ dayTitle }}</div>
           <div class="mt-3 flex flex-wrap gap-2">
             <div
-              class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
+              class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums shadow-sm"
             >
               {{ daySummary.durationLabel }} hrs
             </div>
             <div
-              class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
+              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text shadow-sm"
             >
               {{ daySummary.count }} sessions
             </div>

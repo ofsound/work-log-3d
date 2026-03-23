@@ -255,6 +255,14 @@
         1px,
       transparent 1px
     );
+  /** Week calendar: “today” column header — subtle diagonal stripes (no solid fill / ring). */
+  --background-image-calendar-day-today: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 6px,
+    color-mix(in srgb, var(--color-link) 13%, transparent) 6px,
+    color-mix(in srgb, var(--color-link) 13%, transparent) 7px
+  );
 
   @keyframes blink-once {
     0% {

@@ -54,7 +54,6 @@ const props = defineProps({
   selectedSessionId: { type: String, default: '' },
   scrollAlignTarget: { type: Object as PropType<HTMLElement | null>, default: null },
   headerClickEnabled: { type: Boolean, default: false },
-  inactiveHeaderLabel: { type: String, default: '' },
 })
 
 const emit = defineEmits([
@@ -100,6 +99,7 @@ type InteractionState =
     }
 
 const scrollContainerRef = ref<HTMLElement | null>(null)
+const headerScrollRef = ref<HTMLElement | null>(null)
 const weekCalendarGridRef = ref<HTMLElement | null>(null)
 const calendarSurfaceRef = ref<HTMLElement | null>(null)
 const sevenThirtyLineRef = ref<HTMLElement | null>(null)
@@ -111,6 +111,7 @@ const now = ref(new Date())
 let nowTimer: ReturnType<typeof setInterval> | undefined
 
 const visibleDays = computed(() => (props.days.length > 0 ? props.days : [props.activeDate]))
+const isWeekView = computed(() => visibleDays.value.length > 1)
 const calendarRange = computed(() => {
   const firstDay = visibleDays.value[0]!
   const lastDay = visibleDays.value[visibleDays.value.length - 1]!
@@ -513,19 +514,13 @@ const formatDayHeader = (date: Date) =>
     ? date.toLocaleDateString([], { weekday: 'long' })
     : date.toLocaleDateString([], { weekday: 'short', day: 'numeric' })
 
-const getDayHeaderStatus = (date: Date) => {
-  if (isSameDay(date, now.value)) {
-    return 'Today'
+/** Week header: only “today” is visually distinct (stripes). No selected-day background. */
+const getDayHeaderCellClass = (day: Date) => {
+  if (isSameDay(day, now.value)) {
+    return 'bg-surface bg-[image:var(--background-image-calendar-day-today)]'
   }
 
-  if (visibleDays.value.length === 1) {
-    return date.toLocaleDateString([], {
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
-  return props.inactiveHeaderLabel
+  return 'bg-surface'
 }
 
 const getEventStyle = (layout: TimeBoxDaySegmentLayout) => {
@@ -603,9 +598,13 @@ const scrollAlignTo730 = async () => {
     return
   }
 
+  // Week view: body scroll starts below the day header row — align 7:30 to that row's bottom.
+  // Day view: align to the sessions page header (scrollAlignTarget) as before.
   const targetY =
-    props.scrollAlignTarget?.getBoundingClientRect().bottom ??
-    scrollContainer.getBoundingClientRect().top
+    isWeekView.value && headerScrollRef.value
+      ? headerScrollRef.value.getBoundingClientRect().bottom
+      : (props.scrollAlignTarget?.getBoundingClientRect().bottom ??
+        scrollContainer.getBoundingClientRect().top)
 
   const delta = marker.getBoundingClientRect().top - targetY
   scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop + delta)
@@ -615,6 +614,33 @@ const handleDayHeaderClick = (day: Date) => {
   if (props.headerClickEnabled) {
     emit('openDay', day)
   }
+}
+
+let syncingHorizontalScroll = false
+
+const syncHorizontalScroll = (source: 'header' | 'body') => {
+  if (!isWeekView.value) {
+    return
+  }
+
+  const header = headerScrollRef.value
+  const body = scrollContainerRef.value
+
+  if (!header || !body || syncingHorizontalScroll) {
+    return
+  }
+
+  syncingHorizontalScroll = true
+
+  if (source === 'body') {
+    header.scrollLeft = body.scrollLeft
+  } else {
+    body.scrollLeft = header.scrollLeft
+  }
+
+  requestAnimationFrame(() => {
+    syncingHorizontalScroll = false
+  })
 }
 
 watch(
@@ -642,7 +668,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="min-h-0 flex-1 overflow-hidden">
-    <div ref="scrollContainerRef" class="h-full overflow-auto overscroll-contain px-6 py-6">
+    <!-- Day view: one scroll area; no sticky day header (panel top aligns with 12am). -->
+    <div
+      v-if="!isWeekView"
+      ref="scrollContainerRef"
+      class="h-full overflow-auto overscroll-contain px-6 py-6"
+    >
       <div
         ref="weekCalendarGridRef"
         class="grid min-h-full w-full overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
@@ -651,27 +682,6 @@ onBeforeUnmount(() => {
           minWidth: `${TIME_GUTTER_WIDTH + dayColumnMinWidth * visibleDays.length}px`,
         }"
       >
-        <div class="sticky top-0 z-30 border-b border-border bg-surface"></div>
-        <component
-          :is="headerClickEnabled ? 'button' : 'div'"
-          v-for="day in visibleDays"
-          :key="formatDateKey(day)"
-          :type="headerClickEnabled ? 'button' : undefined"
-          class="sticky top-0 z-20 flex h-18 flex-col items-start justify-center border-b border-l border-border bg-surface px-4 text-left"
-          :class="{
-            'bg-surface-muted': isSameDay(day, activeDate),
-            'cursor-pointer hover:bg-surface-muted': headerClickEnabled,
-            'text-link': isSameDay(day, now),
-          }"
-          @click="handleDayHeaderClick(day)"
-        >
-          <div class="text-xs tracking-[0.2em] text-text-subtle uppercase">Day</div>
-          <div class="text-lg font-semibold">{{ formatDayHeader(day) }}</div>
-          <div v-if="getDayHeaderStatus(day)" class="text-xs font-semibold text-text-subtle">
-            {{ getDayHeaderStatus(day) }}
-          </div>
-        </component>
-
         <div class="relative border-r border-border bg-surface-muted">
           <div :style="{ height: `${HOUR_HEIGHT * 24}px` }">
             <div
@@ -680,7 +690,7 @@ onBeforeUnmount(() => {
               class="absolute inset-x-0 border-t border-border-subtle pr-3 text-right text-xs text-text-subtle"
               :style="{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }"
             >
-              <div class="relative -top-2.5">{{ formatHourLabel(hour) }}</div>
+              <div v-if="hour !== 0" class="relative -top-2.5">{{ formatHourLabel(hour) }}</div>
             </div>
           </div>
         </div>
@@ -693,7 +703,7 @@ onBeforeUnmount(() => {
           <div
             :ref="(el) => setCalendarSurfaceRef(el, dayIndex)"
             class="relative select-none"
-            :class="{ 'bg-surface-muted/40': isSameDay(day, now) }"
+            :class="{ 'bg-link/5': isSameDay(day, now) }"
             :style="{ height: `${HOUR_HEIGHT * 24}px` }"
             @pointerdown="handleCreatePointerDown"
           >
@@ -774,6 +784,166 @@ onBeforeUnmount(() => {
                 class="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize rounded-b-lg"
                 @pointerdown="handleResizePointerDown(layout.timeBox, 'end', $event)"
               ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Week view: fixed header row; hours + sessions scroll underneath. -->
+    <div v-else class="flex h-full min-h-0 flex-col px-6 py-6">
+      <div
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
+      >
+        <div
+          ref="headerScrollRef"
+          class="shrink-0 overflow-x-auto overflow-y-hidden"
+          @scroll="syncHorizontalScroll('header')"
+        >
+          <div
+            class="grid w-full border-b border-border bg-surface"
+            :style="{
+              gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${dayColumnMinWidth}px, 1fr))`,
+              minWidth: `${TIME_GUTTER_WIDTH + dayColumnMinWidth * visibleDays.length}px`,
+            }"
+          >
+            <div class="border-r border-border bg-surface"></div>
+            <component
+              :is="headerClickEnabled ? 'button' : 'div'"
+              v-for="day in visibleDays"
+              :key="formatDateKey(day)"
+              :type="headerClickEnabled ? 'button' : undefined"
+              class="flex h-18 flex-col items-start justify-center border-l border-border px-4 text-left"
+              :class="[
+                getDayHeaderCellClass(day),
+                headerClickEnabled && 'cursor-pointer',
+                headerClickEnabled && isSameDay(day, now) && 'hover:bg-link/15',
+                headerClickEnabled && !isSameDay(day, now) && 'hover:bg-surface-muted',
+              ]"
+              @click="handleDayHeaderClick(day)"
+            >
+              <div class="text-lg font-semibold">{{ formatDayHeader(day) }}</div>
+            </component>
+          </div>
+        </div>
+
+        <div
+          ref="scrollContainerRef"
+          class="min-h-0 flex-1 overflow-auto overscroll-contain"
+          @scroll="syncHorizontalScroll('body')"
+        >
+          <div
+            ref="weekCalendarGridRef"
+            class="grid min-h-full w-full"
+            :style="{
+              gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${dayColumnMinWidth}px, 1fr))`,
+              minWidth: `${TIME_GUTTER_WIDTH + dayColumnMinWidth * visibleDays.length}px`,
+            }"
+          >
+            <div class="relative border-r border-border bg-surface-muted">
+              <div :style="{ height: `${HOUR_HEIGHT * 24}px` }">
+                <div
+                  v-for="hour in hours"
+                  :key="hour"
+                  class="absolute inset-x-0 border-t border-border-subtle pr-3 text-right text-xs text-text-subtle"
+                  :style="{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }"
+                >
+                  <div class="relative -top-2.5">{{ formatHourLabel(hour) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-for="(day, dayIndex) in visibleDays"
+              :key="`${formatDateKey(day)}-column`"
+              class="relative border-l border-border"
+            >
+              <div
+                :ref="(el) => setCalendarSurfaceRef(el, dayIndex)"
+                class="relative select-none"
+                :class="{ 'bg-link/5': isSameDay(day, now) }"
+                :style="{ height: `${HOUR_HEIGHT * 24}px` }"
+                @pointerdown="handleCreatePointerDown"
+              >
+                <div
+                  v-if="dayIndex === 0"
+                  :ref="(el) => setSevenThirtyLineRef(el, dayIndex)"
+                  aria-hidden="true"
+                  class="pointer-events-none absolute inset-x-0 z-0"
+                  :style="{ top: `${SEVEN_THIRTY_TOP_PX}px`, height: '0' }"
+                ></div>
+
+                <div
+                  v-for="hour in hours"
+                  :key="`${formatDateKey(day)}-${hour}`"
+                  class="pointer-events-none absolute inset-x-0 border-t border-border-subtle"
+                  :style="{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }"
+                >
+                  <div class="absolute inset-x-0 top-1/2 border-t border-border-subtle/60"></div>
+                </div>
+
+                <div
+                  v-if="previewStyle && previewStyle.dayIndex === dayIndex"
+                  class="pointer-events-none absolute rounded-lg border border-dashed border-link bg-link/12"
+                  :style="previewStyle.style"
+                ></div>
+
+                <div
+                  v-if="nowMarker && nowMarker.dayIndex === dayIndex"
+                  class="pointer-events-none absolute inset-x-0 z-15 border-t-2 border-danger"
+                  :style="{ top: `${nowMarker.top}px` }"
+                >
+                  <div
+                    class="absolute -top-2 left-0 rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold text-white"
+                  >
+                    {{ now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }}
+                  </div>
+                </div>
+
+                <div
+                  v-for="layout in dayLayouts[dayIndex]"
+                  :key="`${layout.timeBoxId}-${layout.segmentStart.valueOf()}`"
+                  class="absolute z-10 cursor-pointer rounded-lg border px-2 py-1 text-left text-text transition-[box-shadow,filter] duration-150 ease-out hover:z-20 hover:brightness-[1.02]"
+                  :class="{
+                    'shadow-panel-selected ring-1 ring-link/35 ring-inset':
+                      selectedSessionId === layout.timeBoxId,
+                    'shadow-panel': selectedSessionId !== layout.timeBoxId,
+                    'hover:shadow-[var(--shadow-panel-selected)]':
+                      selectedSessionId !== layout.timeBoxId,
+                    'opacity-50':
+                      interactionState?.mode === 'move' &&
+                      interactionState.timeBox.id === layout.timeBoxId,
+                  }"
+                  :style="getEventStyle(layout)"
+                  @pointerdown="handleSessionPointerDown(layout, $event)"
+                >
+                  <button
+                    v-if="layout.startsOnThisDay"
+                    class="absolute inset-x-0 top-0 h-2 cursor-ns-resize rounded-t-lg"
+                    @pointerdown="handleResizePointerDown(layout.timeBox, 'start', $event)"
+                  ></button>
+
+                  <div
+                    class="pointer-events-none flex h-full min-h-0 items-start justify-between gap-2 overflow-hidden"
+                  >
+                    <div class="min-w-0 flex-1 truncate text-sm leading-none font-bold">
+                      {{ getProjectName(layout.timeBox.project) }}
+                    </div>
+                    <div
+                      class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                      :style="getDurationBadgeStyle(layout.timeBox.project)"
+                    >
+                      {{ getDurationMinutesLabel(layout.timeBox) }}
+                    </div>
+                  </div>
+
+                  <button
+                    v-if="layout.endsOnThisDay"
+                    class="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize rounded-b-lg"
+                    @pointerdown="handleResizePointerDown(layout.timeBox, 'end', $event)"
+                  ></button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

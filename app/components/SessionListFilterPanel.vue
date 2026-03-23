@@ -248,12 +248,12 @@ const handleNotesStateChange = (value: string) => {
 
         <div class="flex flex-wrap items-center gap-2">
           <div
-            class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
+            class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text shadow-sm"
           >
             {{ resultCount }} matches
           </div>
           <div
-            class="rounded-full bg-badge-neutral px-3 py-1 text-xs font-semibold text-badge-neutral-text"
+            class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums shadow-sm"
           >
             {{ totalDurationLabel }} hrs
           </div>

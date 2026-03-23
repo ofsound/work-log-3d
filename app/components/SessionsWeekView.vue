@@ -43,7 +43,6 @@ const days = computed(() => buildWeekDays(props.anchorDate))
     :active-date="anchorDate"
     :create-preview-range="createPreviewRange"
     :days="days"
-    inactive-header-label="Week view"
     :header-click-enabled="true"
     :project-by-id="projectById"
     :project-name-by-id="projectNameById"
