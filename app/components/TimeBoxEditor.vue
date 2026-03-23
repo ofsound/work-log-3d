@@ -60,6 +60,7 @@ const dynamicDuration = ref<string | number>('')
 const showLegacyTagNotice = computed(() => hideTags.value && dynamicTags.value.length > 0)
 
 const projectRadiosTwoColumns = computed(() => sortedAllProjects.value.length > 4)
+const isEditingExistingTimeBox = computed(() => Boolean(props.id))
 
 function timeBoxDuration() {
   const date1 = new Date(dynamicStartTime.value)
@@ -285,140 +286,193 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    ref="timeBoxEditorRef"
-    class="w-full rounded-sm border border-border-subtle bg-panel-editor px-6 py-4 font-data shadow-panel grayscale-10 *:my-2"
-    style="width: 100%; min-width: 100%"
-  >
-    <div class="flex gap-15">
-      <input
-        v-model="dynamicDuration"
-        class="relative h-max w-21.5 rounded-sm border border-border-strong bg-input px-2.5 py-1 text-right font-data text-4xl font-bold text-text tabular-nums"
-        @input="mutationErrorMessage = ''"
-      />
-      <div class="flex flex-col gap-1">
-        <div class="flex">
-          <div class="w-18 font-bold">Start:</div>
-          <input
-            v-model="dynamicStartTime"
-            type="datetime-local"
-            class="font-data"
-            @input="mutationErrorMessage = ''"
-          />
-        </div>
-        <div class="flex">
-          <div class="w-18 font-bold">End:</div>
-          <input
-            v-model="dynamicEndTime"
-            type="datetime-local"
-            @input="mutationErrorMessage = ''"
-          />
-        </div>
-      </div>
-    </div>
-    <div class="flex py-4">
-      <textarea
-        v-model="dynamicNotes"
-        class="w-full rounded-sm border border-border-strong bg-input p-2 text-text"
-        rows="5"
-        placeholder="Enter notes here..."
-        @input="mutationErrorMessage = ''"
-      ></textarea>
-    </div>
-    <div class="flex border-b border-border py-4">
-      <div class="w-18 font-bold">Project:</div>
-      <div
-        class="project-radio-group min-w-0 flex-1"
-        :class="
-          projectRadiosTwoColumns
-            ? 'grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2'
-            : 'flex flex-col gap-2'
-        "
-      >
-        <label
-          v-for="thisProject in sortedAllProjects"
-          :key="thisProject.id"
-          class="flex cursor-pointer items-center gap-2 rounded-xl border border-solid px-3 py-2 select-none"
-          :style="
-            getProjectPickerOptionStyle(thisProject.colors, dynamicProject === thisProject.id)
-          "
-        >
-          <input
-            v-model="dynamicProject"
-            type="radio"
-            :value="thisProject.id"
-            name="projectSelection"
-            class="shrink-0"
-            @change="mutationErrorMessage = ''"
-          />
-          <span class="min-w-0 font-bold">{{ thisProject.name }}</span>
-        </label>
-      </div>
-    </div>
+  <div ref="timeBoxEditorRef" class="[container-type:inline-size] w-full font-data text-text">
     <div
-      class="py-4 pb-1"
-      :class="hideTags ? 'rounded-md border border-border-subtle bg-surface px-3' : 'flex'"
+      class="flex flex-col gap-5 rounded-2xl border border-border-subtle bg-surface px-4 py-4 shadow-panel grayscale-10 [@container(min-width:44rem)]:rounded-3xl [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
     >
-      <template v-if="!hideTags">
-        <div class="w-18 font-bold">Tags:</div>
-        <div class="flex gap-4">
+      <div class="flex flex-col gap-1">
+        <div class="text-[11px] font-semibold tracking-[0.18em] text-text-subtle uppercase">
+          {{ isEditingExistingTimeBox ? 'Edit Session' : 'Session Details' }}
+        </div>
+        <p class="text-sm text-text-muted">
+          {{
+            isEditingExistingTimeBox
+              ? 'Adjust timing, notes, and project details for this session.'
+              : 'Capture the timing, notes, and project for this session.'
+          }}
+        </p>
+      </div>
+
+      <section
+        class="grid gap-4 rounded-2xl border border-border-subtle bg-surface-muted/70 px-4 py-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
+      >
+        <label class="flex flex-col gap-2">
+          <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
+            Duration
+          </span>
+          <div
+            class="flex items-end gap-2 rounded-2xl border border-input-border bg-input px-3 py-3 [@container(min-width:38rem)]:h-full"
+          >
+            <input
+              v-model="dynamicDuration"
+              inputmode="numeric"
+              class="min-w-0 flex-1 bg-transparent text-right text-4xl font-bold tabular-nums outline-none"
+              @input="mutationErrorMessage = ''"
+            />
+            <span class="pb-1 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
+              >min</span
+            >
+          </div>
+        </label>
+
+        <div class="grid gap-3 [@container(min-width:52rem)]:grid-cols-2">
+          <label class="flex flex-col gap-2">
+            <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
+              Start
+            </span>
+            <input
+              v-model="dynamicStartTime"
+              type="datetime-local"
+              class="rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
+              @input="mutationErrorMessage = ''"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
+              End
+            </span>
+            <input
+              v-model="dynamicEndTime"
+              type="datetime-local"
+              class="rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
+              @input="mutationErrorMessage = ''"
+            />
+          </label>
+        </div>
+      </section>
+
+      <label class="flex flex-col gap-2">
+        <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
+          Notes
+        </span>
+        <textarea
+          v-model="dynamicNotes"
+          class="min-h-36 w-full rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
+          rows="6"
+          placeholder="What happened during this session?"
+          @input="mutationErrorMessage = ''"
+        ></textarea>
+      </label>
+
+      <section class="flex flex-col gap-3 border-t border-border-subtle pt-5">
+        <div class="flex flex-col gap-1">
+          <div class="text-sm font-semibold text-text">Project</div>
+          <p class="text-xs text-text-muted">Pick the project this session should belong to.</p>
+        </div>
+
+        <div
+          class="project-radio-group grid gap-2.5"
+          :class="projectRadiosTwoColumns ? '[@container(min-width:52rem)]:grid-cols-2' : ''"
+        >
+          <label
+            v-for="thisProject in sortedAllProjects"
+            :key="thisProject.id"
+            class="flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-solid px-3 py-3 transition-[box-shadow,filter] duration-150 ease-out select-none hover:brightness-[1.02]"
+            :class="dynamicProject === thisProject.id ? 'shadow-panel-selected' : 'shadow-control'"
+            :style="
+              getProjectPickerOptionStyle(thisProject.colors, dynamicProject === thisProject.id)
+            "
+          >
+            <input
+              v-model="dynamicProject"
+              type="radio"
+              :value="thisProject.id"
+              name="projectSelection"
+              class="shrink-0"
+              @change="mutationErrorMessage = ''"
+            />
+            <span class="min-w-0 text-base font-semibold">{{ thisProject.name }}</span>
+          </label>
+        </div>
+
+        <div
+          v-if="hideTags"
+          class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-3"
+        >
+          <span v-if="showLegacyTagNotice" class="text-sm text-text-muted">
+            Existing tags on this session are preserved, but tag editing is hidden in project-first
+            mode.
+          </span>
+          <span v-else class="text-sm text-text-muted">
+            Tags are hidden in project-first mode. New sessions will save without tags.
+          </span>
+        </div>
+      </section>
+
+      <section v-if="!hideTags" class="flex flex-col gap-3 border-t border-border-subtle pt-5">
+        <div class="flex flex-col gap-1">
+          <div class="text-sm font-semibold text-text">Tags</div>
+          <p class="text-xs text-text-muted">
+            Add any tags that should stay attached to this session.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2.5">
           <label
             v-for="thisTag in sortedAllTags"
             :key="thisTag.id"
-            class="flex cursor-pointer gap-2 select-none"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
+            :class="
+              dynamicTags.includes(thisTag.id)
+                ? 'border-link bg-link/10 text-link'
+                : 'border-border-subtle bg-surface-muted text-text hover:bg-surface'
+            "
           >
-            <input v-model="dynamicTags" type="checkbox" :value="thisTag.id" />
-            {{ thisTag.name }}
+            <input
+              v-model="dynamicTags"
+              type="checkbox"
+              :value="thisTag.id"
+              class="shrink-0"
+              @change="mutationErrorMessage = ''"
+            />
+            <span>{{ thisTag.name }}</span>
           </label>
         </div>
-      </template>
-      <template v-else>
-        <span v-if="showLegacyTagNotice" class="text-sm text-text-muted">
-          Existing tags on this session are preserved, but tag editing is hidden in project-first
-          mode.
-        </span>
-        <span v-else class="text-sm text-text-muted">
-          Tags are hidden in project-first mode. New sessions will save without tags.
-        </span>
-      </template>
-    </div>
-    <p v-if="mutationErrorMessage" class="text-sm text-danger">
-      {{ mutationErrorMessage }}
-    </p>
-    <div v-if="props.id" class="mt-6! flex gap-3">
-      <button
-        class="ml-auto block cursor-pointer rounded-md bg-button-primary px-3 py-1 text-button-primary-text hover:bg-button-primary-hover"
-        @click="emit('toggleEditor')"
+      </section>
+
+      <p v-if="mutationErrorMessage" class="text-sm text-danger">
+        {{ mutationErrorMessage }}
+      </p>
+
+      <div
+        class="mt-1 flex flex-col gap-3 border-t border-border-subtle pt-4 [@container(min-width:30rem)]:flex-row [@container(min-width:30rem)]:justify-end"
       >
-        Cancel
-      </button>
-      <button
-        class="block cursor-pointer rounded-md bg-button-primary px-3 py-1 text-button-primary-text hover:bg-button-primary-hover"
-        @click="updateTimeBoxDocument"
-      >
-        Update
-      </button>
+        <button
+          v-if="isEditingExistingTimeBox || props.showCreateCancel"
+          type="button"
+          class="w-full cursor-pointer rounded-xl border border-button-secondary-border bg-button-secondary px-4 py-2 font-semibold text-button-secondary-text hover:bg-button-secondary-hover [@container(min-width:30rem)]:w-auto"
+          @click="emit('toggleEditor')"
+        >
+          Cancel
+        </button>
+        <button
+          v-if="isEditingExistingTimeBox"
+          type="button"
+          class="w-full cursor-pointer rounded-xl bg-button-primary px-4 py-2 font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover [@container(min-width:30rem)]:w-auto"
+          @click="updateTimeBoxDocument"
+        >
+          Update
+        </button>
+        <button
+          v-else
+          type="button"
+          class="w-full cursor-pointer rounded-xl bg-button-primary px-4 py-2 font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover [@container(min-width:30rem)]:w-auto"
+          @click="createTimeBoxDocument"
+        >
+          {{ createButtonLabel }}
+        </button>
+      </div>
     </div>
   </div>
-  <div v-if="!props.id && props.showCreateCancel" class="mt-6! flex gap-3">
-    <button
-      class="ml-auto block cursor-pointer rounded-md bg-button-secondary px-3 py-1 text-button-secondary-text hover:bg-button-secondary-hover"
-      @click="emit('toggleEditor')"
-    >
-      Cancel
-    </button>
-    <button
-      class="block cursor-pointer rounded-md bg-button-primary px-3 py-1 text-button-primary-text hover:bg-button-primary-hover"
-      @click="createTimeBoxDocument"
-    >
-      {{ createButtonLabel }}
-    </button>
-  </div>
-  <button
-    v-if="!props.id && !props.showCreateCancel"
-    class="w-full cursor-pointer rounded-sm bg-button-primary p-3 font-bold tracking-wider text-button-primary-text shadow-button-primary hover:brightness-120"
-    @click="createTimeBoxDocument"
-  >
-    {{ createButtonLabel }}
-  </button>
 </template>
