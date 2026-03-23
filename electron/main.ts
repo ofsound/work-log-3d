@@ -147,7 +147,7 @@ const setTimerState = (nextState: TimerState) => {
   timerState = nextState
   void persistTimerState()
 
-  if (shouldPlayTimerAlert(previousStatus, nextState.status)) {
+  if (shouldPlayTimerAlert(previousStatus, nextState)) {
     const alertWindow =
       process.platform === 'darwin' ? (mainWindow ?? null) : (mainWindow ?? createMainWindow())
     void playTimerCompleteAlert(app.getPath('userData'), alertWindow)

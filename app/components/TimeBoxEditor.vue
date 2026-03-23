@@ -330,7 +330,9 @@ onBeforeUnmount(() => {
       <div
         class="project-radio-group min-w-0 flex-1"
         :class="
-          projectRadiosTwoColumns ? 'grid grid-cols-1 gap-2 sm:grid-cols-2' : 'flex flex-col gap-2'
+          projectRadiosTwoColumns
+            ? 'grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2'
+            : 'flex flex-col gap-2'
         "
       >
         <label
@@ -349,7 +351,7 @@ onBeforeUnmount(() => {
             class="shrink-0"
             @change="mutationErrorMessage = ''"
           />
-          <span class="min-w-0 font-medium">{{ thisProject.name }}</span>
+          <span class="min-w-0 font-bold">{{ thisProject.name }}</span>
         </label>
       </div>
     </div>

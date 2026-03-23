@@ -28,9 +28,12 @@ describe('desktop timer host behavior', () => {
     })
   })
 
-  it('plays alert audio only when a timer crosses into completion', () => {
-    expect(shouldPlayTimerAlert('running', 'completed')).toBe(true)
-    expect(shouldPlayTimerAlert('completed', 'completed')).toBe(false)
+  it('plays alert audio only when a countdown crosses into completion', () => {
+    expect(shouldPlayTimerAlert('running', { status: 'completed', mode: 'countdown' })).toBe(true)
+    expect(shouldPlayTimerAlert('running', { status: 'completed', mode: 'countup' })).toBe(false)
+    expect(shouldPlayTimerAlert('completed', { status: 'completed', mode: 'countdown' })).toBe(
+      false,
+    )
   })
 
   it('builds a desktop notification for completed countdown timers', () => {

@@ -51,21 +51,23 @@ watch(
     class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm border border-border-subtle bg-panel-timer px-6 py-4 shadow-panel"
   >
     <div
-      class="relative h-max shrink-0 rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 py-1 font-data text-5xl font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
+      class="relative flex h-14 shrink-0 items-center rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 font-data text-5xl leading-none font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
     >
       <TimerCancelButton @click="cancel" />
-      <div class="flex flex-nowrap items-baseline">
+      <div class="flex flex-nowrap items-center">
         <input
           v-if="!timerIsRunning && !timerIsPaused"
           id="dynamicMinutes"
           v-model="dynamicMinutes"
           type="text"
-          class="w-14 bg-transparent text-right outline-none"
+          class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none"
           @keyup.enter="($event.target as HTMLElement).blur()"
           @keyup.esc="($event.target as HTMLElement).blur()"
         />
-        <div v-else class="w-14 text-right">{{ snapshot.display.split(':')[0] }}</div>
-        <div class="relative -top-1">:</div>
+        <div v-else class="w-14 text-right leading-none">
+          {{ snapshot.display.split(':')[0] }}
+        </div>
+        <span class="relative -top-1">:</span>
         {{ secondsProgress }}
       </div>
     </div>

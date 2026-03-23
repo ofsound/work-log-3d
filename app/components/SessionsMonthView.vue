@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
-import { getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import {
   buildMonthGridDaySegments,
   getMonthGridWeekdays,
   MONTH_GRID_VISIBLE_ROWS,
 } from '~/utils/month-grid'
 import type { Project, TimeBox, TimeBoxInput } from '~~/shared/worklog'
-import { formatDateKey, isSameDay, moveTimeBoxToDay } from '~~/shared/worklog'
+import {
+  formatDateKey,
+  getDurationMinutesLabel,
+  isSameDay,
+  moveTimeBoxToDay,
+} from '~~/shared/worklog'
 
 interface SessionChangePayload {
   id: string
@@ -35,10 +40,17 @@ const dragState = ref<{ timeBox: TimeBox; duplicate: boolean } | null>(null)
 const weekdays = computed(() => getMonthGridWeekdays(props.anchorDate))
 
 const getProjectName = (projectId: string) => props.projectNameById[projectId] ?? 'Untitled'
+const getProject = (projectId: string) => props.projectById[projectId]
 const getProjectStyle = (projectId: string) => {
-  const project = props.projectById[projectId]
+  const project = getProject(projectId)
 
   return project ? getProjectSoftSurfaceStyle(project.colors) : {}
+}
+
+const getDurationBadgeStyle = (projectId: string) => {
+  const project = getProject(projectId)
+
+  return project ? getProjectBadgeStyle(project.colors) : {}
 }
 
 const getDaySegments = (day: Date) => daySegmentsByKey.value.get(formatDateKey(day)) ?? []
@@ -148,8 +160,18 @@ const handleSegmentDragEnd = () => {
                 @dragstart="handleSegmentDragStart(segment.timeBox, $event)"
                 @dragend="handleSegmentDragEnd"
               >
-                <span class="font-semibold">{{ formatSegmentTime(segment.segmentStart) }}</span>
-                <span class="ml-1 truncate">{{ getProjectName(segment.timeBox.project) }}</span>
+                <div class="flex min-h-0 items-start justify-between gap-2 overflow-hidden">
+                  <div class="min-w-0 flex-1 truncate">
+                    <span class="font-semibold">{{ formatSegmentTime(segment.segmentStart) }}</span>
+                    <span class="ml-1">{{ getProjectName(segment.timeBox.project) }}</span>
+                  </div>
+                  <div
+                    class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                    :style="getDurationBadgeStyle(segment.timeBox.project)"
+                  >
+                    {{ getDurationMinutesLabel(segment.timeBox) }}
+                  </div>
+                </div>
               </button>
 
               <button
