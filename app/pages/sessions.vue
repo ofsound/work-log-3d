@@ -96,6 +96,12 @@ const scratchpadDateKey = computed(() => formatDateKey(anchorDate.value))
 const isPersistentScratchpad = computed(
   () => currentMode.value === 'day' && hasMounted.value && isDesktop.value,
 )
+const shouldOverlaySidePanel = computed(
+  () =>
+    isDesktop.value &&
+    (currentMode.value === 'week' || currentMode.value === 'month') &&
+    panelMode.value !== 'closed',
+)
 
 const resolvedTimeBoxes = computed(() =>
   toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
@@ -784,7 +790,7 @@ onBeforeUnmount(() => {
       </p>
     </div>
 
-    <SessionsWorkspaceShell>
+    <SessionsWorkspaceShell :overlay-aside="shouldOverlaySidePanel">
       <div
         v-if="currentMode === 'list'"
         class="h-full overflow-auto overscroll-contain px-6 pt-6 pb-2"
@@ -888,6 +894,7 @@ onBeforeUnmount(() => {
           :initial-end-time="createInitialEndTime"
           :initial-start-time="createInitialStartTime"
           :mode="panelMode"
+          :overlay="shouldOverlaySidePanel"
           :persistent="isPersistentScratchpad"
           :session-id="panelSessionId"
           @close="closePanel"

@@ -5,7 +5,11 @@ import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
 import type { PropType } from 'vue'
-import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import {
+  getProjectBadgeStyle,
+  getProjectOpaqueSoftSurfaceStyle,
+  getProjectSoftSurfaceStyle,
+} from '~/utils/project-color-styles'
 import {
   getProjectPath,
   getProjectPathFromProject,
@@ -35,6 +39,7 @@ const props = defineProps({
   isMinimized: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   flushTop: { type: Boolean, default: false },
+  opaqueSurface: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['toggleEditor', 'deleted'])
@@ -144,7 +149,13 @@ const projectSurfaceStyle = computed(() => {
     return {}
   }
 
-  return project.value ? getProjectSoftSurfaceStyle(project.value.colors) : {}
+  if (!project.value) {
+    return {}
+  }
+
+  return props.opaqueSurface
+    ? getProjectOpaqueSoftSurfaceStyle(project.value.colors)
+    : getProjectSoftSurfaceStyle(project.value.colors)
 })
 const projectBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},

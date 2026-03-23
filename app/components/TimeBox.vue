@@ -6,6 +6,7 @@ const props = defineProps({
   variant: { type: String, default: undefined },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   flushTop: { type: Boolean, default: false },
+  opaqueSurface: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['deleted'])
@@ -29,6 +30,7 @@ const toggleEditor = () => {
     :id
     :flush-top="props.flushTop"
     :highlight-tokens="highlightTokens"
+    :opaque-surface="opaqueSurface"
     :variant
     :is-minimized
     @deleted="emit('deleted')"

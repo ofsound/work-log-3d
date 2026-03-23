@@ -90,6 +90,11 @@ export const getProjectSoftSurfaceStyle = (colors: ProjectColors): CSSProperties
   borderColor: toRgba(colors.primary, 0.42),
 })
 
+export const getProjectOpaqueSoftSurfaceStyle = (colors: ProjectColors): CSSProperties => ({
+  backgroundColor: mixColors(colors.primary, '#f8fafc', 0.9),
+  borderColor: toRgba(colors.primary, 0.42),
+})
+
 export const getProjectHeaderStyle = (colors: ProjectColors): CSSProperties => {
   const endColor = getGradientEndColor(colors)
 
