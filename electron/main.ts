@@ -318,9 +318,11 @@ app.whenReady().then(async () => {
       switch (action) {
         case 'start_countup':
           setTimerState(startCountupTimer(Date.now()))
+          openMainWindow('/new')
           break
         case 'start_focus':
           setTimerState(startCountdownTimer(30 * 60, Date.now()))
+          openMainWindow('/new')
           break
         case 'pause':
           setTimerState(pauseTimer(timerState, Date.now()))
