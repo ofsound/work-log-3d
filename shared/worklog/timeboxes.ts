@@ -59,7 +59,7 @@ export const groupTimeBoxesByStartDay = (timeBoxes: TimeBox[]) => {
     groups.at(-1)?.push(timeBox)
   })
 
-  return groups
+  return groups.map((group) => sortTimeBoxesByStart(group, 'asc'))
 }
 
 export const findProjectName = (projects: NamedEntity[], projectId: string) => {

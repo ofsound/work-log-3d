@@ -78,7 +78,12 @@ function syncDynamicDurationFromTimes() {
   }
 
   const durationMinutes = timeBoxDuration()
-  dynamicDuration.value = Number.isFinite(durationMinutes) ? durationMinutes : ''
+  if (!Number.isFinite(durationMinutes)) {
+    dynamicDuration.value = ''
+    return
+  }
+  // Empty string when 0 so the field stays blank after reset / same start+end.
+  dynamicDuration.value = durationMinutes === 0 ? '' : durationMinutes
 }
 
 const applyCreateDefaults = () => {
@@ -229,6 +234,10 @@ watch(
   },
 )
 
+function isDurationFieldEmpty(value: string | number): boolean {
+  return value === '' || value === null || value === undefined
+}
+
 watch(
   () => dynamicDuration.value,
   () => {
@@ -237,6 +246,12 @@ watch(
       tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value || 0))
       dynamicEndTime.value = formatToDatetimeLocal(tempDate)
     } else {
+      const raw = dynamicDuration.value
+      if (isDurationFieldEmpty(raw)) {
+        clearTimeout(dynamicDurationTypingTimer.value)
+        dynamicDurationTypingTimer.value = undefined
+        return
+      }
       clearTimeout(dynamicDurationTypingTimer.value)
       dynamicDurationTypingTimer.value = setTimeout(() => {
         const now = new Date()
