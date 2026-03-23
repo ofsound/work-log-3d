@@ -114,7 +114,7 @@ const editor = useEditor({
   editorProps: {
     attributes: {
       class:
-        'daily-scratchpad-editor h-full min-h-full rounded-md border border-border-subtle bg-white px-4 py-4 font-data text-base text-text shadow-panel focus:outline-none dark:bg-panel-editor',
+        'daily-scratchpad-editor h-full min-h-full rounded-md border border-border-subtle bg-panel-editor px-4 py-4 font-data text-base text-text shadow-panel focus:outline-none',
     },
   },
   onUpdate: ({ editor: currentEditor }) => {

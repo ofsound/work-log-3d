@@ -84,6 +84,31 @@
   --color-overview-start: light-dark(var(--color-slate-800), var(--color-slate-900));
   --color-overview-end: light-dark(var(--color-zinc-900), var(--color-zinc-950));
 
+  --color-year-heatmap-day-text: light-dark(var(--color-gray-600), var(--color-zinc-400));
+  --color-year-heatmap-1: light-dark(
+    var(--color-emerald-100),
+    color-mix(in srgb, var(--color-emerald-950) 70%, transparent)
+  );
+  --color-year-heatmap-1-edge: light-dark(var(--color-emerald-200), var(--color-emerald-900));
+  --color-year-heatmap-2: light-dark(
+    var(--color-emerald-200),
+    color-mix(in srgb, var(--color-emerald-900) 80%, transparent)
+  );
+  --color-year-heatmap-2-edge: light-dark(var(--color-emerald-300), var(--color-emerald-800));
+  --color-year-heatmap-3: light-dark(var(--color-emerald-300), var(--color-emerald-800));
+  --color-year-heatmap-3-edge: light-dark(var(--color-emerald-400), var(--color-emerald-700));
+  --color-year-heatmap-4: light-dark(var(--color-emerald-400), var(--color-emerald-700));
+  --color-year-heatmap-4-edge: light-dark(var(--color-emerald-500), var(--color-emerald-600));
+  --color-year-heatmap-5: light-dark(var(--color-emerald-600), var(--color-emerald-500));
+  --color-year-heatmap-5-edge: light-dark(var(--color-emerald-700), var(--color-emerald-500));
+
+  --color-callout-warning-border: light-dark(var(--color-amber-300), var(--color-amber-700));
+  --color-callout-warning-surface: light-dark(
+    var(--color-amber-50),
+    color-mix(in srgb, var(--color-amber-950) 50%, transparent)
+  );
+  --color-callout-warning-text: light-dark(var(--color-amber-900), var(--color-amber-100));
+
   --shadow-shell:
     0 10px 15px -3px
       light-dark(

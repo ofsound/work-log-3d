@@ -89,7 +89,7 @@
     "npmRebuild": false,
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "electron/resources/icon-newest-white.png",
+      "icon": "electron/resources/icon-white-not-so-thin.png",
       "target": [
         "dir"
       ]

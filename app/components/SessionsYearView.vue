@@ -58,22 +58,22 @@ const getToneClass = (intensity: YearHeatmapIntensity, inactive: boolean) => {
   }
 
   if (intensity === 1) {
-    return 'border-emerald-200 bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/70'
+    return 'border-year-heatmap-1-edge bg-year-heatmap-1'
   }
 
   if (intensity === 2) {
-    return 'border-emerald-300 bg-emerald-200 dark:border-emerald-800 dark:bg-emerald-900/80'
+    return 'border-year-heatmap-2-edge bg-year-heatmap-2'
   }
 
   if (intensity === 3) {
-    return 'border-emerald-400 bg-emerald-300 dark:border-emerald-700 dark:bg-emerald-800'
+    return 'border-year-heatmap-3-edge bg-year-heatmap-3'
   }
 
   if (intensity === 4) {
-    return 'border-emerald-500 bg-emerald-400 dark:border-emerald-600 dark:bg-emerald-700'
+    return 'border-year-heatmap-4-edge bg-year-heatmap-4'
   }
 
-  return 'border-emerald-700 bg-emerald-600 dark:border-emerald-500 dark:bg-emerald-500'
+  return 'border-year-heatmap-5-edge bg-year-heatmap-5'
 }
 
 const getCellClass = (cell: YearHeatmapCell) => [
@@ -92,7 +92,7 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
   if (cell.intensity === 0) {
     return 'text-text-subtle'
   }
-  return 'text-text-muted dark:text-text-subtle'
+  return 'text-year-heatmap-day-text'
 }
 </script>
 

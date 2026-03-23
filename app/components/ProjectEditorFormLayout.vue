@@ -277,7 +277,7 @@ const toggleSecondaryColor = () => {
 
       <div
         v-if="lowContrastWarning"
-        class="rounded-3xl border border-amber-300 bg-amber-50 px-5 py-4 text-sm text-amber-900 shadow-control dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100"
+        class="rounded-3xl border border-callout-warning-border bg-callout-warning-surface px-5 py-4 text-sm text-callout-warning-text shadow-control"
       >
         This color pairing may reduce contrast in some project surfaces. The preview keeps the
         current choice, but you may want more separation between the two colors.
