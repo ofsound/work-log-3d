@@ -67,7 +67,7 @@
   --color-link: light-dark(var(--color-slate-600), var(--color-sky-300));
   --color-link-hover: light-dark(var(--color-slate-800), var(--color-sky-200));
   --color-danger: light-dark(var(--color-red-700), var(--color-red-400));
-  --color-panel-project: light-dark(var(--color-neutral-200), var(--color-neutral-950));
+  --color-panel-project: light-dark(var(--color-neutral-100), var(--color-neutral-950));
   --color-panel-tag: light-dark(var(--color-purple-200), var(--color-purple-950));
   --color-panel-editor: light-dark(var(--color-neutral-100), var(--color-neutral-950));
   --color-panel-timer: light-dark(var(--color-green-400), var(--color-green-950));

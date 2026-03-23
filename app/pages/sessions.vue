@@ -591,6 +591,28 @@ const isEditableTarget = (event: KeyboardEvent) => {
   return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
 }
 
+/** Same dismiss behavior as Escape for calendar views (selection, overlay panel, day scratchpad). */
+const applyCalendarEscapeDismiss = () => {
+  if (isPersistentScratchpad.value) {
+    if (panelMode.value !== 'scratchpad' || selectedSessionId.value) {
+      if (daySidebarTab.value === 'overview') {
+        void openOverviewPanel()
+        return
+      }
+
+      void openScratchpadPanel()
+    }
+    return
+  }
+
+  if (panelMode.value !== 'closed') {
+    void closePanel()
+    return
+  }
+
+  selectedSessionId.value = ''
+}
+
 const handleCalendarKeyboard = (event: KeyboardEvent) => {
   if (
     ['list', 'year'].includes(currentMode.value) ||
@@ -603,25 +625,7 @@ const handleCalendarKeyboard = (event: KeyboardEvent) => {
 
   if (event.key === 'Escape') {
     event.preventDefault()
-
-    if (isPersistentScratchpad.value) {
-      if (panelMode.value !== 'scratchpad' || selectedSessionId.value) {
-        if (daySidebarTab.value === 'overview') {
-          void openOverviewPanel()
-          return
-        }
-
-        void openScratchpadPanel()
-      }
-      return
-    }
-
-    if (panelMode.value !== 'closed') {
-      void closePanel()
-      return
-    }
-
-    selectedSessionId.value = ''
+    applyCalendarEscapeDismiss()
     return
   }
 
@@ -933,6 +937,7 @@ onBeforeUnmount(() => {
           :time-boxes="visibleCalendarTimeBoxes"
           @change-session="persistSessionChange"
           @create-session="openCreatePanel"
+          @dismiss-calendar="applyCalendarEscapeDismiss"
           @open-day="handleOpenDay"
           @open-session="openSessionPanel"
         />

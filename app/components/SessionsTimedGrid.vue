@@ -62,6 +62,8 @@ const emit = defineEmits([
   'openDay',
   'createSession',
   'changeSession',
+  /** Week view: empty grid click (no drag) — parent should match Escape (clear selection / close panel). */
+  'dismissCalendar',
 ])
 
 const HOUR_HEIGHT = 72
@@ -340,7 +342,11 @@ const handleWindowPointerUp = (event: PointerEvent) => {
 
   if (state.mode === 'create') {
     if (!state.moved) {
-      emit('openScratchpad')
+      if (isWeekView.value) {
+        emit('dismissCalendar')
+      } else {
+        emit('openScratchpad')
+      }
       return
     }
 
@@ -502,6 +508,22 @@ const getDurationBadgeStyle = (projectId: string) => {
   const project = getProject(projectId)
 
   return project ? getProjectBadgeStyle(project.colors) : {}
+}
+
+/** During top/bottom resize, show the preview duration; otherwise the saved session duration. */
+const getSessionDurationLabel = (layout: TimeBoxDaySegmentLayout) => {
+  const state = interactionState.value
+  const preview = previewEvent.value
+
+  if (state?.mode === 'resize' && state.moved && preview && state.timeBox.id === layout.timeBoxId) {
+    const { startTime, endTime } = preview.input
+
+    if (startTime && endTime) {
+      return getDurationMinutesLabel({ ...state.timeBox, startTime, endTime })
+    }
+  }
+
+  return getDurationMinutesLabel(layout.timeBox)
 }
 
 const formatHourLabel = (hour: number) =>
@@ -775,7 +797,7 @@ onBeforeUnmount(() => {
                   class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
                   :style="getDurationBadgeStyle(layout.timeBox.project)"
                 >
-                  {{ getDurationMinutesLabel(layout.timeBox) }}
+                  {{ getSessionDurationLabel(layout) }}
                 </div>
               </div>
 
@@ -933,7 +955,7 @@ onBeforeUnmount(() => {
                       class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
                       :style="getDurationBadgeStyle(layout.timeBox.project)"
                     >
-                      {{ getDurationMinutesLabel(layout.timeBox) }}
+                      {{ getSessionDurationLabel(layout) }}
                     </div>
                   </div>
 

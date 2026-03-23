@@ -33,6 +33,7 @@ const emit = defineEmits<{
   openDay: [day: Date]
   createSession: [range: { startTime: Date; endTime: Date }]
   changeSession: [payload: SessionChangePayload]
+  dismissCalendar: []
 }>()
 
 const days = computed(() => buildWeekDays(props.anchorDate))
@@ -51,6 +52,7 @@ const days = computed(() => buildWeekDays(props.anchorDate))
     :time-boxes="timeBoxes"
     @change-session="emit('changeSession', $event)"
     @create-session="emit('createSession', $event)"
+    @dismiss-calendar="emit('dismissCalendar')"
     @open-day="emit('openDay', $event)"
     @open-session="emit('openSession', $event)"
   />
