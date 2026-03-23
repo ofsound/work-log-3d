@@ -286,9 +286,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="timeBoxEditorRef" class="[container-type:inline-size] w-full font-data text-text">
+  <div
+    ref="timeBoxEditorRef"
+    class="[container-type:inline-size] w-full max-w-full min-w-0 font-data text-text"
+  >
     <div
-      class="flex flex-col gap-5 rounded-2xl border border-border-subtle bg-surface px-4 py-4 shadow-panel grayscale-10 [@container(min-width:44rem)]:rounded-3xl [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
+      class="flex min-w-0 flex-col gap-5 rounded-2xl border border-border-subtle bg-surface px-4 py-4 shadow-panel grayscale-10 [@container(min-width:44rem)]:rounded-3xl [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
     >
       <div class="flex flex-col gap-1">
         <div class="text-[11px] font-semibold tracking-[0.18em] text-text-subtle uppercase">
@@ -304,14 +307,14 @@ onBeforeUnmount(() => {
       </div>
 
       <section
-        class="grid gap-4 rounded-2xl border border-border-subtle bg-surface-muted/70 px-4 py-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
+        class="grid min-w-0 gap-4 rounded-2xl border border-border-subtle bg-surface-muted/70 px-4 py-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
       >
-        <label class="flex flex-col gap-2">
+        <label class="flex min-w-0 flex-col gap-2">
           <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
             Duration
           </span>
           <div
-            class="flex items-end gap-2 rounded-2xl border border-input-border bg-input px-3 py-3 [@container(min-width:38rem)]:h-full"
+            class="flex min-w-0 items-end gap-2 rounded-2xl border border-input-border bg-input px-3 py-3 [@container(min-width:38rem)]:h-full"
           >
             <input
               v-model="dynamicDuration"
@@ -325,40 +328,40 @@ onBeforeUnmount(() => {
           </div>
         </label>
 
-        <div class="grid gap-3 [@container(min-width:52rem)]:grid-cols-2">
-          <label class="flex flex-col gap-2">
+        <div class="grid min-w-0 gap-3 [@container(min-width:52rem)]:grid-cols-2">
+          <label class="flex min-w-0 flex-col gap-2">
             <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
               Start
             </span>
             <input
               v-model="dynamicStartTime"
               type="datetime-local"
-              class="rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
+              class="w-full min-w-0 rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
               @input="mutationErrorMessage = ''"
             />
           </label>
 
-          <label class="flex flex-col gap-2">
+          <label class="flex min-w-0 flex-col gap-2">
             <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
               End
             </span>
             <input
               v-model="dynamicEndTime"
               type="datetime-local"
-              class="rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
+              class="w-full min-w-0 rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
               @input="mutationErrorMessage = ''"
             />
           </label>
         </div>
       </section>
 
-      <label class="flex flex-col gap-2">
+      <label class="flex min-w-0 flex-col gap-2">
         <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
           Notes
         </span>
         <textarea
           v-model="dynamicNotes"
-          class="min-h-36 w-full rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
+          class="min-h-36 w-full max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
           rows="6"
           placeholder="What happened during this session?"
           @input="mutationErrorMessage = ''"

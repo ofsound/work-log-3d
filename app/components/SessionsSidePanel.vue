@@ -31,7 +31,7 @@ defineExpose({
 
 <template>
   <aside
-    class="flex h-full w-full max-w-108 shrink-0 flex-col border-l border-border bg-surface-strong shadow-panel"
+    class="flex h-full w-full max-w-108 min-w-0 shrink-0 flex-col border-l border-border bg-surface-strong shadow-panel"
   >
     <div
       v-if="!persistent || mode === 'session' || mode === 'create'"
@@ -70,7 +70,7 @@ defineExpose({
       </button>
     </div>
 
-    <div class="min-h-0 flex-1 px-4 pt-4 pb-4">
+    <div class="min-h-0 min-w-0 flex-1 px-4 pt-4 pb-4">
       <div v-if="persistent" v-show="mode === 'scratchpad'" class="h-full min-h-0 overflow-hidden">
         <DailyScratchpadPanel
           ref="scratchpadPanelRef"
@@ -79,11 +79,11 @@ defineExpose({
         />
       </div>
 
-      <div v-if="mode === 'session' && sessionId" class="h-full overflow-y-auto pr-1">
+      <div v-if="mode === 'session' && sessionId" class="h-full min-w-0 overflow-y-auto pr-1">
         <TimeBox :id="sessionId" flush-top @deleted="emit('close')" />
       </div>
 
-      <div v-else-if="mode === 'create'" class="h-full overflow-y-auto pr-1 pb-4">
+      <div v-else-if="mode === 'create'" class="h-full min-w-0 overflow-y-auto pr-1 pb-4">
         <TimeBoxEditor
           :initial-start-time="initialStartTime"
           :initial-end-time="initialEndTime"
