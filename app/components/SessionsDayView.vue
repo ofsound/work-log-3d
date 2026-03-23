@@ -29,6 +29,7 @@ const props = defineProps({
 
 const emit = defineEmits<{
   openSession: [sessionId: string]
+  openScratchpad: []
   createSession: [range: { startTime: Date; endTime: Date }]
   changeSession: [payload: SessionChangePayload]
 }>()
@@ -48,6 +49,7 @@ const days = computed(() => [props.anchorDate])
     :time-boxes="timeBoxes"
     @change-session="emit('changeSession', $event)"
     @create-session="emit('createSession', $event)"
+    @open-scratchpad="emit('openScratchpad')"
     @open-session="emit('openSession', $event)"
   />
 </template>

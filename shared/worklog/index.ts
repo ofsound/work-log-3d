@@ -1,4 +1,5 @@
 export * from './calendar'
+export * from './daily-notes'
 export * from './desktop'
 export * from './formatters'
 export * from './projects'

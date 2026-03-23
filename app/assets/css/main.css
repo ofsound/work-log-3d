@@ -292,3 +292,82 @@
     color: var(--color-text);
   }
 }
+
+@layer components {
+  .daily-scratchpad-editor {
+    min-height: 22rem;
+    line-height: 1.65;
+  }
+
+  .daily-scratchpad-editor:focus {
+    border-color: var(--color-link);
+  }
+
+  .daily-scratchpad-editor p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--color-text-subtle);
+    pointer-events: none;
+  }
+
+  .daily-scratchpad-editor h1,
+  .daily-scratchpad-editor h2,
+  .daily-scratchpad-editor h3 {
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .daily-scratchpad-editor h1 {
+    font-size: 1.5rem;
+  }
+
+  .daily-scratchpad-editor h2 {
+    font-size: 1.25rem;
+  }
+
+  .daily-scratchpad-editor h3 {
+    font-size: 1.125rem;
+  }
+
+  .daily-scratchpad-editor p,
+  .daily-scratchpad-editor ul,
+  .daily-scratchpad-editor ol {
+    margin-top: 0.65rem;
+  }
+
+  .daily-scratchpad-editor ul,
+  .daily-scratchpad-editor ol {
+    padding-left: 1.5rem;
+  }
+
+  .daily-scratchpad-editor ul {
+    list-style: disc;
+  }
+
+  .daily-scratchpad-editor ol {
+    list-style: decimal;
+  }
+
+  .daily-scratchpad-editor ul[data-type='taskList'] {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .daily-scratchpad-editor ul[data-type='taskList'] li {
+    display: flex;
+    gap: 0.625rem;
+    align-items: flex-start;
+  }
+
+  .daily-scratchpad-editor ul[data-type='taskList'] li > label {
+    margin-top: 0.2rem;
+  }
+
+  .daily-scratchpad-editor a {
+    color: var(--color-link);
+    text-decoration: underline;
+  }
+}

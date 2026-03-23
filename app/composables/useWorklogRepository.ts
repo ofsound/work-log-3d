@@ -2,14 +2,20 @@ import type { WorklogRepositories } from '~~/shared/worklog'
 import { createFirestoreWorklogRepositories } from '~/utils/worklog-firebase'
 
 export function useWorklogRepository(): WorklogRepositories {
-  const { projectsCollection, tagsCollection, timeBoxesCollection, reportsCollection } =
-    useFirestoreCollections()
+  const {
+    projectsCollection,
+    tagsCollection,
+    timeBoxesCollection,
+    dailyNotesCollection,
+    reportsCollection,
+  } = useFirestoreCollections()
 
   const getRepositories = () => {
     if (
       !projectsCollection.value ||
       !tagsCollection.value ||
       !timeBoxesCollection.value ||
+      !dailyNotesCollection.value ||
       !reportsCollection.value
     ) {
       throw new Error('Worklog repository requires an authenticated user.')
@@ -19,6 +25,7 @@ export function useWorklogRepository(): WorklogRepositories {
       projectsCollection: projectsCollection.value,
       tagsCollection: tagsCollection.value,
       timeBoxesCollection: timeBoxesCollection.value,
+      dailyNotesCollection: dailyNotesCollection.value,
       reportsCollection: reportsCollection.value,
     })
   }
@@ -44,6 +51,10 @@ export function useWorklogRepository(): WorklogRepositories {
       create: (input) => getRepositories().reports.create(input),
       update: (id, input) => getRepositories().reports.update(id, input),
       remove: (id) => getRepositories().reports.remove(id),
+    },
+    dailyNotes: {
+      ensure: (dateKey) => getRepositories().dailyNotes.ensure(dateKey),
+      upsert: (dateKey, input) => getRepositories().dailyNotes.upsert(dateKey, input),
     },
   }
 

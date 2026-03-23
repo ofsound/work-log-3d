@@ -234,6 +234,16 @@ New projects are created from `/project/new`, where the initial notes and curate
 }
 ```
 
+`users/{uid}/dailyNotes/{yyyy-mm-dd}`
+
+```ts
+{
+  content: Record<string, unknown> // Tiptap / ProseMirror JSON document
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+```
+
 `users/{uid}/settings/preferences`
 
 ```ts
@@ -260,6 +270,7 @@ Server-managed published report snapshots for anonymous client access. The top-l
 ## Sessions Views
 
 - `Day` is the default `/sessions` experience and uses a focused single-day timed calendar with keyboard navigation
+- On desktop, Day view keeps the right sidebar open with a private per-day scratchpad; selecting a session or drag-creating a new one swaps that sidebar to the contextual session tab until you return to the scratchpad
 - `List` is a live-filter workspace with URL-synced search over notes, project names, and tag names, plus project/tag/date/duration filters and list-specific sorting
 - `Week` uses a Monday-first timed grid with live today/now indicators, drag-to-create, drag-to-move, and resize handles
 - `Month` uses a Monday-first month grid with compact session chips and day drill-down into Day mode

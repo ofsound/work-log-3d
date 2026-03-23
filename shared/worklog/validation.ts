@@ -1,4 +1,11 @@
 import { formatDateKey, parseDateKey } from './calendar'
+import {
+  cloneDailyNoteContent,
+  DAILY_NOTE_MAX_LINES,
+  getDailyNoteLineCount,
+  isDailyNoteContentNode,
+  type DailyNoteInput,
+} from './daily-notes'
 import { slugifyName } from './formatters'
 import { normalizeHexColor } from './projects'
 import {
@@ -180,6 +187,31 @@ export const validateTimeBoxInput = (input: TimeBoxInput): TimeBoxInput => {
     notes: requireNonEmptyString(input.notes, 'Notes'),
     project: requireNonEmptyString(input.project, 'Project'),
     tags: normalizeOptionalEntityIds(input.tags),
+  }
+}
+
+export const validateDailyNoteInput = (
+  dateKey: string,
+  input: DailyNoteInput,
+): { dateKey: string; content: ReturnType<typeof cloneDailyNoteContent> } => {
+  const normalizedDateKey = requireDateKey(dateKey, 'Date')
+
+  if (!isDailyNoteContentNode(input.content) || input.content.type !== 'doc') {
+    throw new WorklogError('validation', 'Daily note content must be a valid rich-text document.')
+  }
+
+  const content = cloneDailyNoteContent(input.content)
+
+  if (getDailyNoteLineCount(content) > DAILY_NOTE_MAX_LINES) {
+    throw new WorklogError(
+      'validation',
+      `Daily note content must stay within ${DAILY_NOTE_MAX_LINES} lines.`,
+    )
+  }
+
+  return {
+    dateKey: normalizedDateKey,
+    content,
   }
 }
 

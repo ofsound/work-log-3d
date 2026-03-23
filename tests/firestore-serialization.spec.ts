@@ -7,6 +7,7 @@ const getDoc = vi.fn()
 const getDocs = vi.fn()
 const limit = vi.fn((value: number) => ({ type: 'limit', value }))
 const query = vi.fn((collection, ...constraints: unknown[]) => ({ collection, constraints }))
+const setDoc = vi.fn()
 const updateDoc = vi.fn()
 const where = vi.fn((field: string, op: string, value: string) => ({ field, op, value }))
 const fromDate = vi.fn((value: Date) => ({ __timestamp: value.toISOString() }))
@@ -20,12 +21,14 @@ vi.mock('firebase/firestore', () => ({
   getDocs,
   limit,
   query,
+  setDoc,
   updateDoc,
   where,
 }))
 
 const {
   createFirestoreWorklogRepositories,
+  toDailyNote,
   toProject,
   toReport,
   toTimeBox,
@@ -43,6 +46,7 @@ describe('firestore worklog repositories', () => {
     getDocs.mockReset()
     limit.mockClear()
     query.mockClear()
+    setDoc.mockReset()
     updateDoc.mockReset()
     where.mockClear()
     getDoc.mockResolvedValue({
@@ -103,6 +107,25 @@ describe('firestore worklog repositories', () => {
     expect(report.shareToken).toBe('token-1')
   })
 
+  it('serializes daily note timestamps and falls back to an empty document', () => {
+    const note = toDailyNote('2026-03-23', {
+      content: {
+        type: 'doc',
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Daily focus' }] }],
+      },
+      createdAt: { toDate: () => new Date('2026-03-23T08:00:00.000Z') },
+      updatedAt: { toDate: () => new Date('2026-03-23T09:30:00.000Z') },
+    })
+
+    expect(note.dateKey).toBe('2026-03-23')
+    expect(note.createdAt?.toISOString()).toBe('2026-03-23T08:00:00.000Z')
+    expect(note.updatedAt?.toISOString()).toBe('2026-03-23T09:30:00.000Z')
+    expect(toDailyNote('2026-03-24', null).content).toEqual({
+      type: 'doc',
+      content: [{ type: 'paragraph' }],
+    })
+  })
+
   it('serializes user settings with defaults and exact payload shape', () => {
     const settings = toUserSettings({
       appearance: {
@@ -154,6 +177,7 @@ describe('firestore worklog repositories', () => {
       projectsCollection: { id: 'projects' } as never,
       tagsCollection: { id: 'tags' } as never,
       timeBoxesCollection: { id: 'timeBoxes' } as never,
+      dailyNotesCollection: { id: 'dailyNotes' } as never,
       reportsCollection: { id: 'reports' } as never,
     })
 
@@ -182,6 +206,15 @@ describe('firestore worklog repositories', () => {
       tags: ['tag-1', 'tag-1', ''],
     })
     await repositories.tags.remove('tag-1')
+    getDoc.mockResolvedValueOnce({ exists: () => false })
+    await repositories.dailyNotes.ensure('2026-03-21')
+    getDoc.mockResolvedValueOnce({ exists: () => true })
+    await repositories.dailyNotes.upsert('2026-03-21', {
+      content: {
+        type: 'doc',
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Focus list' }] }],
+      },
+    })
     await repositories.reports.create({
       title: '  March Report  ',
       summary: ' Summary ',
@@ -232,11 +265,29 @@ describe('firestore worklog repositories', () => {
         },
       }),
     )
-    expect(fromDate).toHaveBeenCalledTimes(3)
+    expect(fromDate).toHaveBeenCalledTimes(5)
     expect(addDoc).toHaveBeenCalledWith(
       { id: 'timeBoxes' },
       expect.objectContaining({
         tags: ['tag-1'],
+      }),
+    )
+    expect(setDoc).toHaveBeenCalledWith(
+      { id: '2026-03-21' },
+      expect.objectContaining({
+        content: {
+          type: 'doc',
+          content: [{ type: 'paragraph' }],
+        },
+      }),
+    )
+    expect(updateDoc).toHaveBeenCalledWith(
+      { id: '2026-03-21' },
+      expect.objectContaining({
+        content: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Focus list' }] }],
+        },
       }),
     )
     expect(deleteDoc).toHaveBeenCalledWith({ id: 'tag-1' })
@@ -286,6 +337,7 @@ describe('firestore worklog repositories', () => {
       projectsCollection: { id: 'projects' } as never,
       tagsCollection: { id: 'tags' } as never,
       timeBoxesCollection: { id: 'timeBoxes' } as never,
+      dailyNotesCollection: { id: 'dailyNotes' } as never,
       reportsCollection: { id: 'reports' } as never,
     })
 
@@ -307,6 +359,7 @@ describe('firestore worklog repositories', () => {
       projectsCollection: { id: 'projects' } as never,
       tagsCollection: { id: 'tags' } as never,
       timeBoxesCollection: { id: 'timeBoxes' } as never,
+      dailyNotesCollection: { id: 'dailyNotes' } as never,
       reportsCollection: { id: 'reports' } as never,
     })
 
@@ -333,6 +386,7 @@ describe('firestore worklog repositories', () => {
       projectsCollection: { id: 'projects' } as never,
       tagsCollection: { id: 'tags' } as never,
       timeBoxesCollection: { id: 'timeBoxes' } as never,
+      dailyNotesCollection: { id: 'dailyNotes' } as never,
       reportsCollection: { id: 'reports' } as never,
     })
 
@@ -349,6 +403,7 @@ describe('firestore worklog repositories', () => {
       projectsCollection: { id: 'projects' } as never,
       tagsCollection: { id: 'tags' } as never,
       timeBoxesCollection: { id: 'timeBoxes' } as never,
+      dailyNotesCollection: { id: 'dailyNotes' } as never,
       reportsCollection: { id: 'reports' } as never,
     })
 
@@ -368,6 +423,7 @@ describe('firestore worklog repositories', () => {
       projectsCollection: { id: 'projects' } as never,
       tagsCollection: { id: 'tags' } as never,
       timeBoxesCollection: { id: 'timeBoxes' } as never,
+      dailyNotesCollection: { id: 'dailyNotes' } as never,
       reportsCollection: { id: 'reports' } as never,
     })
 
@@ -390,6 +446,7 @@ describe('firestore worklog repositories', () => {
       projectsCollection: { id: 'projects' } as never,
       tagsCollection: { id: 'tags' } as never,
       timeBoxesCollection: { id: 'timeBoxes' } as never,
+      dailyNotesCollection: { id: 'dailyNotes' } as never,
       reportsCollection: { id: 'reports' } as never,
     })
 

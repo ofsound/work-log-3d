@@ -21,6 +21,9 @@ export function useFirestoreCollections() {
   const tagsCollection = computed<CollectionReference<DocumentData> | null>(() =>
     uid.value ? collection(db, 'users', uid.value, 'tags') : null,
   )
+  const dailyNotesCollection = computed<CollectionReference<DocumentData> | null>(() =>
+    uid.value ? collection(db, 'users', uid.value, 'dailyNotes') : null,
+  )
   const reportsCollection = computed<CollectionReference<DocumentData> | null>(() =>
     uid.value ? collection(db, 'users', uid.value, 'reports') : null,
   )
@@ -34,6 +37,7 @@ export function useFirestoreCollections() {
     timeBoxesCollection,
     projectsCollection,
     tagsCollection,
+    dailyNotesCollection,
     reportsCollection,
     settingsDocument,
   }

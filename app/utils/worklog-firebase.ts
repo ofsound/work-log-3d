@@ -7,12 +7,16 @@ import {
   getDocs,
   limit,
   query,
+  setDoc,
   updateDoc,
   where,
 } from 'firebase/firestore'
 
 import type { CollectionReference, DocumentData } from 'firebase/firestore'
 import type {
+  DailyNote,
+  DailyNoteContentNode,
+  DailyNoteInput,
   Project,
   Report,
   ReportInput,
@@ -27,9 +31,11 @@ import {
   createEntityInUseError,
   createNamedEntityPayload,
   createProjectPayload,
+  createEmptyDailyNoteContent,
   resolveProjectColors,
   resolveProjectNotes,
   resolveUserSettings,
+  validateDailyNoteInput,
   validateReportInput,
   validateTimeBoxInput,
   validateUserSettingsInput,
@@ -82,6 +88,12 @@ export interface FirebaseReportDocument {
   createdAt: FirebaseTimestampLike | null
   updatedAt: FirebaseTimestampLike | null
   publishedAt: FirebaseTimestampLike | null
+}
+
+export interface FirebaseDailyNoteDocument {
+  content: DailyNoteContentNode
+  createdAt: FirebaseTimestampLike | null
+  updatedAt: FirebaseTimestampLike | null
 }
 
 export interface FirebaseUserSettingsDocument {
@@ -141,6 +153,16 @@ export const toReport = (report: FirebaseReportDocument): Report => ({
   publishedAt: report.publishedAt?.toDate() ?? null,
 })
 
+export const toDailyNote = (
+  dateKey: string,
+  note: FirebaseDailyNoteDocument | null | undefined,
+): DailyNote => ({
+  dateKey,
+  content: note?.content ?? createEmptyDailyNoteContent(),
+  createdAt: note?.createdAt?.toDate() ?? null,
+  updatedAt: note?.updatedAt?.toDate() ?? null,
+})
+
 export const toUserSettings = (
   settings: FirebaseUserSettingsDocument | null | undefined,
 ): UserSettings => resolveUserSettings(settings)
@@ -155,6 +177,9 @@ const toTimeBoxPayload = (input: TimeBoxInput) => ({
   startTime: Timestamp.fromDate(input.startTime),
   endTime: Timestamp.fromDate(input.endTime),
 })
+
+const toDailyNoteContentPayload = (dateKey: string, input: DailyNoteInput) =>
+  validateDailyNoteInput(dateKey, input).content
 
 const toReportPayload = (input: ReportInput) => {
   const normalized = validateReportInput(input)
@@ -190,13 +215,19 @@ export const createFirestoreWorklogRepositories = ({
   projectsCollection,
   tagsCollection,
   timeBoxesCollection,
+  dailyNotesCollection,
   reportsCollection,
 }: {
   projectsCollection: CollectionReference<DocumentData>
   tagsCollection: CollectionReference<DocumentData>
   timeBoxesCollection: CollectionReference<DocumentData>
+  dailyNotesCollection: CollectionReference<DocumentData>
   reportsCollection: CollectionReference<DocumentData>
 }): WorklogRepositories => {
+  const dailyNoteDocument = (dateKey: string) => doc(dailyNotesCollection, dateKey)
+  const dailyNoteExists = (snapshot: { exists?: () => boolean; data?: () => unknown }) =>
+    typeof snapshot.exists === 'function' ? snapshot.exists() : snapshot.data?.() != null
+
   const assertSlugAvailable = async (
     collection: CollectionReference<DocumentData>,
     slug: string,
@@ -317,6 +348,48 @@ export const createFirestoreWorklogRepositories = ({
       },
       async remove(id: string) {
         await deleteDoc(doc(timeBoxesCollection, id))
+      },
+    },
+    dailyNotes: {
+      async ensure(dateKey: string) {
+        const normalized = validateDailyNoteInput(dateKey, {
+          content: createEmptyDailyNoteContent(),
+        })
+        const noteReference = dailyNoteDocument(normalized.dateKey)
+        const snapshot = await getDoc(noteReference)
+
+        if (dailyNoteExists(snapshot)) {
+          return
+        }
+
+        const createdAt = Timestamp.fromDate(new Date())
+
+        await setDoc(noteReference, {
+          content: normalized.content,
+          createdAt,
+          updatedAt: createdAt,
+        })
+      },
+      async upsert(dateKey: string, input: DailyNoteInput) {
+        const normalized = validateDailyNoteInput(dateKey, input)
+        const noteReference = dailyNoteDocument(normalized.dateKey)
+        const snapshot = await getDoc(noteReference)
+        const updatedAt = Timestamp.fromDate(new Date())
+        const content = toDailyNoteContentPayload(normalized.dateKey, input)
+
+        if (dailyNoteExists(snapshot)) {
+          await updateDoc(noteReference, {
+            content,
+            updatedAt,
+          })
+          return
+        }
+
+        await setDoc(noteReference, {
+          content,
+          createdAt: updatedAt,
+          updatedAt,
+        })
       },
     },
     reports: {

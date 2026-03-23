@@ -1,3 +1,4 @@
+import type { DailyNoteInput } from './daily-notes'
 import type { ReportInput } from './reports'
 import type { EntityId, ProjectInput, TimeBoxInput } from './types'
 
@@ -26,9 +27,15 @@ export interface ReportRepository {
   remove(id: EntityId): Promise<void>
 }
 
+export interface DailyNoteRepository {
+  ensure(dateKey: string): Promise<void>
+  upsert(dateKey: string, input: DailyNoteInput): Promise<void>
+}
+
 export interface WorklogRepositories {
   projects: ProjectRepository
   tags: TagRepository
   timeBoxes: TimeBoxRepository
   reports: ReportRepository
+  dailyNotes: DailyNoteRepository
 }

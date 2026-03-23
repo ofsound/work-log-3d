@@ -57,7 +57,13 @@ const props = defineProps({
   inactiveHeaderLabel: { type: String, default: '' },
 })
 
-const emit = defineEmits(['openSession', 'openDay', 'createSession', 'changeSession'])
+const emit = defineEmits([
+  'openSession',
+  'openScratchpad',
+  'openDay',
+  'createSession',
+  'changeSession',
+])
 
 const HOUR_HEIGHT = 72
 const TIME_GUTTER_WIDTH = 72
@@ -333,6 +339,7 @@ const handleWindowPointerUp = (event: PointerEvent) => {
 
   if (state.mode === 'create') {
     if (!state.moved) {
+      emit('openScratchpad')
       return
     }
 

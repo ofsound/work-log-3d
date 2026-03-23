@@ -125,6 +125,19 @@ describe('firestore rules', () => {
     )
   })
 
+  it('allows an owner to write a valid daily note document', async () => {
+    await assertSucceeds(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'dailyNotes', '2026-03-23'), {
+        content: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Daily focus' }] }],
+        },
+        createdAt: Timestamp.fromDate(new Date('2026-03-23T08:00:00.000Z')),
+        updatedAt: Timestamp.fromDate(new Date('2026-03-23T09:30:00.000Z')),
+      }),
+    )
+  })
+
   it('allows an owner to write valid user settings', async () => {
     await assertSucceeds(
       setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
@@ -179,6 +192,32 @@ describe('firestore rules', () => {
     )
   })
 
+  it('rejects malformed daily note documents', async () => {
+    await assertFails(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'dailyNotes', '2026-03-23'), {
+        content: {
+          type: 'paragraph',
+        },
+        createdAt: Timestamp.fromDate(new Date('2026-03-23T08:00:00.000Z')),
+        updatedAt: Timestamp.fromDate(new Date('2026-03-23T09:30:00.000Z')),
+      }),
+    )
+  })
+
+  it('rejects daily note documents with unexpected top-level keys', async () => {
+    await assertFails(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'dailyNotes', '2026-03-23'), {
+        content: {
+          type: 'doc',
+          content: [{ type: 'paragraph' }],
+        },
+        createdAt: Timestamp.fromDate(new Date('2026-03-23T08:00:00.000Z')),
+        updatedAt: Timestamp.fromDate(new Date('2026-03-23T09:30:00.000Z')),
+        extra: true,
+      }),
+    )
+  })
+
   it('rejects malformed user settings documents', async () => {
     await assertFails(
       setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
@@ -208,6 +247,19 @@ describe('firestore rules', () => {
           primary: '#2563eb',
           secondary: '#06b6d4',
         },
+      }),
+    )
+  })
+
+  it('rejects writes into another users daily note subtree', async () => {
+    await assertFails(
+      setDoc(authContextDoc(testEnvironment, 'user-1', 'user-2', 'dailyNotes', '2026-03-23'), {
+        content: {
+          type: 'doc',
+          content: [{ type: 'paragraph' }],
+        },
+        createdAt: Timestamp.fromDate(new Date('2026-03-23T08:00:00.000Z')),
+        updatedAt: Timestamp.fromDate(new Date('2026-03-23T09:30:00.000Z')),
       }),
     )
   })

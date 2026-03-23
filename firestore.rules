@@ -99,6 +99,15 @@ service cloud.firestore {
         && isTimestampOrNull(request.resource.data.publishedAt);
     }
 
+    function isDailyNoteDocument() {
+      return hasExactKeys(['content', 'createdAt', 'updatedAt'])
+        && request.resource.data.content is map
+        && request.resource.data.content.type == 'doc'
+        && request.resource.data.content.content is list
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
     function isUserSettingsDocument() {
       return hasExactKeys(['appearance', 'workflow'])
         && hasExactMapKeys(request.resource.data.appearance, [
@@ -141,6 +150,12 @@ service cloud.firestore {
       allow read: if isOwner(uid);
       allow create, update: if isOwner(uid) && isTimeBoxDocument();
       allow delete: if isOwner(uid);
+    }
+
+    match /users/{uid}/dailyNotes/{dateKey} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isDailyNoteDocument();
+      allow delete: if false;
     }
 
     match /users/{uid}/reports/{reportId} {

@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { Timestamp, orderBy, query, where } from 'firebase/firestore'
+import { useCollection } from 'vuefire'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
   FirebaseTimeBoxDocument,
 } from '~/utils/worklog-firebase'
+import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
+import { useMediaQuery } from '~/composables/useMediaQuery'
+import { useUserSettings } from '~/composables/useUserSettings'
+import { useWorklogRepository } from '~/composables/useWorklogRepository'
 import { toProjects, toTags, toTimeBoxes } from '~/utils/worklog-firebase'
 import {
   buildSessionsRouteQuery,
@@ -21,6 +28,7 @@ import {
   buildYearHeatmapMonths,
   createDefaultSessionListFilters,
   createSessionListItem,
+  formatDateKey,
   formatToDatetimeLocal,
   getBufferedCalendarRange,
   getDayRange,
@@ -54,6 +62,8 @@ interface SessionCreatePreview {
   createdSessionId: string | null
 }
 
+type PanelMode = 'closed' | 'scratchpad' | 'session' | 'create'
+
 const route = useRoute()
 const router = useRouter()
 const { hideTags } = useUserSettings()
@@ -65,13 +75,15 @@ const allTimeBoxes = useCollection(timeBoxesCollection)
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
 
-const panelMode = ref<'closed' | 'session' | 'create'>('closed')
+const panelMode = ref<PanelMode>('closed')
 const panelSessionId = ref('')
 const selectedSessionId = ref('')
 const createRange = ref<SessionCreatePayload | null>(null)
 const createPreview = ref<SessionCreatePreview | null>(null)
 const mutationErrorMessage = ref('')
 const sessionsHeaderRef = ref<HTMLElement | null>(null)
+const sessionsSidePanelRef = ref<{ flushScratchpad: () => Promise<void> } | null>(null)
+const isDesktop = useMediaQuery('(min-width: 1024px)', false)
 
 const routeState = computed(() =>
   parseSessionsRouteState(route.query as Record<string, string | string[] | undefined>),
@@ -79,6 +91,8 @@ const routeState = computed(() =>
 const currentMode = computed(() => routeState.value.mode)
 const anchorDate = computed(() => routeState.value.date)
 const listFilters = computed(() => routeState.value.listFilters)
+const scratchpadDateKey = computed(() => formatDateKey(anchorDate.value))
+const isPersistentScratchpad = computed(() => currentMode.value === 'day' && isDesktop.value)
 
 const resolvedTimeBoxes = computed(() =>
   toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
@@ -270,23 +284,45 @@ const updateRouteState = async (nextState: Partial<ReturnType<typeof parseSessio
   })
 }
 
-const closePanel = () => {
-  panelMode.value = 'closed'
+const resetPanelState = (
+  mode: PanelMode,
+  options: {
+    preserveCreatePreview?: boolean
+  } = {},
+) => {
+  panelMode.value = mode
   panelSessionId.value = ''
   createRange.value = null
-  createPreview.value = null
+
+  if (!options.preserveCreatePreview) {
+    createPreview.value = null
+  }
+}
+
+const flushScratchpadIfNeeded = async () => {
+  if (!isPersistentScratchpad.value) {
+    return
+  }
+
+  await sessionsSidePanelRef.value?.flushScratchpad()
+}
+
+const closePanel = async () => {
+  await flushScratchpadIfNeeded()
+  resetPanelState(isPersistentScratchpad.value ? 'scratchpad' : 'closed')
 }
 
 const selectSession = (sessionId: string) => {
   selectedSessionId.value = sessionId
 }
 
-const openSessionPanel = (
+const openSessionPanel = async (
   sessionId: string,
   options: {
     preserveCreatePreview?: boolean
   } = {},
 ) => {
+  await flushScratchpadIfNeeded()
   selectSession(sessionId)
   panelMode.value = 'session'
   panelSessionId.value = sessionId
@@ -297,7 +333,8 @@ const openSessionPanel = (
   }
 }
 
-const openCreatePanel = (range: SessionCreatePayload) => {
+const openCreatePanel = async (range: SessionCreatePayload) => {
+  await flushScratchpadIfNeeded()
   panelMode.value = 'create'
   panelSessionId.value = ''
   selectedSessionId.value = ''
@@ -334,7 +371,17 @@ const roundToSnapMinutes = (date: Date) => {
 const getSelectedDayTimeBox = () =>
   visibleDayTimeBoxes.value.find((timeBox) => timeBox.id === selectedSessionId.value) ?? null
 
-const openSuggestedCreatePanel = () => {
+const openScratchpadPanel = async () => {
+  if (!isPersistentScratchpad.value) {
+    return
+  }
+
+  await flushScratchpadIfNeeded()
+  selectedSessionId.value = ''
+  resetPanelState('scratchpad')
+}
+
+const openSuggestedCreatePanel = async () => {
   const selectedTimeBox = getSelectedDayTimeBox()
   const defaultStart = isSameDay(anchorDate.value, new Date())
     ? roundToSnapMinutes(new Date())
@@ -345,7 +392,7 @@ const openSuggestedCreatePanel = () => {
     : defaultStart
   const durationMinutes = selectedTimeBox ? getTimeBoxDurationMinutes(selectedTimeBox) || 60 : 60
 
-  openCreatePanel({
+  await openCreatePanel({
     startTime,
     endTime: addMinutes(startTime, durationMinutes),
   })
@@ -374,7 +421,8 @@ const handleModeChange = async (mode: SessionsViewMode) => {
     return
   }
 
-  closePanel()
+  await flushScratchpadIfNeeded()
+  resetPanelState('closed')
 
   if (mode === 'list') {
     await updateRouteState({
@@ -388,11 +436,14 @@ const handleModeChange = async (mode: SessionsViewMode) => {
 }
 
 const handleOpenDay = async (day: Date) => {
-  closePanel()
+  await flushScratchpadIfNeeded()
+  resetPanelState('closed')
   await updateRouteState({ mode: 'day', date: day })
 }
 
 const handleNavigate = async (direction: -1 | 1) => {
+  await flushScratchpadIfNeeded()
+
   if (currentMode.value === 'day') {
     await updateRouteState({ date: addDays(anchorDate.value, direction) })
     return
@@ -407,6 +458,7 @@ const handleNavigate = async (direction: -1 | 1) => {
 }
 
 const handleGoToday = async () => {
+  await flushScratchpadIfNeeded()
   await updateRouteState({ date: new Date() })
 }
 
@@ -416,20 +468,20 @@ const persistSessionChange = async ({ id, input, duplicate }: SessionChangePaylo
 
     if (duplicate) {
       const createdId = await repositories.timeBoxes.create(input)
-      openSessionPanel(createdId)
+      await openSessionPanel(createdId)
       return
     }
 
     await repositories.timeBoxes.update(id, input)
-    openSessionPanel(id)
+    await openSessionPanel(id)
   } catch (error) {
     mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to update the session.')
   }
 }
 
-const handlePanelCreated = (sessionId: string) => {
+const handlePanelCreated = async (sessionId: string) => {
   markCreatePreviewSaved(sessionId)
-  openSessionPanel(sessionId, { preserveCreatePreview: true })
+  await openSessionPanel(sessionId, { preserveCreatePreview: true })
 }
 
 const moveDaySelection = (direction: -1 | 1) => {
@@ -479,8 +531,15 @@ const handleCalendarKeyboard = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     event.preventDefault()
 
+    if (isPersistentScratchpad.value) {
+      if (panelMode.value !== 'scratchpad' || selectedSessionId.value) {
+        void openScratchpadPanel()
+      }
+      return
+    }
+
     if (panelMode.value !== 'closed') {
-      closePanel()
+      void closePanel()
       return
     }
 
@@ -524,22 +583,29 @@ const handleCalendarKeyboard = (event: KeyboardEvent) => {
 
   if (event.key === 'Enter' && selectedSessionId.value) {
     event.preventDefault()
-    openSessionPanel(selectedSessionId.value)
+    void openSessionPanel(selectedSessionId.value)
     return
   }
 
   if (event.key.toLowerCase() === 'n') {
     event.preventDefault()
-    openSuggestedCreatePanel()
+    void openSuggestedCreatePanel()
     return
   }
 }
 
 watch(
-  currentMode,
-  (mode) => {
-    if (mode === 'list' || mode === 'year') {
-      closePanel()
+  () => [currentMode.value, isDesktop.value],
+  ([mode, desktop]) => {
+    if (mode === 'day' && desktop) {
+      if (panelMode.value === 'closed') {
+        panelMode.value = 'scratchpad'
+      }
+      return
+    }
+
+    if (panelMode.value === 'scratchpad') {
+      resetPanelState('closed')
     }
   },
   { immediate: true },
@@ -549,10 +615,17 @@ watch(
   () => [currentMode.value, anchorDate.value.valueOf()],
   () => {
     if (currentMode.value === 'day') {
-      closePanel()
+      selectedSessionId.value = ''
+      resetPanelState(isPersistentScratchpad.value ? 'scratchpad' : 'closed')
     }
   },
 )
+
+watch(currentMode, (mode) => {
+  if (mode === 'list' || mode === 'year') {
+    resetPanelState('closed')
+  }
+})
 
 watch(visibleDayTimeBoxes, (timeBoxes) => {
   if (
@@ -759,6 +832,7 @@ onBeforeUnmount(() => {
           :time-boxes="visibleDayTimeBoxes"
           @change-session="persistSessionChange"
           @create-session="openCreatePanel"
+          @open-scratchpad="openScratchpadPanel"
           @open-session="openSessionPanel"
         />
 
@@ -800,12 +874,16 @@ onBeforeUnmount(() => {
       <template #aside>
         <SessionsSidePanel
           v-if="panelMode !== 'closed'"
+          ref="sessionsSidePanelRef"
+          :date-key="scratchpadDateKey"
           :initial-end-time="createInitialEndTime"
           :initial-start-time="createInitialStartTime"
           :mode="panelMode"
+          :persistent="isPersistentScratchpad"
           :session-id="panelSessionId"
           @close="closePanel"
           @created="handlePanelCreated"
+          @show-scratchpad="openScratchpadPanel"
         />
       </template>
     </SessionsWorkspaceShell>
