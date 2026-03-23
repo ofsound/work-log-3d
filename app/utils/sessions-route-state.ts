@@ -109,73 +109,71 @@ export const buildSessionsRouteQuery = (
     delete query.untagged
     delete query.notes
     delete query.sort
-
-    return query
-  }
-
-  const filters = normalizeSessionListFilters(state.listFilters)
-
-  if (filters.query) {
-    query.q = filters.query
   } else {
-    delete query.q
-  }
+    const filters = normalizeSessionListFilters(state.listFilters)
 
-  if (filters.projectIds.length > 0) {
-    query.projects = filters.projectIds.join(',')
-  } else {
-    delete query.projects
-  }
+    if (filters.query) {
+      query.q = filters.query
+    } else {
+      delete query.q
+    }
 
-  if (filters.tagIds.length > 0) {
-    query.tags = filters.tagIds.join(',')
-  } else {
-    delete query.tags
-  }
+    if (filters.projectIds.length > 0) {
+      query.projects = filters.projectIds.join(',')
+    } else {
+      delete query.projects
+    }
 
-  if (filters.tagMode !== defaultListFilters.tagMode) {
-    query.tagMode = filters.tagMode
-  } else {
-    delete query.tagMode
-  }
+    if (filters.tagIds.length > 0) {
+      query.tags = filters.tagIds.join(',')
+    } else {
+      delete query.tags
+    }
 
-  if (filters.dateStart) {
-    query.from = filters.dateStart
-  } else {
-    delete query.from
-  }
+    if (filters.tagMode !== defaultListFilters.tagMode) {
+      query.tagMode = filters.tagMode
+    } else {
+      delete query.tagMode
+    }
 
-  if (filters.dateEnd) {
-    query.to = filters.dateEnd
-  } else {
-    delete query.to
-  }
+    if (filters.dateStart) {
+      query.from = filters.dateStart
+    } else {
+      delete query.from
+    }
 
-  if (filters.minMinutes !== null) {
-    query.min = String(filters.minMinutes)
-  } else {
-    delete query.min
-  }
+    if (filters.dateEnd) {
+      query.to = filters.dateEnd
+    } else {
+      delete query.to
+    }
 
-  if (filters.maxMinutes !== null) {
-    query.max = String(filters.maxMinutes)
-  } else {
-    delete query.max
-  }
+    if (filters.minMinutes !== null) {
+      query.min = String(filters.minMinutes)
+    } else {
+      delete query.min
+    }
 
-  if (filters.untaggedOnly) {
-    query.untagged = '1'
-  } else {
-    delete query.untagged
-  }
+    if (filters.maxMinutes !== null) {
+      query.max = String(filters.maxMinutes)
+    } else {
+      delete query.max
+    }
 
-  if (filters.notesState !== defaultListFilters.notesState) {
-    query.notes = filters.notesState
-  } else {
-    delete query.notes
-  }
+    if (filters.untaggedOnly) {
+      query.untagged = '1'
+    } else {
+      delete query.untagged
+    }
 
-  query.sort = filters.sort
+    if (filters.notesState !== defaultListFilters.notesState) {
+      query.notes = filters.notesState
+    } else {
+      delete query.notes
+    }
+
+    query.sort = filters.sort
+  }
 
   return query
 }

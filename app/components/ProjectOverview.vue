@@ -104,17 +104,58 @@ const headerBadges = computed(() => [
   },
 ])
 
-const updateRouteState = async (nextState: Partial<ReturnType<typeof parseProjectRouteState>>) => {
+const hasSameQueryState = (
+  left: Record<string, string | string[] | undefined>,
+  right: Record<string, string | string[] | undefined>,
+) => {
+  const leftKeys = Object.keys(left).sort()
+  const rightKeys = Object.keys(right).sort()
+
+  if (leftKeys.length !== rightKeys.length) {
+    return false
+  }
+
+  return leftKeys.every((key, index) => {
+    if (key !== rightKeys[index]) {
+      return false
+    }
+
+    const leftValue = left[key]
+    const rightValue = right[key]
+
+    if (Array.isArray(leftValue) || Array.isArray(rightValue)) {
+      return JSON.stringify(leftValue) === JSON.stringify(rightValue)
+    }
+
+    return leftValue === rightValue
+  })
+}
+
+const updateRouteState = async (
+  nextState: Partial<ReturnType<typeof parseProjectRouteState>>,
+  options: {
+    history?: 'push' | 'replace'
+  } = {},
+) => {
   mutationErrorMessage.value = ''
 
-  await router.replace({
-    query: buildProjectRouteQuery(
-      {
-        ...routeState.value,
-        ...nextState,
-      },
-      route.query as Record<string, string | string[] | undefined>,
-    ),
+  const nextQuery = buildProjectRouteQuery(
+    {
+      ...routeState.value,
+      ...nextState,
+    },
+    route.query as Record<string, string | string[] | undefined>,
+  )
+  const currentQuery = route.query as Record<string, string | string[] | undefined>
+
+  if (hasSameQueryState(currentQuery, nextQuery)) {
+    return
+  }
+
+  const navigate = options.history === 'push' ? router.push : router.replace
+
+  await navigate({
+    query: nextQuery,
   })
 }
 
@@ -130,7 +171,7 @@ const handleModeChange = async (mode: ProjectViewMode) => {
   }
 
   closePanel()
-  await updateRouteState({ mode })
+  await updateRouteState({ mode }, { history: 'push' })
 }
 
 const handleWorkspaceModeSelect = async (mode: ProjectWorkspaceMode) => {

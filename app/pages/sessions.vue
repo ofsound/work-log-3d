@@ -279,17 +279,58 @@ const pageTitle = computed(() => {
   return 'Sessions'
 })
 
-const updateRouteState = async (nextState: Partial<ReturnType<typeof parseSessionsRouteState>>) => {
+const hasSameQueryState = (
+  left: Record<string, string | string[] | undefined>,
+  right: Record<string, string | string[] | undefined>,
+) => {
+  const leftKeys = Object.keys(left).sort()
+  const rightKeys = Object.keys(right).sort()
+
+  if (leftKeys.length !== rightKeys.length) {
+    return false
+  }
+
+  return leftKeys.every((key, index) => {
+    if (key !== rightKeys[index]) {
+      return false
+    }
+
+    const leftValue = left[key]
+    const rightValue = right[key]
+
+    if (Array.isArray(leftValue) || Array.isArray(rightValue)) {
+      return JSON.stringify(leftValue) === JSON.stringify(rightValue)
+    }
+
+    return leftValue === rightValue
+  })
+}
+
+const updateRouteState = async (
+  nextState: Partial<ReturnType<typeof parseSessionsRouteState>>,
+  options: {
+    history?: 'push' | 'replace'
+  } = {},
+) => {
   mutationErrorMessage.value = ''
 
-  await router.replace({
-    query: buildSessionsRouteQuery(
-      {
-        ...routeState.value,
-        ...nextState,
-      },
-      route.query as Record<string, string | string[] | undefined>,
-    ),
+  const nextQuery = buildSessionsRouteQuery(
+    {
+      ...routeState.value,
+      ...nextState,
+    },
+    route.query as Record<string, string | string[] | undefined>,
+  )
+  const currentQuery = route.query as Record<string, string | string[] | undefined>
+
+  if (hasSameQueryState(currentQuery, nextQuery)) {
+    return
+  }
+
+  const navigate = options.history === 'push' ? router.push : router.replace
+
+  await navigate({
+    query: nextQuery,
   })
 }
 
@@ -332,14 +373,14 @@ const openSessionPanel = async (
   } = {},
 ) => {
   await flushScratchpadIfNeeded()
+  if (!options.preserveCreatePreview) {
+    createPreview.value = null
+  }
+
   selectSession(sessionId)
   panelMode.value = 'session'
   panelSessionId.value = sessionId
   createRange.value = null
-
-  if (!options.preserveCreatePreview) {
-    createPreview.value = null
-  }
 }
 
 const openCreatePanel = async (range: SessionCreatePayload) => {
@@ -434,20 +475,23 @@ const handleModeChange = async (mode: SessionsViewMode) => {
   resetPanelState('closed')
 
   if (mode === 'list') {
-    await updateRouteState({
-      mode,
-      listFilters: createDefaultSessionListFilters(),
-    })
+    await updateRouteState(
+      {
+        mode,
+        listFilters: createDefaultSessionListFilters(),
+      },
+      { history: 'push' },
+    )
     return
   }
 
-  await updateRouteState({ mode })
+  await updateRouteState({ mode }, { history: 'push' })
 }
 
 const handleOpenDay = async (day: Date) => {
   await flushScratchpadIfNeeded()
   resetPanelState('closed')
-  await updateRouteState({ mode: 'day', date: day })
+  await updateRouteState({ mode: 'day', date: day }, { history: 'push' })
 }
 
 const handleNavigate = async (direction: -1 | 1) => {
