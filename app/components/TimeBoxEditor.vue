@@ -30,7 +30,7 @@ const props = defineProps({
 const emit = defineEmits(['toggleEditor', 'saved'])
 
 const repositories = useWorklogRepository()
-const shell = useHostShell()
+const { confirm } = useConfirmDialog()
 const { hideTags } = useUserSettings()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
@@ -101,7 +101,12 @@ if (props.id) {
 const updateTimeBoxDocument = async () => {
   if (!props.id) return
 
-  const confirmed = shell.confirm(`Are you sure you want to update this Time Box?`)
+  const confirmed = await confirm({
+    title: 'Update this session?',
+    message: 'Save your changes to this time box.',
+    confirmLabel: 'Update',
+    variant: 'primary',
+  })
 
   if (confirmed) {
     try {

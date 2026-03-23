@@ -5,6 +5,7 @@ const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
+  flushTop: { type: Boolean, default: false },
 })
 
 const showEditor = ref(false)
@@ -24,6 +25,7 @@ const toggleEditor = () => {
   <TimeBoxViewer
     v-if="!showEditor"
     :id
+    :flush-top="props.flushTop"
     :highlight-tokens="highlightTokens"
     :variant
     :is-minimized

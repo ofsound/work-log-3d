@@ -61,11 +61,11 @@ const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
 
 const panelMode = ref<'closed' | 'session' | 'create'>('closed')
-const panelDate = ref<Date | null>(null)
 const panelSessionId = ref('')
 const selectedSessionId = ref('')
 const createRange = ref<SessionCreatePayload | null>(null)
 const mutationErrorMessage = ref('')
+const sessionsHeaderRef = ref<HTMLElement | null>(null)
 
 const routeState = computed(() =>
   parseSessionsRouteState(route.query as Record<string, string | string[] | undefined>),
@@ -282,7 +282,6 @@ const openSessionPanel = (sessionId: string) => {
 
 const openCreatePanel = (range: SessionCreatePayload) => {
   panelMode.value = 'create'
-  panelDate.value = range.startTime
   panelSessionId.value = ''
   selectedSessionId.value = ''
   createRange.value = range
@@ -528,7 +527,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="flex h-full min-h-0 flex-col overflow-hidden">
-    <div class="border-b border-border px-6 py-5">
+    <div ref="sessionsHeaderRef" class="border-b border-border px-6 py-5">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div class="text-3xl font-bold tracking-tight">{{ pageTitle }}</div>
@@ -692,6 +691,7 @@ onBeforeUnmount(() => {
         <SessionsDayView
           v-if="currentMode === 'day'"
           :anchor-date="anchorDate"
+          :scroll-align-target="sessionsHeaderRef"
           :hide-tags="hideTags"
           :project-by-id="projectById"
           :project-name-by-id="projectNameById"
@@ -706,6 +706,7 @@ onBeforeUnmount(() => {
         <SessionsWeekView
           v-else-if="currentMode === 'week'"
           :anchor-date="anchorDate"
+          :scroll-align-target="sessionsHeaderRef"
           :project-by-id="projectById"
           :project-name-by-id="projectNameById"
           :selected-session-id="selectedSessionId"
@@ -739,7 +740,6 @@ onBeforeUnmount(() => {
       <template #aside>
         <SessionsSidePanel
           v-if="panelMode !== 'closed'"
-          :day="panelDate ?? undefined"
           :initial-end-time="createInitialEndTime"
           :initial-start-time="createInitialStartTime"
           :mode="panelMode"

@@ -29,15 +29,15 @@ const props = defineProps({
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
   projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
-  tagNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
-  hideTags: { type: Boolean, default: false },
   selectedSessionId: { type: String, default: '' },
+  scrollAlignTarget: { type: Object as PropType<HTMLElement | null>, default: null },
 })
 
 const emit = defineEmits(['openSession', 'createSession', 'changeSession'])
 
 const HOUR_HEIGHT = 72
-const HEADER_HEIGHT = 24
+/** Y offset of the 7:30am grid line from the top of the calendar surface (7.5 hours). */
+const SEVEN_THIRTY_TOP_PX = 7.5 * HOUR_HEIGHT
 const TIME_GUTTER_WIDTH = 72
 const SNAP_MINUTES = 10
 const MINIMUM_DURATION_MINUTES = 10
@@ -66,6 +66,9 @@ type InteractionState =
     }
 
 const scrollContainerRef = ref<HTMLElement | null>(null)
+/** Top of the 24h grid; pointer Y is measured from here (not the scroll container). */
+const calendarSurfaceRef = ref<HTMLElement | null>(null)
+const sevenThirtyLineRef = ref<HTMLElement | null>(null)
 const interactionState = ref<InteractionState | null>(null)
 const lastPointerMinutes = ref<number | null>(null)
 const pointerOrigin = ref({ x: 0, y: 0 })
@@ -146,14 +149,13 @@ const clampMinutes = (minutes: number) => {
 }
 
 const getPointerMinutes = (clientY: number) => {
-  const scrollContainer = scrollContainerRef.value
+  const surface = calendarSurfaceRef.value
 
-  if (!scrollContainer) {
+  if (!surface) {
     return null
   }
 
-  const rect = scrollContainer.getBoundingClientRect()
-  const offsetY = clientY - rect.top + scrollContainer.scrollTop - HEADER_HEIGHT
+  const offsetY = clientY - surface.getBoundingClientRect().top
 
   if (offsetY < 0) {
     return null
@@ -371,19 +373,16 @@ const handleResizePointerDown = (timeBox: TimeBox, edge: 'start' | 'end', event:
 const getProjectName = (projectId: string) => props.projectNameById[projectId] ?? 'Untitled'
 const getProject = (projectId: string) => props.projectById[projectId]
 
-const getTagNames = (tagIds: string[]) =>
-  tagIds.map((tagId) => props.tagNameById[tagId]).filter(Boolean)
-
 const formatHourLabel = (hour: number) =>
   new Date(2026, 0, 1, hour).toLocaleTimeString([], {
     hour: 'numeric',
   })
 
-const formatEventTime = (date: Date) =>
-  date.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+const getDurationBadgeStyle = (projectId: string) => {
+  const project = getProject(projectId)
+
+  return project ? getProjectBadgeStyle(project.colors) : {}
+}
 
 const getEventStyle = (layout: (typeof dayLayouts.value)[number]) => {
   const top = (getMinutesSinceStartOfDay(layout.segmentStart) / MINUTES_PER_DAY) * HOUR_HEIGHT * 24
@@ -425,49 +424,35 @@ const getPreviewStyle = () => {
   }
 }
 
-const getLayoutDensity = (layout: (typeof dayLayouts.value)[number]) => {
-  const minutes = (layout.segmentEnd.valueOf() - layout.segmentStart.valueOf()) / 60_000
-
-  if (layout.laneCount >= 3 || minutes < 25) {
-    return 'compact'
-  }
-
-  if (layout.laneCount === 2 || minutes < 55) {
-    return 'medium'
-  }
-
-  return 'full'
-}
-
 const previewStyle = computed(() => getPreviewStyle())
-const getDurationBadgeStyle = (projectId: string) => {
-  const project = getProject(projectId)
 
-  return project ? getProjectBadgeStyle(project.colors) : {}
+const scrollAlignTo730 = async () => {
+  await nextTick()
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve())
+    })
+  })
+
+  const scrollContainer = scrollContainerRef.value
+  const marker = sevenThirtyLineRef.value
+
+  if (!scrollContainer || !marker) {
+    return
+  }
+
+  const targetY =
+    props.scrollAlignTarget?.getBoundingClientRect().bottom ??
+    scrollContainer.getBoundingClientRect().top
+
+  const delta = marker.getBoundingClientRect().top - targetY
+  scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop + delta)
 }
 
 watch(
   () => props.anchorDate.valueOf(),
-  async () => {
-    await nextTick()
-
-    const scrollContainer = scrollContainerRef.value
-
-    if (!scrollContainer) {
-      return
-    }
-
-    const firstEvent = dayLayouts.value[0]
-    const targetMinutes = isSameDay(props.anchorDate, now.value)
-      ? getMinutesSinceStartOfDay(now.value)
-      : firstEvent
-        ? getMinutesSinceStartOfDay(firstEvent.segmentStart)
-        : 8 * 60
-
-    scrollContainer.scrollTop = Math.max(
-      0,
-      (targetMinutes / MINUTES_PER_DAY) * HOUR_HEIGHT * 24 - 220,
-    )
+  () => {
+    void scrollAlignTo730()
   },
   { immediate: true },
 )
@@ -522,11 +507,19 @@ onBeforeUnmount(() => {
 
         <div class="relative border-l border-border">
           <div
+            ref="calendarSurfaceRef"
             class="relative select-none"
             :class="{ 'bg-surface-muted/30': isSameDay(anchorDate, now) }"
             :style="{ height: `${HOUR_HEIGHT * 24}px` }"
             @pointerdown="handleCreatePointerDown"
           >
+            <div
+              ref="sevenThirtyLineRef"
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-x-0 z-0"
+              :style="{ top: `${SEVEN_THIRTY_TOP_PX}px`, height: '0' }"
+            ></div>
+
             <div
               v-for="hour in hours"
               :key="`${hour}-day`"
@@ -557,67 +550,38 @@ onBeforeUnmount(() => {
             <div
               v-for="layout in dayLayouts"
               :key="`${layout.timeBoxId}-${layout.segmentStart.valueOf()}`"
-              class="absolute z-10 cursor-pointer rounded-2xl border px-4 py-3 text-left text-text shadow-panel transition hover:brightness-97"
-              :class="{ 'ring-2 ring-link': selectedSessionId === layout.timeBoxId }"
+              class="absolute z-10 cursor-pointer rounded-md border px-3 py-2 text-left text-text transition hover:brightness-97"
+              :class="{
+                'shadow-panel-selected ring-1 ring-link/35 ring-inset':
+                  selectedSessionId === layout.timeBoxId,
+                'shadow-panel': selectedSessionId !== layout.timeBoxId,
+              }"
               :style="getEventStyle(layout)"
               @pointerdown="handleSessionPointerDown(layout, $event)"
             >
               <button
                 v-if="layout.startsOnThisDay"
-                class="absolute inset-x-0 top-0 h-2 cursor-ns-resize rounded-t-2xl"
+                class="absolute inset-x-0 top-0 h-2 cursor-ns-resize rounded-t-xl"
                 @pointerdown="handleResizePointerDown(layout.timeBox, 'start', $event)"
               ></button>
 
-              <div class="pointer-events-none flex h-full flex-col">
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <div class="text-xs tracking-[0.18em] uppercase opacity-70">
-                      {{ formatEventTime(layout.segmentStart) }} -
-                      {{ formatEventTime(layout.segmentEnd) }}
-                    </div>
-                    <div class="mt-1 text-sm font-bold sm:text-lg">
-                      {{ getProjectName(layout.timeBox.project) }}
-                    </div>
-                  </div>
-                  <div
-                    class="rounded-full border px-2 py-0.5 text-xs font-semibold"
-                    :style="getDurationBadgeStyle(layout.timeBox.project)"
-                  >
-                    {{ getDurationMinutesLabel(layout.timeBox) }}
-                  </div>
+              <div
+                class="pointer-events-none flex h-full min-h-0 items-start justify-between gap-2 overflow-hidden"
+              >
+                <div class="min-w-0 flex-1 truncate text-sm leading-none font-bold">
+                  {{ getProjectName(layout.timeBox.project) }}
                 </div>
-
                 <div
-                  v-if="getLayoutDensity(layout) !== 'compact'"
-                  class="mt-2 line-clamp-4 text-sm leading-relaxed opacity-85"
+                  class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                  :style="getDurationBadgeStyle(layout.timeBox.project)"
                 >
-                  {{ layout.timeBox.notes }}
-                </div>
-
-                <div
-                  v-if="!hideTags && getLayoutDensity(layout) === 'full'"
-                  class="mt-3 flex flex-wrap gap-2"
-                >
-                  <div
-                    v-for="tagName in getTagNames(layout.timeBox.tags)"
-                    :key="tagName"
-                    class="rounded-full bg-white/55 px-2 py-0.5 text-xs font-medium dark:bg-black/20"
-                  >
-                    {{ tagName }}
-                  </div>
-                </div>
-
-                <div
-                  v-if="getLayoutDensity(layout) === 'compact'"
-                  class="mt-2 truncate text-xs opacity-80"
-                >
-                  {{ layout.timeBox.notes }}
+                  {{ getDurationMinutesLabel(layout.timeBox) }}
                 </div>
               </div>
 
               <button
                 v-if="layout.endsOnThisDay"
-                class="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize rounded-b-2xl"
+                class="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize rounded-b-xl"
                 @pointerdown="handleResizePointerDown(layout.timeBox, 'end', $event)"
               ></button>
             </div>

@@ -21,7 +21,7 @@ import {
 } from '~~/shared/worklog'
 
 const repositories = useWorklogRepository()
-const shell = useHostShell()
+const { confirm } = useConfirmDialog()
 const { hideTags } = useUserSettings()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
@@ -30,6 +30,7 @@ const props = defineProps({
   variant: { type: String, default: undefined },
   isMinimized: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
+  flushTop: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['toggleEditor'])
@@ -98,16 +99,22 @@ const endTimeFormatted = computed(() => {
   })
 })
 
-const deleteTimeBoxDocument = async () => {
-  const confirmed = shell.confirm(`Are you sure you want to delete this Session?`)
+const requestDeleteSession = async () => {
+  const ok = await confirm({
+    title: 'Delete this session?',
+    message: 'This cannot be undone.',
+    variant: 'danger',
+  })
 
-  if (confirmed) {
-    try {
-      await repositories.timeBoxes.remove(props.id)
-      mutationErrorMessage.value = ''
-    } catch (error) {
-      mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to delete session.')
-    }
+  if (!ok) {
+    return
+  }
+
+  try {
+    await repositories.timeBoxes.remove(props.id)
+    mutationErrorMessage.value = ''
+  } catch (error) {
+    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to delete session.')
   }
 }
 
@@ -122,7 +129,8 @@ const projectBadgeStyle = computed(() =>
 <template>
   <div
     v-if="!isMinimized"
-    class="relative my-4 rounded-sm border bg-panel-session px-6 py-4 shadow-panel"
+    class="relative rounded-sm border bg-panel-session px-6 py-4 shadow-panel"
+    :class="props.flushTop ? 'mt-0 mb-4' : 'my-4'"
     :style="projectSurfaceStyle"
   >
     <button
@@ -132,8 +140,10 @@ const projectBadgeStyle = computed(() =>
       <EditIcon />
     </button>
     <button
+      type="button"
       class="absolute right-4 cursor-pointer px-1 text-text-subtle hover:text-text"
-      @click="deleteTimeBoxDocument"
+      aria-label="Delete session"
+      @click="requestDeleteSession"
     >
       <DeleteIcon />
     </button>

@@ -174,7 +174,10 @@ const handleSegmentDragEnd = () => {
                 v-for="segment in getVisibleSegments(day)"
                 :key="segment.id"
                 class="cursor-pointer rounded-md border px-2 py-1 text-left text-xs text-text hover:brightness-97"
-                :class="{ 'ring-2 ring-link': selectedSessionId === segment.timeBox.id }"
+                :class="{
+                  'shadow-panel-selected ring-1 ring-link/35 ring-inset':
+                    selectedSessionId === segment.timeBox.id,
+                }"
                 :style="getProjectStyle(segment.timeBox.project)"
                 draggable="true"
                 @click.stop="emit('openSession', segment.timeBox.id)"

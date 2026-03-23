@@ -11,7 +11,7 @@ import type { Project } from '~~/shared/worklog'
 import { getTotalDurationLabel, getWorklogErrorMessage } from '~~/shared/worklog'
 
 const repositories = useWorklogRepository()
-const shell = useHostShell()
+const { confirm } = useConfirmDialog()
 const { timeBoxesCollection } = useFirestoreCollections()
 const timeBoxes = useCollection(timeBoxesCollection)
 
@@ -27,9 +27,11 @@ const mutationErrorMessage = ref('')
 const isNameEditMode = ref(false)
 
 const deleteProjectDocument = async () => {
-  const confirmed = shell.confirm(
-    `Are you sure you want to delete the project: ${props.project.name}?`,
-  )
+  const confirmed = await confirm({
+    title: `Delete project “${props.project.name}”?`,
+    message: 'This cannot be undone.',
+    variant: 'danger',
+  })
 
   if (confirmed) {
     try {

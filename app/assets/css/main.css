@@ -106,6 +106,17 @@
         color-mix(in srgb, var(--color-black) 10%, transparent),
         color-mix(in srgb, var(--color-black) 70%, transparent)
       );
+  --shadow-panel-selected:
+    0 6px 14px -3px
+      light-dark(
+        color-mix(in srgb, var(--color-black) 14%, transparent),
+        color-mix(in srgb, var(--color-black) 88%, transparent)
+      ),
+    0 4px 8px -4px
+      light-dark(
+        color-mix(in srgb, var(--color-black) 12%, transparent),
+        color-mix(in srgb, var(--color-black) 76%, transparent)
+      );
   --shadow-overview: 0 2px 4px
     light-dark(
       color-mix(in srgb, var(--color-gray-700) 40%, transparent),

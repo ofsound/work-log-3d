@@ -1,27 +1,16 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
-import { formatDateKey } from '~~/shared/worklog'
+import CloseIcon from '@/icons/CloseIcon.vue'
 
-const props = defineProps({
+defineProps({
   mode: { type: String as PropType<'session' | 'create'>, required: true },
-  day: { type: Date, default: undefined },
   sessionId: { type: String, default: undefined },
   initialStartTime: { type: String, default: '' },
   initialEndTime: { type: String, default: '' },
 })
 
 const emit = defineEmits(['close', 'created'])
-
-const dayTitle = computed(
-  () =>
-    props.day?.toLocaleDateString([], {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    }) ?? '',
-)
 
 const handleCreated = (sessionId: string) => {
   emit('created', sessionId)
@@ -32,32 +21,20 @@ const handleCreated = (sessionId: string) => {
   <aside
     class="flex h-full w-full max-w-108 shrink-0 flex-col border-l border-border bg-surface-strong shadow-panel"
   >
-    <div class="flex items-center gap-3 border-b border-border-subtle px-5 py-4">
-      <div class="min-w-0 flex-1">
-        <div v-if="mode === 'session'" class="text-lg font-bold">Session</div>
-        <div v-else class="text-lg font-bold">New Session</div>
-        <div class="text-sm text-text-subtle">
-          <span v-if="mode === 'create'">
-            {{
-              day
-                ? `Prefilled for ${dayTitle || formatDateKey(day)}`
-                : 'Prefilled from the calendar selection'
-            }}
-          </span>
-          <span v-else>Edit without losing calendar context</span>
-        </div>
-      </div>
+    <div class="flex shrink-0 items-center justify-end px-3 py-3">
       <button
-        class="cursor-pointer rounded-md border border-button-secondary-border px-2 py-1 text-sm text-button-secondary-text hover:bg-button-secondary-hover"
+        type="button"
+        class="cursor-pointer rounded-md p-2 text-text-subtle hover:bg-surface hover:text-text"
+        aria-label="Close"
         @click="emit('close')"
       >
-        Close
+        <CloseIcon />
       </button>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-auto overscroll-contain px-4 py-4">
+    <div class="min-h-0 flex-1 overflow-auto overscroll-contain px-4 pb-4">
       <div v-if="mode === 'session' && sessionId">
-        <TimeBox :id="sessionId" />
+        <TimeBox :id="sessionId" flush-top />
       </div>
 
       <div v-else class="pb-4">

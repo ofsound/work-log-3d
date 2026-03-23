@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
-import { getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import type { Project, TimeBox, TimeBoxInput } from '~~/shared/worklog'
 import {
   addMinutes,
   buildDaySegmentLayouts,
   buildWeekDays,
   formatDateKey,
+  getDurationMinutesLabel,
   getEndOfWeek,
   getMinutesSinceStartOfDay,
   getStartOfDay,
@@ -33,20 +34,40 @@ const props = defineProps({
   projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
   selectedSessionId: { type: String, default: '' },
+  scrollAlignTarget: { type: Object as PropType<HTMLElement | null>, default: null },
 })
 
 const emit = defineEmits(['openSession', 'openDay', 'createSession', 'changeSession'])
 
 const HOUR_HEIGHT = 72
-const HEADER_HEIGHT = 72
+/** Y offset of the 7:30am grid line from the top of the calendar surface (7.5 hours). */
+const SEVEN_THIRTY_TOP_PX = 7.5 * HOUR_HEIGHT
 const TIME_GUTTER_WIDTH = 72
-const DAY_COLUMN_WIDTH = 160
+/** Minimum day column width; columns grow with `1fr` to fill the row (like month view). */
+const MIN_DAY_COLUMN_WIDTH = 160
 const SNAP_MINUTES = 10
 const MINIMUM_DURATION_MINUTES = 10
 const INTERACTION_THRESHOLD = 4
 
 const scrollContainerRef = ref<HTMLElement | null>(null)
+const sevenThirtyLineRef = ref<HTMLElement | null>(null)
+/** Grid wrapper; used with clientX for day column. */
+const weekCalendarGridRef = ref<HTMLElement | null>(null)
+/** First day column's 24h surface; pointer Y is measured from here. */
+const calendarSurfaceRef = ref<HTMLElement | null>(null)
 const now = ref(new Date())
+
+const setCalendarSurfaceRef = (el: unknown, dayIndex: number) => {
+  if (dayIndex === 0) {
+    calendarSurfaceRef.value = el instanceof HTMLElement ? el : null
+  }
+}
+
+const setSevenThirtyLineRef = (el: unknown, dayIndex: number) => {
+  if (dayIndex === 0) {
+    sevenThirtyLineRef.value = el instanceof HTMLElement ? el : null
+  }
+}
 
 let nowTimer: ReturnType<typeof setInterval> | undefined
 
@@ -210,24 +231,30 @@ const enforceMinimumEnd = (startTime: Date, endTime: Date) =>
     : endTime
 
 const getPointerSlot = (clientX: number, clientY: number) => {
-  const scrollContainer = scrollContainerRef.value
+  const grid = weekCalendarGridRef.value
+  const surface = calendarSurfaceRef.value
 
-  if (!scrollContainer) {
+  if (!grid || !surface) {
     return null
   }
 
-  const rect = scrollContainer.getBoundingClientRect()
-  const offsetX = clientX - rect.left + scrollContainer.scrollLeft - TIME_GUTTER_WIDTH
-  const offsetY = clientY - rect.top + scrollContainer.scrollTop - HEADER_HEIGHT
+  const gridRect = grid.getBoundingClientRect()
+  const relativeX = clientX - gridRect.left - TIME_GUTTER_WIDTH
+  const dayAreaWidth = Math.max(0, gridRect.width - TIME_GUTTER_WIDTH)
+  const columnWidth = dayAreaWidth / weekDays.value.length
 
-  if (offsetX < 0 || offsetY < 0) {
+  if (relativeX < 0 || relativeX >= dayAreaWidth || columnWidth <= 0) {
     return null
   }
 
-  const dayIndex = Math.min(
-    weekDays.value.length - 1,
-    Math.max(0, Math.floor(offsetX / DAY_COLUMN_WIDTH)),
-  )
+  const dayIndex = Math.min(weekDays.value.length - 1, Math.floor(relativeX / columnWidth))
+
+  const offsetY = clientY - surface.getBoundingClientRect().top
+
+  if (offsetY < 0) {
+    return null
+  }
+
   const minutes = clampMinutes((offsetY / (HOUR_HEIGHT * 24)) * MINUTES_PER_DAY)
 
   return { dayIndex, minutes }
@@ -436,6 +463,12 @@ const handleResizePointerDown = (timeBox: TimeBox, edge: 'start' | 'end', event:
 const getProjectName = (projectId: string) => props.projectNameById[projectId] ?? 'Untitled'
 const getProject = (projectId: string) => props.projectById[projectId]
 
+const getDurationBadgeStyle = (projectId: string) => {
+  const project = getProject(projectId)
+
+  return project ? getProjectBadgeStyle(project.colors) : {}
+}
+
 const formatHourLabel = (hour: number) =>
   new Date(2026, 0, 1, hour).toLocaleTimeString([], {
     hour: 'numeric',
@@ -447,13 +480,9 @@ const formatDayHeader = (date: Date) =>
     day: 'numeric',
   })
 
-const formatEventTime = (date: Date) =>
-  date.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+type WeekLayout = (typeof dayLayouts.value)[number][number]
 
-const getEventStyle = (layout: (typeof dayLayouts.value)[number][number]) => {
+const getEventStyle = (layout: WeekLayout) => {
   const top = (getMinutesSinceStartOfDay(layout.segmentStart) / MINUTES_PER_DAY) * HOUR_HEIGHT * 24
   const height = Math.max(
     22,
@@ -503,22 +532,33 @@ const getPreviewStyle = () => {
 
 const previewStyle = computed(() => getPreviewStyle())
 
+const scrollAlignTo730 = async () => {
+  await nextTick()
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve())
+    })
+  })
+
+  const scrollContainer = scrollContainerRef.value
+  const marker = sevenThirtyLineRef.value
+
+  if (!scrollContainer || !marker) {
+    return
+  }
+
+  const targetY =
+    props.scrollAlignTarget?.getBoundingClientRect().bottom ??
+    scrollContainer.getBoundingClientRect().top
+
+  const delta = marker.getBoundingClientRect().top - targetY
+  scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop + delta)
+}
+
 watch(
   () => formatDateKey(props.anchorDate),
-  async () => {
-    await nextTick()
-
-    const scrollContainer = scrollContainerRef.value
-
-    if (!scrollContainer || !todayVisible.value) {
-      return
-    }
-
-    const targetTop = Math.max(
-      0,
-      (getMinutesSinceStartOfDay(now.value) / MINUTES_PER_DAY) * HOUR_HEIGHT * 24 - 220,
-    )
-    scrollContainer.scrollTop = targetTop
+  () => {
+    void scrollAlignTo730()
   },
   { immediate: true },
 )
@@ -542,10 +582,11 @@ onBeforeUnmount(() => {
   <div class="min-h-0 flex-1 overflow-hidden">
     <div ref="scrollContainerRef" class="h-full overflow-auto overscroll-contain px-6 py-6">
       <div
-        class="grid min-h-full overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
+        ref="weekCalendarGridRef"
+        class="grid min-h-full w-full overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
         :style="{
-          gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(7, ${DAY_COLUMN_WIDTH}px)`,
-          minWidth: `${TIME_GUTTER_WIDTH + DAY_COLUMN_WIDTH * 7}px`,
+          gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(7, minmax(${MIN_DAY_COLUMN_WIDTH}px, 1fr))`,
+          minWidth: `${TIME_GUTTER_WIDTH + MIN_DAY_COLUMN_WIDTH * 7}px`,
         }"
       >
         <div class="sticky top-0 z-30 border-b border-border bg-surface"></div>
@@ -584,11 +625,20 @@ onBeforeUnmount(() => {
           class="relative border-l border-border"
         >
           <div
+            :ref="(el) => setCalendarSurfaceRef(el, dayIndex)"
             class="relative select-none"
             :class="{ 'bg-surface-muted/40': isSameDay(day, now) }"
             :style="{ height: `${HOUR_HEIGHT * 24}px` }"
             @pointerdown="handleCreatePointerDown(dayIndex, $event)"
           >
+            <div
+              v-if="dayIndex === 0"
+              :ref="(el) => setSevenThirtyLineRef(el, dayIndex)"
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-x-0 z-0"
+              :style="{ top: `${SEVEN_THIRTY_TOP_PX}px`, height: '0' }"
+            ></div>
+
             <div
               v-for="hour in hours"
               :key="`${formatDateKey(day)}-${hour}`"
@@ -619,9 +669,11 @@ onBeforeUnmount(() => {
             <div
               v-for="layout in dayLayouts[dayIndex]"
               :key="`${layout.timeBoxId}-${layout.segmentStart.valueOf()}`"
-              class="absolute z-10 cursor-pointer rounded-lg border px-2 py-1 text-left text-text shadow-panel transition hover:brightness-97"
+              class="absolute z-10 cursor-pointer rounded-lg border px-2 py-1 text-left text-text transition hover:brightness-97"
               :class="{
-                'ring-2 ring-link': selectedSessionId === layout.timeBoxId,
+                'shadow-panel-selected ring-1 ring-link/35 ring-inset':
+                  selectedSessionId === layout.timeBoxId,
+                'shadow-panel': selectedSessionId !== layout.timeBoxId,
                 'opacity-50':
                   interactionState?.mode === 'move' &&
                   interactionState.timeBox.id === layout.timeBoxId,
@@ -634,17 +686,17 @@ onBeforeUnmount(() => {
                 class="absolute inset-x-0 top-0 h-2 cursor-ns-resize rounded-t-lg"
                 @pointerdown="handleResizePointerDown(layout.timeBox, 'start', $event)"
               ></button>
-              <div class="pointer-events-none">
-                <div
-                  class="truncate text-[11px] font-semibold tracking-[0.16em] uppercase opacity-70"
-                >
-                  {{ formatEventTime(layout.segmentStart) }}
-                </div>
-                <div class="truncate text-sm font-semibold">
+              <div
+                class="pointer-events-none flex h-full min-h-0 items-start justify-between gap-2 overflow-hidden"
+              >
+                <div class="min-w-0 flex-1 truncate text-sm leading-none font-bold">
                   {{ getProjectName(layout.timeBox.project) }}
                 </div>
-                <div class="truncate text-xs opacity-80">
-                  {{ layout.timeBox.notes }}
+                <div
+                  class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                  :style="getDurationBadgeStyle(layout.timeBox.project)"
+                >
+                  {{ getDurationMinutesLabel(layout.timeBox) }}
                 </div>
               </div>
               <button

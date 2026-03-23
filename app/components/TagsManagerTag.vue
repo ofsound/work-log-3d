@@ -9,7 +9,7 @@ import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getTotalDurationLabel, getWorklogErrorMessage } from '~~/shared/worklog'
 
 const repositories = useWorklogRepository()
-const shell = useHostShell()
+const { confirm } = useConfirmDialog()
 const { timeBoxesCollection } = useFirestoreCollections()
 const timeBoxes = useCollection(timeBoxesCollection)
 
@@ -26,7 +26,11 @@ const mutationErrorMessage = ref('')
 const isNameEditMode = ref(false)
 
 const deleteTagDocument = async () => {
-  const confirmed = shell.confirm(`Are you sure you want to delete the tag: ${props.name}?`)
+  const confirmed = await confirm({
+    title: `Delete tag “${props.name ?? props.id}”?`,
+    message: 'This cannot be undone.',
+    variant: 'danger',
+  })
 
   if (confirmed) {
     try {
