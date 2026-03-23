@@ -669,11 +669,13 @@ onBeforeUnmount(() => {
             <div
               v-for="layout in dayLayouts[dayIndex]"
               :key="`${layout.timeBoxId}-${layout.segmentStart.valueOf()}`"
-              class="absolute z-10 cursor-pointer rounded-lg border px-2 py-1 text-left text-text transition hover:brightness-97"
+              class="absolute z-10 cursor-pointer rounded-lg border px-2 py-1 text-left text-text transition-[box-shadow,filter] duration-150 ease-out hover:z-20 hover:brightness-[1.02]"
               :class="{
                 'shadow-panel-selected ring-1 ring-link/35 ring-inset':
                   selectedSessionId === layout.timeBoxId,
                 'shadow-panel': selectedSessionId !== layout.timeBoxId,
+                'hover:shadow-[var(--shadow-panel-selected)]':
+                  selectedSessionId !== layout.timeBoxId,
                 'opacity-50':
                   interactionState?.mode === 'move' &&
                   interactionState.timeBox.id === layout.timeBoxId,
