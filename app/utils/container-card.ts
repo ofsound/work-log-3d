@@ -19,14 +19,14 @@ export type ContainerCardPadding = (typeof CONTAINER_CARD_PADDING_OPTIONS)[numbe
 const BASE_CLASS_NAME = 'border'
 
 export const CONTAINER_CARD_VARIANT_CLASS_NAMES = {
-  default: 'rounded-2xl border-border-subtle bg-surface shadow-panel',
-  muted: 'rounded-2xl border-border-subtle bg-surface-muted shadow-none',
-  subtle: 'rounded-2xl border-border bg-surface shadow-panel',
-  project: 'rounded-2xl border-border-subtle bg-panel-project shadow-panel',
-  tag: 'rounded-2xl border-border-subtle bg-panel-tag shadow-panel',
-  day: 'rounded-2xl border-border-subtle bg-panel-day shadow-panel',
-  timer: 'rounded-2xl border-border-subtle bg-panel-timer shadow-panel',
-  session: 'rounded-2xl border-border-subtle bg-panel-session shadow-panel',
+  default: 'rounded-lg border-border-subtle bg-surface shadow-panel',
+  muted: 'rounded-lg border-border-subtle bg-surface-muted shadow-none',
+  subtle: 'rounded-lg border-border bg-surface shadow-panel',
+  project: 'rounded-lg border-border-subtle bg-panel-project shadow-panel',
+  tag: 'rounded-lg border-border-subtle bg-panel-tag shadow-panel',
+  day: 'rounded-lg border-border-subtle bg-panel-day shadow-panel',
+  timer: 'rounded-lg border-border-subtle bg-panel-timer shadow-panel',
+  session: 'rounded-lg border-border-subtle bg-panel-session shadow-panel',
   overlay: 'rounded-3xl border-white/20 bg-surface/42 shadow-panel backdrop-blur-lg',
   warning:
     'rounded-3xl border-callout-warning-border bg-callout-warning-surface shadow-control text-callout-warning-text',
