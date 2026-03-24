@@ -56,6 +56,7 @@ const dynamicSecondaryColor = ref('#06b6d4')
 const secondaryColorEnabled = ref(true)
 const mutationErrorMessage = ref('')
 const isSaving = ref(false)
+const isDeleting = ref(false)
 const initialFormSnapshot = ref<string | null>(null)
 const allowNextNavigation = ref(false)
 
@@ -229,6 +230,37 @@ const cancelEditing = async () => {
   await navigateToWorkspaceMode(routeState.value.mode)
 }
 
+const deleteProject = async () => {
+  if (!project.value) {
+    return
+  }
+
+  const displayName = dynamicName.value.trim() || project.value.name || 'this project'
+  const confirmed = await confirm({
+    title: `Delete project “${displayName}”?`,
+    message: 'This cannot be undone.',
+    variant: 'danger',
+  })
+
+  if (!confirmed) {
+    return
+  }
+
+  isDeleting.value = true
+
+  try {
+    mutationErrorMessage.value = ''
+    await repositories.projects.remove(props.id)
+    allowNextNavigation.value = true
+    await router.push('/projects')
+  } catch (error) {
+    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to delete project.')
+  } finally {
+    allowNextNavigation.value = false
+    isDeleting.value = false
+  }
+}
+
 const handleWorkspaceModeSelect = async (mode: ProjectWorkspaceMode) => {
   await navigateToWorkspaceMode(mode)
 }
@@ -296,6 +328,24 @@ onBeforeRouteLeave(async () => {
           @update:secondary-color="dynamicSecondaryColor = $event"
           @update:secondary-color-enabled="secondaryColorEnabled = $event"
         />
+
+        <ContainerCard as="section" padding="default" variant="danger">
+          <h2 class="text-sm font-bold tracking-wide text-danger uppercase">Danger zone</h2>
+          <p class="mt-2 max-w-xl text-sm text-text">
+            Permanently delete this project. Sessions that use this project must be removed or
+            reassigned first, or deletion will fail.
+          </p>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              class="cursor-pointer rounded-md bg-danger px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="isDeleting"
+              @click="deleteProject"
+            >
+              {{ isDeleting ? 'Deleting…' : 'Delete project' }}
+            </button>
+          </div>
+        </ContainerCard>
       </div>
     </div>
   </div>

@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import DeleteIcon from '@/icons/DeleteIcon.vue'
-
 import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import { getProjectEditPathFromProject, getProjectPathFromProject } from '~/utils/worklog-routes'
 import type { Project, TimeBox } from '~~/shared/worklog'
-import { getTotalDurationLabel, getWorklogErrorMessage } from '~~/shared/worklog'
+import { getTotalDurationLabel } from '~~/shared/worklog'
 
-const repositories = useWorklogRepository()
-const { confirm } = useConfirmDialog()
 const { timeBoxesCollection } = useFirestoreCollections()
 const timeBoxes = useCollection(timeBoxesCollection)
 
@@ -18,24 +14,6 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const mutationErrorMessage = ref('')
-
-const deleteProjectDocument = async () => {
-  const confirmed = await confirm({
-    title: `Delete project “${props.project.name}”?`,
-    message: 'This cannot be undone.',
-    variant: 'danger',
-  })
-
-  if (confirmed) {
-    try {
-      await repositories.projects.remove(props.project.id)
-      mutationErrorMessage.value = ''
-    } catch (error) {
-      mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to delete project.')
-    }
-  }
-}
 
 const projectTimeBoxes = computed<TimeBox[]>(() =>
   toTimeBoxes(timeBoxes.value as FirebaseTimeBoxDocument[]).filter(
@@ -122,16 +100,6 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
       >
         Edit
       </button>
-      <button
-        type="button"
-        class="cursor-pointer px-1 text-text-subtle hover:text-text"
-        @click.stop="deleteProjectDocument"
-      >
-        <DeleteIcon />
-      </button>
     </div>
-    <p v-if="mutationErrorMessage" class="mt-2 px-1 text-sm text-danger" @click.stop>
-      {{ mutationErrorMessage }}
-    </p>
   </ContainerCard>
 </template>

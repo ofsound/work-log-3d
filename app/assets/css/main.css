@@ -109,6 +109,12 @@
   );
   --color-callout-warning-text: light-dark(var(--color-amber-900), var(--color-amber-100));
 
+  --color-callout-danger-border: light-dark(var(--color-red-300), var(--color-red-800));
+  --color-callout-danger-surface: light-dark(
+    var(--color-red-50),
+    color-mix(in srgb, var(--color-red-950) 48%, transparent)
+  );
+
   --shadow-shell:
     0 10px 15px -3px
       light-dark(

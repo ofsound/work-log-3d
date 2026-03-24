@@ -21,15 +21,15 @@ const currentUser = ref({
 
 const savedSettings = ref(cloneUserSettings(DEFAULT_USER_SETTINGS))
 
-  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-    useCurrentUser: () => currentUser,
-    useFirebaseAuth: () => ({ id: 'auth' }),
-    useFirestoreCollections: () => ({
-      projectsCollection: ref({ id: 'projects' }),
-      tagsCollection: ref({ id: 'tags' }),
-    }),
-    useRouter: () => ({ push: routerPush }),
-  }
+;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+  useCurrentUser: () => currentUser,
+  useFirebaseAuth: () => ({ id: 'auth' }),
+  useFirestoreCollections: () => ({
+    projectsCollection: ref({ id: 'projects' }),
+    tagsCollection: ref({ id: 'tags' }),
+  }),
+  useRouter: () => ({ push: routerPush }),
+}
 
 vi.mock('firebase/auth', () => ({
   signOut,

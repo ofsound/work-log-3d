@@ -12,7 +12,7 @@ const getRequiredMock = <T>(key: string): T => {
   return value as T
 }
 
-export const definePageMeta = () => { }
+export const definePageMeta = () => {}
 
 export const getCurrentUser = () => getRequiredMock<() => Promise<unknown>>('getCurrentUser')()
 

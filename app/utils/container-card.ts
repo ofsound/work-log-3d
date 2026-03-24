@@ -9,6 +9,7 @@ export const CONTAINER_CARD_VARIANTS = [
   'session',
   'overlay',
   'warning',
+  'danger',
 ] as const
 
 export const CONTAINER_CARD_PADDING_OPTIONS = ['compact', 'default', 'comfortable'] as const
@@ -30,6 +31,7 @@ export const CONTAINER_CARD_VARIANT_CLASS_NAMES = {
   overlay: 'rounded-3xl border-white/20 bg-surface/42 shadow-panel backdrop-blur-lg',
   warning:
     'rounded-3xl border-callout-warning-border bg-callout-warning-surface shadow-control text-callout-warning-text',
+  danger: 'rounded-3xl border-callout-danger-border bg-callout-danger-surface shadow-control',
 } satisfies Record<ContainerCardVariant, string>
 
 export const CONTAINER_CARD_PADDING_CLASS_NAMES = {
