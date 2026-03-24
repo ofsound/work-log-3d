@@ -16,6 +16,8 @@ const props = defineProps({
   useProjectCardStyles: { type: Boolean, default: false },
   emptyEyebrow: { type: String, default: 'No sessions' },
   emptyMessage: { type: String, default: 'No sessions on the selected day.' },
+  /** When false, hides the day title and aggregate stats (e.g. parent already shows them). */
+  showDaySummary: { type: Boolean, default: true },
 })
 
 const emit = defineEmits<{
@@ -75,7 +77,7 @@ const getCardStyle = (timeBox: TimeBox) => {
 
 <template>
   <div class="flex flex-col gap-4 pb-4">
-    <div>
+    <div v-if="showDaySummary" data-testid="day-summary">
       <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Day</div>
       <div class="mt-1 text-lg font-bold tracking-tight">{{ dayTitle }}</div>
       <div class="mt-3 flex flex-wrap gap-2">

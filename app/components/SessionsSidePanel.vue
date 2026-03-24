@@ -123,6 +123,7 @@ defineExpose({
           :project-by-id="projectById"
           :project-name-by-id="projectNameById"
           :selected-session-id="selectedSessionId"
+          :show-day-summary="false"
           show-project-name
           :time-boxes="timeBoxes"
           use-project-card-styles

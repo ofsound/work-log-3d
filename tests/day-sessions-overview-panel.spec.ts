@@ -64,6 +64,7 @@ describe('DaySessionsOverviewPanel', () => {
       },
     })
 
+    expect(wrapper.find('[data-testid="day-summary"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('Client Portal')
     expect(wrapper.text()).toContain('Marketing Site')
     expect(wrapper.text()).toContain('Untitled session')
@@ -71,6 +72,33 @@ describe('DaySessionsOverviewPanel', () => {
     await wrapper.findAll('button')[0]!.trigger('click')
 
     expect(wrapper.emitted('openSession')).toEqual([['session-1']])
+  })
+
+  it('hides the day summary block when showDaySummary is false', () => {
+    const wrapper = mount(DaySessionsOverviewPanel, {
+      global: {
+        components: {
+          ContainerCard,
+        },
+      },
+      props: {
+        day: new Date('2026-03-23T12:00:00.000Z'),
+        showDaySummary: false,
+        timeBoxes: [
+          {
+            id: 'session-1',
+            startTime: new Date('2026-03-23T16:00:00.000Z'),
+            endTime: new Date('2026-03-23T17:00:00.000Z'),
+            notes: 'Deep work',
+            project: 'projectA',
+            tags: [],
+          },
+        ],
+      },
+    })
+
+    expect(wrapper.find('[data-testid="day-summary"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Deep work')
   })
 
   it('renders the configured empty-state copy', () => {
