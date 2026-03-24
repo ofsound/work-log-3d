@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { definePageMeta } from '#imports'
+
+definePageMeta({ layout: 'main-bleed' })
+</script>
+
 <template>
   <div class="flex h-2/3 items-center justify-center">
     <div

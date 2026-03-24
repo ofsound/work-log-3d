@@ -301,7 +301,7 @@ const copyShareLink = async () => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 gap-6 px-6 pt-6 pb-6">
+  <div class="flex h-full min-h-0 gap-6">
     <ContainerCard as="aside" class="flex w-full max-w-90 shrink-0 flex-col" padding="compact">
       <div class="flex items-center justify-between gap-3">
         <div>

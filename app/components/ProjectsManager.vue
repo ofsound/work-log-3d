@@ -24,7 +24,7 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
 <template>
   <ContainerCard
     as="section"
-    class="my-4 w-full rounded-sm py-4"
+    class="mb-4 w-full rounded-sm py-4"
     padding="comfortable"
     style="width: 100%; min-width: 100%"
     variant="projectGradient"

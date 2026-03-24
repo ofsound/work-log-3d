@@ -3,6 +3,7 @@ import { Timestamp, orderBy, query, where } from 'firebase/firestore'
 import { useCollection } from 'vuefire'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { definePageMeta } from '#imports'
 
 import type {
   FirebaseProjectDocument,
@@ -45,6 +46,8 @@ import {
   setTimeOnDate,
   sortNamedEntities,
 } from '~~/shared/worklog'
+
+definePageMeta({ layout: 'main-workspace' })
 
 interface SessionChangePayload {
   id: string
@@ -779,7 +782,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="flex h-full min-h-0 flex-col overflow-hidden">
-    <div ref="sessionsHeaderRef" class="border-b border-border px-6 py-5">
+    <div ref="sessionsHeaderRef" class="shrink-0 border-b border-border px-6 py-5">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div class="text-3xl font-bold tracking-tight">{{ pageTitle }}</div>

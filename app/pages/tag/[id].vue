@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { definePageMeta } from '#imports'
 import { limit, query, where } from 'firebase/firestore'
+
+definePageMeta({ layout: 'main-workspace' })
 
 const { hideTags } = useUserSettings()
 const { tagsCollection } = useFirestoreCollections()

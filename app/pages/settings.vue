@@ -3,7 +3,13 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { signOut } from 'firebase/auth'
 import { useCollection } from 'vuefire'
-import { useCurrentUser, useFirebaseAuth, useRouter, useRuntimeConfig } from '#imports'
+import {
+  definePageMeta,
+  useCurrentUser,
+  useFirebaseAuth,
+  useRouter,
+  useRuntimeConfig,
+} from '#imports'
 
 import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
 import { useHostRuntime } from '~/composables/useHostRuntime'
@@ -27,6 +33,8 @@ import {
   getWorklogErrorMessage,
   sortNamedEntities,
 } from '~~/shared/worklog'
+
+definePageMeta({ layout: 'main-simple' })
 
 const router = useRouter()
 const runtimeConfig = useRuntimeConfig()
@@ -282,536 +290,525 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-full overflow-auto px-6 pt-6 pb-6">
-    <div class="mx-auto flex max-w-5xl flex-col gap-6">
-      <ContainerCard as="section">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Settings</div>
-            <h1 class="mt-1 text-3xl font-bold text-text">Personal workspace</h1>
-            <p class="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
-              Appearance and workflow preferences sync with your account. The desktop app can also
-              add local alert sounds and tray shortcuts around those synced preferences.
+  <div class="mx-auto flex max-w-5xl flex-col gap-6">
+    <ContainerCard as="section">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Settings</div>
+          <h1 class="mt-1 text-3xl font-bold text-text">Personal workspace</h1>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
+            Appearance and workflow preferences sync with your account. The desktop app can also add
+            local alert sounds and tray shortcuts around those synced preferences.
+          </p>
+
+          <ContainerCard class="mt-4" padding="compact" variant="muted" aria-live="polite">
+            <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Account</div>
+
+            <p
+              v-if="!isAccountUiReady || currentUser === undefined"
+              class="mt-2 text-sm text-text-muted"
+            >
+              Loading account…
             </p>
 
-            <ContainerCard class="mt-4" padding="compact" variant="muted" aria-live="polite">
-              <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Account</div>
-
-              <p
-                v-if="!isAccountUiReady || currentUser === undefined"
-                class="mt-2 text-sm text-text-muted"
-              >
-                Loading account…
-              </p>
-
-              <div v-else-if="accountUid" class="mt-3 flex gap-4">
-                <img
-                  v-if="accountPhotoUrl"
-                  :src="accountPhotoUrl"
-                  alt=""
-                  class="h-12 w-12 shrink-0 rounded-full border border-border-subtle bg-surface object-cover"
-                  referrerpolicy="no-referrer"
-                />
-                <div class="min-w-0 flex-1">
-                  <div v-if="accountDisplayName" class="font-semibold text-text">
-                    {{ accountDisplayName }}
-                  </div>
+            <div v-else-if="accountUid" class="mt-3 flex gap-4">
+              <img
+                v-if="accountPhotoUrl"
+                :src="accountPhotoUrl"
+                alt=""
+                class="h-12 w-12 shrink-0 rounded-full border border-border-subtle bg-surface object-cover"
+                referrerpolicy="no-referrer"
+              />
+              <div class="min-w-0 flex-1">
+                <div v-if="accountDisplayName" class="font-semibold text-text">
+                  {{ accountDisplayName }}
+                </div>
+                <div
+                  v-if="accountEmail"
+                  class="flex flex-wrap items-center justify-between gap-2"
+                  :class="accountDisplayName ? 'mt-0.5' : ''"
+                >
                   <div
-                    v-if="accountEmail"
-                    class="flex flex-wrap items-center justify-between gap-2"
-                    :class="accountDisplayName ? 'mt-0.5' : ''"
+                    class="min-w-0 text-sm"
+                    :class="accountDisplayName ? 'text-text-muted' : 'font-semibold text-text'"
                   >
-                    <div
-                      class="min-w-0 text-sm"
-                      :class="accountDisplayName ? 'text-text-muted' : 'font-semibold text-text'"
-                    >
-                      {{ accountEmail }}
-                    </div>
-                    <button
-                      type="button"
-                      class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
-                      @click="handleSignOut"
-                    >
-                      Sign out
-                    </button>
+                    {{ accountEmail }}
                   </div>
-                  <div
-                    v-else-if="accountDisplayName"
-                    class="mt-2 flex flex-wrap items-center justify-end gap-2"
+                  <button
+                    type="button"
+                    class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                    @click="handleSignOut"
                   >
-                    <button
-                      type="button"
-                      class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
-                      @click="handleSignOut"
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                  <div v-else class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="text-sm font-semibold text-text">Signed-in user</div>
-                    <button
-                      type="button"
-                      class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
-                      @click="handleSignOut"
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                  <div class="mt-1 font-mono text-xs break-all text-text-subtle">
-                    {{ accountUid }}
-                  </div>
+                    Sign out
+                  </button>
+                </div>
+                <div
+                  v-else-if="accountDisplayName"
+                  class="mt-2 flex flex-wrap items-center justify-end gap-2"
+                >
+                  <button
+                    type="button"
+                    class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                    @click="handleSignOut"
+                  >
+                    Sign out
+                  </button>
+                </div>
+                <div v-else class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="text-sm font-semibold text-text">Signed-in user</div>
+                  <button
+                    type="button"
+                    class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                    @click="handleSignOut"
+                  >
+                    Sign out
+                  </button>
+                </div>
+                <div class="mt-1 font-mono text-xs break-all text-text-subtle">
+                  {{ accountUid }}
                 </div>
               </div>
+            </div>
 
-              <p v-else class="mt-2 text-sm text-text-muted">No user is signed in.</p>
-            </ContainerCard>
+            <p v-else class="mt-2 text-sm text-text-muted">No user is signed in.</p>
+          </ContainerCard>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+            @click="handleCancel"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+            @click="handleResetToDefaults"
+          >
+            Reset to defaults
+          </button>
+          <button
+            type="button"
+            class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
+            :disabled="!isDirty || isSaving"
+            @click="handleSave"
+          >
+            {{ isSaving ? 'Saving…' : 'Save changes' }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="saveMessage" class="mt-4 rounded-xl bg-surface-muted px-4 py-3 text-sm text-text">
+        {{ saveMessage }}
+      </div>
+      <p v-if="mutationErrorMessage" class="mt-4 text-sm text-danger">
+        {{ mutationErrorMessage }}
+      </p>
+    </ContainerCard>
+
+    <ContainerCard as="section">
+      <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Appearance</div>
+      <h2 class="mt-1 text-2xl font-bold text-text">Fonts and shell</h2>
+      <div class="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <div class="flex flex-col gap-4">
+          <label class="flex flex-col gap-2">
+            <span class="text-sm font-semibold text-text">Google Fonts import</span>
+            <input
+              v-model="draft.appearance.fontImportUrl"
+              class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+              placeholder="https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap"
+            />
+            <span class="text-xs text-text-subtle">
+              Paste either a raw `https://fonts.googleapis.com/css2...` URL or a full `@import
+              url(...)` rule.
+            </span>
+          </label>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-text">UI font family</span>
+              <input
+                v-model="draft.appearance.fontFamilies.ui"
+                class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                placeholder="'National Park', sans-serif"
+              />
+            </label>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-text">Data font family</span>
+              <input
+                v-model="draft.appearance.fontFamilies.data"
+                class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                placeholder="'Lato', sans-serif"
+              />
+            </label>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-text">Script font family</span>
+              <input
+                v-model="draft.appearance.fontFamilies.script"
+                class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                placeholder="'Caveat', sans-serif"
+              />
+            </label>
           </div>
+        </div>
+
+        <ContainerCard padding="compact" variant="muted">
+          <div class="text-sm font-semibold text-text">Live font preview</div>
+          <div class="mt-4 flex flex-col gap-4">
+            <div>
+              <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">UI</div>
+              <div class="mt-2 text-2xl text-text">
+                Settings should feel personal, but still readable at a glance.
+              </div>
+            </div>
+            <div>
+              <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Data</div>
+              <div class="mt-2 font-data text-3xl font-bold text-text tabular-nums">
+                03:45 · 128.4 hrs
+              </div>
+            </div>
+            <div>
+              <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Script</div>
+              <div class="mt-2 font-script text-4xl text-text">Daily rhythm</div>
+            </div>
+          </div>
+        </ContainerCard>
+      </div>
+
+      <div class="mt-6">
+        <div class="text-sm font-semibold text-text">Background style</div>
+        <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <label
+            v-for="option in USER_SETTINGS_BACKGROUND_OPTIONS"
+            :key="option.id"
+            class="flex flex-col gap-3"
+          >
+            <ContainerCard
+              as="div"
+              padding="compact"
+              :interactive="draft.appearance.backgroundPreset !== option.id"
+              :selected="draft.appearance.backgroundPreset === option.id"
+              :variant="draft.appearance.backgroundPreset === option.id ? 'muted' : 'default'"
+              class="flex h-full cursor-pointer flex-col gap-3"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="font-semibold text-text">{{ option.label }}</div>
+                <input
+                  v-model="draft.appearance.backgroundPreset"
+                  type="radio"
+                  :value="option.id"
+                />
+              </div>
+              <div class="text-sm leading-6 text-text-muted">
+                {{ option.description }}
+              </div>
+              <div class="rounded-xl bg-surface-muted px-3 py-3 text-xs text-text-subtle">
+                {{ getUserSettingsBackgroundOption(option.id).label }}
+              </div>
+            </ContainerCard>
+          </label>
+        </div>
+      </div>
+    </ContainerCard>
+
+    <ContainerCard as="section">
+      <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Desktop app</div>
+      <h2 class="mt-1 text-2xl font-bold text-text">Tray and alerts</h2>
+
+      <ContainerCard
+        v-if="!isDesktop"
+        class="mt-5 border-dashed py-5 text-sm leading-6 text-text-muted shadow-none"
+        padding="compact"
+        variant="muted"
+      >
+        Timer completion sounds and tray shortcuts are available in the Electron app. Open the
+        desktop app on this device to import a local sound file or manage tray shortcuts.
+      </ContainerCard>
+
+      <div v-else class="mt-5 flex flex-col gap-6">
+        <section class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1">
+            <div class="text-sm font-semibold text-text">Timer completion sound</div>
+            <p class="text-sm leading-6 text-text-muted">
+              Choose the sound this device plays when a countdown completes.
+            </p>
+          </div>
+
+          <ContainerCard padding="compact" variant="muted">
+            <div class="text-sm font-semibold text-text">Current sound</div>
+            <div class="mt-2 text-text">
+              {{
+                isLoadingDesktopAlert
+                  ? 'Loading…'
+                  : desktopAlertState?.fileName || 'timer-complete.wav'
+              }}
+            </div>
+            <div class="mt-1 text-sm text-text-muted">
+              {{
+                hasCustomDesktopAlertSound
+                  ? 'Imported on this device and copied into app storage.'
+                  : 'Using the bundled default alert sound.'
+              }}
+            </div>
+          </ContainerCard>
 
           <div class="flex flex-wrap gap-2">
             <button
               type="button"
-              class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-              @click="handleCancel"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-              @click="handleResetToDefaults"
-            >
-              Reset to defaults
-            </button>
-            <button
-              type="button"
               class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
-              :disabled="!isDirty || isSaving"
-              @click="handleSave"
+              :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
+              @click="
+                runDesktopAlertAction(
+                  () => desktopApi!.chooseAlertSound(),
+                  'Desktop alert sound updated.',
+                )
+              "
             >
-              {{ isSaving ? 'Saving…' : 'Save changes' }}
+              Choose file
+            </button>
+            <button
+              type="button"
+              class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+              :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
+              @click="
+                runDesktopAlertAction(
+                  () => desktopApi!.testAlertSound().then(() => undefined),
+                  'Playing alert sound…',
+                )
+              "
+            >
+              Test sound
+            </button>
+            <button
+              type="button"
+              class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+              :disabled="
+                isLoadingDesktopAlert || isMutatingDesktopAlert || !hasCustomDesktopAlertSound
+              "
+              @click="
+                runDesktopAlertAction(
+                  () => desktopApi!.clearAlertSound(),
+                  'Custom desktop alert cleared.',
+                )
+              "
+            >
+              Clear custom sound
             </button>
           </div>
-        </div>
 
-        <div
-          v-if="saveMessage"
-          class="mt-4 rounded-xl bg-surface-muted px-4 py-3 text-sm text-text"
-        >
-          {{ saveMessage }}
-        </div>
-        <p v-if="mutationErrorMessage" class="mt-4 text-sm text-danger">
-          {{ mutationErrorMessage }}
-        </p>
-      </ContainerCard>
+          <div class="text-sm text-text-muted">Supported file types: mp3, wav, aiff.</div>
+          <p v-if="desktopAlertMessage" class="text-sm text-text-muted">
+            {{ desktopAlertMessage }}
+          </p>
+        </section>
 
-      <ContainerCard as="section">
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Appearance</div>
-        <h2 class="mt-1 text-2xl font-bold text-text">Fonts and shell</h2>
-        <div class="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div class="flex flex-col gap-4">
-            <label class="flex flex-col gap-2">
-              <span class="text-sm font-semibold text-text">Google Fonts import</span>
-              <input
-                v-model="draft.appearance.fontImportUrl"
-                class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                placeholder="https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap"
-              />
-              <span class="text-xs text-text-subtle">
-                Paste either a raw `https://fonts.googleapis.com/css2...` URL or a full `@import
-                url(...)` rule.
-              </span>
-            </label>
-
-            <div class="grid gap-4 md:grid-cols-3">
-              <label class="flex flex-col gap-2">
-                <span class="text-sm font-semibold text-text">UI font family</span>
-                <input
-                  v-model="draft.appearance.fontFamilies.ui"
-                  class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                  placeholder="'National Park', sans-serif"
-                />
-              </label>
-              <label class="flex flex-col gap-2">
-                <span class="text-sm font-semibold text-text">Data font family</span>
-                <input
-                  v-model="draft.appearance.fontFamilies.data"
-                  class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                  placeholder="'Lato', sans-serif"
-                />
-              </label>
-              <label class="flex flex-col gap-2">
-                <span class="text-sm font-semibold text-text">Script font family</span>
-                <input
-                  v-model="draft.appearance.fontFamilies.script"
-                  class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                  placeholder="'Caveat', sans-serif"
-                />
-              </label>
-            </div>
-          </div>
-
-          <ContainerCard padding="compact" variant="muted">
-            <div class="text-sm font-semibold text-text">Live font preview</div>
-            <div class="mt-4 flex flex-col gap-4">
-              <div>
-                <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">UI</div>
-                <div class="mt-2 text-2xl text-text">
-                  Settings should feel personal, but still readable at a glance.
-                </div>
-              </div>
-              <div>
-                <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Data</div>
-                <div class="mt-2 font-data text-3xl font-bold text-text tabular-nums">
-                  03:45 · 128.4 hrs
-                </div>
-              </div>
-              <div>
-                <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Script</div>
-                <div class="mt-2 font-script text-4xl text-text">Daily rhythm</div>
-              </div>
-            </div>
-          </ContainerCard>
-        </div>
-
-        <div class="mt-6">
-          <div class="text-sm font-semibold text-text">Background style</div>
-          <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <label
-              v-for="option in USER_SETTINGS_BACKGROUND_OPTIONS"
-              :key="option.id"
-              class="flex flex-col gap-3"
-            >
-              <ContainerCard
-                as="div"
-                padding="compact"
-                :interactive="draft.appearance.backgroundPreset !== option.id"
-                :selected="draft.appearance.backgroundPreset === option.id"
-                :variant="draft.appearance.backgroundPreset === option.id ? 'muted' : 'default'"
-                class="flex h-full cursor-pointer flex-col gap-3"
-              >
-                <div class="flex items-center justify-between gap-3">
-                  <div class="font-semibold text-text">{{ option.label }}</div>
-                  <input
-                    v-model="draft.appearance.backgroundPreset"
-                    type="radio"
-                    :value="option.id"
-                  />
-                </div>
-                <div class="text-sm leading-6 text-text-muted">
-                  {{ option.description }}
-                </div>
-                <div class="rounded-xl bg-surface-muted px-3 py-3 text-xs text-text-subtle">
-                  {{ getUserSettingsBackgroundOption(option.id).label }}
-                </div>
-              </ContainerCard>
-            </label>
-          </div>
-        </div>
-      </ContainerCard>
-
-      <ContainerCard as="section">
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Desktop app</div>
-        <h2 class="mt-1 text-2xl font-bold text-text">Tray and alerts</h2>
-
-        <ContainerCard
-          v-if="!isDesktop"
-          class="mt-5 border-dashed py-5 text-sm leading-6 text-text-muted shadow-none"
-          padding="compact"
-          variant="muted"
-        >
-          Timer completion sounds and tray shortcuts are available in the Electron app. Open the
-          desktop app on this device to import a local sound file or manage tray shortcuts.
-        </ContainerCard>
-
-        <div v-else class="mt-5 flex flex-col gap-6">
-          <section class="flex flex-col gap-4">
-            <div class="flex flex-col gap-1">
-              <div class="text-sm font-semibold text-text">Timer completion sound</div>
-              <p class="text-sm leading-6 text-text-muted">
-                Choose the sound this device plays when a countdown completes.
-              </p>
-            </div>
-
-            <ContainerCard padding="compact" variant="muted">
-              <div class="text-sm font-semibold text-text">Current sound</div>
-              <div class="mt-2 text-text">
-                {{
-                  isLoadingDesktopAlert
-                    ? 'Loading…'
-                    : desktopAlertState?.fileName || 'timer-complete.wav'
-                }}
-              </div>
-              <div class="mt-1 text-sm text-text-muted">
-                {{
-                  hasCustomDesktopAlertSound
-                    ? 'Imported on this device and copied into app storage.'
-                    : 'Using the bundled default alert sound.'
-                }}
-              </div>
-            </ContainerCard>
-
-            <div class="flex flex-wrap gap-2">
-              <button
-                type="button"
-                class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
-                :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
-                @click="
-                  runDesktopAlertAction(
-                    () => desktopApi!.chooseAlertSound(),
-                    'Desktop alert sound updated.',
-                  )
-                "
-              >
-                Choose file
-              </button>
-              <button
-                type="button"
-                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
-                :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
-                @click="
-                  runDesktopAlertAction(
-                    () => desktopApi!.testAlertSound().then(() => undefined),
-                    'Playing alert sound…',
-                  )
-                "
-              >
-                Test sound
-              </button>
-              <button
-                type="button"
-                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
-                :disabled="
-                  isLoadingDesktopAlert || isMutatingDesktopAlert || !hasCustomDesktopAlertSound
-                "
-                @click="
-                  runDesktopAlertAction(
-                    () => desktopApi!.clearAlertSound(),
-                    'Custom desktop alert cleared.',
-                  )
-                "
-              >
-                Clear custom sound
-              </button>
-            </div>
-
-            <div class="text-sm text-text-muted">Supported file types: mp3, wav, aiff.</div>
-            <p v-if="desktopAlertMessage" class="text-sm text-text-muted">
-              {{ desktopAlertMessage }}
-            </p>
-          </section>
-
-          <section class="flex flex-col gap-4 border-t border-border-subtle pt-6">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div class="text-sm font-semibold text-text">Tray menu shortcuts</div>
-                <p class="mt-1 text-sm leading-6 text-text-muted">
-                  Add desktop-only shortcuts that appear alongside Pomodoro and Start Timer. Each
-                  shortcut can start count up or countdown and open `/new` with a project and tags
-                  preselected.
-                </p>
-              </div>
-              <button
-                type="button"
-                class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover"
-                @click="addTrayShortcut"
-              >
-                Add shortcut
-              </button>
-            </div>
-
-            <ContainerCard
-              v-if="draft.desktop.trayShortcuts.length === 0"
-              class="py-5 text-sm text-text-muted shadow-none"
-              padding="compact"
-              variant="muted"
-            >
-              No custom tray shortcuts yet.
-            </ContainerCard>
-
-            <ContainerCard
-              v-for="(shortcut, index) in draft.desktop.trayShortcuts"
-              :key="shortcut.id"
-              class="flex flex-col gap-4"
-              padding="compact"
-              variant="muted"
-            >
-              <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div class="grid flex-1 gap-4 lg:grid-cols-2">
-                  <label class="flex flex-col gap-2">
-                    <span
-                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
-                    >
-                      Label
-                    </span>
-                    <input
-                      v-model="shortcut.label"
-                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                      placeholder="Deep work"
-                    />
-                  </label>
-
-                  <fieldset class="flex flex-col gap-2">
-                    <legend
-                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
-                    >
-                      Timer
-                    </legend>
-                    <div class="flex flex-wrap gap-2.5">
-                      <label
-                        class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
-                        :class="
-                          shortcut.timerMode === 'countup'
-                            ? 'border-link bg-link/10 text-link'
-                            : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
-                        "
-                      >
-                        <input
-                          :checked="shortcut.timerMode === 'countup'"
-                          :name="`trayShortcutMode-${shortcut.id}`"
-                          type="radio"
-                          @change="setTrayShortcutTimerMode(shortcut, 'countup')"
-                        />
-                        <span>Count up</span>
-                      </label>
-                      <label
-                        class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
-                        :class="
-                          shortcut.timerMode === 'countdown'
-                            ? 'border-link bg-link/10 text-link'
-                            : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
-                        "
-                      >
-                        <input
-                          :checked="shortcut.timerMode === 'countdown'"
-                          :name="`trayShortcutMode-${shortcut.id}`"
-                          type="radio"
-                          @change="setTrayShortcutTimerMode(shortcut, 'countdown')"
-                        />
-                        <span>Countdown</span>
-                      </label>
-                    </div>
-                  </fieldset>
-
-                  <label v-if="shortcut.timerMode === 'countdown'" class="flex flex-col gap-2">
-                    <span
-                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
-                    >
-                      Countdown minutes
-                    </span>
-                    <input
-                      :value="shortcut.durationMinutes ?? ''"
-                      min="1"
-                      step="1"
-                      type="number"
-                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                      placeholder="30"
-                      @input="handleTrayShortcutDurationInput(shortcut, $event)"
-                    />
-                  </label>
-
-                  <label class="flex flex-col gap-2">
-                    <span
-                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
-                    >
-                      Project
-                    </span>
-                    <select
-                      v-model="shortcut.project"
-                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                    >
-                      <option value="">No project preselected</option>
-                      <option
-                        v-for="project in trayShortcutProjectOptions"
-                        :key="project.id"
-                        :value="project.id"
-                      >
-                        {{ project.name }}
-                      </option>
-                    </select>
-                  </label>
-                </div>
-
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
-                    :disabled="index === 0"
-                    @click="moveTrayShortcut(index, -1)"
-                  >
-                    Move up
-                  </button>
-                  <button
-                    type="button"
-                    class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
-                    :disabled="index === draft.desktop.trayShortcuts.length - 1"
-                    @click="moveTrayShortcut(index, 1)"
-                  >
-                    Move down
-                  </button>
-                  <button
-                    type="button"
-                    class="cursor-pointer rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger hover:bg-danger/15"
-                    @click="removeTrayShortcut(shortcut.id)"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-
-              <div class="flex flex-col gap-3 border-t border-border-subtle pt-4">
-                <div class="flex flex-col gap-1">
-                  <div class="text-sm font-semibold text-text">Tags</div>
-                  <p class="text-xs text-text-muted">
-                    Tags apply when this shortcut opens the new session form.
-                  </p>
-                </div>
-
-                <div v-if="sortedTags.length" class="flex flex-wrap gap-2.5">
-                  <label
-                    v-for="tag in sortedTags"
-                    :key="tag.id"
-                    class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
-                    :class="
-                      shortcut.tags.includes(tag.id)
-                        ? 'border-link bg-link/10 text-link'
-                        : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
-                    "
-                  >
-                    <input v-model="shortcut.tags" type="checkbox" :value="tag.id" />
-                    <span>{{ tag.name }}</span>
-                  </label>
-                </div>
-
-                <p v-else class="text-sm text-text-muted">
-                  No tags available yet. Create tags first if you want to prefill them from tray
-                  shortcuts.
-                </p>
-              </div>
-            </ContainerCard>
-          </section>
-        </div>
-      </ContainerCard>
-
-      <ContainerCard as="section">
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Workflow</div>
-        <h2 class="mt-1 text-2xl font-bold text-text">Project-first mode</h2>
-        <label class="mt-5 block">
-          <ContainerCard class="flex items-start gap-4" padding="compact" variant="muted">
-            <input v-model="draft.workflow.hideTags" type="checkbox" class="mt-1" />
+        <section class="flex flex-col gap-4 border-t border-border-subtle pt-6">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div class="font-semibold text-text">Hide tags across the authenticated app</div>
-              <p class="mt-2 text-sm leading-6 text-text-muted">
-                Removes tag navigation, filters, badges, editors, and tag report controls while
-                preserving any existing tag data already attached to sessions and reports.
+              <div class="text-sm font-semibold text-text">Tray menu shortcuts</div>
+              <p class="mt-1 text-sm leading-6 text-text-muted">
+                Add desktop-only shortcuts that appear alongside Pomodoro and Start Timer. Each
+                shortcut can start count up or countdown and open `/new` with a project and tags
+                preselected.
+              </p>
+            </div>
+            <button
+              type="button"
+              class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover"
+              @click="addTrayShortcut"
+            >
+              Add shortcut
+            </button>
+          </div>
+
+          <ContainerCard
+            v-if="draft.desktop.trayShortcuts.length === 0"
+            class="py-5 text-sm text-text-muted shadow-none"
+            padding="compact"
+            variant="muted"
+          >
+            No custom tray shortcuts yet.
+          </ContainerCard>
+
+          <ContainerCard
+            v-for="(shortcut, index) in draft.desktop.trayShortcuts"
+            :key="shortcut.id"
+            class="flex flex-col gap-4"
+            padding="compact"
+            variant="muted"
+          >
+            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div class="grid flex-1 gap-4 lg:grid-cols-2">
+                <label class="flex flex-col gap-2">
+                  <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
+                    Label
+                  </span>
+                  <input
+                    v-model="shortcut.label"
+                    class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                    placeholder="Deep work"
+                  />
+                </label>
+
+                <fieldset class="flex flex-col gap-2">
+                  <legend
+                    class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
+                  >
+                    Timer
+                  </legend>
+                  <div class="flex flex-wrap gap-2.5">
+                    <label
+                      class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
+                      :class="
+                        shortcut.timerMode === 'countup'
+                          ? 'border-link bg-link/10 text-link'
+                          : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
+                      "
+                    >
+                      <input
+                        :checked="shortcut.timerMode === 'countup'"
+                        :name="`trayShortcutMode-${shortcut.id}`"
+                        type="radio"
+                        @change="setTrayShortcutTimerMode(shortcut, 'countup')"
+                      />
+                      <span>Count up</span>
+                    </label>
+                    <label
+                      class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
+                      :class="
+                        shortcut.timerMode === 'countdown'
+                          ? 'border-link bg-link/10 text-link'
+                          : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
+                      "
+                    >
+                      <input
+                        :checked="shortcut.timerMode === 'countdown'"
+                        :name="`trayShortcutMode-${shortcut.id}`"
+                        type="radio"
+                        @change="setTrayShortcutTimerMode(shortcut, 'countdown')"
+                      />
+                      <span>Countdown</span>
+                    </label>
+                  </div>
+                </fieldset>
+
+                <label v-if="shortcut.timerMode === 'countdown'" class="flex flex-col gap-2">
+                  <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
+                    Countdown minutes
+                  </span>
+                  <input
+                    :value="shortcut.durationMinutes ?? ''"
+                    min="1"
+                    step="1"
+                    type="number"
+                    class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                    placeholder="30"
+                    @input="handleTrayShortcutDurationInput(shortcut, $event)"
+                  />
+                </label>
+
+                <label class="flex flex-col gap-2">
+                  <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
+                    Project
+                  </span>
+                  <select
+                    v-model="shortcut.project"
+                    class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                  >
+                    <option value="">No project preselected</option>
+                    <option
+                      v-for="project in trayShortcutProjectOptions"
+                      :key="project.id"
+                      :value="project.id"
+                    >
+                      {{ project.name }}
+                    </option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                  :disabled="index === 0"
+                  @click="moveTrayShortcut(index, -1)"
+                >
+                  Move up
+                </button>
+                <button
+                  type="button"
+                  class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                  :disabled="index === draft.desktop.trayShortcuts.length - 1"
+                  @click="moveTrayShortcut(index, 1)"
+                >
+                  Move down
+                </button>
+                <button
+                  type="button"
+                  class="cursor-pointer rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger hover:bg-danger/15"
+                  @click="removeTrayShortcut(shortcut.id)"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3 border-t border-border-subtle pt-4">
+              <div class="flex flex-col gap-1">
+                <div class="text-sm font-semibold text-text">Tags</div>
+                <p class="text-xs text-text-muted">
+                  Tags apply when this shortcut opens the new session form.
+                </p>
+              </div>
+
+              <div v-if="sortedTags.length" class="flex flex-wrap gap-2.5">
+                <label
+                  v-for="tag in sortedTags"
+                  :key="tag.id"
+                  class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
+                  :class="
+                    shortcut.tags.includes(tag.id)
+                      ? 'border-link bg-link/10 text-link'
+                      : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
+                  "
+                >
+                  <input v-model="shortcut.tags" type="checkbox" :value="tag.id" />
+                  <span>{{ tag.name }}</span>
+                </label>
+              </div>
+
+              <p v-else class="text-sm text-text-muted">
+                No tags available yet. Create tags first if you want to prefill them from tray
+                shortcuts.
               </p>
             </div>
           </ContainerCard>
-        </label>
-      </ContainerCard>
+        </section>
+      </div>
+    </ContainerCard>
 
-      <p class="text-center text-xs text-text-subtle">
-        Work Log {{ runtimeConfig.public.appVersion }}
-      </p>
-    </div>
+    <ContainerCard as="section">
+      <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Workflow</div>
+      <h2 class="mt-1 text-2xl font-bold text-text">Project-first mode</h2>
+      <label class="mt-5 block">
+        <ContainerCard class="flex items-start gap-4" padding="compact" variant="muted">
+          <input v-model="draft.workflow.hideTags" type="checkbox" class="mt-1" />
+          <div>
+            <div class="font-semibold text-text">Hide tags across the authenticated app</div>
+            <p class="mt-2 text-sm leading-6 text-text-muted">
+              Removes tag navigation, filters, badges, editors, and tag report controls while
+              preserving any existing tag data already attached to sessions and reports.
+            </p>
+          </div>
+        </ContainerCard>
+      </label>
+    </ContainerCard>
+
+    <p class="text-center text-xs text-text-subtle">
+      Work Log {{ runtimeConfig.public.appVersion }}
+    </p>
   </div>
 </template>
