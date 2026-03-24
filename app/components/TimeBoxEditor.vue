@@ -267,6 +267,15 @@ watch(
   },
 )
 
+function adjustDurationMinutes(delta: number) {
+  mutationErrorMessage.value = ''
+  const raw = dynamicDuration.value
+  const current = Number(typeof raw === 'string' ? raw.trim() || '0' : raw || 0)
+  const base = Number.isFinite(current) ? current : 0
+  const next = Math.max(0, base + delta)
+  dynamicDuration.value = next === 0 ? '' : next
+}
+
 const handleEscape = (event: { key: string }) => {
   if (event.key === 'Escape') {
     emit('toggleEditor')
@@ -325,6 +334,40 @@ onBeforeUnmount(() => {
             <span class="pb-1 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
               >min</span
             >
+          </div>
+          <div
+            class="flex min-w-0 flex-nowrap items-center gap-0.5 [@container(min-width:38rem)]:gap-1"
+            role="group"
+            aria-label="Adjust duration in minutes"
+          >
+            <button
+              type="button"
+              class="h-6 min-w-0 flex-1 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-0.5 text-[10px] leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
+              @click="adjustDurationMinutes(-10)"
+            >
+              -10
+            </button>
+            <button
+              type="button"
+              class="h-6 min-w-0 flex-1 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-0.5 text-[10px] leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
+              @click="adjustDurationMinutes(-5)"
+            >
+              -5
+            </button>
+            <button
+              type="button"
+              class="h-6 min-w-0 flex-1 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-0.5 text-[10px] leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
+              @click="adjustDurationMinutes(5)"
+            >
+              +5
+            </button>
+            <button
+              type="button"
+              class="h-6 min-w-0 flex-1 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-0.5 text-[10px] leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
+              @click="adjustDurationMinutes(10)"
+            >
+              +10
+            </button>
           </div>
         </label>
 
