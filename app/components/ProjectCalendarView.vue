@@ -121,8 +121,8 @@ const handleSegmentDragEnd = () => {
         v-for="month in monthEntries"
         :key="`${month.year}-${month.monthIndex}`"
         as="section"
-        class="overflow-hidden p-0"
-        padding="compact"
+        class="overflow-hidden"
+        padding="none"
         variant="subtle"
       >
         <div class="border-b border-border bg-surface-muted px-4 py-4">

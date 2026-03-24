@@ -12,7 +12,7 @@ export const CONTAINER_CARD_VARIANTS = [
   'danger',
 ] as const
 
-export const CONTAINER_CARD_PADDING_OPTIONS = ['compact', 'default', 'comfortable'] as const
+export const CONTAINER_CARD_PADDING_OPTIONS = ['none', 'compact', 'default', 'comfortable'] as const
 
 export type ContainerCardVariant = (typeof CONTAINER_CARD_VARIANTS)[number]
 export type ContainerCardPadding = (typeof CONTAINER_CARD_PADDING_OPTIONS)[number]
@@ -35,6 +35,7 @@ export const CONTAINER_CARD_VARIANT_CLASS_NAMES = {
 } satisfies Record<ContainerCardVariant, string>
 
 export const CONTAINER_CARD_PADDING_CLASS_NAMES = {
+  none: 'p-0',
   compact: 'px-4 py-4',
   default: 'px-5 py-5',
   comfortable: 'px-6 py-6',

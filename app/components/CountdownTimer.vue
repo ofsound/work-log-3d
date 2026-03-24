@@ -9,7 +9,7 @@ const updateDraftMinutes = (minutesToAdd: number) => {
   const currentMinutes = Number(dynamicMinutes.value || '0')
   const nextMinutes = (Number.isFinite(currentMinutes) ? currentMinutes : 0) + minutesToAdd
 
-  dynamicMinutes.value = String(nextMinutes)
+  dynamicMinutes.value = String(Math.max(0, nextMinutes))
 }
 
 const startTimer = () => {
@@ -91,21 +91,39 @@ watch(
           {{ secondsProgress }}
         </div>
       </div>
-      <div class="flex flex-col gap-1">
-        <button
-          type="button"
-          class="h-6 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2 text-xs leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover"
-          @click="addMinutes(5)"
-        >
-          +5
-        </button>
-        <button
-          type="button"
-          class="h-6 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2 text-xs leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover"
-          @click="addMinutes(10)"
-        >
-          +10
-        </button>
+      <div class="flex shrink-0 items-center gap-2">
+        <div class="flex flex-col gap-1">
+          <button
+            type="button"
+            class="h-6 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2 text-xs leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover"
+            @click="addMinutes(-5)"
+          >
+            -5
+          </button>
+          <button
+            type="button"
+            class="h-6 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2 text-xs leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover"
+            @click="addMinutes(-10)"
+          >
+            -10
+          </button>
+        </div>
+        <div class="flex flex-col gap-1">
+          <button
+            type="button"
+            class="h-6 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2 text-xs leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover"
+            @click="addMinutes(5)"
+          >
+            +5
+          </button>
+          <button
+            type="button"
+            class="h-6 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2 text-xs leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover"
+            @click="addMinutes(10)"
+          >
+            +10
+          </button>
+        </div>
       </div>
     </div>
     <TimerButton v-if="!timerIsRunning && !timerIsPaused" class="shrink-0" @click="startTimer"

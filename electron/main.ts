@@ -332,7 +332,7 @@ const registerIpc = () => {
     setTimerState(startCountdownTimer(durationSeconds, Date.now()))
   })
   ipcMain.handle('timer:addCountdownTime', (_event, durationSeconds: number) => {
-    setTimerState(addCountdownSeconds(timerState, durationSeconds))
+    setTimerState(addCountdownSeconds(timerState, durationSeconds, Date.now()))
   })
   ipcMain.handle('timer:pause', () => {
     setTimerState(pauseTimer(timerState, Date.now()))
@@ -410,10 +410,10 @@ app.whenReady().then(async () => {
           setTimerState(pauseTimer(timerState, Date.now()))
           break
         case 'add_countdown_5_minutes':
-          setTimerState(addCountdownSeconds(timerState, 5 * 60))
+          setTimerState(addCountdownSeconds(timerState, 5 * 60, Date.now()))
           break
         case 'add_countdown_10_minutes':
-          setTimerState(addCountdownSeconds(timerState, 10 * 60))
+          setTimerState(addCountdownSeconds(timerState, 10 * 60, Date.now()))
           break
         case 'resume':
           setTimerState(resumeTimer(timerState, Date.now()))

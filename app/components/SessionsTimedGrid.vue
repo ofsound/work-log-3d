@@ -698,8 +698,8 @@ onBeforeUnmount(() => {
     >
       <ContainerCard
         ref="weekCalendarGridRef"
-        class="grid min-h-full w-full overflow-hidden p-0"
-        padding="compact"
+        class="grid min-h-full w-full overflow-hidden"
+        padding="none"
         variant="subtle"
         :style="{
           gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${dayColumnMinWidth}px, 1fr))`,
@@ -817,8 +817,8 @@ onBeforeUnmount(() => {
     <!-- Week view: fixed header row; hours + sessions scroll underneath. -->
     <div v-else class="flex h-full min-h-0 flex-col px-6 py-6">
       <ContainerCard
-        class="flex min-h-0 flex-1 flex-col overflow-hidden p-0"
-        padding="compact"
+        class="flex min-h-0 flex-1 flex-col overflow-hidden"
+        padding="none"
         variant="subtle"
       >
         <div

@@ -124,7 +124,7 @@ export function useTimerService() {
     }
 
     timerNow.value = Date.now()
-    timerState.value = addCountdownSeconds(timerState.value, durationSeconds)
+    timerState.value = addCountdownSeconds(timerState.value, durationSeconds, timerNow.value)
   }
 
   const stop = async () => {

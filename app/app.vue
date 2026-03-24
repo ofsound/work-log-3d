@@ -4,5 +4,6 @@
       <NuxtPage />
     </NuxtLayout>
     <AppConfirmHost />
+    <AppOverlayToastHost />
   </div>
 </template>

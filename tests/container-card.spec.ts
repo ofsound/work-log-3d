@@ -38,6 +38,20 @@ describe('ContainerCard', () => {
     }
   })
 
+  it('applies every padding option from the central registry', () => {
+    for (const [padding, className] of Object.entries(CONTAINER_CARD_PADDING_CLASS_NAMES)) {
+      const wrapper = mount(ContainerCard, {
+        props: {
+          padding: padding as keyof typeof CONTAINER_CARD_PADDING_CLASS_NAMES,
+        },
+      })
+
+      for (const token of className.split(' ')) {
+        expect(wrapper.classes()).toContain(token)
+      }
+    }
+  })
+
   it('applies padding, interactive, and selected state classes', () => {
     const wrapper = mount(ContainerCard, {
       props: {

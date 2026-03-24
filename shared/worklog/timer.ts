@@ -124,7 +124,11 @@ export const resumeTimer = (state: TimerState, nowMs: number): TimerState => {
   }
 }
 
-export const addCountdownSeconds = (state: TimerState, seconds: number): TimerState => {
+export const addCountdownSeconds = (
+  state: TimerState,
+  seconds: number,
+  nowMs: number,
+): TimerState => {
   if (
     state.mode !== 'countdown' ||
     state.durationSeconds === null ||
@@ -133,15 +137,26 @@ export const addCountdownSeconds = (state: TimerState, seconds: number): TimerSt
     return state
   }
 
-  const addedSeconds = Math.max(0, Math.trunc(seconds))
+  const deltaSeconds = Math.trunc(seconds)
 
-  if (addedSeconds === 0) {
+  if (deltaSeconds === 0) {
+    return state
+  }
+
+  let newDurationSeconds = state.durationSeconds + deltaSeconds
+
+  if (deltaSeconds < 0) {
+    const elapsedSeconds = getElapsedSeconds(state, nowMs)
+    newDurationSeconds = Math.max(elapsedSeconds, newDurationSeconds)
+  }
+
+  if (newDurationSeconds === state.durationSeconds) {
     return state
   }
 
   return {
     ...state,
-    durationSeconds: state.durationSeconds + addedSeconds,
+    durationSeconds: newDurationSeconds,
   }
 }
 

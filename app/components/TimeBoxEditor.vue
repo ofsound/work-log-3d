@@ -35,6 +35,7 @@ const emit = defineEmits(['toggleEditor', 'saved'])
 
 const repositories = useWorklogRepository()
 const { confirm } = useConfirmDialog()
+const { show: showOverlayToast } = useOverlayToast()
 const { hideTags } = useUserSettings()
 const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
@@ -167,8 +168,11 @@ const createTimeBoxDocument = async () => {
     emit('saved', createdId)
 
     if (props.resetAfterCreate) {
-      timeBoxEditorRef.value?.classList.add('animate-[var(--animate-blink-once)]')
-      setTimeout(resetTimeBoxEditor, 100)
+      await showOverlayToast({
+        title: 'Session logged successfully',
+        message: 'Your session was saved to the calendar.',
+      })
+      resetTimeBoxEditor()
     }
   } catch (error) {
     mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save the session.')
@@ -191,7 +195,6 @@ const resetTimeBoxEditor = () => {
   dynamicNotes.value = ''
   dynamicTags.value = []
   mutationErrorMessage.value = ''
-  timeBoxEditorRef.value?.classList.remove('animate-[var(--animate-blink-once)]')
 }
 
 watch(
