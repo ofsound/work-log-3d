@@ -21,14 +21,29 @@ const currentUser = ref({
 
 const savedSettings = ref(cloneUserSettings(DEFAULT_USER_SETTINGS))
 
-;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-  useCurrentUser: () => currentUser,
-  useFirebaseAuth: () => ({ id: 'auth' }),
-  useRouter: () => ({ push: routerPush }),
-}
+  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+    useCurrentUser: () => currentUser,
+    useFirebaseAuth: () => ({ id: 'auth' }),
+    useFirestoreCollections: () => ({
+      projectsCollection: ref({ id: 'projects' }),
+      tagsCollection: ref({ id: 'tags' }),
+    }),
+    useRouter: () => ({ push: routerPush }),
+  }
 
 vi.mock('firebase/auth', () => ({
   signOut,
+}))
+
+vi.mock('vuefire', () => ({
+  useCollection: () => ref([]),
+}))
+
+vi.mock('~/composables/useFirestoreCollections', () => ({
+  useFirestoreCollections: () => ({
+    projectsCollection: ref({ id: 'projects' }),
+    tagsCollection: ref({ id: 'tags' }),
+  }),
 }))
 
 vi.mock('~/composables/useHostRuntime', () => ({
@@ -73,6 +88,7 @@ describe('settings page', () => {
 
     expect(wrapper.text()).toContain('Personal workspace')
     expect(wrapper.text()).toContain('Fonts and shell')
+    expect(wrapper.text()).toContain('Tray and alerts')
     expect(wrapper.text()).toContain('Timer completion sound')
     expect(wrapper.text()).toContain('Project-first mode')
     expect(wrapper.text()).toContain('Work Log 0.0.0-test')

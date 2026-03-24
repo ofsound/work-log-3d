@@ -1,4 +1,5 @@
 import {
+  createDesktopTrayShortcutActionId,
   createIdleTimerState,
   formatDesktopTrayBadgeText,
   getDesktopTrayStructuralKey,
@@ -8,9 +9,29 @@ import {
   shouldHideWindowOnClose,
   startCountdownTimer,
   startCountupTimer,
+  type UserSettingsTrayShortcut,
 } from '~/shared/worklog'
 
 describe('desktop tray state', () => {
+  const customShortcuts: UserSettingsTrayShortcut[] = [
+    {
+      id: 'deep-work',
+      label: 'Deep Work',
+      timerMode: 'countdown',
+      durationMinutes: 45,
+      project: 'project-1',
+      tags: ['tag-1'],
+    },
+    {
+      id: 'admin',
+      label: 'Admin Catch-up',
+      timerMode: 'countup',
+      durationMinutes: null,
+      project: 'project-2',
+      tags: ['tag-2'],
+    },
+  ]
+
   it('derives the idle tray menu with timer start actions', () => {
     const trayState = getDesktopTrayState(getTimerSnapshot(createIdleTimerState(), 0), 'darwin')
 
@@ -30,15 +51,55 @@ describe('desktop tray state', () => {
     ])
   })
 
-  it('uses structural key from timer status only so menu shape can skip rebuilds while time ticks', () => {
+  it('adds configured tray shortcuts to idle menus after the built-in timer actions', () => {
+    const trayState = getDesktopTrayState(
+      getTimerSnapshot(createIdleTimerState(), 0),
+      'darwin',
+      customShortcuts,
+    )
+
+    expect(trayState.menuItems).toEqual([
+      { kind: 'status', label: 'Timer idle', enabled: false },
+      { kind: 'separator' },
+      { kind: 'action', id: 'start_focus', label: 'Pomodoro (30m)', enabled: true },
+      { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
+      {
+        kind: 'action',
+        id: createDesktopTrayShortcutActionId('deep-work'),
+        label: 'Deep Work',
+        enabled: true,
+      },
+      {
+        kind: 'action',
+        id: createDesktopTrayShortcutActionId('admin'),
+        label: 'Admin Catch-up',
+        enabled: true,
+      },
+      { kind: 'separator' },
+      { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
+      { kind: 'action', id: 'quit', label: 'Quit', enabled: true },
+    ])
+  })
+
+  it('uses timer status for running menus and shortcut config for idle menus', () => {
     const runningA = getTimerSnapshot(startCountupTimer(0), 65_000)
     const runningB = getTimerSnapshot(startCountupTimer(0), 125_000)
     const runningCountdown = getTimerSnapshot(startCountdownTimer(300, 60_000), 120_000)
+    const idleSnapshot = getTimerSnapshot(createIdleTimerState(), 0)
 
     expect(getDesktopTrayStructuralKey(runningA)).toBe('running:countup')
     expect(getDesktopTrayStructuralKey(runningB)).toBe('running:countup')
     expect(getDesktopTrayStructuralKey(runningCountdown)).toBe('running:countdown')
-    expect(getDesktopTrayStructuralKey(getTimerSnapshot(createIdleTimerState(), 0))).toBe('idle')
+    expect(getDesktopTrayStructuralKey(idleSnapshot)).toBe('idle')
+    expect(getDesktopTrayStructuralKey(idleSnapshot, customShortcuts)).not.toBe('idle')
+    expect(
+      getDesktopTrayStructuralKey(idleSnapshot, [
+        {
+          ...customShortcuts[0],
+          label: 'Renamed shortcut',
+        },
+      ]),
+    ).not.toBe(getDesktopTrayStructuralKey(idleSnapshot, [customShortcuts[0]]))
   })
 
   it('uses live text in the macOS tray while a timer is active', () => {

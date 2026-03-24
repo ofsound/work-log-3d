@@ -12,7 +12,7 @@ const getRequiredMock = <T>(key: string): T => {
   return value as T
 }
 
-export const definePageMeta = () => {}
+export const definePageMeta = () => { }
 
 export const getCurrentUser = () => getRequiredMock<() => Promise<unknown>>('getCurrentUser')()
 
@@ -23,6 +23,9 @@ export const onBeforeRouteLeave = (guard: unknown) =>
 export const useCurrentUser = () => getRequiredMock<() => { value: unknown }>('useCurrentUser')()
 
 export const useFirebaseAuth = () => getRequiredMock<() => unknown>('useFirebaseAuth')()
+
+export const useFirestoreCollections = () =>
+  getRequiredMock<() => unknown>('useFirestoreCollections')()
 
 export const useRoute = () => getRequiredMock<() => unknown>('useRoute')()
 

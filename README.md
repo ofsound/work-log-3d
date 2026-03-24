@@ -21,14 +21,15 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - `/project/:segment` is query-driven like `/sessions`: the default `List` mode omits `mode`, `Calendar` persists `mode=calendar`, and both modes preserve `date=YYYY-MM-DD` for the selected project day context
 - `/sessions` is a single route with query-driven state: `mode=day|week|month|year|list` and `date=YYYY-MM-DD`; `mode=list` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort`
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
-- `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences and desktop-only alert sound controls
+- `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences, synced desktop tray shortcuts, and desktop-only local alert sound controls
+- `/new` can accept desktop-prefill query params: `project=<documentId>` and `tags=id1,id2`
 - Each project and tag has a `slug` derived from its name; URLs prefer it for readability while Firestore keeps using document ids
 - Project slug `new` is reserved so `/project/new` always points to the create workspace
 - Projects and tags cannot be deleted while sessions still reference them
 - Shared validation lives in `shared/worklog/validation.ts`
 - Firestore rules in `firestore.rules` must match the current document shape
 - Theme preference is stored in `localStorage` per Firebase user, with a guest fallback before auth resolves
-- Appearance and workflow settings are stored in Firestore at `users/{uid}/settings/preferences`, while desktop alert sounds stay local to each Electron install
+- Appearance, workflow, and tray shortcut settings are stored in Firestore at `users/{uid}/settings/preferences`, while desktop alert sounds stay local to each Electron install
 
 ## Setup
 

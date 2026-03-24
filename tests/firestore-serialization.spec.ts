@@ -154,6 +154,9 @@ describe('firestore worklog repositories', () => {
       workflow: {
         hideTags: false,
       },
+      desktop: {
+        trayShortcuts: [],
+      },
     })
   })
 

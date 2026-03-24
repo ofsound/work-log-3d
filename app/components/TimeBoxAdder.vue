@@ -1,9 +1,34 @@
 <script setup lang="ts">
+import { parseNewTimeBoxRoutePrefill } from '~/utils/new-timebox-route-state'
+import { toProjects, toTags } from '~/utils/worklog-firebase'
+import { sortNamedEntities } from '~~/shared/worklog'
+
+import type { FirebaseProjectDocument, FirebaseTagDocument } from '~/utils/worklog-firebase'
+
+const route = useRoute()
 const { snapshot } = useTimerService()
+const { projectsCollection, tagsCollection } = useFirestoreCollections()
+const allProjects = useCollection(projectsCollection)
+const allTags = useCollection(tagsCollection)
 
 const countUpIsActive = computed(() => snapshot.value.mode === 'countup' && snapshot.value.isActive)
 const countDownIsActive = computed(
   () => snapshot.value.mode === 'countdown' && snapshot.value.isActive,
+)
+
+const sortedProjects = computed(() =>
+  sortNamedEntities(toProjects((allProjects.value as FirebaseProjectDocument[] | undefined) ?? [])),
+)
+
+const sortedTags = computed(() =>
+  sortNamedEntities(toTags((allTags.value as FirebaseTagDocument[] | undefined) ?? [])),
+)
+
+const routePrefill = computed(() =>
+  parseNewTimeBoxRoutePrefill(route.query as Record<string, string | string[] | undefined>, {
+    validProjectIds: sortedProjects.value.map((project) => project.id),
+    validTagIds: sortedTags.value.map((tag) => tag.id),
+  }),
 )
 
 const startTimeFromTimer = computed(() => {
@@ -33,6 +58,8 @@ const endTimeFromTimer = computed(() => {
     <TimeBoxEditor
       :start-time-from-timer="startTimeFromTimer"
       :end-time-from-timer="endTimeFromTimer"
+      :initial-project="routePrefill.project"
+      :initial-tags="routePrefill.tags"
     />
   </div>
 </template>

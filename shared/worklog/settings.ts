@@ -1,6 +1,10 @@
 export const USER_SETTINGS_BACKGROUND_PRESETS = ['grid', 'dots', 'crosshatch', 'aurora'] as const
 
 export type UserSettingsBackgroundPreset = (typeof USER_SETTINGS_BACKGROUND_PRESETS)[number]
+export const USER_SETTINGS_TRAY_SHORTCUT_TIMER_MODES = ['countup', 'countdown'] as const
+
+export type UserSettingsTrayShortcutTimerMode =
+  (typeof USER_SETTINGS_TRAY_SHORTCUT_TIMER_MODES)[number]
 
 export interface UserSettingsFontFamilies {
   ui: string
@@ -18,9 +22,32 @@ export interface UserSettingsWorkflow {
   hideTags: boolean
 }
 
+export interface UserSettingsTrayShortcut {
+  id: string
+  label: string
+  timerMode: UserSettingsTrayShortcutTimerMode
+  durationMinutes: number | null
+  project: string
+  tags: string[]
+}
+
+export interface UserSettingsDesktop {
+  trayShortcuts: UserSettingsTrayShortcut[]
+}
+
 export interface UserSettings {
   appearance: UserSettingsAppearance
   workflow: UserSettingsWorkflow
+  desktop: UserSettingsDesktop
+}
+
+export interface PartialUserSettingsTrayShortcut {
+  id?: string
+  label?: string
+  timerMode?: string
+  durationMinutes?: number | null
+  project?: string
+  tags?: string[]
 }
 
 export interface PartialUserSettings {
@@ -31,6 +58,9 @@ export interface PartialUserSettings {
   }
   workflow?: {
     hideTags?: boolean
+  }
+  desktop?: {
+    trayShortcuts?: PartialUserSettingsTrayShortcut[]
   }
 }
 
@@ -47,6 +77,9 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   workflow: {
     hideTags: false,
   },
+  desktop: {
+    trayShortcuts: [],
+  },
 }
 
 const GOOGLE_FONTS_HOSTNAME = 'fonts.googleapis.com'
@@ -59,6 +92,15 @@ export const isUserSettingsBackgroundPreset = (
   return (
     value != null &&
     USER_SETTINGS_BACKGROUND_PRESETS.includes(value as UserSettingsBackgroundPreset)
+  )
+}
+
+export const isUserSettingsTrayShortcutTimerMode = (
+  value: string | null | undefined,
+): value is UserSettingsTrayShortcutTimerMode => {
+  return (
+    value != null &&
+    USER_SETTINGS_TRAY_SHORTCUT_TIMER_MODES.includes(value as UserSettingsTrayShortcutTimerMode)
   )
 }
 
@@ -75,6 +117,16 @@ export const cloneUserSettings = (settings: UserSettings): UserSettings => ({
   workflow: {
     hideTags: settings.workflow.hideTags,
   },
+  desktop: {
+    trayShortcuts: settings.desktop.trayShortcuts.map((shortcut) => ({
+      id: shortcut.id,
+      label: shortcut.label,
+      timerMode: shortcut.timerMode,
+      durationMinutes: shortcut.durationMinutes,
+      project: shortcut.project,
+      tags: [...shortcut.tags],
+    })),
+  },
 })
 
 export const areUserSettingsEqual = (left: UserSettings, right: UserSettings) =>
@@ -88,6 +140,66 @@ const normalizeRequiredFontFamily = (value: string, label: string) => {
   }
 
   return normalized
+}
+
+const normalizeOptionalEntityId = (value: string | null | undefined) => value?.trim() ?? ''
+
+const normalizeOptionalEntityIds = (value: string[] | null | undefined) =>
+  Array.from(new Set((value ?? []).map((item) => item.trim()).filter(Boolean)))
+
+const normalizeShortcutId = (value: string | null | undefined, index: number) => {
+  const normalized = value?.trim()
+
+  return normalized || `tray-shortcut-${index + 1}`
+}
+
+const normalizeShortcutLabel = (value: string | null | undefined) => {
+  const normalized = value?.trim() ?? ''
+
+  if (!normalized) {
+    throw new Error('Tray shortcut label is required.')
+  }
+
+  return normalized
+}
+
+const normalizeShortcutDurationMinutes = (
+  value: number | null | undefined,
+  timerMode: UserSettingsTrayShortcutTimerMode,
+): number | null => {
+  if (timerMode === 'countup') {
+    return null
+  }
+
+  const durationMinutes = value ?? Number.NaN
+
+  if (
+    !Number.isFinite(durationMinutes) ||
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes <= 0
+  ) {
+    throw new Error('Countdown duration must be a whole number of minutes.')
+  }
+
+  return durationMinutes
+}
+
+const normalizeUserSettingsTrayShortcut = (
+  shortcut: PartialUserSettingsTrayShortcut | UserSettingsTrayShortcut,
+  index: number,
+): UserSettingsTrayShortcut => {
+  const timerMode = isUserSettingsTrayShortcutTimerMode(shortcut.timerMode)
+    ? shortcut.timerMode
+    : 'countup'
+
+  return {
+    id: normalizeShortcutId(shortcut.id, index),
+    label: normalizeShortcutLabel(shortcut.label),
+    timerMode,
+    durationMinutes: normalizeShortcutDurationMinutes(shortcut.durationMinutes, timerMode),
+    project: normalizeOptionalEntityId(shortcut.project),
+    tags: normalizeOptionalEntityIds(shortcut.tags),
+  }
 }
 
 export const normalizeGoogleFontsImportUrl = (value: string) => {
@@ -119,6 +231,31 @@ export const normalizeGoogleFontsImportUrl = (value: string) => {
   return parsedUrl.toString()
 }
 
+export const validateUserSettingsTrayShortcuts = (
+  shortcuts: readonly UserSettingsTrayShortcut[],
+): UserSettingsTrayShortcut[] =>
+  shortcuts.map((shortcut, index) => normalizeUserSettingsTrayShortcut(shortcut, index))
+
+export const resolveUserSettingsTrayShortcuts = (
+  shortcuts: readonly PartialUserSettingsTrayShortcut[] | null | undefined,
+): UserSettingsTrayShortcut[] => {
+  if (!Array.isArray(shortcuts)) {
+    return []
+  }
+
+  const resolved: UserSettingsTrayShortcut[] = []
+
+  shortcuts.forEach((shortcut, index) => {
+    try {
+      resolved.push(normalizeUserSettingsTrayShortcut(shortcut, index))
+    } catch {
+      // Ignore malformed saved shortcuts so the rest of settings can still load.
+    }
+  })
+
+  return resolved
+}
+
 export const validateUserSettings = (input: UserSettings): UserSettings => ({
   appearance: {
     fontImportUrl: normalizeGoogleFontsImportUrl(input.appearance.fontImportUrl),
@@ -130,11 +267,16 @@ export const validateUserSettings = (input: UserSettings): UserSettings => ({
     backgroundPreset: isUserSettingsBackgroundPreset(input.appearance.backgroundPreset)
       ? input.appearance.backgroundPreset
       : (() => {
-          throw new Error('Background preset is invalid.')
-        })(),
+        throw new Error('Background preset is invalid.')
+      })(),
   },
   workflow: {
-    hideTags: Boolean(input.workflow.hideTags),
+    hideTags: Boolean(input.workflow?.hideTags ?? DEFAULT_USER_SETTINGS.workflow.hideTags),
+  },
+  desktop: {
+    trayShortcuts: validateUserSettingsTrayShortcuts(
+      input.desktop?.trayShortcuts ?? DEFAULT_USER_SETTINGS.desktop.trayShortcuts,
+    ),
   },
 })
 
@@ -166,6 +308,9 @@ export const resolveUserSettings = (
       },
       workflow: {
         hideTags: input.workflow?.hideTags ?? DEFAULT_USER_SETTINGS.workflow.hideTags,
+      },
+      desktop: {
+        trayShortcuts: resolveUserSettingsTrayShortcuts(input.desktop?.trayShortcuts),
       },
     })
   } catch {

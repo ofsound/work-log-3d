@@ -109,6 +109,16 @@ export interface FirebaseUserSettingsDocument {
   workflow?: {
     hideTags?: boolean
   }
+  desktop?: {
+    trayShortcuts?: Array<{
+      id?: string
+      label?: string
+      timerMode?: string
+      durationMinutes?: number | null
+      project?: string
+      tags?: string[]
+    }>
+  }
 }
 
 export const toProject = (project: FirebaseProjectDocument): Project => ({
@@ -207,6 +217,16 @@ export const toUserSettingsPayload = (input: UserSettings) => {
     },
     workflow: {
       hideTags: normalized.workflow.hideTags,
+    },
+    desktop: {
+      trayShortcuts: normalized.desktop.trayShortcuts.map((shortcut) => ({
+        id: shortcut.id,
+        label: shortcut.label,
+        timerMode: shortcut.timerMode,
+        durationMinutes: shortcut.durationMinutes,
+        project: shortcut.project,
+        tags: shortcut.tags,
+      })),
     },
   }
 }

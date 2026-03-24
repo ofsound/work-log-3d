@@ -2,24 +2,42 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { signOut } from 'firebase/auth'
+import { useCollection } from 'vuefire'
 import { useCurrentUser, useFirebaseAuth, useRouter, useRuntimeConfig } from '#imports'
-import type { DesktopAlertSoundState, UserSettings } from '~~/shared/worklog'
-import { areUserSettingsEqual, cloneUserSettings, getWorklogErrorMessage } from '~~/shared/worklog'
 
+import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
 import { useHostRuntime } from '~/composables/useHostRuntime'
 import { useUserSettings } from '~/composables/useUserSettings'
+import { toProjects, toTags } from '~/utils/worklog-firebase'
 import {
   getUserSettingsBackgroundOption,
   USER_SETTINGS_BACKGROUND_OPTIONS,
 } from '~/utils/user-settings'
 
+import type { FirebaseProjectDocument, FirebaseTagDocument } from '~/utils/worklog-firebase'
+import type {
+  DesktopAlertSoundState,
+  UserSettings,
+  UserSettingsTrayShortcut,
+  UserSettingsTrayShortcutTimerMode,
+} from '~~/shared/worklog'
+import {
+  areUserSettingsEqual,
+  cloneUserSettings,
+  getWorklogErrorMessage,
+  sortNamedEntities,
+} from '~~/shared/worklog'
+
 const router = useRouter()
 const runtimeConfig = useRuntimeConfig()
 const auth = useFirebaseAuth()
 const { desktopApi, isDesktop } = useHostRuntime()
+const { projectsCollection, tagsCollection } = useFirestoreCollections()
 const { applyPreview, clearPreview, defaultSettings, saveSettings, savedSettings } =
   useUserSettings()
 const currentUser = useCurrentUser()
+const allProjects = useCollection(projectsCollection)
+const allTags = useCollection(tagsCollection)
 
 const draft = ref<UserSettings>(cloneUserSettings(savedSettings.value))
 const mutationErrorMessage = ref('')
@@ -36,6 +54,12 @@ const isAccountUiReady = ref(false)
 
 const isDirty = computed(() => !areUserSettingsEqual(draft.value, savedSettings.value))
 const hasCustomDesktopAlertSound = computed(() => desktopAlertState.value?.source === 'custom')
+const sortedProjects = computed(() =>
+  sortNamedEntities(toProjects((allProjects.value as FirebaseProjectDocument[] | undefined) ?? [])),
+)
+const sortedTags = computed(() =>
+  sortNamedEntities(toTags((allTags.value as FirebaseTagDocument[] | undefined) ?? [])),
+)
 
 const accountDisplayName = computed(() => {
   const u = currentUser.value
@@ -51,6 +75,66 @@ const accountUid = computed(() => currentUser.value?.uid ?? null)
 
 const syncDraftFromSaved = (settings: UserSettings) => {
   draft.value = cloneUserSettings(settings)
+}
+
+const createTrayShortcutId = () =>
+  globalThis.crypto?.randomUUID?.() ??
+  `tray-shortcut-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+
+const createTrayShortcut = (): UserSettingsTrayShortcut => ({
+  id: createTrayShortcutId(),
+  label: '',
+  timerMode: 'countup',
+  durationMinutes: null,
+  project: '',
+  tags: [],
+})
+
+const clearMessages = () => {
+  mutationErrorMessage.value = ''
+  saveMessage.value = ''
+}
+
+const addTrayShortcut = () => {
+  draft.value.desktop.trayShortcuts = [...draft.value.desktop.trayShortcuts, createTrayShortcut()]
+  clearMessages()
+}
+
+const removeTrayShortcut = (shortcutId: string) => {
+  draft.value.desktop.trayShortcuts = draft.value.desktop.trayShortcuts.filter(
+    (shortcut) => shortcut.id !== shortcutId,
+  )
+  clearMessages()
+}
+
+const moveTrayShortcut = (index: number, direction: -1 | 1) => {
+  const nextIndex = index + direction
+
+  if (nextIndex < 0 || nextIndex >= draft.value.desktop.trayShortcuts.length) {
+    return
+  }
+
+  const nextShortcuts = [...draft.value.desktop.trayShortcuts]
+  const currentShortcut = nextShortcuts[index]!
+  nextShortcuts[index] = nextShortcuts[nextIndex]!
+  nextShortcuts[nextIndex] = currentShortcut
+  draft.value.desktop.trayShortcuts = nextShortcuts
+  clearMessages()
+}
+
+const setTrayShortcutTimerMode = (
+  shortcut: UserSettingsTrayShortcut,
+  timerMode: UserSettingsTrayShortcutTimerMode,
+) => {
+  shortcut.timerMode = timerMode
+  shortcut.durationMinutes = timerMode === 'countdown' ? (shortcut.durationMinutes ?? 30) : null
+  clearMessages()
+}
+
+const handleTrayShortcutDurationInput = (shortcut: UserSettingsTrayShortcut, event: Event) => {
+  const value = Number.parseInt((event.target as HTMLInputElement).value, 10)
+  shortcut.durationMinutes = Number.isFinite(value) ? value : null
+  clearMessages()
 }
 
 const loadDesktopAlertState = async () => {
@@ -106,6 +190,16 @@ const handleSave = async () => {
   try {
     mutationErrorMessage.value = ''
     await saveSettings(draft.value)
+    if (isDesktop && desktopApi) {
+      try {
+        await desktopApi.setTrayShortcuts(draft.value.desktop.trayShortcuts)
+      } catch (error) {
+        mutationErrorMessage.value = getWorklogErrorMessage(
+          error,
+          'Settings saved, but tray shortcuts could not sync to the desktop app.',
+        )
+      }
+    }
     saveMessage.value = 'Settings saved.'
   } catch (error) {
     mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save settings.')
@@ -139,6 +233,12 @@ watch(
   (nextSettings) => {
     if (!hasInitializedDraft.value || !isDirty.value) {
       syncDraftFromSaved(nextSettings)
+    }
+
+    if (desktopApi) {
+      void desktopApi.setTrayShortcuts(nextSettings.desktop.trayShortcuts).catch((error) => {
+        console.warn('[worklog] unable to sync tray shortcuts', error)
+      })
     }
 
     hasInitializedDraft.value = true
@@ -181,8 +281,8 @@ onBeforeUnmount(() => {
             <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Settings</div>
             <h1 class="mt-1 text-3xl font-bold text-text">Personal workspace</h1>
             <p class="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
-              Appearance and workflow preferences sync with your account. Desktop alert sounds stay
-              local to each Electron install.
+              Appearance and workflow preferences sync with your account. The desktop app can also
+              add local alert sounds and tray shortcuts around those synced preferences.
             </p>
 
             <ContainerCard class="mt-4" padding="compact" variant="muted" aria-live="polite">
@@ -401,8 +501,8 @@ onBeforeUnmount(() => {
       </ContainerCard>
 
       <ContainerCard as="section">
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Desktop Alerts</div>
-        <h2 class="mt-1 text-2xl font-bold text-text">Timer completion sound</h2>
+        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Desktop app</div>
+        <h2 class="mt-1 text-2xl font-bold text-text">Tray and alerts</h2>
 
         <ContainerCard
           v-if="!isDesktop"
@@ -410,77 +510,276 @@ onBeforeUnmount(() => {
           padding="compact"
           variant="muted"
         >
-          Custom alert sounds are available in the Electron app. Open the desktop app on this device
-          to import, clear, or test a local sound file.
+          Timer completion sounds and tray shortcuts are available in the Electron app. Open the
+          desktop app on this device to import a local sound file or manage tray shortcuts.
         </ContainerCard>
 
-        <div v-else class="mt-5 flex flex-col gap-4">
-          <ContainerCard padding="compact" variant="muted">
-            <div class="text-sm font-semibold text-text">Current sound</div>
-            <div class="mt-2 text-text">
-              {{
-                isLoadingDesktopAlert
-                  ? 'Loading…'
-                  : desktopAlertState?.fileName || 'timer-complete.wav'
-              }}
+        <div v-else class="mt-5 flex flex-col gap-6">
+          <section class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+              <div class="text-sm font-semibold text-text">Timer completion sound</div>
+              <p class="text-sm leading-6 text-text-muted">
+                Choose the sound this device plays when a countdown completes.
+              </p>
             </div>
-            <div class="mt-1 text-sm text-text-muted">
-              {{
-                hasCustomDesktopAlertSound
-                  ? 'Imported on this device and copied into app storage.'
-                  : 'Using the bundled default alert sound.'
-              }}
+
+            <ContainerCard padding="compact" variant="muted">
+              <div class="text-sm font-semibold text-text">Current sound</div>
+              <div class="mt-2 text-text">
+                {{
+                  isLoadingDesktopAlert
+                    ? 'Loading…'
+                    : desktopAlertState?.fileName || 'timer-complete.wav'
+                }}
+              </div>
+              <div class="mt-1 text-sm text-text-muted">
+                {{
+                  hasCustomDesktopAlertSound
+                    ? 'Imported on this device and copied into app storage.'
+                    : 'Using the bundled default alert sound.'
+                }}
+              </div>
+            </ContainerCard>
+
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
+                :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
+                @click="
+                  runDesktopAlertAction(
+                    () => desktopApi!.chooseAlertSound(),
+                    'Desktop alert sound updated.',
+                  )
+                "
+              >
+                Choose file
+              </button>
+              <button
+                type="button"
+                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
+                @click="
+                  runDesktopAlertAction(
+                    () => desktopApi!.testAlertSound().then(() => undefined),
+                    'Playing alert sound…',
+                  )
+                "
+              >
+                Test sound
+              </button>
+              <button
+                type="button"
+                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                :disabled="
+                  isLoadingDesktopAlert || isMutatingDesktopAlert || !hasCustomDesktopAlertSound
+                "
+                @click="
+                  runDesktopAlertAction(
+                    () => desktopApi!.clearAlertSound(),
+                    'Custom desktop alert cleared.',
+                  )
+                "
+              >
+                Clear custom sound
+              </button>
             </div>
-          </ContainerCard>
 
-          <div class="flex flex-wrap gap-2">
-            <button
-              type="button"
-              class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
-              :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
-              @click="
-                runDesktopAlertAction(
-                  () => desktopApi!.chooseAlertSound(),
-                  'Desktop alert sound updated.',
-                )
-              "
-            >
-              Choose file
-            </button>
-            <button
-              type="button"
-              class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
-              :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
-              @click="
-                runDesktopAlertAction(
-                  () => desktopApi!.testAlertSound().then(() => undefined),
-                  'Playing alert sound…',
-                )
-              "
-            >
-              Test sound
-            </button>
-            <button
-              type="button"
-              class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
-              :disabled="
-                isLoadingDesktopAlert || isMutatingDesktopAlert || !hasCustomDesktopAlertSound
-              "
-              @click="
-                runDesktopAlertAction(
-                  () => desktopApi!.clearAlertSound(),
-                  'Custom desktop alert cleared.',
-                )
-              "
-            >
-              Clear custom sound
-            </button>
-          </div>
+            <div class="text-sm text-text-muted">Supported file types: mp3, wav, aiff.</div>
+            <p v-if="desktopAlertMessage" class="text-sm text-text-muted">
+              {{ desktopAlertMessage }}
+            </p>
+          </section>
 
-          <div class="text-sm text-text-muted">Supported file types: mp3, wav, aiff.</div>
-          <p v-if="desktopAlertMessage" class="text-sm text-text-muted">
-            {{ desktopAlertMessage }}
-          </p>
+          <section class="flex flex-col gap-4 border-t border-border-subtle pt-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div class="text-sm font-semibold text-text">Tray menu shortcuts</div>
+                <p class="mt-1 text-sm leading-6 text-text-muted">
+                  Add desktop-only shortcuts that appear alongside Pomodoro and Start Timer. Each
+                  shortcut can start count up or countdown and open `/new` with a project and tags
+                  preselected.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover"
+                @click="addTrayShortcut"
+              >
+                Add shortcut
+              </button>
+            </div>
+
+            <ContainerCard
+              v-if="draft.desktop.trayShortcuts.length === 0"
+              class="py-5 text-sm text-text-muted shadow-none"
+              padding="compact"
+              variant="muted"
+            >
+              No custom tray shortcuts yet.
+            </ContainerCard>
+
+            <ContainerCard
+              v-for="(shortcut, index) in draft.desktop.trayShortcuts"
+              :key="shortcut.id"
+              class="flex flex-col gap-4"
+              padding="compact"
+              variant="muted"
+            >
+              <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div class="grid flex-1 gap-4 lg:grid-cols-2">
+                  <label class="flex flex-col gap-2">
+                    <span
+                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
+                    >
+                      Label
+                    </span>
+                    <input
+                      v-model="shortcut.label"
+                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                      placeholder="Deep work"
+                    />
+                  </label>
+
+                  <fieldset class="flex flex-col gap-2">
+                    <legend
+                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
+                    >
+                      Timer
+                    </legend>
+                    <div class="flex flex-wrap gap-2.5">
+                      <label
+                        class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
+                        :class="
+                          shortcut.timerMode === 'countup'
+                            ? 'border-link bg-link/10 text-link'
+                            : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
+                        "
+                      >
+                        <input
+                          :checked="shortcut.timerMode === 'countup'"
+                          :name="`trayShortcutMode-${shortcut.id}`"
+                          type="radio"
+                          @change="setTrayShortcutTimerMode(shortcut, 'countup')"
+                        />
+                        <span>Count up</span>
+                      </label>
+                      <label
+                        class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
+                        :class="
+                          shortcut.timerMode === 'countdown'
+                            ? 'border-link bg-link/10 text-link'
+                            : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
+                        "
+                      >
+                        <input
+                          :checked="shortcut.timerMode === 'countdown'"
+                          :name="`trayShortcutMode-${shortcut.id}`"
+                          type="radio"
+                          @change="setTrayShortcutTimerMode(shortcut, 'countdown')"
+                        />
+                        <span>Countdown</span>
+                      </label>
+                    </div>
+                  </fieldset>
+
+                  <label v-if="shortcut.timerMode === 'countdown'" class="flex flex-col gap-2">
+                    <span
+                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
+                    >
+                      Countdown minutes
+                    </span>
+                    <input
+                      :value="shortcut.durationMinutes ?? ''"
+                      min="1"
+                      step="1"
+                      type="number"
+                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                      placeholder="30"
+                      @input="handleTrayShortcutDurationInput(shortcut, $event)"
+                    />
+                  </label>
+
+                  <label class="flex flex-col gap-2">
+                    <span
+                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
+                    >
+                      Project
+                    </span>
+                    <select
+                      v-model="shortcut.project"
+                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+                    >
+                      <option value="">No project preselected</option>
+                      <option
+                        v-for="project in sortedProjects"
+                        :key="project.id"
+                        :value="project.id"
+                      >
+                        {{ project.name }}
+                      </option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                    :disabled="index === 0"
+                    @click="moveTrayShortcut(index, -1)"
+                  >
+                    Move up
+                  </button>
+                  <button
+                    type="button"
+                    class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                    :disabled="index === draft.desktop.trayShortcuts.length - 1"
+                    @click="moveTrayShortcut(index, 1)"
+                  >
+                    Move down
+                  </button>
+                  <button
+                    type="button"
+                    class="cursor-pointer rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger hover:bg-danger/15"
+                    @click="removeTrayShortcut(shortcut.id)"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-3 border-t border-border-subtle pt-4">
+                <div class="flex flex-col gap-1">
+                  <div class="text-sm font-semibold text-text">Tags</div>
+                  <p class="text-xs text-text-muted">
+                    Tags apply when this shortcut opens the new session form.
+                  </p>
+                </div>
+
+                <div v-if="sortedTags.length" class="flex flex-wrap gap-2.5">
+                  <label
+                    v-for="tag in sortedTags"
+                    :key="tag.id"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
+                    :class="
+                      shortcut.tags.includes(tag.id)
+                        ? 'border-link bg-link/10 text-link'
+                        : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
+                    "
+                  >
+                    <input v-model="shortcut.tags" type="checkbox" :value="tag.id" />
+                    <span>{{ tag.name }}</span>
+                  </label>
+                </div>
+
+                <p v-else class="text-sm text-text-muted">
+                  No tags available yet. Create tags first if you want to prefill them from tray
+                  shortcuts.
+                </p>
+              </div>
+            </ContainerCard>
+          </section>
         </div>
       </ContainerCard>
 

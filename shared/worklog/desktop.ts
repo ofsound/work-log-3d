@@ -1,3 +1,4 @@
+import type { UserSettingsTrayShortcut } from './settings'
 import type { TimerSnapshot, TimerState } from './timer'
 
 export interface DesktopTimerEvent {
@@ -23,6 +24,7 @@ export type DesktopTrayActionId =
   | 'reset'
   | 'show_window'
   | 'open_window_to_log_session'
+  | `shortcut:${string}`
   | 'quit'
 
 export type DesktopTrayVisualMode = 'icon' | 'badge'
@@ -30,19 +32,19 @@ export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
 
 export type DesktopTrayMenuItem =
   | {
-      kind: 'status'
-      label: string
-      enabled: false
-    }
+    kind: 'status'
+    label: string
+    enabled: false
+  }
   | {
-      kind: 'separator'
-    }
+    kind: 'separator'
+  }
   | {
-      kind: 'action'
-      id: DesktopTrayActionId
-      label: string
-      enabled: boolean
-    }
+    kind: 'action'
+    id: DesktopTrayActionId
+    label: string
+    enabled: boolean
+  }
 
 export interface DesktopTrayState {
   mode: TimerState['status']
@@ -84,6 +86,7 @@ export interface DesktopApi {
   getCapabilities(): DesktopCapabilities
   getTimerState(): Promise<TimerState>
   getAlertSound(): Promise<DesktopAlertSoundState>
+  setTrayShortcuts(shortcuts: UserSettingsTrayShortcut[]): Promise<UserSettingsTrayShortcut[]>
   subscribeToTimer(listener: (event: DesktopTimerEvent) => void): () => void
   subscribeToRouteRequest(listener: (path: string) => void): () => void
   startCountup(): Promise<void>
@@ -155,22 +158,58 @@ const createActionItem = (
 
 const separatorItem: DesktopTrayMenuItem = { kind: 'separator' }
 
+export const createDesktopTrayShortcutActionId = (shortcutId: string): `shortcut:${string}` =>
+  `shortcut:${shortcutId}`
+
+export const isDesktopTrayShortcutActionId = (
+  actionId: DesktopTrayActionId,
+): actionId is `shortcut:${string}` => actionId.startsWith('shortcut:')
+
+export const getDesktopTrayShortcutIdFromAction = (actionId: DesktopTrayActionId) =>
+  isDesktopTrayShortcutActionId(actionId) ? actionId.slice('shortcut:'.length) : null
+
 const createCountdownAdjustmentItems = (): DesktopTrayMenuItem[] => [
   createActionItem('add_countdown_5_minutes', '+5 min'),
   createActionItem('add_countdown_10_minutes', '+10 min'),
 ]
+
+const createTrayShortcutItems = (
+  shortcuts: readonly UserSettingsTrayShortcut[],
+): DesktopTrayMenuItem[] =>
+  shortcuts.map((shortcut) =>
+    createActionItem(createDesktopTrayShortcutActionId(shortcut.id), shortcut.label),
+  )
+
+const getTrayShortcutStructuralKey = (shortcuts: readonly UserSettingsTrayShortcut[]) =>
+  shortcuts
+    .map((shortcut) =>
+      JSON.stringify([
+        shortcut.id,
+        shortcut.label,
+        shortcut.timerMode,
+        shortcut.durationMinutes,
+        shortcut.project,
+        shortcut.tags,
+      ]),
+    )
+    .join('|')
 
 /**
  * Identifies tray **menu structure** (which actions exist). When this is unchanged, only
  * time-derived labels/tooltip/title need updating — not a full `Menu.buildFromTemplate`.
  * Running and paused menus also depend on timer mode because countdowns expose add-time actions.
  */
-export const getDesktopTrayStructuralKey = (snapshot: TimerSnapshot): string => {
+export const getDesktopTrayStructuralKey = (
+  snapshot: TimerSnapshot,
+  shortcuts: readonly UserSettingsTrayShortcut[] = [],
+): string => {
   if (snapshot.status === 'running' || snapshot.status === 'paused') {
     return `${snapshot.status}:${snapshot.mode ?? 'timer'}`
   }
 
-  return snapshot.status
+  const shortcutKey = getTrayShortcutStructuralKey(shortcuts)
+
+  return shortcutKey ? `${snapshot.status}:${shortcutKey}` : snapshot.status
 }
 
 export const formatDesktopTrayBadgeText = (display: string) => {
@@ -186,7 +225,10 @@ export const formatDesktopTrayBadgeText = (display: string) => {
 export const getDesktopTrayState = (
   snapshot: TimerSnapshot,
   platform: NodeJS.Platform = process.platform,
+  shortcuts: readonly UserSettingsTrayShortcut[] = [],
 ): DesktopTrayState => {
+  const trayShortcutItems = createTrayShortcutItems(shortcuts)
+
   if (snapshot.status === 'idle') {
     const statusLabel = 'Timer idle'
 
@@ -203,6 +245,7 @@ export const getDesktopTrayState = (
         separatorItem,
         createActionItem('start_focus', 'Pomodoro (30m)'),
         createActionItem('start_countup', 'Start Timer'),
+        ...trayShortcutItems,
         separatorItem,
         createActionItem('show_window', 'Show Window'),
         createActionItem('quit', 'Quit'),
@@ -280,6 +323,7 @@ export const getDesktopTrayState = (
       separatorItem,
       createActionItem('start_focus', 'Pomodoro (30m)'),
       createActionItem('start_countup', 'Start Timer'),
+      ...trayShortcutItems,
       separatorItem,
       createActionItem('open_window_to_log_session', 'Open Window to Log Session'),
       createActionItem('reset', 'Reset'),

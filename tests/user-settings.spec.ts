@@ -27,6 +27,7 @@ describe('user settings', () => {
     )
     expect(settings.appearance.fontFamilies.ui).toBe("'IBM Plex Sans', sans-serif")
     expect(settings.workflow.hideTags).toBe(true)
+    expect(settings.desktop.trayShortcuts).toEqual([])
   })
 
   it('falls back to defaults when stored settings are incomplete', () => {
@@ -50,6 +51,9 @@ describe('user settings', () => {
       },
       workflow: {
         hideTags: false,
+      },
+      desktop: {
+        trayShortcuts: [],
       },
     })
   })

@@ -3,15 +3,18 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 import { Notification, app, BrowserWindow, dialog, ipcMain, session } from 'electron'
 
-import type { DesktopTimerEvent, TimerState } from '~/shared/worklog'
+import type { DesktopTimerEvent, TimerState, UserSettingsTrayShortcut } from '~/shared/worklog'
 import {
   addCountdownSeconds,
   cancelTimer,
   createIdleTimerState,
+  getDesktopTrayShortcutIdFromAction,
   getDesktopTimerNotification,
   getTimerSnapshot,
+  isDesktopTrayShortcutActionId,
   pauseTimer,
   resumeTimer,
+  resolveUserSettingsTrayShortcuts,
   reviveTimerState,
   serializeTimerState,
   shouldHideWindowOnClose,
@@ -21,6 +24,7 @@ import {
   startCountupTimer,
   stopTimer,
   syncTimerState,
+  validateUserSettingsTrayShortcuts,
 } from '~/shared/worklog'
 import type { TrayController } from '~/electron/tray-controller'
 import {
@@ -39,6 +43,7 @@ let timerInterval: NodeJS.Timeout | null = null
 let mainWindow: BrowserWindow | null = null
 let isQuitting = false
 let trayController: TrayController | null = null
+let desktopTrayShortcuts: UserSettingsTrayShortcut[] = []
 let pendingRouteRequest: string | null = null
 let desktopRendererServer: Awaited<ReturnType<typeof createDesktopRendererServer>> | null = null
 
@@ -46,6 +51,7 @@ let desktopRendererServer: Awaited<ReturnType<typeof createDesktopRendererServer
 const activeTimerNotifications: Notification[] = []
 
 const getTimerStatePath = () => join(app.getPath('userData'), 'timer-state.json')
+const getTrayShortcutsPath = () => join(app.getPath('userData'), 'tray-shortcuts.json')
 const desktopRendererUrl = process.env.NUXT_DEV_SERVER_URL ?? process.env.ELECTRON_RENDERER_URL
 
 const persistTimerState = async () => {
@@ -63,6 +69,35 @@ const loadTimerState = async () => {
   }
 }
 
+const persistTrayShortcuts = async () => {
+  const trayShortcutsPath = getTrayShortcutsPath()
+  await mkdir(dirname(trayShortcutsPath), { recursive: true })
+  await writeFile(trayShortcutsPath, JSON.stringify(desktopTrayShortcuts))
+}
+
+const loadTrayShortcuts = async () => {
+  try {
+    const savedShortcuts = JSON.parse(await readFile(getTrayShortcutsPath(), 'utf8')) as
+      | UserSettingsTrayShortcut[]
+      | null
+    desktopTrayShortcuts = resolveUserSettingsTrayShortcuts(savedShortcuts)
+  } catch {
+    desktopTrayShortcuts = []
+  }
+}
+
+const syncTrayController = () => {
+  trayController?.sync(getTimerSnapshot(timerState, Date.now()), desktopTrayShortcuts)
+}
+
+const setTrayShortcuts = (nextShortcuts: readonly UserSettingsTrayShortcut[]) => {
+  desktopTrayShortcuts = validateUserSettingsTrayShortcuts([...nextShortcuts])
+  void persistTrayShortcuts()
+  syncTrayController()
+
+  return desktopTrayShortcuts
+}
+
 const emitTimerEvent = (previousStatus: TimerState['status']) => {
   const snapshot = getTimerSnapshot(timerState, Date.now())
   const event: DesktopTimerEvent = {
@@ -71,7 +106,7 @@ const emitTimerEvent = (previousStatus: TimerState['status']) => {
     previousStatus,
   }
 
-  trayController?.sync(snapshot)
+  trayController?.sync(snapshot, desktopTrayShortcuts)
   BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('timer:state', event)
   })
@@ -254,10 +289,39 @@ const openMainWindow = (path?: string) => {
   focusOrCreateMainWindow()
 }
 
+const buildNewTimeBoxPath = (shortcut?: Pick<UserSettingsTrayShortcut, 'project' | 'tags'>) => {
+  const params = new URLSearchParams()
+
+  if (shortcut?.project) {
+    params.set('project', shortcut.project)
+  }
+
+  if (shortcut?.tags.length) {
+    params.set('tags', shortcut.tags.join(','))
+  }
+
+  const queryString = params.toString()
+
+  return queryString ? `/new?${queryString}` : '/new'
+}
+
+const runTrayShortcut = (shortcut: UserSettingsTrayShortcut) => {
+  if (shortcut.timerMode === 'countdown') {
+    setTimerState(startCountdownTimer((shortcut.durationMinutes ?? 0) * 60, Date.now()))
+  } else {
+    setTimerState(startCountupTimer(Date.now()))
+  }
+
+  openMainWindow(buildNewTimeBoxPath(shortcut))
+}
+
 const registerIpc = () => {
   ipcMain.handle('timer:getState', () => timerState)
   ipcMain.handle('desktop:getAlertSound', async () => {
     return getDesktopAlertSoundState(app.getPath('userData'))
+  })
+  ipcMain.handle('desktop:setTrayShortcuts', (_event, shortcuts: UserSettingsTrayShortcut[]) => {
+    return setTrayShortcuts(shortcuts)
   })
   ipcMain.handle('timer:startCountup', () => {
     setTimerState(startCountupTimer(Date.now()))
@@ -310,6 +374,7 @@ const registerIpc = () => {
 app.whenReady().then(async () => {
   registerMediaPermissionHandler()
   await loadTimerState()
+  await loadTrayShortcuts()
 
   if (!desktopRendererUrl) {
     desktopRendererServer = await createDesktopRendererServer(join(__dirname, '../renderer'), {
@@ -319,14 +384,25 @@ app.whenReady().then(async () => {
 
   trayController = createTrayController({
     onAction(action) {
+      if (isDesktopTrayShortcutActionId(action)) {
+        const shortcutId = getDesktopTrayShortcutIdFromAction(action)
+        const shortcut = desktopTrayShortcuts.find((item) => item.id === shortcutId)
+
+        if (shortcut) {
+          runTrayShortcut(shortcut)
+        }
+
+        return
+      }
+
       switch (action) {
         case 'start_countup':
           setTimerState(startCountupTimer(Date.now()))
-          openMainWindow('/new')
+          openMainWindow(buildNewTimeBoxPath())
           break
         case 'start_focus':
           setTimerState(startCountdownTimer(30 * 60, Date.now()))
-          openMainWindow('/new')
+          openMainWindow(buildNewTimeBoxPath())
           break
         case 'pause':
           setTimerState(pauseTimer(timerState, Date.now()))
@@ -350,7 +426,7 @@ app.whenReady().then(async () => {
           openMainWindow()
           break
         case 'open_window_to_log_session':
-          openMainWindow('/new')
+          openMainWindow(buildNewTimeBoxPath())
           break
         case 'quit':
           quitFromTray()
@@ -360,7 +436,7 @@ app.whenReady().then(async () => {
   })
   registerIpc()
   createMainWindow()
-  trayController.sync(getTimerSnapshot(timerState, Date.now()))
+  syncTrayController()
   ensureTimerLoop()
 
   app.on('activate', () => {
