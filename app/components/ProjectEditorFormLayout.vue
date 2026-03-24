@@ -87,8 +87,8 @@ const toggleArchived = () => {
 </script>
 
 <template>
-  <div class="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-    <ContainerCard as="section" class="rounded-3xl" padding="comfortable">
+  <div class="flex w-full min-w-0 flex-col gap-6">
+    <ContainerCard as="section" class="w-full rounded-3xl" padding="comfortable">
       <div class="mb-6">
         <div class="text-xs tracking-[0.2em] text-text-subtle uppercase">Metadata</div>
         <h1 class="mt-2 text-2xl font-bold text-text">{{ heading }}</h1>
@@ -239,76 +239,83 @@ const toggleArchived = () => {
       </div>
     </ContainerCard>
 
-    <section class="flex flex-col gap-4">
-      <ContainerCard class="rounded-3xl" :style="previewSurfaceStyle">
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Live preview</div>
-        <ContainerCard
-          class="mt-4 overflow-hidden rounded-3xl border-white/20 bg-surface p-0"
-          padding="compact"
-          variant="overlay"
-        >
-          <div class="px-5 py-5" :style="previewHeaderStyle">
-            <div class="text-xs tracking-[0.18em] uppercase opacity-80">Project header</div>
-            <div class="mt-2 text-2xl font-bold">
-              {{ name.trim() || 'Project preview' }}
-            </div>
-          </div>
-          <div class="flex flex-col gap-4 px-5 py-5">
-            <div class="flex flex-wrap items-center gap-2">
-              <div class="rounded-full px-3 py-1 text-xs font-semibold" :style="previewBadgeStyle">
-                Example badge
-              </div>
-              <div
-                class="rounded-full border px-3 py-1 text-xs font-semibold text-text"
-                :style="previewSurfaceStyle"
-              >
-                Subtle project surface
+    <div class="grid w-full min-w-0 gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+      <section class="flex min-w-0 flex-col gap-4">
+        <ContainerCard class="rounded-3xl" :style="previewSurfaceStyle">
+          <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Live preview</div>
+          <ContainerCard
+            class="mt-4 overflow-hidden rounded-3xl border-white/20 bg-surface p-0"
+            padding="compact"
+            variant="overlay"
+          >
+            <div class="px-5 py-5" :style="previewHeaderStyle">
+              <div class="text-xs tracking-[0.18em] uppercase opacity-80">Project header</div>
+              <div class="mt-2 text-2xl font-bold">
+                {{ name.trim() || 'Project preview' }}
               </div>
             </div>
-            <p class="text-sm text-text-muted">
-              {{ notes.trim() || previewNotesFallback }}
-            </p>
+            <div class="flex flex-col gap-4 px-5 py-5">
+              <div class="flex flex-wrap items-center gap-2">
+                <div
+                  class="rounded-full px-3 py-1 text-xs font-semibold"
+                  :style="previewBadgeStyle"
+                >
+                  Example badge
+                </div>
+                <div
+                  class="rounded-full border px-3 py-1 text-xs font-semibold text-text"
+                  :style="previewSurfaceStyle"
+                >
+                  Subtle project surface
+                </div>
+              </div>
+              <p class="text-sm text-text-muted">
+                {{ notes.trim() || previewNotesFallback }}
+              </p>
+            </div>
+          </ContainerCard>
+        </ContainerCard>
+      </section>
+
+      <section class="flex min-w-0 flex-col gap-4">
+        <ContainerCard v-if="contextSummary" class="rounded-3xl">
+          <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Project context</div>
+          <div class="mt-4 flex flex-col gap-3 text-sm text-text">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-text-subtle">Sessions</span>
+              <span class="font-semibold">{{ contextSummary.sessionCount }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-text-subtle">Logged hours</span>
+              <span class="font-semibold">{{ contextSummary.totalDurationLabel }} hrs</span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-text-subtle">Last activity</span>
+              <span class="font-semibold">
+                {{
+                  contextSummary.lastSession
+                    ? contextSummary.lastSession.toLocaleDateString([], {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    : 'No sessions yet'
+                }}
+              </span>
+            </div>
           </div>
         </ContainerCard>
-      </ContainerCard>
 
-      <ContainerCard v-if="contextSummary" class="rounded-3xl">
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Project context</div>
-        <div class="mt-4 flex flex-col gap-3 text-sm text-text">
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-text-subtle">Sessions</span>
-            <span class="font-semibold">{{ contextSummary.sessionCount }}</span>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-text-subtle">Logged hours</span>
-            <span class="font-semibold">{{ contextSummary.totalDurationLabel }} hrs</span>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-text-subtle">Last activity</span>
-            <span class="font-semibold">
-              {{
-                contextSummary.lastSession
-                  ? contextSummary.lastSession.toLocaleDateString([], {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })
-                  : 'No sessions yet'
-              }}
-            </span>
-          </div>
-        </div>
-      </ContainerCard>
-
-      <ContainerCard
-        v-if="lowContrastWarning"
-        class="rounded-3xl py-4 text-sm"
-        padding="default"
-        variant="warning"
-      >
-        This color pairing may reduce contrast in some project surfaces. The preview keeps the
-        current choice, but you may want more separation between the two colors.
-      </ContainerCard>
-    </section>
+        <ContainerCard
+          v-if="lowContrastWarning"
+          class="rounded-3xl py-4 text-sm"
+          padding="default"
+          variant="warning"
+        >
+          This color pairing may reduce contrast in some project surfaces. The preview keeps the
+          current choice, but you may want more separation between the two colors.
+        </ContainerCard>
+      </section>
+    </div>
   </div>
 </template>

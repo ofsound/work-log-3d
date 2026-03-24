@@ -236,16 +236,12 @@ const handleNotesStateChange = (value: string) => {
 </script>
 
 <template>
-  <ContainerCard
-    as="section"
-    class="sticky top-0 z-10 rounded-2xl border-border-subtle bg-surface/96 backdrop-blur"
-    variant="overlay"
-  >
-    <div class="flex flex-col gap-5">
-      <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+  <div class="h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5">
+    <div class="flex min-w-0 flex-col gap-5">
+      <div class="flex min-w-0 flex-col gap-3">
         <div>
-          <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">List Filters</div>
-          <div class="mt-1 text-2xl font-bold text-text">Search your sessions</div>
+          <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">List filters</div>
+          <div class="mt-1 text-xl font-bold text-text lg:text-2xl">Search your sessions</div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -269,15 +265,13 @@ const handleNotesStateChange = (value: string) => {
         </div>
       </div>
 
-      <div
-        class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)]"
-      >
+      <div class="flex min-w-0 flex-col gap-4">
         <label class="flex min-w-0 flex-col gap-2">
           <span class="text-sm font-semibold text-text">Search</span>
           <input
             :value="filters.query"
             type="text"
-            class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             :placeholder="
               hideTags ? 'Search notes and projects' : 'Search notes, projects, and tags'
             "
@@ -290,6 +284,7 @@ const handleNotesStateChange = (value: string) => {
         </label>
 
         <SessionListMultiSelect
+          class="min-w-0"
           :model-value="filters.projectIds"
           :options="
             projects.map((project) => ({
@@ -305,6 +300,7 @@ const handleNotesStateChange = (value: string) => {
 
         <SessionListMultiSelect
           v-if="!hideTags"
+          class="min-w-0"
           :disabled="filters.untaggedOnly"
           :model-value="filters.tagIds"
           :options="tags.map((tag) => ({ id: tag.id, label: tag.name }))"
@@ -317,7 +313,7 @@ const handleNotesStateChange = (value: string) => {
           <span class="text-sm font-semibold text-text">Sort</span>
           <select
             :value="filters.sort"
-            class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             @change="
               updateFilters({
                 sort: ($event.target as HTMLSelectElement).value as SessionListFilters['sort'],
@@ -332,18 +328,11 @@ const handleNotesStateChange = (value: string) => {
         </label>
       </div>
 
-      <div
-        class="grid gap-4"
-        :class="
-          hideTags
-            ? 'xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.85fr)]'
-            : 'xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.85fr)]'
-        "
-      >
-        <div v-if="!hideTags" class="flex flex-col gap-2">
+      <div class="flex min-w-0 flex-col gap-4">
+        <div v-if="!hideTags" class="flex min-w-0 flex-col gap-2">
           <span class="text-sm font-semibold text-text">Tag matching</span>
           <div
-            class="inline-flex rounded-xl border border-border bg-surface-strong p-1 shadow-control"
+            class="inline-flex w-fit max-w-full rounded-xl border border-border bg-surface-strong p-1 shadow-control"
           >
             <button
               type="button"
@@ -372,7 +361,7 @@ const handleNotesStateChange = (value: string) => {
           </div>
         </div>
 
-        <div class="flex flex-col gap-2">
+        <div class="flex min-w-0 flex-col gap-2">
           <span class="text-sm font-semibold text-text">Quick ranges</span>
           <div class="flex flex-wrap gap-2">
             <button
@@ -387,40 +376,38 @@ const handleNotesStateChange = (value: string) => {
           </div>
         </div>
 
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="flex flex-col gap-2">
-            <span class="text-sm font-semibold text-text">From</span>
-            <input
-              :value="filters.dateStart"
-              type="date"
-              class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-              @input="
-                updateFilters({
-                  dateStart: ($event.target as HTMLInputElement).value,
-                })
-              "
-            />
-          </label>
-          <label class="flex flex-col gap-2">
-            <span class="text-sm font-semibold text-text">To</span>
-            <input
-              :value="filters.dateEnd"
-              type="date"
-              class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-              @input="
-                updateFilters({
-                  dateEnd: ($event.target as HTMLInputElement).value,
-                })
-              "
-            />
-          </label>
-        </div>
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-sm font-semibold text-text">From</span>
+          <input
+            :value="filters.dateStart"
+            type="date"
+            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+            @input="
+              updateFilters({
+                dateStart: ($event.target as HTMLInputElement).value,
+              })
+            "
+          />
+        </label>
+        <label class="flex min-w-0 flex-col gap-2">
+          <span class="text-sm font-semibold text-text">To</span>
+          <input
+            :value="filters.dateEnd"
+            type="date"
+            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+            @input="
+              updateFilters({
+                dateEnd: ($event.target as HTMLInputElement).value,
+              })
+            "
+          />
+        </label>
 
-        <div class="flex flex-col gap-2">
+        <div class="flex min-w-0 flex-col gap-2">
           <span class="text-sm font-semibold text-text">Notes</span>
           <select
             :value="filters.notesState"
-            class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             @change="handleNotesStateChange(($event.target as HTMLSelectElement).value)"
           >
             <option value="any">Any</option>
@@ -430,14 +417,14 @@ const handleNotesStateChange = (value: string) => {
         </div>
       </div>
 
-      <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
-        <div class="flex flex-col gap-2">
+      <div class="flex min-w-0 flex-col gap-4">
+        <div class="flex min-w-0 flex-col gap-2">
           <span class="text-sm font-semibold text-text">Minimum duration</span>
           <input
             :value="filters.minMinutes ?? ''"
             type="number"
             min="0"
-            class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             placeholder="No minimum"
             @input="handleMinutesInput('minMinutes', ($event.target as HTMLInputElement).value)"
           />
@@ -454,13 +441,13 @@ const handleNotesStateChange = (value: string) => {
           </div>
         </div>
 
-        <div class="flex flex-col gap-2">
+        <div class="flex min-w-0 flex-col gap-2">
           <span class="text-sm font-semibold text-text">Maximum duration</span>
           <input
             :value="filters.maxMinutes ?? ''"
             type="number"
             min="0"
-            class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
+            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             placeholder="No maximum"
             @input="handleMinutesInput('maxMinutes', ($event.target as HTMLInputElement).value)"
           />
@@ -479,7 +466,7 @@ const handleNotesStateChange = (value: string) => {
 
         <ContainerCard
           v-if="!hideTags"
-          class="flex items-center gap-3 text-sm text-text shadow-none"
+          class="flex min-w-0 items-center gap-3 text-sm text-text shadow-none"
           padding="compact"
           variant="muted"
         >
@@ -496,12 +483,12 @@ const handleNotesStateChange = (value: string) => {
         </ContainerCard>
       </div>
 
-      <div v-if="activeFilterChips.length > 0" class="flex flex-wrap gap-2">
+      <div v-if="activeFilterChips.length > 0" class="flex min-w-0 flex-wrap gap-2">
         <button
           v-for="chip in activeFilterChips"
           :key="chip.id"
           type="button"
-          class="cursor-pointer rounded-full border bg-surface px-3 py-1.5 text-xs font-semibold text-text"
+          class="cursor-pointer rounded-full border bg-surface px-3 py-1.5 text-left text-xs font-semibold text-text"
           :style="chip.style"
           @click="updateFilters(chip.patch)"
         >
@@ -509,5 +496,5 @@ const handleNotesStateChange = (value: string) => {
         </button>
       </div>
     </div>
-  </ContainerCard>
+  </div>
 </template>

@@ -5,6 +5,7 @@ import {
   getProjectBadgeStyle,
   getProjectHeaderStyle,
   getProjectSoftSurfaceStyle,
+  getProjectWorkspaceModeToggleStyles,
   hasLowProjectContrast,
 } from '~/utils/project-color-styles'
 import {
@@ -87,8 +88,18 @@ const previewColors = computed<ProjectColors>(() => ({
     ? (normalizeHexColor(dynamicSecondaryColor.value) ?? null)
     : null,
 }))
+/** In-form preview card only; workspace sub-header uses neutral bar + `modeToggleStyles`. */
 const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
 const previewSurfaceStyle = computed(() => getProjectSoftSurfaceStyle(previewColors.value))
+const modeToggleStyles = computed(() => {
+  const styles = getProjectWorkspaceModeToggleStyles(previewColors.value)
+
+  return {
+    container: styles.container as Record<string, string>,
+    activeButton: styles.activeButton as Record<string, string>,
+    inactiveButton: styles.inactiveButton as Record<string, string>,
+  }
+})
 const previewBadgeStyle = computed(() => getProjectBadgeStyle(previewColors.value))
 const lowContrastWarning = computed(() => hasLowProjectContrast(previewColors.value))
 const headerBadges = computed(() => [
@@ -301,12 +312,12 @@ onBeforeRouteLeave(async () => {
       active-mode="edit"
       :badges="headerBadges"
       :error-message="mutationErrorMessage"
-      :header-style="previewHeaderStyle as Record<string, string>"
+      :mode-toggle-styles="modeToggleStyles"
       :title="dynamicName.trim() || project.name || 'Untitled project'"
       @select-mode="handleWorkspaceModeSelect"
     />
 
-    <div class="flex-1 overflow-auto px-6 py-6">
+    <div class="flex-1 overflow-auto px-11 py-6">
       <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <ProjectEditorFormLayout
           :archived="dynamicArchived"

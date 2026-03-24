@@ -196,7 +196,7 @@ onBeforeRouteLeave(async (to) => {
       :title="dynamicName.trim() || 'New project'"
     />
 
-    <div class="flex-1 overflow-auto px-6 py-6">
+    <div class="flex-1 overflow-auto px-11 py-6">
       <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <ProjectEditorFormLayout
           heading="Create project"

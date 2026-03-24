@@ -897,9 +897,11 @@ onBeforeUnmount(() => {
     <SessionsWorkspaceShell :overlay-aside="shouldOverlaySidePanel">
       <div
         v-if="currentMode === 'list'"
-        class="h-full overflow-auto overscroll-contain px-6 pt-6 pb-2"
+        class="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row"
       >
-        <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <aside
+          class="flex w-full shrink-0 flex-col overflow-hidden border-b border-border-subtle bg-surface/96 backdrop-blur max-lg:max-h-[min(50vh,26rem)] lg:h-full lg:max-h-none lg:w-[400px] lg:border-r lg:border-b-0"
+        >
           <SessionListFilterPanel
             :filters="listFilters"
             :hide-tags="hideTags"
@@ -910,7 +912,11 @@ onBeforeUnmount(() => {
             @clear-filters="clearListFilters"
             @update-filters="updateListFilters"
           />
+        </aside>
 
+        <div
+          class="mx-auto flex min-h-0 w-full max-w-6xl min-w-0 flex-1 flex-col gap-6 overflow-auto overscroll-contain px-6 py-6 pb-2"
+        >
           <ContainerCard
             v-if="filteredSessionListTimeBoxes.length === 0"
             class="border-dashed px-6 py-10 text-center shadow-none"
@@ -929,7 +935,7 @@ onBeforeUnmount(() => {
             </p>
           </ContainerCard>
 
-          <div v-else class="pb-4">
+          <div v-else>
             <TimeBox
               v-for="item in filteredSessionListTimeBoxes"
               :id="item.id"

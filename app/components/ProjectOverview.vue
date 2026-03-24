@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { doc, query, where } from 'firebase/firestore'
 
-import { getProjectBadgeStyle, getProjectHeaderStyle } from '~/utils/project-color-styles'
+import {
+  getProjectBadgeStyle,
+  getProjectWorkspaceModeToggleStyles,
+} from '~/utils/project-color-styles'
 import {
   buildProjectWorkspaceLocation,
   buildProjectRouteQuery,
@@ -94,9 +97,19 @@ const selectedDayTimeBoxes = computed(() =>
     ? []
     : getTimeBoxesForDay(rawProjectTimeBoxes.value, selectedDate.value),
 )
-const headerStyle = computed(() =>
-  project.value ? getProjectHeaderStyle(project.value.colors) : {},
-)
+const modeToggleStyles = computed(() => {
+  if (!project.value) {
+    return undefined
+  }
+
+  const styles = getProjectWorkspaceModeToggleStyles(project.value.colors)
+
+  return {
+    container: styles.container as Record<string, string>,
+    activeButton: styles.activeButton as Record<string, string>,
+    inactiveButton: styles.inactiveButton as Record<string, string>,
+  }
+})
 const durationBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},
 )
@@ -341,7 +354,7 @@ onUnmounted(() => {
       :active-mode="currentMode"
       :badges="headerBadges"
       :error-message="mutationErrorMessage"
-      :header-style="headerStyle as Record<string, string>"
+      :mode-toggle-styles="modeToggleStyles"
       :title="project?.name ?? 'Loading project'"
       @select-mode="handleWorkspaceModeSelect"
     />

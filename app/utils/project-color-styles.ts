@@ -104,6 +104,25 @@ export const getProjectHeaderStyle = (colors: ProjectColors): CSSProperties => {
   }
 }
 
+/**
+ * Neutral project sub-header bar: no full-width gradient. Applies project colors to the
+ * List / Calendar / Edit toggle (soft tinted rail; inactive labels use primary tint; active
+ * segment uses solid primary like the duration badge).
+ */
+export const getProjectWorkspaceModeToggleStyles = (
+  colors: ProjectColors,
+): {
+  container: CSSProperties
+  activeButton: CSSProperties
+  inactiveButton: CSSProperties
+} => ({
+  container: getProjectSoftSurfaceStyle(colors),
+  activeButton: getProjectBadgeStyle(colors),
+  inactiveButton: {
+    color: toRgba(colors.primary, 0.82),
+  },
+})
+
 /** Session editor project radios: full gradient when selected, soft gradient when not. */
 export const getProjectPickerOptionStyle = (
   colors: ProjectColors,
