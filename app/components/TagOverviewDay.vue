@@ -26,10 +26,12 @@ const dayDuration = computed(() => getTotalDurationLabel(props.tagOverviewDayDat
     >
       {{ dayDuration }} hrs
     </div>
-    <div
-      class="relative my-4 rounded-sm border border-border-subtle bg-panel-day px-6 pt-6 pb-3.5 shadow-panel"
+    <ContainerCard
+      class="relative my-4 rounded-sm px-6 pt-6 pb-3.5"
+      padding="comfortable"
+      variant="day"
     >
       <TimeBox v-for="item in tagOverviewDayData" :id="item.id" :key="item.id" variant="tag" />
-    </div>
+    </ContainerCard>
   </div>
 </template>

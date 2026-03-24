@@ -92,26 +92,29 @@ const getCardStyle = (timeBox: TimeBox) => {
       </div>
     </div>
 
-    <div
+    <ContainerCard
       v-if="timeBoxes.length === 0"
-      class="rounded-2xl border border-dashed border-border-subtle bg-surface px-5 py-8 text-center"
+      class="border-dashed py-8 text-center shadow-none"
+      variant="default"
     >
       <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">{{ emptyEyebrow }}</div>
       <div class="mt-2 text-sm text-text-muted">
         {{ emptyMessage }}
       </div>
-    </div>
+    </ContainerCard>
 
     <div v-else class="flex flex-col gap-3">
-      <button
+      <ContainerCard
         v-for="timeBox in timeBoxes"
         :key="timeBox.id"
-        type="button"
-        class="cursor-pointer rounded-2xl border px-4 py-3 text-left transition hover:brightness-97"
-        :class="{
-          'shadow-panel-selected ring-1 ring-link/35 ring-inset': selectedSessionId === timeBox.id,
-        }"
+        as="button"
+        class="px-4 py-3 text-left"
+        interactive
+        padding="compact"
+        :selected="selectedSessionId === timeBox.id"
         :style="getCardStyle(timeBox)"
+        type="button"
+        variant="subtle"
         @click="emit('openSession', timeBox.id)"
       >
         <div class="text-xs font-semibold tracking-[0.14em] text-text-subtle uppercase">
@@ -126,7 +129,7 @@ const getCardStyle = (timeBox: TimeBox) => {
         <div class="mt-1 text-sm font-semibold text-text">
           {{ getSessionNotes(timeBox) }}
         </div>
-      </button>
+      </ContainerCard>
     </div>
   </div>
 </template>

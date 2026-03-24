@@ -38,9 +38,12 @@ const cancelCreateAndLoseFocus = () => {
 </script>
 
 <template>
-  <div
-    class="my-4 w-full rounded-sm border border-border-subtle bg-panel-tag px-6 py-4 shadow-panel"
+  <ContainerCard
+    as="section"
+    class="my-4 w-full rounded-sm py-4"
+    padding="comfortable"
     style="width: 100%; min-width: 100%"
+    variant="tag"
   >
     <div class="mb-2 text-center text-xl font-bold uppercase">Tags</div>
     <TagsManagerTag
@@ -70,5 +73,5 @@ const cancelCreateAndLoseFocus = () => {
     <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
       {{ mutationErrorMessage }}
     </p>
-  </div>
+  </ContainerCard>
 </template>

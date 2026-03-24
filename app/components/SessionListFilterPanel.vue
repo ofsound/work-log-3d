@@ -236,8 +236,10 @@ const handleNotesStateChange = (value: string) => {
 </script>
 
 <template>
-  <section
-    class="sticky top-0 z-10 rounded-2xl border border-border-subtle bg-surface/96 px-5 py-5 shadow-panel backdrop-blur"
+  <ContainerCard
+    as="section"
+    class="sticky top-0 z-10 rounded-2xl border-border-subtle bg-surface/96 backdrop-blur"
+    variant="overlay"
   >
     <div class="flex flex-col gap-5">
       <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -475,9 +477,11 @@ const handleNotesStateChange = (value: string) => {
           </div>
         </div>
 
-        <label
+        <ContainerCard
           v-if="!hideTags"
-          class="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4 text-sm text-text"
+          class="flex items-center gap-3 text-sm text-text shadow-none"
+          padding="compact"
+          variant="muted"
         >
           <input
             :checked="filters.untaggedOnly"
@@ -489,7 +493,7 @@ const handleNotesStateChange = (value: string) => {
             "
           />
           Only show untagged sessions
-        </label>
+        </ContainerCard>
       </div>
 
       <div v-if="activeFilterChips.length > 0" class="flex flex-wrap gap-2">
@@ -505,5 +509,5 @@ const handleNotesStateChange = (value: string) => {
         </button>
       </div>
     </div>
-  </section>
+  </ContainerCard>
 </template>

@@ -882,9 +882,10 @@ onBeforeUnmount(() => {
             @update-filters="updateListFilters"
           />
 
-          <div
+          <ContainerCard
             v-if="filteredSessionListTimeBoxes.length === 0"
-            class="rounded-2xl border border-dashed border-border-subtle bg-surface px-6 py-10 text-center shadow-panel"
+            class="border-dashed px-6 py-10 text-center shadow-none"
+            padding="comfortable"
           >
             <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">No matches</div>
             <div class="mt-2 text-xl font-bold text-text">
@@ -897,7 +898,7 @@ onBeforeUnmount(() => {
                   : 'Adjust the search, date range, tags, or duration bounds to widen the results.'
               }}
             </p>
-          </div>
+          </ContainerCard>
 
           <div v-else class="pb-4">
             <TimeBox

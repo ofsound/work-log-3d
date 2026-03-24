@@ -8,3 +8,5 @@ alwaysApply: false
 
 - Use Tailwind CSS for styling; avoid vanilla CSS in `<style>` blocks
 - Do **not** use `space-y-*` or `space-x-*`; use flex or grid with `gap-*` instead
+- Use `ContainerCard` for substantial bordered/background content shells instead of repeating raw Tailwind card bundles inline
+- Do not force `ContainerCard` onto inputs, buttons, chips, badges, dropdown menus, table rows, calendar event pills, or tiny layout wrappers

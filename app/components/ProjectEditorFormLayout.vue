@@ -80,7 +80,7 @@ const toggleSecondaryColor = () => {
 
 <template>
   <div class="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-    <section class="rounded-3xl border border-border-subtle bg-surface px-6 py-6 shadow-panel">
+    <ContainerCard as="section" class="rounded-3xl" padding="comfortable">
       <div class="mb-6">
         <div class="text-xs tracking-[0.2em] text-text-subtle uppercase">Metadata</div>
         <h1 class="mt-2 text-2xl font-bold text-text">{{ heading }}</h1>
@@ -208,16 +208,15 @@ const toggleSecondaryColor = () => {
           </button>
         </div>
       </div>
-    </section>
+    </ContainerCard>
 
     <section class="flex flex-col gap-4">
-      <div
-        class="rounded-3xl border border-border-subtle px-5 py-5 shadow-panel"
-        :style="previewSurfaceStyle"
-      >
+      <ContainerCard class="rounded-3xl" :style="previewSurfaceStyle">
         <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Live preview</div>
-        <div
-          class="mt-4 overflow-hidden rounded-3xl border border-white/20 bg-surface shadow-panel"
+        <ContainerCard
+          class="mt-4 overflow-hidden rounded-3xl border-white/20 bg-surface p-0"
+          padding="compact"
+          variant="overlay"
         >
           <div class="px-5 py-5" :style="previewHeaderStyle">
             <div class="text-xs tracking-[0.18em] uppercase opacity-80">Project header</div>
@@ -241,13 +240,10 @@ const toggleSecondaryColor = () => {
               {{ notes.trim() || previewNotesFallback }}
             </p>
           </div>
-        </div>
-      </div>
+        </ContainerCard>
+      </ContainerCard>
 
-      <div
-        v-if="contextSummary"
-        class="rounded-3xl border border-border-subtle bg-surface px-5 py-5 shadow-panel"
-      >
+      <ContainerCard v-if="contextSummary" class="rounded-3xl">
         <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Project context</div>
         <div class="mt-4 flex flex-col gap-3 text-sm text-text">
           <div class="flex items-center justify-between gap-3">
@@ -273,15 +269,17 @@ const toggleSecondaryColor = () => {
             </span>
           </div>
         </div>
-      </div>
+      </ContainerCard>
 
-      <div
+      <ContainerCard
         v-if="lowContrastWarning"
-        class="rounded-3xl border border-callout-warning-border bg-callout-warning-surface px-5 py-4 text-sm text-callout-warning-text shadow-control"
+        class="rounded-3xl py-4 text-sm"
+        padding="default"
+        variant="warning"
       >
         This color pairing may reduce contrast in some project surfaces. The preview keeps the
         current choice, but you may want more separation between the two colors.
-      </div>
+      </ContainerCard>
     </section>
   </div>
 </template>

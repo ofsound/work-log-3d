@@ -300,11 +300,9 @@ onBeforeRouteLeave(async () => {
     </div>
   </div>
   <div v-else class="flex h-full items-center justify-center px-6 py-6">
-    <div
-      class="rounded-3xl border border-border-subtle bg-surface px-6 py-8 text-center shadow-panel"
-    >
+    <ContainerCard class="rounded-3xl px-6 py-8 text-center" padding="comfortable">
       <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Loading</div>
       <div class="mt-2 text-xl font-bold text-text">Loading project details</div>
-    </div>
+    </ContainerCard>
   </div>
 </template>

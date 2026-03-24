@@ -39,8 +39,10 @@ const printPage = () => {
 
 <template>
   <div v-if="data" class="flex flex-col gap-6">
-    <div
-      class="sticky top-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-surface/95 px-4 py-3 shadow-panel backdrop-blur"
+    <ContainerCard
+      class="sticky top-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-border-subtle bg-surface/95 py-3 backdrop-blur"
+      padding="compact"
+      variant="overlay"
     >
       <div>
         <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Shared report</div>
@@ -52,7 +54,7 @@ const printPage = () => {
       >
         Print / Save PDF
       </button>
-    </div>
+    </ContainerCard>
 
     <ReportSnapshotView
       :title="data.title"

@@ -696,9 +696,11 @@ onBeforeUnmount(() => {
       ref="scrollContainerRef"
       class="h-full overflow-auto overscroll-contain px-6 py-6"
     >
-      <div
+      <ContainerCard
         ref="weekCalendarGridRef"
-        class="grid min-h-full w-full overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
+        class="grid min-h-full w-full overflow-hidden p-0"
+        padding="compact"
+        variant="subtle"
         :style="{
           gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${dayColumnMinWidth}px, 1fr))`,
           minWidth: `${TIME_GUTTER_WIDTH + dayColumnMinWidth * visibleDays.length}px`,
@@ -809,13 +811,15 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-      </div>
+      </ContainerCard>
     </div>
 
     <!-- Week view: fixed header row; hours + sessions scroll underneath. -->
     <div v-else class="flex h-full min-h-0 flex-col px-6 py-6">
-      <div
-        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-panel"
+      <ContainerCard
+        class="flex min-h-0 flex-1 flex-col overflow-hidden p-0"
+        padding="compact"
+        variant="subtle"
       >
         <div
           ref="headerScrollRef"
@@ -969,7 +973,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-      </div>
+      </ContainerCard>
     </div>
   </div>
 </template>

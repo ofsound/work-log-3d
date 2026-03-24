@@ -163,11 +163,13 @@ const projectBadgeStyle = computed(() =>
 </script>
 
 <template>
-  <div
+  <ContainerCard
     v-if="!isMinimized"
-    class="relative rounded-sm border bg-panel-session px-6 py-4 shadow-panel"
+    class="relative rounded-sm py-4"
     :class="props.flushTop ? 'mt-0 mb-4' : 'my-4'"
+    padding="comfortable"
     :style="projectSurfaceStyle"
+    variant="session"
   >
     <button
       class="absolute right-4 bottom-3 cursor-pointer px-1 text-text-subtle hover:text-text"
@@ -228,12 +230,14 @@ const projectBadgeStyle = computed(() =>
     <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
       {{ mutationErrorMessage }}
     </p>
-  </div>
-  <div
+  </ContainerCard>
+  <ContainerCard
     v-if="isMinimized"
-    class="mb-2.5 rounded-xl border px-3 py-2"
+    class="mb-2.5 rounded-xl px-3 py-2 shadow-none"
     :class="variant === 'project' ? 'border-border-subtle bg-surface-subtle' : ''"
+    padding="compact"
     :style="variant === 'project' ? {} : projectSurfaceStyle"
+    :variant="variant === 'project' ? 'muted' : 'subtle'"
   >
     <NuxtLink
       v-if="variant !== 'project' && timeBox?.project"
@@ -257,5 +261,5 @@ const projectBadgeStyle = computed(() =>
         <span class="text-text-subtle">]</span></span
       >
     </div>
-  </div>
+  </ContainerCard>
 </template>

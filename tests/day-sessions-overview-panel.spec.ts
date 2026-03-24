@@ -2,11 +2,17 @@
 
 import { mount } from '@vue/test-utils'
 
+import ContainerCard from '~/app/components/ContainerCard.vue'
 import DaySessionsOverviewPanel from '~/app/components/DaySessionsOverviewPanel.vue'
 
 describe('DaySessionsOverviewPanel', () => {
   it('shows mixed-project details and emits the clicked session id', async () => {
     const wrapper = mount(DaySessionsOverviewPanel, {
+      global: {
+        components: {
+          ContainerCard,
+        },
+      },
       props: {
         day: new Date('2026-03-23T12:00:00.000Z'),
         projectById: {
@@ -69,6 +75,11 @@ describe('DaySessionsOverviewPanel', () => {
 
   it('renders the configured empty-state copy', () => {
     const wrapper = mount(DaySessionsOverviewPanel, {
+      global: {
+        components: {
+          ContainerCard,
+        },
+      },
       props: {
         day: new Date('2026-03-23T12:00:00.000Z'),
         emptyEyebrow: 'No entries',

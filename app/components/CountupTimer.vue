@@ -25,8 +25,10 @@ const countupParts = computed(() => {
 </script>
 
 <template>
-  <div
-    class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm border border-border-subtle bg-panel-timer px-6 py-4 shadow-panel"
+  <ContainerCard
+    class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm py-4"
+    padding="comfortable"
+    variant="timer"
   >
     <div
       class="relative flex h-14 shrink-0 items-center rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 font-data text-5xl leading-none font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
@@ -45,5 +47,5 @@ const countupParts = computed(() => {
       <TimerButton v-if="timerIsPaused" @click="resume">Resume Timer </TimerButton>
       <TimerButton v-if="showCountupStop" @click="stop">Stop Timer</TimerButton>
     </div>
-  </div>
+  </ContainerCard>
 </template>

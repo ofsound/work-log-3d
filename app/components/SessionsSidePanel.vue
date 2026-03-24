@@ -42,13 +42,16 @@ defineExpose({
 </script>
 
 <template>
-  <aside
-    class="flex h-full w-full min-w-0 shrink-0 flex-col"
+  <ContainerCard
+    as="aside"
+    class="flex h-full w-full min-w-0 shrink-0 flex-col p-0"
     :class="
       overlay
-        ? 'rounded-3xl border border-white/20 bg-surface/42 shadow-panel backdrop-blur-lg'
-        : 'max-w-108 border-l border-border bg-surface-strong shadow-panel'
+        ? ''
+        : 'max-w-108 rounded-none border-y-0 border-r-0 border-l border-border bg-surface-strong'
     "
+    padding="compact"
+    :variant="overlay ? 'overlay' : 'subtle'"
   >
     <div
       class="flex shrink-0 items-center justify-between gap-3 px-3 py-3"
@@ -143,5 +146,5 @@ defineExpose({
         />
       </div>
     </div>
-  </aside>
+  </ContainerCard>
 </template>

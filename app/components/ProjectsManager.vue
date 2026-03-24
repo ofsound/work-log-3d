@@ -20,9 +20,12 @@ const sortedAllProjects = computed<Project[]>(() =>
 </script>
 
 <template>
-  <div
-    class="my-4 w-full rounded-sm border border-border-subtle bg-panel-project px-6 py-4 shadow-panel"
+  <ContainerCard
+    as="section"
+    class="my-4 w-full rounded-sm py-4"
+    padding="comfortable"
     style="width: 100%; min-width: 100%"
+    variant="project"
   >
     <div class="mb-8 text-center text-xl font-bold uppercase">Projects</div>
     <div class="flex flex-col gap-4">
@@ -36,5 +39,5 @@ const sortedAllProjects = computed<Project[]>(() =>
         + Create Project
       </button>
     </div>
-  </div>
+  </ContainerCard>
 </template>

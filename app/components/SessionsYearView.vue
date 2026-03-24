@@ -99,9 +99,7 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
 <template>
   <div class="min-h-0 flex-1 overflow-hidden">
     <div class="h-full overflow-auto overscroll-contain px-6 py-6">
-      <div
-        class="flex flex-col gap-6 rounded-2xl border border-border bg-surface px-4 py-5 shadow-panel md:px-6"
-      >
+      <ContainerCard class="flex flex-col gap-6 md:px-6" padding="compact" variant="subtle">
         <div class="flex items-center justify-end gap-3 text-xs font-semibold text-text-subtle">
           <span>Less</span>
           <div class="flex items-center gap-1">
@@ -115,7 +113,12 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
           <span>More</span>
         </div>
 
-        <section class="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4 md:p-5">
+        <ContainerCard
+          as="section"
+          class="bg-surface-subtle/35 p-4 shadow-none md:p-5"
+          padding="compact"
+          variant="muted"
+        >
           <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <template
               v-for="(month, monthIndex) in months"
@@ -130,8 +133,11 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
                 </h2>
               </div>
 
-              <article
-                class="rounded-2xl border border-border-subtle bg-surface px-3 py-3 shadow-control"
+              <ContainerCard
+                as="article"
+                class="px-3 py-3 shadow-control"
+                padding="compact"
+                variant="default"
               >
                 <div class="mb-3 text-lg font-semibold tracking-tight">{{ month.label }}</div>
 
@@ -193,11 +199,11 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
                     </template>
                   </div>
                 </div>
-              </article>
+              </ContainerCard>
             </template>
           </div>
-        </section>
-      </div>
+        </ContainerCard>
+      </ContainerCard>
     </div>
   </div>
 </template>

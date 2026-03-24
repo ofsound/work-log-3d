@@ -3,6 +3,8 @@
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 
+import ContainerCard from '~/app/components/ContainerCard.vue'
+
 const routerPush = vi.fn()
 const projectDocuments = ref([
   {
@@ -41,6 +43,9 @@ describe('projects manager', () => {
   it('routes project creation to the dedicated new project page', async () => {
     const wrapper = mount(ProjectsManager, {
       global: {
+        components: {
+          ContainerCard,
+        },
         stubs: {
           ProjectsManagerProject: {
             props: ['project'],

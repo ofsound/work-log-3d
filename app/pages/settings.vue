@@ -1,8 +1,13 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
 import { signOut } from 'firebase/auth'
+import { useCurrentUser, useFirebaseAuth, useRouter } from '#imports'
 import type { DesktopAlertSoundState, UserSettings } from '~~/shared/worklog'
 import { areUserSettingsEqual, cloneUserSettings, getWorklogErrorMessage } from '~~/shared/worklog'
 
+import { useHostRuntime } from '~/composables/useHostRuntime'
+import { useUserSettings } from '~/composables/useUserSettings'
 import {
   getUserSettingsBackgroundOption,
   USER_SETTINGS_BACKGROUND_OPTIONS,
@@ -166,7 +171,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="h-full overflow-auto px-6 pt-6 pb-6">
     <div class="mx-auto flex max-w-5xl flex-col gap-6">
-      <section class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <ContainerCard as="section">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Settings</div>
@@ -176,10 +181,7 @@ onBeforeUnmount(() => {
               local to each Electron install.
             </p>
 
-            <div
-              class="mt-4 rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
-              aria-live="polite"
-            >
+            <ContainerCard class="mt-4" padding="compact" variant="muted" aria-live="polite">
               <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Account</div>
 
               <p v-if="currentUser === undefined" class="mt-2 text-sm text-text-muted">
@@ -246,7 +248,7 @@ onBeforeUnmount(() => {
               </div>
 
               <p v-else class="mt-2 text-sm text-text-muted">No user is signed in.</p>
-            </div>
+            </ContainerCard>
           </div>
 
           <div class="flex flex-wrap gap-2">
@@ -284,9 +286,9 @@ onBeforeUnmount(() => {
         <p v-if="mutationErrorMessage" class="mt-4 text-sm text-danger">
           {{ mutationErrorMessage }}
         </p>
-      </section>
+      </ContainerCard>
 
-      <section class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <ContainerCard as="section">
         <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Appearance</div>
         <h2 class="mt-1 text-2xl font-bold text-text">Fonts and shell</h2>
         <div class="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
@@ -332,7 +334,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4">
+          <ContainerCard padding="compact" variant="muted">
             <div class="text-sm font-semibold text-text">Live font preview</div>
             <div class="mt-4 flex flex-col gap-4">
               <div>
@@ -352,7 +354,7 @@ onBeforeUnmount(() => {
                 <div class="mt-2 font-script text-4xl text-text">Daily rhythm</div>
               </div>
             </div>
-          </div>
+          </ContainerCard>
         </div>
 
         <div class="mt-6">
@@ -361,46 +363,52 @@ onBeforeUnmount(() => {
             <label
               v-for="option in USER_SETTINGS_BACKGROUND_OPTIONS"
               :key="option.id"
-              class="flex cursor-pointer flex-col gap-3 rounded-2xl border px-4 py-4 transition"
-              :class="
-                draft.appearance.backgroundPreset === option.id
-                  ? 'border-border-strong bg-surface-subtle shadow-control'
-                  : 'border-border-subtle bg-surface hover:border-border'
-              "
+              class="flex flex-col gap-3"
             >
-              <div class="flex items-center justify-between gap-3">
-                <div class="font-semibold text-text">{{ option.label }}</div>
-                <input
-                  v-model="draft.appearance.backgroundPreset"
-                  type="radio"
-                  :value="option.id"
-                />
-              </div>
-              <div class="text-sm leading-6 text-text-muted">
-                {{ option.description }}
-              </div>
-              <div class="rounded-xl bg-surface-muted px-3 py-3 text-xs text-text-subtle">
-                {{ getUserSettingsBackgroundOption(option.id).label }}
-              </div>
+              <ContainerCard
+                as="div"
+                padding="compact"
+                :interactive="draft.appearance.backgroundPreset !== option.id"
+                :selected="draft.appearance.backgroundPreset === option.id"
+                :variant="draft.appearance.backgroundPreset === option.id ? 'muted' : 'default'"
+                class="flex h-full cursor-pointer flex-col gap-3"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="font-semibold text-text">{{ option.label }}</div>
+                  <input
+                    v-model="draft.appearance.backgroundPreset"
+                    type="radio"
+                    :value="option.id"
+                  />
+                </div>
+                <div class="text-sm leading-6 text-text-muted">
+                  {{ option.description }}
+                </div>
+                <div class="rounded-xl bg-surface-muted px-3 py-3 text-xs text-text-subtle">
+                  {{ getUserSettingsBackgroundOption(option.id).label }}
+                </div>
+              </ContainerCard>
             </label>
           </div>
         </div>
-      </section>
+      </ContainerCard>
 
-      <section class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <ContainerCard as="section">
         <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Desktop Alerts</div>
         <h2 class="mt-1 text-2xl font-bold text-text">Timer completion sound</h2>
 
-        <div
+        <ContainerCard
           v-if="!isDesktop"
-          class="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted px-4 py-5 text-sm leading-6 text-text-muted"
+          class="mt-5 border-dashed py-5 text-sm leading-6 text-text-muted shadow-none"
+          padding="compact"
+          variant="muted"
         >
           Custom alert sounds are available in the Electron app. Open the desktop app on this device
           to import, clear, or test a local sound file.
-        </div>
+        </ContainerCard>
 
         <div v-else class="mt-5 flex flex-col gap-4">
-          <div class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4">
+          <ContainerCard padding="compact" variant="muted">
             <div class="text-sm font-semibold text-text">Current sound</div>
             <div class="mt-2 text-text">
               {{
@@ -416,7 +424,7 @@ onBeforeUnmount(() => {
                   : 'Using the bundled default alert sound.'
               }}
             </div>
-          </div>
+          </ContainerCard>
 
           <div class="flex flex-wrap gap-2">
             <button
@@ -467,24 +475,24 @@ onBeforeUnmount(() => {
             {{ desktopAlertMessage }}
           </p>
         </div>
-      </section>
+      </ContainerCard>
 
-      <section class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <ContainerCard as="section">
         <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Workflow</div>
         <h2 class="mt-1 text-2xl font-bold text-text">Project-first mode</h2>
-        <label
-          class="mt-5 flex items-start gap-4 rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
-        >
-          <input v-model="draft.workflow.hideTags" type="checkbox" class="mt-1" />
-          <div>
-            <div class="font-semibold text-text">Hide tags across the authenticated app</div>
-            <p class="mt-2 text-sm leading-6 text-text-muted">
-              Removes tag navigation, filters, badges, editors, and tag report controls while
-              preserving any existing tag data already attached to sessions and reports.
-            </p>
-          </div>
+        <label class="mt-5 block">
+          <ContainerCard class="flex items-start gap-4" padding="compact" variant="muted">
+            <input v-model="draft.workflow.hideTags" type="checkbox" class="mt-1" />
+            <div>
+              <div class="font-semibold text-text">Hide tags across the authenticated app</div>
+              <p class="mt-2 text-sm leading-6 text-text-muted">
+                Removes tag navigation, filters, badges, editors, and tag report controls while
+                preserving any existing tag data already attached to sessions and reports.
+              </p>
+            </div>
+          </ContainerCard>
         </label>
-      </section>
+      </ContainerCard>
     </div>
   </div>
 </template>

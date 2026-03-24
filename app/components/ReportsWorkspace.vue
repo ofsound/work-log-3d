@@ -302,9 +302,7 @@ const copyShareLink = async () => {
 
 <template>
   <div class="flex h-full min-h-0 gap-6 px-6 pt-6 pb-6">
-    <aside
-      class="flex w-full max-w-90 shrink-0 flex-col rounded-2xl border border-border-subtle bg-surface px-4 py-4 shadow-panel"
-    >
+    <ContainerCard as="aside" class="flex w-full max-w-90 shrink-0 flex-col" padding="compact">
       <div class="flex items-center justify-between gap-3">
         <div>
           <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Reports</div>
@@ -320,21 +318,23 @@ const copyShareLink = async () => {
       </div>
 
       <div class="mt-4 flex-1 overflow-auto">
-        <div
+        <ContainerCard
           v-if="reports.length === 0"
-          class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
+          class="rounded-xl border-dashed py-6 text-sm text-text-muted shadow-none"
+          padding="compact"
+          variant="subtle"
         >
           Create a saved report draft to start composing a client-facing summary.
-        </div>
-        <button
+        </ContainerCard>
+        <ContainerCard
           v-for="report in reports"
           :key="report.id"
-          class="mb-3 flex w-full cursor-pointer flex-col rounded-xl border px-3 py-3 text-left shadow-control transition hover:border-border-strong"
-          :class="
-            report.id === selectedReportId
-              ? 'border-border-strong bg-surface-subtle'
-              : 'border-border-subtle bg-surface'
-          "
+          as="button"
+          class="mb-3 flex w-full flex-col rounded-xl px-3 py-3 text-left shadow-control"
+          :interactive="report.id !== selectedReportId"
+          padding="compact"
+          :selected="report.id === selectedReportId"
+          :variant="report.id === selectedReportId ? 'muted' : 'default'"
           @click="selectedReportId = report.id"
         >
           <div class="flex items-start justify-between gap-3">
@@ -350,12 +350,12 @@ const copyShareLink = async () => {
             {{ report.filters.dateStart }} - {{ report.filters.dateEnd }}
           </div>
           <div class="mt-1 text-xs text-text-subtle">{{ report.timezone }}</div>
-        </button>
+        </ContainerCard>
       </div>
-    </aside>
+    </ContainerCard>
 
     <div class="flex min-w-0 flex-1 flex-col gap-6 overflow-auto">
-      <section class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <ContainerCard as="section">
         <div class="flex flex-col gap-6">
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -466,10 +466,7 @@ const copyShareLink = async () => {
             </div>
 
             <div class="grid gap-4">
-              <div
-                v-if="!hideTags"
-                class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
-              >
+              <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
                 <div class="text-sm font-semibold text-text">Group combination</div>
                 <div class="mt-3 grid gap-2 md:grid-cols-2">
                   <label class="flex items-center gap-2 text-sm text-text">
@@ -485,12 +482,9 @@ const copyShareLink = async () => {
                     Project OR tag
                   </label>
                 </div>
-              </div>
+              </ContainerCard>
 
-              <div
-                v-if="!hideTags"
-                class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
-              >
+              <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
                 <div class="text-sm font-semibold text-text">Tag matching</div>
                 <div class="mt-3 grid gap-2 md:grid-cols-2">
                   <label class="flex items-center gap-2 text-sm text-text">
@@ -502,10 +496,10 @@ const copyShareLink = async () => {
                     All selected tags
                   </label>
                 </div>
-              </div>
+              </ContainerCard>
 
               <div class="grid gap-4 xl:grid-cols-2">
-                <div class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4">
+                <ContainerCard padding="compact" variant="muted">
                   <div class="text-sm font-semibold text-text">Projects</div>
                   <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
                     <label
@@ -527,12 +521,9 @@ const copyShareLink = async () => {
                       {{ project.name }}
                     </label>
                   </div>
-                </div>
+                </ContainerCard>
 
-                <div
-                  v-if="!hideTags"
-                  class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
-                >
+                <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
                   <div class="text-sm font-semibold text-text">Tags</div>
                   <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
                     <label
@@ -554,39 +545,40 @@ const copyShareLink = async () => {
                       {{ tag.name }}
                     </label>
                   </div>
-                </div>
+                </ContainerCard>
               </div>
 
-              <div
+              <ContainerCard
                 v-if="hasHiddenLegacyTagFilters"
-                class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4 text-sm text-text-muted"
+                class="text-sm text-text-muted shadow-none"
+                padding="compact"
+                variant="muted"
               >
                 This report still includes legacy tag filters. They remain active for existing data,
                 but tag editing is hidden while project-first mode is on.
-              </div>
+              </ContainerCard>
             </div>
           </div>
 
-          <div
+          <ContainerCard
             v-if="shareLink"
-            class="rounded-xl border border-border-subtle bg-surface-muted px-4 py-3 text-sm text-text"
+            class="rounded-xl py-3 text-sm text-text shadow-none"
+            padding="compact"
+            variant="muted"
           >
             Public link:
             <a class="text-link underline hover:text-link-hover" :href="shareLink">{{
               shareLink
             }}</a>
-          </div>
+          </ContainerCard>
 
           <p v-if="mutationErrorMessage" class="text-sm text-danger">
             {{ mutationErrorMessage }}
           </p>
         </div>
-      </section>
+      </ContainerCard>
 
-      <section
-        v-if="previewSnapshot"
-        class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel"
-      >
+      <ContainerCard v-if="previewSnapshot" as="section">
         <div class="mb-5 text-xs tracking-[0.18em] text-text-subtle uppercase">Preview</div>
         <ReportSnapshotView
           :hide-tags="hideTags"
@@ -595,7 +587,7 @@ const copyShareLink = async () => {
           :snapshot="previewSnapshot"
           :published-at-iso="selectedReport?.publishedAt?.toISOString() ?? ''"
         />
-      </section>
+      </ContainerCard>
     </div>
   </div>
 </template>

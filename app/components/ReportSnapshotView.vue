@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { PropType } from 'vue'
 
 import { formatReportDateTime, formatReportHours, formatReportTime } from '~/utils/report-ui'
@@ -30,8 +31,10 @@ const visibleInsights = computed(
 
 <template>
   <div v-if="snapshot" class="flex flex-col gap-8">
-    <section
-      class="rounded-2xl border border-border-subtle bg-linear-to-br from-overview-start to-overview-end px-6 py-6 text-header-text shadow-panel"
+    <ContainerCard
+      as="section"
+      class="bg-linear-to-br from-overview-start to-overview-end px-6 py-6 text-header-text"
+      padding="comfortable"
     >
       <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div class="max-w-3xl">
@@ -62,40 +65,42 @@ const visibleInsights = computed(
           </div>
         </div>
       </div>
-    </section>
+    </ContainerCard>
 
     <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      <article
+      <ContainerCard
         v-for="metric in snapshot.overview.metrics"
         :key="metric.label"
-        class="rounded-xl border border-border-subtle bg-surface px-4 py-4 shadow-panel"
+        as="article"
+        class="rounded-xl"
+        padding="compact"
       >
         <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">{{ metric.label }}</div>
         <div class="mt-2 text-2xl font-bold text-text">{{ metric.value }}</div>
-      </article>
+      </ContainerCard>
     </section>
 
-    <section
-      v-if="visibleInsights.length > 0"
-      class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel"
-    >
+    <ContainerCard v-if="visibleInsights.length > 0" as="section">
       <div class="text-lg font-bold text-text">Highlights</div>
       <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <article
+        <ContainerCard
           v-for="insight in visibleInsights"
           :key="insight.id"
-          class="rounded-xl border border-border-subtle bg-surface-muted px-4 py-4"
+          as="article"
+          class="rounded-xl shadow-none"
+          padding="compact"
+          variant="muted"
         >
           <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">
             {{ insight.label }}
           </div>
           <div class="mt-2 text-base font-semibold text-text">{{ insight.value }}</div>
-        </article>
+        </ContainerCard>
       </div>
-    </section>
+    </ContainerCard>
 
     <section class="grid gap-6 xl:grid-cols-2">
-      <div class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <ContainerCard>
         <div class="text-lg font-bold text-text">Hours by project</div>
         <div class="mt-4 overflow-auto">
           <table class="min-w-full text-left text-sm">
@@ -121,12 +126,9 @@ const visibleInsights = computed(
             </tbody>
           </table>
         </div>
-      </div>
+      </ContainerCard>
 
-      <div
-        v-if="!hideTags"
-        class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel"
-      >
+      <ContainerCard v-if="!hideTags">
         <div class="text-lg font-bold text-text">Hours by tag</div>
         <div class="mt-4 overflow-auto">
           <table class="min-w-full text-left text-sm">
@@ -152,13 +154,10 @@ const visibleInsights = computed(
             </tbody>
           </table>
         </div>
-      </div>
+      </ContainerCard>
     </section>
 
-    <section
-      v-if="!hideTags"
-      class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel"
-    >
+    <ContainerCard v-if="!hideTags" as="section">
       <div class="text-lg font-bold text-text">Project by tag matrix</div>
       <div class="mt-4 overflow-auto">
         <table class="min-w-full text-left text-sm">
@@ -194,10 +193,10 @@ const visibleInsights = computed(
           </tbody>
         </table>
       </div>
-    </section>
+    </ContainerCard>
 
     <section class="grid gap-6 xl:grid-cols-2">
-      <div class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <ContainerCard>
         <div class="text-lg font-bold text-text">Daily totals</div>
         <div class="mt-4 overflow-auto">
           <table class="min-w-full text-left text-sm">
@@ -221,9 +220,9 @@ const visibleInsights = computed(
             </tbody>
           </table>
         </div>
-      </div>
+      </ContainerCard>
 
-      <div class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+      <ContainerCard>
         <div class="text-lg font-bold text-text">Weekly totals</div>
         <div class="mt-4 overflow-auto">
           <table class="min-w-full text-left text-sm">
@@ -247,16 +246,17 @@ const visibleInsights = computed(
             </tbody>
           </table>
         </div>
-      </div>
+      </ContainerCard>
     </section>
 
-    <section class="rounded-2xl border border-border-subtle bg-surface px-5 py-5 shadow-panel">
+    <ContainerCard as="section">
       <div class="text-lg font-bold text-text">Session detail</div>
       <div class="mt-5 flex flex-col gap-6">
-        <div
+        <ContainerCard
           v-for="group in snapshot.sessionGroups"
           :key="group.dateKey"
-          class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-4"
+          padding="compact"
+          variant="muted"
         >
           <div class="flex flex-wrap items-center gap-3">
             <div class="text-lg font-semibold text-text">{{ group.label }}</div>
@@ -270,10 +270,12 @@ const visibleInsights = computed(
             </div>
           </div>
           <div class="mt-4 flex flex-col gap-3">
-            <article
+            <ContainerCard
               v-for="session in group.sessions"
               :key="session.sessionId"
-              class="rounded-xl border border-border-subtle bg-surface px-4 py-4"
+              as="article"
+              class="rounded-xl"
+              padding="compact"
             >
               <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div class="max-w-3xl">
@@ -304,10 +306,10 @@ const visibleInsights = computed(
                   </div>
                 </div>
               </div>
-            </article>
+            </ContainerCard>
           </div>
-        </div>
+        </ContainerCard>
       </div>
-    </section>
+    </ContainerCard>
   </div>
 </template>

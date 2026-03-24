@@ -30,6 +30,15 @@
 - Keep validation centralized in shared code so UI, repositories, and tests use the same rules.
 - Firestore rules must stay aligned with the current document shape for `projects`, `tags`, and `timeBoxes`.
 - Avoid app-wide auth redirect watchers. Route middleware owns access control; the login page owns post-auth redirect behavior.
+- Use `ContainerCard` for substantial bordered/background content shells in the web app. Do not hand-roll new top-level or section-level card wrappers with inline Tailwind class bundles.
+- `ContainerCard` does **not** replace inputs, buttons, chips, badges, dropdown menus, table rows, calendar event pills, or tiny layout wrappers.
+
+## Current UI Backlog
+
+- Remaining raw card-like patterns to migrate after the first `ContainerCard` pass:
+  - internal calendar event pills and cells in `app/components/SessionsTimedGrid.vue`, `app/components/SessionsMonthView.vue`, and `app/components/ProjectCalendarView.vue`
+  - dropdown/popover surfaces in `app/components/SessionListMultiSelect.vue`
+  - smaller option chips and picker rows that still use bespoke inline container classes in `app/components/TimeBoxEditor.vue`
 
 ## Verification
 

@@ -64,8 +64,10 @@ watch(
 </script>
 
 <template>
-  <div
-    class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm border border-border-subtle bg-panel-timer px-6 py-4 shadow-panel"
+  <ContainerCard
+    class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm py-4"
+    padding="comfortable"
+    variant="timer"
   >
     <div class="flex shrink-0 items-center gap-3">
       <div
@@ -113,5 +115,5 @@ watch(
       >Pause Timer</TimerButton
     >
     <TimerButton v-if="timerIsPaused" class="shrink-0" @click="resume">Resume Timer </TimerButton>
-  </div>
+  </ContainerCard>
 </template>

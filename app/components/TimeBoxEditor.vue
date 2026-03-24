@@ -299,8 +299,9 @@ onBeforeUnmount(() => {
     ref="timeBoxEditorRef"
     class="[container-type:inline-size] w-full max-w-full min-w-0 font-data text-text"
   >
-    <div
-      class="flex min-w-0 flex-col gap-5 rounded-2xl border border-border-subtle bg-surface px-4 py-4 shadow-panel grayscale-10 [@container(min-width:44rem)]:rounded-3xl [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
+    <ContainerCard
+      class="flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-3xl [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
+      padding="compact"
     >
       <div class="flex flex-col gap-1">
         <div class="text-[11px] font-semibold tracking-[0.18em] text-text-subtle uppercase">
@@ -315,8 +316,11 @@ onBeforeUnmount(() => {
         </p>
       </div>
 
-      <section
-        class="grid min-w-0 gap-4 rounded-2xl border border-border-subtle bg-surface-muted/70 px-4 py-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
+      <ContainerCard
+        as="section"
+        class="grid min-w-0 gap-4 bg-surface-muted/70 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
+        padding="compact"
+        variant="muted"
       >
         <label class="flex min-w-0 flex-col gap-2">
           <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
@@ -396,7 +400,7 @@ onBeforeUnmount(() => {
             />
           </label>
         </div>
-      </section>
+      </ContainerCard>
 
       <label class="flex min-w-0 flex-col gap-2">
         <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
@@ -442,10 +446,7 @@ onBeforeUnmount(() => {
           </label>
         </div>
 
-        <div
-          v-if="hideTags"
-          class="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-3"
-        >
+        <ContainerCard v-if="hideTags" class="py-3 shadow-none" padding="compact" variant="muted">
           <span v-if="showLegacyTagNotice" class="text-sm text-text-muted">
             Existing tags on this session are preserved, but tag editing is hidden in project-first
             mode.
@@ -453,7 +454,7 @@ onBeforeUnmount(() => {
           <span v-else class="text-sm text-text-muted">
             Tags are hidden in project-first mode. New sessions will save without tags.
           </span>
-        </div>
+        </ContainerCard>
       </section>
 
       <section v-if="!hideTags" class="flex flex-col gap-3 border-t border-border-subtle pt-5">
@@ -519,6 +520,6 @@ onBeforeUnmount(() => {
           {{ createButtonLabel }}
         </button>
       </div>
-    </div>
+    </ContainerCard>
   </div>
 </template>

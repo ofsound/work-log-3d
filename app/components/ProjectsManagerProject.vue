@@ -91,9 +91,12 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
 </script>
 
 <template>
-  <div
-    class="cursor-pointer rounded-sm border px-3 py-1.5 shadow-control transition-[box-shadow,filter] duration-150 ease-out hover:shadow-[var(--shadow-panel)] hover:brightness-[1.03]"
+  <ContainerCard
+    class="rounded-sm px-3 py-1.5 shadow-control hover:brightness-[1.03]"
+    interactive
+    padding="compact"
     :style="rowStyle"
+    variant="subtle"
     @click="router.push(getProjectPathFromProject(project))"
   >
     <div class="flex gap-2">
@@ -130,5 +133,5 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
     <p v-if="mutationErrorMessage" class="mt-2 px-1 text-sm text-danger" @click.stop>
       {{ mutationErrorMessage }}
     </p>
-  </div>
+  </ContainerCard>
 </template>
