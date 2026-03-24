@@ -163,13 +163,15 @@ const toggleArchived = () => {
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between gap-3">
               <span class="text-sm font-semibold text-text">Secondary color</span>
-              <button
-                type="button"
-                class="cursor-pointer rounded-full border border-button-secondary-border bg-button-secondary px-3 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+              <AppButton
+                shape="pill"
+                size="sm"
+                variant="secondary"
+                class="py-1 text-xs font-semibold"
                 @click="toggleSecondaryColor"
               >
                 {{ secondaryColorEnabled ? 'Disable' : 'Enable' }}
-              </button>
+              </AppButton>
             </div>
 
             <div
@@ -220,21 +222,10 @@ const toggleArchived = () => {
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            class="cursor-pointer rounded-xl border border-button-secondary-border bg-button-secondary px-4 py-2 font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-            @click="emit('cancel')"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="cursor-pointer rounded-xl bg-button-primary px-4 py-2 font-semibold text-button-primary-text hover:bg-button-primary-hover"
-            :disabled="isSaving"
-            @click="emit('save')"
-          >
+          <AppButton variant="secondary" @click="emit('cancel')">Cancel</AppButton>
+          <AppButton variant="primary" :disabled="isSaving" @click="emit('save')">
             {{ isSaving ? 'Saving...' : submitLabel }}
-          </button>
+          </AppButton>
         </div>
       </div>
     </ContainerCard>

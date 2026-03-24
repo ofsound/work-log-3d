@@ -354,14 +354,9 @@ onBeforeRouteLeave(async () => {
             reassigned first, or deletion will fail.
           </p>
           <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              class="cursor-pointer rounded-md bg-danger px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="isDeleting"
-              @click="deleteProject"
-            >
+            <AppButton size="sm" variant="danger" :disabled="isDeleting" @click="deleteProject">
               {{ isDeleting ? 'Deleting…' : 'Delete project' }}
-            </button>
+            </AppButton>
           </div>
         </ContainerCard>
       </div>

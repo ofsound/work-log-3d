@@ -312,8 +312,9 @@ onBeforeUnmount(() => {
     class="[container-type:inline-size] w-full max-w-full min-w-0 font-data text-text"
   >
     <ContainerCard
-      class="flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-md [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
+      class="flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-md [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
       padding="compact"
+      variant="gradient"
     >
       <section
         class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
@@ -338,34 +339,38 @@ onBeforeUnmount(() => {
             role="group"
             aria-label="Adjust duration in minutes"
           >
-            <button
-              type="button"
-              class="h-6 min-w-0 flex-1 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-0.5 text-[10px] leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
+            <AppButton
+              size="xs"
+              variant="secondary"
+              class="min-w-0 flex-1 [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
               @click="adjustDurationMinutes(-10)"
             >
               -10
-            </button>
-            <button
-              type="button"
-              class="h-6 min-w-0 flex-1 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-0.5 text-[10px] leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
+            </AppButton>
+            <AppButton
+              size="xs"
+              variant="secondary"
+              class="min-w-0 flex-1 [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
               @click="adjustDurationMinutes(-5)"
             >
               -5
-            </button>
-            <button
-              type="button"
-              class="h-6 min-w-0 flex-1 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-0.5 text-[10px] leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
+            </AppButton>
+            <AppButton
+              size="xs"
+              variant="secondary"
+              class="min-w-0 flex-1 [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
               @click="adjustDurationMinutes(5)"
             >
               +5
-            </button>
-            <button
-              type="button"
-              class="h-6 min-w-0 flex-1 cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-0.5 text-[10px] leading-none font-bold tracking-normal text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
+            </AppButton>
+            <AppButton
+              size="xs"
+              variant="secondary"
+              class="min-w-0 flex-1 [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
               @click="adjustDurationMinutes(10)"
             >
               +10
-            </button>
+            </AppButton>
           </div>
         </label>
 
@@ -492,32 +497,35 @@ onBeforeUnmount(() => {
       </p>
 
       <div
-        class="mt-1 flex flex-col gap-3 border-t border-border-subtle pt-4 [@container(min-width:30rem)]:flex-row [@container(min-width:30rem)]:justify-end"
+        class="mt-1 flex w-full min-w-0 flex-col gap-3 pt-4 [@container(min-width:30rem)]:flex-row [@container(min-width:30rem)]:items-stretch"
       >
-        <button
+        <AppButton
           v-if="isEditingExistingTimeBox || props.showCreateCancel"
-          type="button"
-          class="w-full cursor-pointer rounded-xl border border-button-secondary-border bg-button-secondary px-4 py-2 font-semibold text-button-secondary-text hover:bg-button-secondary-hover [@container(min-width:30rem)]:w-auto"
+          block
+          class="shrink-0 [@container(min-width:30rem)]:w-auto"
+          variant="secondary"
           @click="emit('toggleEditor')"
         >
           Cancel
-        </button>
-        <button
+        </AppButton>
+        <AppButton
           v-if="isEditingExistingTimeBox"
-          type="button"
-          class="w-full cursor-pointer rounded-xl bg-button-primary px-4 py-2 font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover [@container(min-width:30rem)]:w-auto"
+          block
+          class="min-w-0 [@container(min-width:30rem)]:flex-1"
+          variant="primary"
           @click="updateTimeBoxDocument"
         >
           Update
-        </button>
-        <button
+        </AppButton>
+        <AppButton
           v-else
-          type="button"
-          class="w-full cursor-pointer rounded-xl bg-button-primary px-4 py-2 font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover [@container(min-width:30rem)]:w-auto"
+          block
+          class="min-w-0 [@container(min-width:30rem)]:flex-1"
+          variant="primary"
           @click="createTimeBoxDocument"
         >
           {{ createButtonLabel }}
-        </button>
+        </AppButton>
       </div>
     </ContainerCard>
   </div>

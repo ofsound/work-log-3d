@@ -106,14 +106,15 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
       </div>
     </div>
     <div class="mt-8 flex justify-end">
-      <button
-        type="button"
-        class="ml-auto block w-max cursor-pointer rounded-md bg-button-primary px-3 py-1 tracking-wide text-button-primary-text hover:bg-button-primary-hover"
+      <AppButton
+        class="ml-auto w-max tracking-wide"
+        size="sm"
+        variant="primary"
         aria-label="Create project"
         @click="router.push(getProjectNewPath())"
       >
         + Create Project
-      </button>
+      </AppButton>
     </div>
   </ContainerCard>
 </template>

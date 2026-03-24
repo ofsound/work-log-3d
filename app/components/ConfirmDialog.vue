@@ -18,12 +18,6 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const confirmButtonClass = computed(() =>
-  props.variant === 'danger'
-    ? 'cursor-pointer rounded-md bg-danger px-3 py-1.5 text-sm font-medium text-white hover:opacity-90'
-    : 'cursor-pointer rounded-md bg-button-primary px-3 py-1.5 text-sm font-medium text-button-primary-text hover:bg-button-primary-hover',
-)
-
 watch(
   () => props.open,
   (open) => {
@@ -64,16 +58,16 @@ watch(
           {{ message }}
         </p>
         <div class="mt-5 flex justify-end gap-2">
-          <button
-            type="button"
-            class="cursor-pointer rounded-md border border-button-secondary-border px-3 py-1.5 text-sm text-button-secondary-text hover:bg-button-secondary-hover"
-            @click="emit('cancel')"
-          >
+          <AppButton size="sm" variant="secondary" @click="emit('cancel')">
             {{ cancelLabel }}
-          </button>
-          <button type="button" :class="confirmButtonClass" @click="emit('confirm')">
+          </AppButton>
+          <AppButton
+            size="sm"
+            :variant="variant === 'danger' ? 'danger' : 'primary'"
+            @click="emit('confirm')"
+          >
             {{ confirmLabel }}
-          </button>
+          </AppButton>
         </div>
       </div>
     </div>

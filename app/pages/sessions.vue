@@ -890,13 +890,7 @@ onBeforeUnmount(() => {
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
-            <button
-              type="button"
-              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2.5 py-1.5 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-              @click="handleGoToday"
-            >
-              Today
-            </button>
+            <AppButton size="sm" variant="secondary" @click="handleGoToday">Today</AppButton>
             <button
               type="button"
               class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"

@@ -63,12 +63,14 @@ const cancelCreateAndLoseFocus = () => {
         @keyup.enter="createTagDocument"
         @keyup.esc="cancelCreateAndLoseFocus"
       />
-      <button
-        class="ml-auto block w-max cursor-pointer rounded-md bg-button-primary px-3 py-1 tracking-wide text-button-primary-text hover:bg-button-primary-hover"
+      <AppButton
+        class="ml-auto w-max tracking-wide"
+        size="sm"
+        variant="primary"
         @click="createTagDocument"
       >
         + Create Tag
-      </button>
+      </AppButton>
     </div>
     <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
       {{ mutationErrorMessage }}

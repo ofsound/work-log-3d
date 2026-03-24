@@ -48,12 +48,9 @@ const printPage = () => {
         <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Shared report</div>
         <div class="mt-1 text-lg font-bold text-text">{{ data.title }}</div>
       </div>
-      <button
-        class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover print:hidden"
-        @click="printPage"
-      >
+      <AppButton class="print:hidden" variant="primary" @click="printPage">
         Print / Save PDF
-      </button>
+      </AppButton>
     </ContainerCard>
 
     <ReportSnapshotView

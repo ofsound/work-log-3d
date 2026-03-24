@@ -103,13 +103,9 @@ async function handleGoogleSignIn() {
         <p v-if="errorMessage" class="text-sm text-danger">
           {{ errorMessage }}
         </p>
-        <button
-          type="submit"
-          class="cursor-pointer rounded bg-button-primary px-4 py-2 font-medium text-button-primary-text hover:bg-button-primary-hover disabled:opacity-50"
-          :disabled="isLoading"
-        >
+        <AppButton type="submit" variant="primary" :disabled="isLoading">
           {{ isSignUp ? 'Create account' : 'Sign in' }}
-        </button>
+        </AppButton>
       </form>
 
       <button
@@ -126,14 +122,9 @@ async function handleGoogleSignIn() {
         <div class="h-px flex-1 bg-border" />
       </div>
 
-      <button
-        type="button"
-        class="w-full cursor-pointer rounded border border-button-secondary-border bg-button-secondary px-4 py-2 font-medium text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
-        :disabled="isLoading"
-        @click="handleGoogleSignIn"
-      >
+      <AppButton block variant="secondary" :disabled="isLoading" @click="handleGoogleSignIn">
         Sign in with Google
-      </button>
+      </AppButton>
     </template>
   </div>
 </template>

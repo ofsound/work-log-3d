@@ -308,13 +308,9 @@ const copyShareLink = async () => {
           <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Reports</div>
           <div class="mt-1 text-xl font-bold text-text">Saved drafts</div>
         </div>
-        <button
-          class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
-          :disabled="isSaving"
-          @click="createSavedReport"
-        >
+        <AppButton variant="primary" :disabled="isSaving" @click="createSavedReport">
           New
-        </button>
+        </AppButton>
       </div>
 
       <div class="mt-4 flex-1 overflow-auto">
@@ -363,15 +359,11 @@ const copyShareLink = async () => {
               <div class="mt-1 text-2xl font-bold text-text">Report settings</div>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button
-                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
-                :disabled="isSaving"
-                @click="ensureSavedReport"
-              >
+              <AppButton variant="secondary" :disabled="isSaving" @click="ensureSavedReport">
                 {{ isSaving ? 'Saving…' : 'Save draft' }}
-              </button>
-              <button
-                class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
+              </AppButton>
+              <AppButton
+                variant="primary"
                 :disabled="isPublishing || !canPublish"
                 @click="publishReport"
               >
@@ -382,23 +374,23 @@ const copyShareLink = async () => {
                       ? 'Republish'
                       : 'Publish'
                 }}
-              </button>
-              <button
+              </AppButton>
+              <AppButton
                 v-if="selectedReport?.shareToken"
-                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                variant="secondary"
                 :disabled="isCopyingLink"
                 @click="copyShareLink"
               >
                 {{ isCopyingLink ? 'Copying…' : 'Copy link' }}
-              </button>
-              <button
+              </AppButton>
+              <AppButton
                 v-if="selectedReport?.publishedAt"
-                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                variant="secondary"
                 :disabled="isUnpublishing"
                 @click="unpublishReport"
               >
                 {{ isUnpublishing ? 'Unpublishing…' : 'Unpublish' }}
-              </button>
+              </AppButton>
             </div>
           </div>
 
@@ -453,14 +445,16 @@ const copyShareLink = async () => {
               <div>
                 <div class="text-sm font-semibold text-text">Quick ranges</div>
                 <div class="mt-3 flex flex-wrap gap-2">
-                  <button
+                  <AppButton
                     v-for="preset in datePresets"
                     :key="preset.id"
-                    class="cursor-pointer rounded-full border border-button-secondary-border bg-button-secondary px-3 py-1.5 text-sm text-button-secondary-text hover:bg-button-secondary-hover"
+                    shape="pill"
+                    size="sm"
+                    variant="secondary"
                     @click="applyDatePreset(preset.dateStart, preset.dateEnd)"
                   >
                     {{ preset.label }}
-                  </button>
+                  </AppButton>
                 </div>
               </div>
             </div>

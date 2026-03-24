@@ -255,13 +255,9 @@ const handleNotesStateChange = (value: string) => {
           >
             {{ totalDurationLabel }} hrs
           </div>
-          <button
-            type="button"
-            class="cursor-pointer rounded-full border border-button-secondary-border bg-button-secondary px-3 py-1.5 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-            @click="emit('clear-filters')"
-          >
+          <AppButton shape="pill" size="sm" variant="secondary" @click="emit('clear-filters')">
             Clear all
-          </button>
+          </AppButton>
         </div>
       </div>
 
@@ -364,15 +360,16 @@ const handleNotesStateChange = (value: string) => {
         <div class="flex min-w-0 flex-col gap-2">
           <span class="text-sm font-semibold text-text">Quick ranges</span>
           <div class="flex flex-wrap gap-2">
-            <button
+            <AppButton
               v-for="preset in datePresets"
               :key="preset.id"
-              type="button"
-              class="cursor-pointer rounded-full border border-button-secondary-border bg-button-secondary px-3 py-1.5 text-sm text-button-secondary-text hover:bg-button-secondary-hover"
+              shape="pill"
+              size="sm"
+              variant="secondary"
               @click="applyDatePreset(preset)"
             >
               {{ preset.label }}
-            </button>
+            </AppButton>
           </div>
         </div>
 
@@ -429,15 +426,17 @@ const handleNotesStateChange = (value: string) => {
             @input="handleMinutesInput('minMinutes', ($event.target as HTMLInputElement).value)"
           />
           <div class="flex flex-wrap gap-2">
-            <button
+            <AppButton
               v-for="minutes in [15, 30, 60, 120]"
               :key="`min-${minutes}`"
-              type="button"
-              class="cursor-pointer rounded-full border border-button-secondary-border bg-button-secondary px-3 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+              shape="pill"
+              size="sm"
+              variant="secondary"
+              class="py-1 text-xs font-semibold"
               @click="updateFilters({ minMinutes: minutes })"
             >
               {{ minutes }}m
-            </button>
+            </AppButton>
           </div>
         </div>
 
@@ -452,15 +451,17 @@ const handleNotesStateChange = (value: string) => {
             @input="handleMinutesInput('maxMinutes', ($event.target as HTMLInputElement).value)"
           />
           <div class="flex flex-wrap gap-2">
-            <button
+            <AppButton
               v-for="minutes in [30, 60, 120, 240]"
               :key="`max-${minutes}`"
-              type="button"
-              class="cursor-pointer rounded-full border border-button-secondary-border bg-button-secondary px-3 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+              shape="pill"
+              size="sm"
+              variant="secondary"
+              class="py-1 text-xs font-semibold"
               @click="updateFilters({ maxMinutes: minutes })"
             >
               {{ minutes }}m
-            </button>
+            </AppButton>
           </div>
         </div>
 

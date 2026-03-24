@@ -371,21 +371,17 @@ onBeforeUnmount(() => {
           <ContainerCard as="section" class="mt-4">
             <div class="flex flex-col gap-2">
               <div class="flex gap-2">
-                <button
-                  type="button"
-                  class="min-w-0 flex-1 cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-                  @click="handleCancel"
-                >
+                <AppButton class="min-w-0 flex-1" variant="secondary" @click="handleCancel">
                   Cancel
-                </button>
-                <button
-                  type="button"
-                  class="min-w-0 flex-1 cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
+                </AppButton>
+                <AppButton
+                  class="min-w-0 flex-1"
+                  variant="primary"
                   :disabled="!isDirty || isSaving"
                   @click="handleSave"
                 >
                   {{ isSaving ? 'Saving…' : 'Save changes' }}
-                </button>
+                </AppButton>
               </div>
             </div>
 
@@ -412,13 +408,9 @@ onBeforeUnmount(() => {
       <ContainerCard as="section">
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div class="flex flex-col gap-4">
-            <button
-              type="button"
-              class="w-full cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-              @click="handleResetFontsToDefaults"
-            >
+            <AppButton block variant="secondary" @click="handleResetFontsToDefaults">
               Reset fonts to defaults
-            </button>
+            </AppButton>
             <label class="flex flex-col gap-2">
               <span class="text-sm font-semibold text-text">Google Fonts import</span>
               <input

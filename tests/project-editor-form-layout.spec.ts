@@ -2,6 +2,7 @@
 
 import { mount } from '@vue/test-utils'
 
+import AppButton from '~/app/components/AppButton.vue'
 import ContainerCard from '~/app/components/ContainerCard.vue'
 import ProjectEditorFormLayout from '~/app/components/ProjectEditorFormLayout.vue'
 
@@ -10,6 +11,7 @@ describe('ProjectEditorFormLayout', () => {
     const wrapper = mount(ProjectEditorFormLayout, {
       global: {
         components: {
+          AppButton,
           ContainerCard,
         },
       },
