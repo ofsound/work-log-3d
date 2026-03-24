@@ -1,12 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 import type { IpcRendererEvent } from 'electron'
-import type {
-  DesktopApi,
-  DesktopTimerEvent,
-  TimerState,
-  UserSettingsTrayShortcut,
-} from '~/shared/worklog'
+import type { DesktopApi, DesktopTimerEvent, TimerState } from '~/shared/worklog'
 import { DEFAULT_DESKTOP_CAPABILITIES } from '~/shared/worklog'
 
 const api: DesktopApi = {
@@ -27,10 +22,7 @@ const api: DesktopApi = {
     >
   },
   async setTrayShortcuts(shortcuts) {
-    return (await ipcRenderer.invoke(
-      'desktop:setTrayShortcuts',
-      shortcuts,
-    )) as UserSettingsTrayShortcut[]
+    await ipcRenderer.invoke('desktop:setTrayShortcuts', shortcuts)
   },
   subscribeToTimer(listener) {
     const handler = (_event: IpcRendererEvent, payload: DesktopTimerEvent) => {

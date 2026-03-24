@@ -24,7 +24,6 @@ import {
   startCountupTimer,
   stopTimer,
   syncTimerState,
-  validateUserSettingsTrayShortcuts,
 } from '~/shared/worklog'
 import type { TrayController } from '~/electron/tray-controller'
 import {
@@ -90,9 +89,9 @@ const syncTrayController = () => {
   trayController?.sync(getTimerSnapshot(timerState, Date.now()), desktopTrayShortcuts)
 }
 
-const setTrayShortcuts = (nextShortcuts: readonly UserSettingsTrayShortcut[]) => {
-  desktopTrayShortcuts = validateUserSettingsTrayShortcuts([...nextShortcuts])
-  void persistTrayShortcuts()
+const setTrayShortcuts = async (nextShortcuts: readonly UserSettingsTrayShortcut[]) => {
+  desktopTrayShortcuts = resolveUserSettingsTrayShortcuts(nextShortcuts)
+  await persistTrayShortcuts()
   syncTrayController()
 
   return desktopTrayShortcuts
@@ -320,9 +319,12 @@ const registerIpc = () => {
   ipcMain.handle('desktop:getAlertSound', async () => {
     return getDesktopAlertSoundState(app.getPath('userData'))
   })
-  ipcMain.handle('desktop:setTrayShortcuts', (_event, shortcuts: UserSettingsTrayShortcut[]) => {
-    return setTrayShortcuts(shortcuts)
-  })
+  ipcMain.handle(
+    'desktop:setTrayShortcuts',
+    async (_event, shortcuts: UserSettingsTrayShortcut[]) => {
+      await setTrayShortcuts(shortcuts)
+    },
+  )
   ipcMain.handle('timer:startCountup', () => {
     setTimerState(startCountupTimer(Date.now()))
   })

@@ -10,10 +10,10 @@ const createProject = vi.fn()
 const confirm = vi.fn()
 const getDocs = vi.fn()
 
-  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-    onBeforeRouteLeave: () => { },
-    useRouter: () => ({ push: routerPush }),
-  }
+;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+  onBeforeRouteLeave: () => {},
+  useRouter: () => ({ push: routerPush }),
+}
 
 vi.mock('firebase/firestore', () => ({
   getDocs,

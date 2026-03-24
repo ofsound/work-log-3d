@@ -78,6 +78,11 @@ const syncDraftFromSaved = (settings: UserSettings) => {
   draft.value = cloneUserSettings(settings)
 }
 
+/** Plain JSON so Electron IPC can structured-clone (Vue proxies are not clone-safe). */
+const cloneTrayShortcutsForDesktop = (
+  shortcuts: UserSettingsTrayShortcut[],
+): UserSettingsTrayShortcut[] => JSON.parse(JSON.stringify(shortcuts))
+
 const createTrayShortcutId = () =>
   globalThis.crypto?.randomUUID?.() ??
   `tray-shortcut-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
@@ -191,16 +196,6 @@ const handleSave = async () => {
   try {
     mutationErrorMessage.value = ''
     await saveSettings(draft.value)
-    if (isDesktop && desktopApi) {
-      try {
-        await desktopApi.setTrayShortcuts(draft.value.desktop.trayShortcuts)
-      } catch (error) {
-        mutationErrorMessage.value = getWorklogErrorMessage(
-          error,
-          'Settings saved, but tray shortcuts could not sync to the desktop app.',
-        )
-      }
-    }
     saveMessage.value = 'Settings saved.'
   } catch (error) {
     mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save settings.')
@@ -236,13 +231,24 @@ watch(
       syncDraftFromSaved(nextSettings)
     }
 
-    if (desktopApi) {
-      void desktopApi.setTrayShortcuts(nextSettings.desktop.trayShortcuts).catch((error) => {
-        console.warn('[worklog] unable to sync tray shortcuts', error)
-      })
+    hasInitializedDraft.value = true
+  },
+  {
+    deep: true,
+    immediate: true,
+  },
+)
+
+watch(
+  () => savedSettings.value.desktop.trayShortcuts,
+  (shortcuts) => {
+    if (!isDesktop || !desktopApi) {
+      return
     }
 
-    hasInitializedDraft.value = true
+    void desktopApi.setTrayShortcuts(cloneTrayShortcutsForDesktop(shortcuts)).catch((error) => {
+      console.warn('[worklog] unable to sync tray shortcuts', error)
+    })
   },
   {
     deep: true,
@@ -254,8 +260,10 @@ watch(
   draft,
   (nextSettings) => {
     applyPreview(nextSettings)
-    mutationErrorMessage.value = ''
-    saveMessage.value = ''
+    if (isDirty.value) {
+      mutationErrorMessage.value = ''
+      saveMessage.value = ''
+    }
   },
   {
     deep: true,

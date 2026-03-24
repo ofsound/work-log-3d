@@ -32,19 +32,19 @@ export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
 
 export type DesktopTrayMenuItem =
   | {
-      kind: 'status'
-      label: string
-      enabled: false
-    }
+    kind: 'status'
+    label: string
+    enabled: false
+  }
   | {
-      kind: 'separator'
-    }
+    kind: 'separator'
+  }
   | {
-      kind: 'action'
-      id: DesktopTrayActionId
-      label: string
-      enabled: boolean
-    }
+    kind: 'action'
+    id: DesktopTrayActionId
+    label: string
+    enabled: boolean
+  }
 
 export interface DesktopTrayState {
   mode: TimerState['status']
@@ -86,7 +86,7 @@ export interface DesktopApi {
   getCapabilities(): DesktopCapabilities
   getTimerState(): Promise<TimerState>
   getAlertSound(): Promise<DesktopAlertSoundState>
-  setTrayShortcuts(shortcuts: UserSettingsTrayShortcut[]): Promise<UserSettingsTrayShortcut[]>
+  setTrayShortcuts(shortcuts: UserSettingsTrayShortcut[]): Promise<void>
   subscribeToTimer(listener: (event: DesktopTimerEvent) => void): () => void
   subscribeToRouteRequest(listener: (path: string) => void): () => void
   startCountup(): Promise<void>
