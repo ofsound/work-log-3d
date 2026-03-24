@@ -9,9 +9,12 @@ import {
   type SessionTagMatchMode,
 } from '~~/shared/worklog'
 
-export const SESSION_VIEW_MODES = ['day', 'week', 'month', 'year', 'list'] as const
+export const SESSION_VIEW_MODES = ['day', 'week', 'month', 'year', 'search'] as const
 
 export type SessionsViewMode = (typeof SESSION_VIEW_MODES)[number]
+
+/** Legacy query value; parsed as {@link SessionsViewMode} `'search'`. */
+const LEGACY_SESSIONS_VIEW_MODE_LIST = 'list' as const
 
 export interface SessionsRouteState {
   mode: SessionsViewMode
@@ -24,6 +27,22 @@ const defaultListFilters = createDefaultSessionListFilters()
 
 const isViewMode = (value: string): value is SessionsViewMode =>
   SESSION_VIEW_MODES.includes(value as SessionsViewMode)
+
+const parseModeFromQuery = (modeValue: string | undefined): SessionsViewMode => {
+  if (!modeValue) {
+    return defaultMode
+  }
+
+  if (modeValue === LEGACY_SESSIONS_VIEW_MODE_LIST) {
+    return 'search'
+  }
+
+  if (isViewMode(modeValue)) {
+    return modeValue
+  }
+
+  return defaultMode
+}
 
 const getSingleQueryValue = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value
@@ -60,7 +79,7 @@ export const parseSessionsRouteState = (
   const dateValue = getSingleQueryValue(query.date)
 
   return {
-    mode: modeValue && isViewMode(modeValue) ? modeValue : defaultMode,
+    mode: parseModeFromQuery(modeValue),
     date: parseDateKey(dateValue) ?? fallbackDate,
     listFilters: normalizeSessionListFilters({
       query: getSingleQueryValue(query.q) ?? '',
@@ -97,7 +116,7 @@ export const buildSessionsRouteQuery = (
 
   query.date = formatDateKey(state.date)
 
-  if (state.mode !== 'list') {
+  if (state.mode !== 'search') {
     delete query.q
     delete query.projects
     delete query.tags

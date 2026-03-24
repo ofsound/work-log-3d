@@ -328,10 +328,7 @@ describe('sessions day scratchpad', () => {
 
     expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('overview')
 
-    const nextButton = wrapper.findAll('button').find((button) => button.text() === 'Next')
-
-    expect(nextButton).toBeDefined()
-    await nextButton!.trigger('click')
+    await wrapper.get('[aria-label="Next period"]').trigger('click')
     await flushPendingWork()
 
     expect(routerReplace).toHaveBeenCalled()

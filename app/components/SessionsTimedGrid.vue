@@ -711,7 +711,8 @@ onBeforeUnmount(() => {
             <div
               v-for="hour in hours"
               :key="hour"
-              class="absolute inset-x-0 border-t border-border-subtle pr-3 text-right text-xs text-text-subtle"
+              class="absolute inset-x-0 pr-3 text-right text-xs text-text-subtle"
+              :class="{ 'border-t border-border-subtle': hour !== 0 }"
               :style="{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }"
             >
               <div v-if="hour !== 0" class="relative -top-2.5">{{ formatHourLabel(hour) }}</div>
@@ -742,7 +743,8 @@ onBeforeUnmount(() => {
             <div
               v-for="hour in hours"
               :key="`${formatDateKey(day)}-${hour}`"
-              class="pointer-events-none absolute inset-x-0 border-t border-border-subtle"
+              class="pointer-events-none absolute inset-x-0"
+              :class="{ 'border-t border-border-subtle': hour !== 0 }"
               :style="{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }"
             >
               <div class="absolute inset-x-0 top-1/2 border-t border-border-subtle/60"></div>
@@ -871,7 +873,8 @@ onBeforeUnmount(() => {
                 <div
                   v-for="hour in hours"
                   :key="hour"
-                  class="absolute inset-x-0 border-t border-border-subtle pr-3 text-right text-xs text-text-subtle"
+                  class="absolute inset-x-0 pr-3 text-right text-xs text-text-subtle"
+                  :class="{ 'border-t border-border-subtle': hour !== 0 }"
                   :style="{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }"
                 >
                   <div class="relative -top-2.5">{{ formatHourLabel(hour) }}</div>
@@ -902,7 +905,8 @@ onBeforeUnmount(() => {
                 <div
                   v-for="hour in hours"
                   :key="`${formatDateKey(day)}-${hour}`"
-                  class="pointer-events-none absolute inset-x-0 border-t border-border-subtle"
+                  class="pointer-events-none absolute inset-x-0"
+                  :class="{ 'border-t border-border-subtle': hour !== 0 }"
                   :style="{ top: `${hour * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }"
                 >
                   <div class="absolute inset-x-0 top-1/2 border-t border-border-subtle/60"></div>

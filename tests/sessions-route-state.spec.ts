@@ -24,7 +24,7 @@ describe('sessions route state', () => {
 
   it('parses supported mode, date, and normalized list filter params', () => {
     const state = parseSessionsRouteState({
-      mode: 'list',
+      mode: 'search',
       date: '2026-03-21',
       q: '  client   bug ',
       projects: 'project-b,project-a,project-a',
@@ -39,7 +39,7 @@ describe('sessions route state', () => {
       sort: 'longest',
     })
 
-    expect(state.mode).toBe('list')
+    expect(state.mode).toBe('search')
     expect(state.date.getFullYear()).toBe(2026)
     expect(state.date.getMonth()).toBe(2)
     expect(state.date.getDate()).toBe(21)
@@ -60,7 +60,7 @@ describe('sessions route state', () => {
 
   it('drops invalid list filter params while keeping valid ones', () => {
     const state = parseSessionsRouteState({
-      mode: 'list',
+      mode: 'search',
       q: '   ',
       tagMode: 'bad',
       from: 'nope',
@@ -86,10 +86,10 @@ describe('sessions route state', () => {
     })
   })
 
-  it('serializes list mode with stable ids and omits default filters except sort', () => {
+  it('serializes search mode with stable ids and omits default filters except sort', () => {
     const query = buildSessionsRouteQuery(
       {
-        mode: 'list',
+        mode: 'search',
         date: new Date(2026, 2, 21, 12, 0, 0, 0),
         listFilters: {
           query: 'client bug',
@@ -110,7 +110,7 @@ describe('sessions route state', () => {
 
     expect(query).toEqual({
       preserved: 'yes',
-      mode: 'list',
+      mode: 'search',
       date: '2026-03-21',
       q: 'client bug',
       projects: 'project-a,project-b',
@@ -125,7 +125,7 @@ describe('sessions route state', () => {
     })
   })
 
-  it('omits mode on default day view and removes list-only params outside list mode', () => {
+  it('omits mode on default day view and removes search-only params outside search mode', () => {
     const query = buildSessionsRouteQuery(
       {
         mode: 'day',
@@ -164,9 +164,9 @@ describe('sessions route state', () => {
     })
   })
 
-  it('keeps explicit list mode in the query and always persists the current sort', () => {
+  it('keeps explicit search mode in the query and always persists the current sort', () => {
     const query = buildSessionsRouteQuery({
-      mode: 'list',
+      mode: 'search',
       date: new Date(2026, 2, 21, 12, 0, 0, 0),
       listFilters: {
         query: '',
@@ -184,9 +184,18 @@ describe('sessions route state', () => {
     })
 
     expect(query).toEqual({
-      mode: 'list',
+      mode: 'search',
       date: '2026-03-21',
       sort: 'newest',
     })
+  })
+
+  it('maps legacy mode=list to search', () => {
+    const state = parseSessionsRouteState({
+      mode: 'list',
+      date: '2026-03-21',
+    })
+
+    expect(state.mode).toBe('search')
   })
 })

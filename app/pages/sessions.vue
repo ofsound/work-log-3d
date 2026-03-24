@@ -503,7 +503,7 @@ const handleModeChange = async (mode: SessionsViewMode) => {
   await flushScratchpadIfNeeded()
   resetPanelState('closed')
 
-  if (mode === 'list') {
+  if (mode === 'search') {
     await updateRouteState(
       {
         mode,
@@ -643,7 +643,7 @@ const applyCalendarEscapeDismiss = () => {
 
 const handleCalendarKeyboard = (event: KeyboardEvent) => {
   if (
-    ['list', 'year'].includes(currentMode.value) ||
+    ['search', 'year'].includes(currentMode.value) ||
     isEditableTarget(event) ||
     event.metaKey ||
     event.ctrlKey
@@ -743,7 +743,7 @@ watch(
 )
 
 watch(currentMode, (mode) => {
-  if (mode === 'list' || mode === 'year') {
+  if (mode === 'search' || mode === 'year') {
     resetPanelState('closed')
   }
 })
@@ -856,37 +856,66 @@ onBeforeUnmount(() => {
             <button
               class="rounded-lg px-4 py-2 text-sm font-semibold transition"
               :class="
-                currentMode === 'list'
+                currentMode === 'search'
                   ? 'bg-header text-header-text'
                   : 'text-text-muted hover:bg-surface'
               "
-              @click="handleModeChange('list')"
+              @click="handleModeChange('search')"
             >
-              List
+              Search
             </button>
           </div>
 
           <div
-            v-if="currentMode !== 'list' && currentMode !== 'year'"
+            v-if="currentMode !== 'search' && currentMode !== 'year'"
             class="flex items-center gap-2"
           >
             <button
-              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2.5 py-1.5 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+              type="button"
+              class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"
+              aria-label="Previous period"
               @click="handleNavigate(-1)"
             >
-              Prev
+              <svg
+                class="h-5 w-5 shrink-0"
+                aria-hidden="true"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
             </button>
             <button
+              type="button"
               class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2.5 py-1.5 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
               @click="handleGoToday"
             >
               Today
             </button>
             <button
-              class="cursor-pointer rounded-md border border-button-secondary-border bg-button-secondary px-2.5 py-1.5 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+              type="button"
+              class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"
+              aria-label="Next period"
               @click="handleNavigate(1)"
             >
-              Next
+              <svg
+                class="h-5 w-5 shrink-0"
+                aria-hidden="true"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M9 6l6 6-6 6" />
+              </svg>
             </button>
           </div>
         </div>
@@ -899,7 +928,7 @@ onBeforeUnmount(() => {
 
     <SessionsWorkspaceShell :overlay-aside="shouldOverlaySidePanel">
       <div
-        v-if="currentMode === 'list'"
+        v-if="currentMode === 'search'"
         class="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row"
       >
         <aside
