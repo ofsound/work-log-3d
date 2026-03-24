@@ -6,7 +6,7 @@ const { hideTags } = useUserSettings()
 
 <template>
   <div
-    class="fixed z-100 flex w-full items-center gap-3 bg-header px-4 py-2 tracking-wide text-header-text"
+    class="fixed z-100 flex h-header-bar w-full items-center gap-3 bg-header px-4 tracking-wide text-header-text"
   >
     <NuxtLink to="/" class="font-bold hover:underline">WORK LOG</NuxtLink>
     <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>

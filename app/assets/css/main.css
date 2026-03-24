@@ -44,6 +44,8 @@
     color-mix(in srgb, var(--color-white) 20%, transparent),
     color-mix(in srgb, var(--color-slate-200) 18%, transparent)
   );
+  /* Total height of fixed `HeaderBar`; keep in sync with `h-header-bar` / `pt-header-bar` clearance. */
+  --spacing-header-bar: 3rem;
   --color-border: light-dark(var(--color-gray-300), var(--color-zinc-700));
   --color-border-strong: light-dark(var(--color-gray-400), var(--color-zinc-500));
   --color-border-subtle: light-dark(
