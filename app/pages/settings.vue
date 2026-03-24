@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { signOut } from 'firebase/auth'
-import { useCurrentUser, useFirebaseAuth, useRouter } from '#imports'
+import { useCurrentUser, useFirebaseAuth, useRouter, useRuntimeConfig } from '#imports'
 import type { DesktopAlertSoundState, UserSettings } from '~~/shared/worklog'
 import { areUserSettingsEqual, cloneUserSettings, getWorklogErrorMessage } from '~~/shared/worklog'
 
@@ -14,6 +14,7 @@ import {
 } from '~/utils/user-settings'
 
 const router = useRouter()
+const runtimeConfig = useRuntimeConfig()
 const auth = useFirebaseAuth()
 const { desktopApi, isDesktop } = useHostRuntime()
 const { applyPreview, clearPreview, defaultSettings, saveSettings, savedSettings } =
@@ -30,6 +31,8 @@ const desktopAlertState = ref<DesktopAlertSoundState | null>(null)
 const desktopAlertMessage = ref('')
 const isLoadingDesktopAlert = ref(false)
 const isMutatingDesktopAlert = ref(false)
+/** Avoid SSR/client hydration mismatch: auth user ref can differ before mount. */
+const isAccountUiReady = ref(false)
 
 const isDirty = computed(() => !areUserSettingsEqual(draft.value, savedSettings.value))
 const hasCustomDesktopAlertSound = computed(() => desktopAlertState.value?.source === 'custom')
@@ -160,6 +163,7 @@ watch(
 )
 
 onMounted(() => {
+  isAccountUiReady.value = true
   void loadDesktopAlertState()
 })
 
@@ -184,7 +188,10 @@ onBeforeUnmount(() => {
             <ContainerCard class="mt-4" padding="compact" variant="muted" aria-live="polite">
               <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Account</div>
 
-              <p v-if="currentUser === undefined" class="mt-2 text-sm text-text-muted">
+              <p
+                v-if="!isAccountUiReady || currentUser === undefined"
+                class="mt-2 text-sm text-text-muted"
+              >
                 Loading account…
               </p>
 
@@ -493,6 +500,10 @@ onBeforeUnmount(() => {
           </ContainerCard>
         </label>
       </ContainerCard>
+
+      <p class="text-center text-xs text-text-subtle">
+        Work Log {{ runtimeConfig.public.appVersion }}
+      </p>
     </div>
   </div>
 </template>

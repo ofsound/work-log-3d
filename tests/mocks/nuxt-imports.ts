@@ -27,3 +27,9 @@ export const useFirebaseAuth = () => getRequiredMock<() => unknown>('useFirebase
 export const useRoute = () => getRequiredMock<() => unknown>('useRoute')()
 
 export const useRouter = () => getRequiredMock<() => unknown>('useRouter')()
+
+export const useRuntimeConfig = () => ({
+  public: {
+    appVersion: '0.0.0-test',
+  },
+})

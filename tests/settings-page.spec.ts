@@ -75,5 +75,6 @@ describe('settings page', () => {
     expect(wrapper.text()).toContain('Fonts and shell')
     expect(wrapper.text()).toContain('Timer completion sound')
     expect(wrapper.text()).toContain('Project-first mode')
+    expect(wrapper.text()).toContain('Work Log 0.0.0-test')
   })
 })

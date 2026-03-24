@@ -1,12 +1,24 @@
-import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import tailwindcss from '@tailwindcss/vite'
 
 const isElectronBuild = process.env.NUXT_ELECTRON_BUILD === 'true'
 
+const projectRoot = dirname(fileURLToPath(import.meta.url))
+const packageJson = JSON.parse(readFileSync(resolve(projectRoot, 'package.json'), 'utf8')) as {
+  version: string
+}
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
+  runtimeConfig: {
+    public: {
+      appVersion: packageJson.version,
+    },
+  },
   devtools: { enabled: true },
   ssr: isElectronBuild ? false : true,
   app: isElectronBuild
