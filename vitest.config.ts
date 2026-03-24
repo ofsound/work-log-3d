@@ -15,6 +15,7 @@ export default defineConfig({
         replacement: `${resolve(__dirname, 'app/composables')}/$1`,
       },
       { find: /^~\/components\/(.*)$/, replacement: `${resolve(__dirname, 'app/components')}/$1` },
+      { find: /^~\/icons\/(.*)$/, replacement: `${resolve(__dirname, 'app/icons')}/$1` },
       { find: /^~\/stores\/(.*)$/, replacement: `${resolve(__dirname, 'app/stores')}/$1` },
       { find: /^~\/assets\/(.*)$/, replacement: `${resolve(__dirname, 'app/assets')}/$1` },
       { find: /^~~\/(.*)$/, replacement: `${resolve(__dirname)}/$1` },

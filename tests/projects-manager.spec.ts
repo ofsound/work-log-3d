@@ -19,9 +19,23 @@ const projectDocuments = ref([
   },
 ])
 
-;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-  useRouter: () => ({ push: routerPush }),
-}
+const layoutRef = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref } = require('vue') as typeof import('vue')
+  return ref<'list' | 'grid'>('list')
+})
+
+vi.mock('~/composables/useProjectsPageLayout', () => ({
+  useProjectsPageLayout: () => ({
+    layout: layoutRef,
+    setLayout: (next: 'list' | 'grid') => {
+      layoutRef.value = next
+    },
+  }),
+}))
+  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+    useRouter: () => ({ push: routerPush }),
+  }
 
 vi.mock('vuefire', () => ({
   useCollection: () => projectDocuments,
@@ -38,6 +52,7 @@ const { default: ProjectsManager } = await import('~/app/components/ProjectsMana
 describe('projects manager', () => {
   beforeEach(() => {
     routerPush.mockReset()
+    layoutRef.value = 'list'
   })
 
   it('routes project creation to the dedicated new project page', async () => {
@@ -47,8 +62,10 @@ describe('projects manager', () => {
           ContainerCard,
         },
         stubs: {
+          GridLayoutIcon: true,
+          ListLayoutIcon: true,
           ProjectsManagerProject: {
-            props: ['project'],
+            props: ['layout', 'project'],
             template: '<div data-test="project-row">{{ project.name }}</div>',
           },
         },
@@ -57,7 +74,7 @@ describe('projects manager', () => {
 
     expect(wrapper.find('input').exists()).toBe(false)
 
-    await wrapper.get('button').trigger('click')
+    await wrapper.get('[aria-label="Create project"]').trigger('click')
 
     expect(routerPush).toHaveBeenCalledWith('/project/new')
   })

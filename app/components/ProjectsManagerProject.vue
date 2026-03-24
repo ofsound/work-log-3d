@@ -1,17 +1,25 @@
 <script setup lang="ts">
-import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
-import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getProjectEditPathFromProject, getProjectPathFromProject } from '~/utils/worklog-routes'
-import type { Project, TimeBox } from '~~/shared/worklog'
 import { getTotalDurationLabel } from '~~/shared/worklog'
+
+import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
+import type { ProjectsPageLayout } from '~/utils/projects-page-layout'
+import type { Project, TimeBox } from '~~/shared/worklog'
 
 const { timeBoxesCollection } = useFirestoreCollections()
 const timeBoxes = useCollection(timeBoxesCollection)
 
-const props = defineProps<{
-  project: Project
-}>()
+const props = withDefaults(
+  defineProps<{
+    layout?: ProjectsPageLayout
+    project: Project
+  }>(),
+  {
+    layout: 'list',
+  },
+)
 
 const router = useRouter()
 
@@ -70,36 +78,69 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
 
 <template>
   <ContainerCard
-    class="rounded-sm px-3 py-1.5 shadow-control hover:brightness-[1.03]"
     interactive
     padding="compact"
+    :class="[
+      'rounded-sm shadow-control hover:brightness-[1.03]',
+      layout === 'list' ? 'px-3 py-1.5' : 'flex h-full min-h-[148px] flex-col px-3 py-3',
+    ]"
     :style="rowStyle"
     variant="subtle"
     @click="router.push(getProjectPathFromProject(project))"
   >
-    <div class="flex gap-2">
-      <div class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 p-1 text-left">
-        <span class="font-bold text-text">{{ project.name }}</span>
-        <span
-          v-if="projectSessionDateRangeLabel"
-          class="font-data text-xs font-normal text-text-muted italic"
+    <template v-if="layout === 'list'">
+      <div class="flex gap-2">
+        <div class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 p-1 text-left">
+          <span class="font-bold text-text">{{ project.name }}</span>
+          <span
+            v-if="projectSessionDateRangeLabel"
+            class="font-data text-xs font-normal text-text-muted italic"
+          >
+            {{ projectSessionDateRangeLabel }}
+          </span>
+        </div>
+        <div
+          class="relative top-1 mt-1.5 mb-3 ml-2 w-max self-start rounded-md border px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
+          :style="durationBadgeStyle"
         >
-          {{ projectSessionDateRangeLabel }}
-        </span>
+          {{ projectTimeBoxesTotalDuration }} hrs
+        </div>
+        <button
+          type="button"
+          class="cursor-pointer rounded-md border border-button-secondary-border px-2 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+          @click.stop="router.push(getProjectEditPathFromProject(project))"
+        >
+          Edit
+        </button>
       </div>
-      <div
-        class="relative top-1 mt-1.5 mb-3 ml-2 w-max self-start rounded-md border px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
-        :style="durationBadgeStyle"
-      >
-        {{ projectTimeBoxesTotalDuration }} hrs
+    </template>
+    <template v-else>
+      <div class="flex h-full min-h-0 flex-1 flex-col gap-4">
+        <div class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 px-1">
+          <span class="text-center font-bold text-text">{{ project.name }}</span>
+          <span
+            v-if="projectSessionDateRangeLabel"
+            class="text-center font-data text-xs font-normal text-text-muted italic"
+          >
+            {{ projectSessionDateRangeLabel }}
+          </span>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <div
+            class="rounded-md border px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
+            :style="durationBadgeStyle"
+          >
+            {{ projectTimeBoxesTotalDuration }} hrs
+          </div>
+          <button
+            type="button"
+            class="cursor-pointer rounded-md border border-button-secondary-border px-2 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
+            @click.stop="router.push(getProjectEditPathFromProject(project))"
+          >
+            Edit
+          </button>
+        </div>
       </div>
-      <button
-        type="button"
-        class="cursor-pointer rounded-md border border-button-secondary-border px-2 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-        @click.stop="router.push(getProjectEditPathFromProject(project))"
-      >
-        Edit
-      </button>
-    </div>
+    </template>
   </ContainerCard>
 </template>

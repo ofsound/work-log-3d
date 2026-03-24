@@ -22,18 +22,18 @@ export type ContainerCardPadding = (typeof CONTAINER_CARD_PADDING_OPTIONS)[numbe
 const BASE_CLASS_NAME = 'border'
 
 export const CONTAINER_CARD_VARIANT_CLASS_NAMES = {
-  default: 'rounded-lg border-border-subtle bg-surface shadow-panel',
-  muted: 'rounded-lg border-border-subtle bg-surface-muted shadow-none',
-  subtle: 'rounded-lg border-border bg-surface shadow-panel',
+  default: 'rounded-md border-border-subtle bg-surface shadow-panel',
+  muted: 'rounded-md border-border-subtle bg-surface-muted shadow-none',
+  subtle: 'rounded-md border-border bg-surface shadow-panel',
   gradient:
-    'rounded-lg border-border-subtle bg-[image:var(--background-image-container-card-gradient-surface)] shadow-panel',
-  project: 'rounded-lg border-border-subtle bg-panel-project shadow-panel',
+    'rounded-md border-border-subtle bg-[image:var(--background-image-container-card-gradient-surface)] shadow-panel',
+  project: 'rounded-md border-border-subtle bg-panel-project shadow-panel',
   projectGradient:
-    'rounded-lg border-border-subtle bg-[image:var(--background-image-container-card-gradient-project)] shadow-panel',
-  tag: 'rounded-lg border-border-subtle bg-panel-tag shadow-panel',
-  day: 'rounded-lg border-border-subtle bg-panel-day shadow-panel',
-  timer: 'rounded-lg border-border-subtle bg-panel-timer shadow-panel',
-  session: 'rounded-lg border-border-subtle bg-panel-session shadow-panel',
+    'rounded-md border-border-subtle bg-[image:var(--background-image-container-card-gradient-project)] shadow-panel',
+  tag: 'rounded-md border-border-subtle bg-panel-tag shadow-panel',
+  day: 'rounded-md border-border-subtle bg-panel-day shadow-panel',
+  timer: 'rounded-md border-border-subtle bg-panel-timer shadow-panel',
+  session: 'rounded-md border-border-subtle bg-panel-session shadow-panel',
   overlay:
     'overflow-hidden rounded-3xl border-white/20 bg-surface/42 shadow-panel backdrop-blur-xl backdrop-saturate-150',
   warning:
