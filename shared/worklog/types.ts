@@ -11,12 +11,14 @@ export interface Project {
   slug: string
   notes: string
   colors: ProjectColors
+  archived: boolean
 }
 
 export interface ProjectInput {
   name: string
   notes: string
   colors: ProjectColors
+  archived: boolean
 }
 
 export interface Tag {

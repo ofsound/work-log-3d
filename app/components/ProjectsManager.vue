@@ -14,9 +14,11 @@ const { projectsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
 const router = useRouter()
 
-const sortedAllProjects = computed<Project[]>(() =>
+const allProjectsNormalized = computed<Project[]>(() =>
   sortNamedEntities(toProjects(allProjects.value as FirebaseProjectDocument[])),
 )
+const activeProjects = computed(() => allProjectsNormalized.value.filter((p) => !p.archived))
+const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) => p.archived))
 </script>
 
 <template>
@@ -28,8 +30,23 @@ const sortedAllProjects = computed<Project[]>(() =>
     variant="project"
   >
     <div class="mb-8 text-center text-xl font-bold uppercase">Projects</div>
-    <div class="flex flex-col gap-4">
-      <ProjectsManagerProject v-for="item in sortedAllProjects" :key="item.id" :project="item" />
+    <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-3">
+        <div class="text-center text-sm font-semibold tracking-wide text-text-muted uppercase">
+          Active
+        </div>
+        <div class="flex flex-col gap-4">
+          <ProjectsManagerProject v-for="item in activeProjects" :key="item.id" :project="item" />
+        </div>
+      </div>
+      <div v-if="archivedProjects.length > 0" class="flex flex-col gap-3">
+        <div class="text-center text-sm font-semibold tracking-wide text-text-muted uppercase">
+          Archived
+        </div>
+        <div class="flex flex-col gap-4">
+          <ProjectsManagerProject v-for="item in archivedProjects" :key="item.id" :project="item" />
+        </div>
+      </div>
     </div>
     <div class="mt-8 flex justify-end">
       <button

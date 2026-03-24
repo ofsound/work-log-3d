@@ -57,6 +57,7 @@ const hasCustomDesktopAlertSound = computed(() => desktopAlertState.value?.sourc
 const sortedProjects = computed(() =>
   sortNamedEntities(toProjects((allProjects.value as FirebaseProjectDocument[] | undefined) ?? [])),
 )
+const trayShortcutProjectOptions = computed(() => sortedProjects.value.filter((p) => !p.archived))
 const sortedTags = computed(() =>
   sortNamedEntities(toTags((allTags.value as FirebaseTagDocument[] | undefined) ?? [])),
 )
@@ -712,7 +713,7 @@ onBeforeUnmount(() => {
                     >
                       <option value="">No project preselected</option>
                       <option
-                        v-for="project in sortedProjects"
+                        v-for="project in trayShortcutProjectOptions"
                         :key="project.id"
                         :value="project.id"
                       >

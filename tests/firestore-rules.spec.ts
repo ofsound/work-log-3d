@@ -57,6 +57,7 @@ describe('firestore rules', () => {
         name: 'Focus',
         slug: 'focus',
         notes: '',
+        archived: false,
         colors: {
           primary: '#2563eb',
           secondary: '#06b6d4',
@@ -71,9 +72,24 @@ describe('firestore rules', () => {
         name: '',
         slug: 'focus',
         notes: '',
+        archived: false,
         colors: {
           primary: '#2563eb',
           secondary: null,
+        },
+      }),
+    )
+  })
+
+  it('rejects project documents without archived field', async () => {
+    await assertFails(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'projects', 'project-1'), {
+        name: 'Focus',
+        slug: 'focus',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '#06b6d4',
         },
       }),
     )
@@ -154,6 +170,9 @@ describe('firestore rules', () => {
         workflow: {
           hideTags: true,
         },
+        desktop: {
+          trayShortcuts: [],
+        },
       }),
     )
   })
@@ -233,6 +252,9 @@ describe('firestore rules', () => {
         workflow: {
           hideTags: true,
         },
+        desktop: {
+          trayShortcuts: [],
+        },
       }),
     )
   })
@@ -243,6 +265,7 @@ describe('firestore rules', () => {
         name: 'Shared',
         slug: 'shared',
         notes: '',
+        archived: false,
         colors: {
           primary: '#2563eb',
           secondary: '#06b6d4',

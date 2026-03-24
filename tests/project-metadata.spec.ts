@@ -6,6 +6,7 @@ import {
   getProjectDefaultMetadata,
   getWorklogErrorMessage,
   PROJECT_COLOR_PALETTE,
+  projectsForSessionPicker,
   resolveProjectColors,
   validateProjectInput,
 } from '../shared/worklog'
@@ -20,6 +21,7 @@ describe('project metadata helpers', () => {
           primary: '#ABCDEF',
           secondary: '123456',
         },
+        archived: false,
       }),
     ).toEqual({
       name: 'Client Portal',
@@ -29,6 +31,7 @@ describe('project metadata helpers', () => {
         primary: '#abcdef',
         secondary: '#123456',
       },
+      archived: false,
     })
   })
 
@@ -41,6 +44,7 @@ describe('project metadata helpers', () => {
           primary: 'blue',
           secondary: null,
         },
+        archived: false,
       }),
     ).toThrow('Primary color must be a valid hex color.')
   })
@@ -54,6 +58,7 @@ describe('project metadata helpers', () => {
           primary: '#2563eb',
           secondary: '#06b6d4',
         },
+        archived: false,
       }),
     ).toThrow('Project name would conflict with a reserved project route.')
   })
@@ -78,14 +83,58 @@ describe('project metadata helpers', () => {
     expect(getWorklogErrorMessage(tagError, 'fallback')).toBe('Another tag already uses this name.')
   })
 
+  it('includes archived in normalized project payloads', () => {
+    expect(
+      createProjectPayload({
+        name: 'Alpha',
+        notes: '',
+        colors: { primary: '#2563eb', secondary: null },
+        archived: true,
+      }).archived,
+    ).toBe(true)
+    expect(
+      validateProjectInput({
+        name: 'Beta',
+        notes: '',
+        colors: { primary: '#2563eb', secondary: null },
+        archived: false,
+      }).archived,
+    ).toBe(false)
+  })
+
+  it('builds session picker lists with the selected archived project included once', () => {
+    const projects = [
+      {
+        id: 'a',
+        name: 'Active',
+        slug: 'active',
+        notes: '',
+        colors: { primary: '#111111', secondary: null },
+        archived: false,
+      },
+      {
+        id: 'b',
+        name: 'Gone',
+        slug: 'gone',
+        notes: '',
+        colors: { primary: '#222222', secondary: null },
+        archived: true,
+      },
+    ] as const
+    expect(projectsForSessionPicker([...projects], '').map((p) => p.id)).toEqual(['a'])
+    expect(projectsForSessionPicker([...projects], 'b').map((p) => p.id)).toEqual(['a', 'b'])
+  })
+
   it('exposes a rotating default metadata palette', () => {
     expect(getProjectDefaultMetadata(0)).toEqual({
       notes: '',
       colors: PROJECT_COLOR_PALETTE[0],
+      archived: false,
     })
     expect(getProjectDefaultMetadata(PROJECT_COLOR_PALETTE.length)).toEqual({
       notes: '',
       colors: PROJECT_COLOR_PALETTE[0],
+      archived: false,
     })
   })
 })

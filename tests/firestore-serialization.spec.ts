@@ -63,6 +63,7 @@ describe('firestore worklog repositories', () => {
     })
 
     expect(project.notes).toBe('')
+    expect(project.archived).toBe(false)
     expect(project.colors.primary).toMatch(/^#[0-9a-f]{6}$/)
     expect(project.colors.secondary).toMatch(/^#[0-9a-f]{6}$/)
   })
@@ -171,6 +172,7 @@ describe('firestore worklog repositories', () => {
             name: 'Saved Project',
             slug: 'saved-project',
             notes: 'Existing notes',
+            archived: false,
             colors: { primary: '#224466', secondary: '#88aacc' },
           }) as Record<string, unknown>
         )[field],
@@ -191,6 +193,7 @@ describe('firestore worklog repositories', () => {
         primary: '#123456',
         secondary: 'abcdef',
       },
+      archived: false,
     })
     await repositories.projects.rename('project-1', ' Renamed Project ')
     await repositories.projects.update('project-2', {
@@ -200,6 +203,7 @@ describe('firestore worklog repositories', () => {
         primary: '#ABCDEF',
         secondary: null,
       },
+      archived: false,
     })
     await repositories.timeBoxes.create({
       startTime: new Date('2026-03-20T08:00:00.000Z'),
@@ -242,6 +246,7 @@ describe('firestore worklog repositories', () => {
           primary: '#123456',
           secondary: '#abcdef',
         },
+        archived: false,
       }),
     )
     expect(updateDoc).toHaveBeenCalledWith(
@@ -254,6 +259,7 @@ describe('firestore worklog repositories', () => {
           primary: '#224466',
           secondary: '#88aacc',
         },
+        archived: false,
       }),
     )
     expect(updateDoc).toHaveBeenCalledWith(
@@ -266,6 +272,7 @@ describe('firestore worklog repositories', () => {
           primary: '#abcdef',
           secondary: null,
         },
+        archived: false,
       }),
     )
     expect(fromDate).toHaveBeenCalledTimes(5)
@@ -352,6 +359,7 @@ describe('firestore worklog repositories', () => {
           primary: '#2563eb',
           secondary: '#06b6d4',
         },
+        archived: false,
       }),
     ).rejects.toThrow('Another project already uses this name.')
     expect(addDoc).not.toHaveBeenCalled()
@@ -374,6 +382,7 @@ describe('firestore worklog repositories', () => {
           primary: '#2563eb',
           secondary: '#06b6d4',
         },
+        archived: false,
       }),
     ).rejects.toThrow('Project name would conflict with a reserved project route.')
     expect(addDoc).not.toHaveBeenCalled()

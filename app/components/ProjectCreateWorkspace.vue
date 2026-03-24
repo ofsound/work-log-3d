@@ -56,6 +56,7 @@ const buildProjectInput = (): ProjectInput => ({
     primary: dynamicPrimaryColor.value,
     secondary: secondaryColorEnabled.value ? dynamicSecondaryColor.value : null,
   },
+  archived: false,
 })
 
 const isDirty = computed(

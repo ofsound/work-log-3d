@@ -143,6 +143,7 @@ export const validateProjectInput = (input: ProjectInput): ProjectInput => ({
     primary: requireHexColor(input.colors.primary, 'Primary color'),
     secondary: normalizeNullableHexColor(input.colors.secondary, 'Secondary color'),
   },
+  archived: input.archived === true,
 })
 
 export const createProjectPayload = (input: ProjectInput) => {
@@ -165,6 +166,7 @@ export const createProjectPayload = (input: ProjectInput) => {
     slug,
     notes: normalized.notes,
     colors: normalized.colors,
+    archived: normalized.archived,
   }
 }
 

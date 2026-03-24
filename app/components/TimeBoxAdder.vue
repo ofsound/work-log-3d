@@ -19,6 +19,9 @@ const countDownIsActive = computed(
 const sortedProjects = computed(() =>
   sortNamedEntities(toProjects((allProjects.value as FirebaseProjectDocument[] | undefined) ?? [])),
 )
+const nonArchivedProjectIds = computed(() =>
+  sortedProjects.value.filter((p) => !p.archived).map((p) => p.id),
+)
 
 const sortedTags = computed(() =>
   sortNamedEntities(toTags((allTags.value as FirebaseTagDocument[] | undefined) ?? [])),
@@ -26,7 +29,7 @@ const sortedTags = computed(() =>
 
 const routePrefill = computed(() =>
   parseNewTimeBoxRoutePrefill(route.query as Record<string, string | string[] | undefined>, {
-    validProjectIds: sortedProjects.value.map((project) => project.id),
+    validProjectIds: nonArchivedProjectIds.value,
     validTagIds: sortedTags.value.map((tag) => tag.id),
   }),
 )

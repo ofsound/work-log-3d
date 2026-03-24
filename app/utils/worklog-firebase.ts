@@ -50,6 +50,7 @@ export interface FirebaseProjectDocument {
   name: string
   slug: string
   notes?: string
+  archived?: boolean
   colors?: {
     primary?: string
     secondary?: string | null
@@ -127,6 +128,7 @@ export const toProject = (project: FirebaseProjectDocument): Project => ({
   slug: project.slug,
   notes: resolveProjectNotes(project.notes),
   colors: resolveProjectColors(project.id, project.colors),
+  archived: project.archived === true,
 })
 
 export const toTag = (tag: FirebaseTagDocument): Tag => ({
@@ -300,6 +302,7 @@ export const createFirestoreWorklogRepositories = ({
           name: String(snapshot.get('name') ?? ''),
           slug: String(snapshot.get('slug') ?? ''),
           notes: snapshot.get('notes') as string | undefined,
+          archived: snapshot.get('archived') as boolean | undefined,
           colors: snapshot.get('colors') as FirebaseProjectDocument['colors'],
         })
 
@@ -307,6 +310,7 @@ export const createFirestoreWorklogRepositories = ({
           name,
           notes: currentProject.notes,
           colors: currentProject.colors,
+          archived: currentProject.archived,
         })
 
         if (payload.slug !== currentProject.slug) {

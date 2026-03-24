@@ -11,7 +11,11 @@ import type {
 } from '~/utils/worklog-firebase'
 import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
 import type { TimeBoxInput } from '~~/shared/worklog'
-import { getWorklogErrorMessage, sortNamedEntities } from '~~/shared/worklog'
+import {
+  getWorklogErrorMessage,
+  projectsForSessionPicker,
+  sortNamedEntities,
+} from '~~/shared/worklog'
 
 const props = defineProps({
   id: { type: String, default: undefined },
@@ -42,9 +46,14 @@ const dynamicDurationTypingTimer = ref<ReturnType<typeof setTimeout>>()
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
 
-const sortedAllProjects = computed(() => {
-  return sortNamedEntities(toProjects(allProjects.value as FirebaseProjectDocument[]))
-})
+const sortedPickerProjects = computed(() =>
+  sortNamedEntities(
+    projectsForSessionPicker(
+      toProjects(allProjects.value as FirebaseProjectDocument[]),
+      dynamicProject.value,
+    ),
+  ),
+)
 
 const sortedAllTags = computed(() => {
   return sortNamedEntities(toTags(allTags.value as FirebaseTagDocument[]))
@@ -59,7 +68,7 @@ const dynamicTags = ref<string[]>([])
 const dynamicDuration = ref<string | number>('')
 const showLegacyTagNotice = computed(() => hideTags.value && dynamicTags.value.length > 0)
 
-const projectRadiosTwoColumns = computed(() => sortedAllProjects.value.length > 4)
+const projectRadiosTwoColumns = computed(() => sortedPickerProjects.value.length > 4)
 const isEditingExistingTimeBox = computed(() => Boolean(props.id))
 
 function timeBoxDuration() {
@@ -426,7 +435,7 @@ onBeforeUnmount(() => {
           :class="projectRadiosTwoColumns ? '[@container(min-width:52rem)]:grid-cols-2' : ''"
         >
           <label
-            v-for="thisProject in sortedAllProjects"
+            v-for="thisProject in sortedPickerProjects"
             :key="thisProject.id"
             class="flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-solid px-3 py-3 transition-[box-shadow,filter] duration-150 ease-out select-none hover:brightness-[1.02]"
             :class="dynamicProject === thisProject.id ? 'shadow-panel-selected' : 'shadow-control'"

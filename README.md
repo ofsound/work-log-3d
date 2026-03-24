@@ -26,6 +26,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Each project and tag has a `slug` derived from its name; URLs prefer it for readability while Firestore keeps using document ids
 - Project slug `new` is reserved so `/project/new` always points to the create workspace
 - Projects and tags cannot be deleted while sessions still reference them
+- Projects can be marked **archived** on `/project/:segment/edit`; archived projects are grouped under “Archived” on `/projects`, omitted from session project pickers and from the project dropdown on desktop tray shortcuts in `/settings`, and still appear elsewhere (sessions history, reports, filters, etc.) for now
 - Shared validation lives in `shared/worklog/validation.ts`
 - Firestore rules in `firestore.rules` must match the current document shape
 - Theme preference is stored in `localStorage` per Firebase user, with a guest fallback before auth resolves

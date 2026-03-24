@@ -1,4 +1,4 @@
-import type { ProjectColors } from './types'
+import type { Project, ProjectColors } from './types'
 
 const HEX_COLOR_PATTERN = /^#?([\da-f]{3}|[\da-f]{6})$/i
 
@@ -52,6 +52,7 @@ export const getProjectColorPaletteEntry = (index: number): ProjectColors => {
 export const getProjectDefaultMetadata = (index: number) => ({
   notes: '',
   colors: getProjectColorPaletteEntry(index),
+  archived: false,
 })
 
 export const getProjectPaletteIndexFromSeed = (seed: string) => {
@@ -90,3 +91,14 @@ export const resolveProjectColors = (
 
 export const resolveProjectNotes = (value: string | null | undefined) =>
   typeof value === 'string' ? value.trim() : ''
+
+/** Session editor pickers: active projects plus the selected project when it is archived. */
+export const projectsForSessionPicker = (projects: Project[], selectedProjectId: string) => {
+  const byId = new Map(projects.map((p) => [p.id, p]))
+  const selected = selectedProjectId ? byId.get(selectedProjectId) : undefined
+  const base = projects.filter((p) => !p.archived)
+  if (selected?.archived) {
+    return [...base, selected]
+  }
+  return base
+}

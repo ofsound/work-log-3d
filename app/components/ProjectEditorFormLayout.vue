@@ -37,6 +37,8 @@ const props = defineProps({
   primaryColor: { type: String, required: true },
   secondaryColor: { type: String, required: true },
   secondaryColorEnabled: { type: Boolean, default: true },
+  showArchiveToggle: { type: Boolean, default: false },
+  archived: { type: Boolean, default: false },
   submitLabel: { type: String, required: true },
 })
 
@@ -50,6 +52,7 @@ const emit = defineEmits<{
   'update:primary-color': [value: string]
   'update:secondary-color': [value: string]
   'update:secondary-color-enabled': [value: boolean]
+  'update:archived': [value: boolean]
 }>()
 
 const updateName = (event: Event) => {
@@ -74,6 +77,11 @@ const updateSecondaryColor = (event: Event) => {
 
 const toggleSecondaryColor = () => {
   emit('update:secondary-color-enabled', !props.secondaryColorEnabled)
+  emit('clear-error')
+}
+
+const toggleArchived = () => {
+  emit('update:archived', !props.archived)
   emit('clear-error')
 }
 </script>
@@ -108,6 +116,27 @@ const toggleSecondaryColor = () => {
             @input="updateNotes"
           ></textarea>
         </label>
+
+        <div
+          v-if="showArchiveToggle"
+          class="flex flex-col gap-2 rounded-2xl border border-border-subtle bg-surface-muted px-4 py-3"
+        >
+          <label class="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              class="mt-1 size-4 shrink-0 cursor-pointer rounded border-input-border text-link"
+              :checked="archived"
+              @change="toggleArchived"
+            />
+            <span class="min-w-0">
+              <span class="text-sm font-semibold text-text">Archived</span>
+              <span class="mt-1 block text-sm text-text-muted">
+                Hides this project from session pickers and desktop tray shortcut lists. It still
+                appears in history, reports, and project pages until you change that behavior.
+              </span>
+            </span>
+          </label>
+        </div>
 
         <div class="grid gap-4 md:grid-cols-2">
           <label class="flex flex-col gap-2">

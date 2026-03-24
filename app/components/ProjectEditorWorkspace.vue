@@ -54,6 +54,7 @@ const dynamicNotes = ref('')
 const dynamicPrimaryColor = ref('#2563eb')
 const dynamicSecondaryColor = ref('#06b6d4')
 const secondaryColorEnabled = ref(true)
+const dynamicArchived = ref(false)
 const mutationErrorMessage = ref('')
 const isSaving = ref(false)
 const isDeleting = ref(false)
@@ -114,6 +115,7 @@ const applyProjectToForm = (value: FirebaseProjectDocument | null | undefined) =
   dynamicPrimaryColor.value = normalized.colors.primary
   dynamicSecondaryColor.value = normalized.colors.secondary ?? normalized.colors.primary
   secondaryColorEnabled.value = normalized.colors.secondary !== null
+  dynamicArchived.value = normalized.archived
   mutationErrorMessage.value = ''
   initialFormSnapshot.value = createProjectInputSnapshot({
     name: normalized.name,
@@ -122,6 +124,7 @@ const applyProjectToForm = (value: FirebaseProjectDocument | null | undefined) =
       primary: normalized.colors.primary,
       secondary: normalized.colors.secondary,
     },
+    archived: normalized.archived,
   })
 }
 
@@ -147,6 +150,7 @@ const buildProjectInput = (): ProjectInput => ({
     primary: dynamicPrimaryColor.value,
     secondary: secondaryColorEnabled.value ? dynamicSecondaryColor.value : null,
   },
+  archived: dynamicArchived.value,
 })
 
 const isDirty = computed(
@@ -305,6 +309,7 @@ onBeforeRouteLeave(async () => {
     <div class="flex-1 overflow-auto px-6 py-6">
       <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <ProjectEditorFormLayout
+          :archived="dynamicArchived"
           :context-summary="projectSummary"
           heading="Edit project details"
           :is-saving="isSaving"
@@ -317,11 +322,13 @@ onBeforeRouteLeave(async () => {
           :primary-color="dynamicPrimaryColor"
           :secondary-color="dynamicSecondaryColor"
           :secondary-color-enabled="secondaryColorEnabled"
+          show-archive-toggle
           submit-label="Save project"
           @apply-palette="applyPalette"
           @cancel="cancelEditing"
           @clear-error="mutationErrorMessage = ''"
           @save="saveProject"
+          @update:archived="dynamicArchived = $event"
           @update:name="dynamicName = $event"
           @update:notes="dynamicNotes = $event"
           @update:primary-color="dynamicPrimaryColor = $event"
