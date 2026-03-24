@@ -380,6 +380,8 @@ const openSessionPanel = async (
   sessionId: string,
   options: {
     preserveCreatePreview?: boolean
+    /** When set (e.g. month grid), sync `date` in the URL to this day before showing the session. */
+    day?: Date
   } = {},
 ) => {
   await flushScratchpadIfNeeded()
@@ -391,6 +393,10 @@ const openSessionPanel = async (
   panelMode.value = 'session'
   panelSessionId.value = sessionId
   createRange.value = null
+
+  if (options.day) {
+    await updateRouteState({ date: options.day }, { history: 'push' })
+  }
 }
 
 const openCreatePanel = async (range: SessionCreatePayload) => {
@@ -510,8 +516,27 @@ const handleModeChange = async (mode: SessionsViewMode) => {
 
 const handleOpenDay = async (day: Date) => {
   await flushScratchpadIfNeeded()
+
+  if (currentMode.value === 'month') {
+    const dayBoxes = getTimeBoxesForDay(visibleCalendarTimeBoxes.value, day)
+    if (dayBoxes.length === 0) {
+      await closePanel()
+      await updateRouteState({ date: day }, { history: 'push' })
+      return
+    }
+
+    selectedSessionId.value = ''
+    resetPanelState('overview')
+    await updateRouteState({ date: day }, { history: 'push' })
+    return
+  }
+
   resetPanelState('closed')
   await updateRouteState({ mode: 'day', date: day }, { history: 'push' })
+}
+
+const handleOpenSessionFromMonth = async (payload: { day: Date; sessionId: string }) => {
+  await openSessionPanel(payload.sessionId, { day: payload.day })
 }
 
 const handleNavigate = async (direction: -1 | 1) => {
@@ -688,6 +713,10 @@ watch(
       if (panelMode.value === 'closed') {
         panelMode.value = daySidebarTab.value
       }
+      return
+    }
+
+    if ((mode === 'month' || mode === 'week') && panelMode.value === 'overview') {
       return
     }
 
@@ -955,11 +984,12 @@ onBeforeUnmount(() => {
           :anchor-date="anchorDate"
           :project-by-id="projectById"
           :project-name-by-id="projectNameById"
+          :selected-date="currentMode === 'month' && panelMode !== 'closed' ? anchorDate : null"
           :selected-session-id="selectedSessionId"
           :time-boxes="visibleCalendarTimeBoxes"
           @change-session="persistSessionChange"
           @open-day="handleOpenDay"
-          @open-session="openSessionPanel"
+          @open-session="handleOpenSessionFromMonth"
         />
       </template>
 

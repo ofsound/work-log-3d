@@ -32,6 +32,7 @@
 - Avoid app-wide auth redirect watchers. Route middleware owns access control; the login page owns post-auth redirect behavior.
 - Use `ContainerCard` for substantial bordered/background content shells in the web app. Do not hand-roll new top-level or section-level card wrappers with inline Tailwind class bundles.
 - `ContainerCard` does **not** replace inputs, buttons, chips, badges, dropdown menus, table rows, calendar event pills, or tiny layout wrappers.
+- `ContainerCard` variants `gradient` and `projectGradient` use theme tokens `--background-image-container-card-gradient-surface` and `--background-image-container-card-gradient-project` in `app/assets/css/main.css` for a subtle diagonal fill (lighter in light mode, darker in dark).
 
 ## Current UI Backlog
 

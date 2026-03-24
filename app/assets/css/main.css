@@ -294,6 +294,23 @@
     color-mix(in srgb, var(--color-link) 13%, transparent) 6px,
     color-mix(in srgb, var(--color-link) 13%, transparent) 7px
   );
+  /** ContainerCard: subtle diagonal fill (lighter in light scheme, darker in dark). */
+  --background-image-container-card-gradient-surface: linear-gradient(
+    135deg,
+    var(--color-surface),
+    light-dark(
+      color-mix(in srgb, var(--color-surface) 94%, var(--color-white)),
+      color-mix(in srgb, var(--color-surface) 90%, var(--color-black))
+    )
+  );
+  --background-image-container-card-gradient-project: linear-gradient(
+    135deg,
+    var(--color-panel-project),
+    light-dark(
+      color-mix(in srgb, var(--color-panel-project) 94%, var(--color-white)),
+      color-mix(in srgb, var(--color-panel-project) 90%, var(--color-black))
+    )
+  );
 
   @keyframes blink-once {
     0% {

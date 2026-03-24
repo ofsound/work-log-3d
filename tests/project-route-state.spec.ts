@@ -20,9 +20,19 @@ describe('project route state', () => {
     })
 
     expect(state.mode).toBe('calendar')
-    expect(state.date.getFullYear()).toBe(2026)
-    expect(state.date.getMonth()).toBe(2)
-    expect(state.date.getDate()).toBe(21)
+    expect(state.date).not.toBeNull()
+    expect(state.date!.getFullYear()).toBe(2026)
+    expect(state.date!.getMonth()).toBe(2)
+    expect(state.date!.getDate()).toBe(21)
+  })
+
+  it('parses calendar mode with no date as null (no day selected)', () => {
+    const state = parseProjectRouteState({
+      mode: 'calendar',
+    })
+
+    expect(state.mode).toBe('calendar')
+    expect(state.date).toBeNull()
   })
 
   it('falls back safely when mode or date are invalid', () => {
@@ -52,6 +62,21 @@ describe('project route state', () => {
       preserved: 'yes',
       mode: 'calendar',
       date: '2026-03-21',
+    })
+  })
+
+  it('omits date when calendar has no day selected', () => {
+    const query = buildProjectRouteQuery(
+      {
+        mode: 'calendar',
+        date: null,
+      },
+      { preserved: 'yes' },
+    )
+
+    expect(query).toEqual({
+      preserved: 'yes',
+      mode: 'calendar',
     })
   })
 

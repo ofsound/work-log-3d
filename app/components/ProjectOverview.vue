@@ -64,6 +64,11 @@ const panelSessionId = ref('')
 const selectedSessionId = ref('')
 const mutationErrorMessage = ref('')
 
+const isDesktop = useMediaQuery('(min-width: 1024px)', false)
+const shouldOverlayProjectCalendarPanel = computed(
+  () => isDesktop.value && currentMode.value === 'calendar' && panelMode.value !== 'closed',
+)
+
 const routeState = computed(() =>
   parseProjectRouteState(route.query as Record<string, string | string[] | undefined>),
 )
@@ -85,7 +90,9 @@ const projectTimeBoxesTotalDuration = computed(() =>
 )
 const calendarMonths = computed(() => buildYearHeatmapMonths(rawProjectTimeBoxes.value, new Date()))
 const selectedDayTimeBoxes = computed(() =>
-  getTimeBoxesForDay(rawProjectTimeBoxes.value, selectedDate.value),
+  selectedDate.value == null
+    ? []
+    : getTimeBoxesForDay(rawProjectTimeBoxes.value, selectedDate.value),
 )
 const headerStyle = computed(() =>
   project.value ? getProjectHeaderStyle(project.value.colors) : {},
@@ -192,6 +199,13 @@ const handleWorkspaceModeSelect = async (mode: ProjectWorkspaceMode) => {
 }
 
 const openDayPanel = async (day: Date) => {
+  const dayBoxes = getTimeBoxesForDay(rawProjectTimeBoxes.value, day)
+  if (dayBoxes.length === 0) {
+    closePanel()
+    await updateRouteState({ mode: 'calendar', date: day })
+    return
+  }
+
   selectedSessionId.value = ''
   panelSessionId.value = ''
   panelMode.value = 'day'
@@ -251,7 +265,7 @@ watch(
 )
 
 watch(
-  () => selectedDate.value.valueOf(),
+  () => selectedDate.value?.valueOf() ?? null,
   () => {
     if (panelMode.value === 'day') {
       selectedSessionId.value = ''
@@ -273,6 +287,52 @@ watch(rawProjectTimeBoxes, (timeBoxList) => {
     closePanel()
   }
 })
+
+const isEscapeTargetInEditableField = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
+}
+
+const clearCalendarSelectionFromEscape = async () => {
+  if (currentMode.value !== 'calendar') {
+    return
+  }
+
+  closePanel()
+  await updateRouteState({ date: null })
+}
+
+const handleProjectOverviewKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'Escape') {
+    return
+  }
+
+  if (isEscapeTargetInEditableField(event.target)) {
+    return
+  }
+
+  if (currentMode.value !== 'calendar') {
+    return
+  }
+
+  if (panelMode.value === 'closed' && routeState.value.date === null) {
+    return
+  }
+
+  event.preventDefault()
+  void clearCalendarSelectionFromEscape()
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleProjectOverviewKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleProjectOverviewKeydown)
+})
 </script>
 
 <template>
@@ -286,7 +346,7 @@ watch(rawProjectTimeBoxes, (timeBoxList) => {
       @select-mode="handleWorkspaceModeSelect"
     />
 
-    <SessionsWorkspaceShell>
+    <SessionsWorkspaceShell :overlay-aside="shouldOverlayProjectCalendarPanel">
       <div v-if="currentMode === 'list'" class="flex-1 overflow-auto px-11 pt-8">
         <ProjectOverviewDay
           v-for="(item, index) in projectOverviewDayObjects"
@@ -311,8 +371,9 @@ watch(rawProjectTimeBoxes, (timeBoxList) => {
       <template #aside>
         <ProjectCalendarSidebar
           v-if="currentMode === 'calendar' && panelMode !== 'closed'"
-          :day="selectedDate"
+          :day="selectedDate ?? new Date()"
           :mode="panelMode === 'session' ? 'session' : 'day'"
+          :overlay="shouldOverlayProjectCalendarPanel"
           :project="project"
           :selected-session-id="selectedSessionId"
           :session-id="panelSessionId"

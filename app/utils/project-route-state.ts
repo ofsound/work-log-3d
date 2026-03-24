@@ -13,7 +13,8 @@ export interface ProjectWorkspaceTab {
 
 export interface ProjectRouteState {
   mode: ProjectViewMode
-  date: Date
+  /** Calendar with no `date` query param; list mode always resolves to a concrete `Date`. */
+  date: Date | null
 }
 
 export type ProjectRouteQuery = Record<string, string | string[] | undefined>
@@ -38,10 +39,21 @@ export const parseProjectRouteState = (
 ): ProjectRouteState => {
   const modeValue = getSingleQueryValue(query.mode)
   const dateValue = getSingleQueryValue(query.date)
+  const mode = modeValue && isViewMode(modeValue) ? modeValue : defaultMode
+  const dateParsed = dateValue !== undefined ? parseDateKey(dateValue) : null
+
+  let date: Date | null
+  if (mode === 'calendar' && dateValue === undefined) {
+    date = null
+  } else if (dateParsed) {
+    date = dateParsed
+  } else {
+    date = fallbackDate
+  }
 
   return {
-    mode: modeValue && isViewMode(modeValue) ? modeValue : defaultMode,
-    date: parseDateKey(dateValue) ?? fallbackDate,
+    mode,
+    date,
   }
 }
 
@@ -57,7 +69,11 @@ export const buildProjectRouteQuery = (
     query.mode = state.mode
   }
 
-  query.date = formatDateKey(state.date)
+  if (state.date === null) {
+    delete query.date
+  } else {
+    query.date = formatDateKey(state.date)
+  }
 
   return query
 }

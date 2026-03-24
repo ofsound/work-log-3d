@@ -27,7 +27,7 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
     class="my-4 w-full rounded-sm py-4"
     padding="comfortable"
     style="width: 100%; min-width: 100%"
-    variant="project"
+    variant="projectGradient"
   >
     <div class="mb-8 text-center text-xl font-bold uppercase">Projects</div>
     <div class="flex flex-col gap-6">

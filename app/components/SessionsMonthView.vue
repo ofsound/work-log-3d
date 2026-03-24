@@ -26,10 +26,16 @@ const props = defineProps({
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
   projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
+  /** When set (e.g. URL anchor while month sidebar is open), highlight that calendar cell. */
+  selectedDate: { type: Object as PropType<Date | null>, default: null },
   selectedSessionId: { type: String, default: '' },
 })
 
-const emit = defineEmits(['openSession', 'openDay', 'changeSession'])
+const emit = defineEmits<{
+  changeSession: [payload: SessionChangePayload]
+  openDay: [day: Date]
+  openSession: [payload: { day: Date; sessionId: string }]
+}>()
 
 const monthGrid = computed(() => buildMonthGridDaySegments(props.timeBoxes, props.anchorDate))
 const gridDays = computed(() => monthGrid.value.gridDays)
@@ -128,6 +134,8 @@ const handleSegmentDragEnd = () => {
             :class="{
               'bg-surface-muted/50 text-text-subtle': isOutsideAnchorMonth(day),
               'ring-1 ring-link/20 ring-inset': isSameDay(day, new Date()),
+              'ring-2 ring-link/35 ring-inset':
+                props.selectedDate != null && isSameDay(day, props.selectedDate),
             }"
             @click="handleDayClick(day)"
             @dragover.prevent
@@ -154,7 +162,7 @@ const handleSegmentDragEnd = () => {
                 }"
                 :style="getProjectStyle(segment.timeBox.project)"
                 draggable="true"
-                @click.stop="emit('openSession', segment.timeBox.id)"
+                @click.stop="emit('openSession', { day, sessionId: segment.timeBox.id })"
                 @dragstart="handleSegmentDragStart(segment.timeBox, $event)"
                 @dragend="handleSegmentDragEnd"
               >
