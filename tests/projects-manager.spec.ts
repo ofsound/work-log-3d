@@ -33,9 +33,9 @@ vi.mock('~/composables/useProjectsPageLayout', () => ({
     },
   }),
 }))
-  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-    useRouter: () => ({ push: routerPush }),
-  }
+;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+  useRouter: () => ({ push: routerPush }),
+}
 
 vi.mock('vuefire', () => ({
   useCollection: () => projectDocuments,

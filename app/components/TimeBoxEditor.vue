@@ -312,16 +312,14 @@ onBeforeUnmount(() => {
     class="[container-type:inline-size] w-full max-w-full min-w-0 font-data text-text"
   >
     <ContainerCard
-      class="flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-3xl [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
+      class="flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-md [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
       padding="compact"
     >
       <section
         class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
       >
-        <label class="flex min-w-0 flex-col gap-2">
-          <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
-            Duration
-          </span>
+        <label class="flex min-w-0 flex-col gap-3">
+          <div class="text-sm font-semibold text-text">Duration</div>
           <div
             class="flex min-w-0 items-end gap-2 rounded-2xl border border-input-border bg-input px-3 py-3 [@container(min-width:38rem)]:h-full"
           >
@@ -371,37 +369,31 @@ onBeforeUnmount(() => {
           </div>
         </label>
 
-        <div class="grid min-w-0 gap-3 [@container(min-width:52rem)]:grid-cols-2">
-          <label class="flex min-w-0 flex-col gap-2">
-            <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
-              Start
-            </span>
+        <div class="ml-8 flex min-w-0 flex-wrap items-start gap-8">
+          <label class="flex min-w-0 shrink-0 flex-col gap-3">
+            <div class="text-sm font-semibold text-text">Start</div>
             <input
               v-model="dynamicStartTime"
               type="datetime-local"
-              class="w-full min-w-0 rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
+              class="w-[220px] max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
               @input="mutationErrorMessage = ''"
             />
           </label>
 
-          <label class="flex min-w-0 flex-col gap-2">
-            <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
-              End
-            </span>
+          <label class="flex min-w-0 shrink-0 flex-col gap-3">
+            <div class="text-sm font-semibold text-text">End</div>
             <input
               v-model="dynamicEndTime"
               type="datetime-local"
-              class="w-full min-w-0 rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
+              class="w-[220px] max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
               @input="mutationErrorMessage = ''"
             />
           </label>
         </div>
       </section>
 
-      <label class="flex min-w-0 flex-col gap-2">
-        <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
-          Notes
-        </span>
+      <label class="flex min-w-0 flex-col gap-3">
+        <div class="text-sm font-semibold text-text">Notes</div>
         <textarea
           v-model="dynamicNotes"
           class="min-h-24 w-full max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
@@ -411,74 +403,89 @@ onBeforeUnmount(() => {
         ></textarea>
       </label>
 
-      <section class="flex flex-col gap-3 border-t border-border-subtle pt-5">
-        <div class="text-sm font-semibold text-text">Project</div>
-
-        <div
-          class="project-radio-group grid gap-2.5"
-          :class="projectRadiosTwoColumns ? '[@container(min-width:52rem)]:grid-cols-2' : ''"
+      <div
+        class="border-t border-border-subtle pt-5"
+        :class="
+          hideTags
+            ? ''
+            : 'flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,25%)] md:items-start md:gap-x-6 md:gap-y-0'
+        "
+      >
+        <section
+          class="flex min-w-0 flex-col gap-3"
+          :class="!hideTags ? 'md:border-r md:border-border-subtle md:pr-6' : ''"
         >
-          <label
-            v-for="thisProject in sortedPickerProjects"
-            :key="thisProject.id"
-            class="flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-solid px-3 py-3 transition-[border-color,box-shadow,filter] duration-150 ease-out select-none"
-            :class="[
-              dynamicProject === thisProject.id
-                ? 'shadow-panel-selected hover:brightness-[1.02]'
-                : 'project-radio-option-muted shadow-control',
-            ]"
-            :style="
-              getProjectPickerOptionStyle(thisProject.colors, dynamicProject === thisProject.id)
-            "
+          <div class="text-sm font-semibold text-text">Project</div>
+
+          <div
+            class="project-radio-group grid gap-2.5"
+            :class="projectRadiosTwoColumns ? '[@container(min-width:52rem)]:grid-cols-2' : ''"
           >
-            <input
-              v-model="dynamicProject"
-              type="radio"
-              :value="thisProject.id"
-              name="projectSelection"
-              class="shrink-0"
-              @change="mutationErrorMessage = ''"
-            />
-            <span class="min-w-0 text-base font-semibold">{{ thisProject.name }}</span>
-          </label>
-        </div>
+            <label
+              v-for="thisProject in sortedPickerProjects"
+              :key="thisProject.id"
+              class="flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-solid px-3 py-3 transition-[border-color,box-shadow,filter] duration-150 ease-out select-none"
+              :class="[
+                dynamicProject === thisProject.id
+                  ? 'shadow-panel-selected hover:brightness-[1.02]'
+                  : 'project-radio-option-muted shadow-control',
+              ]"
+              :style="
+                getProjectPickerOptionStyle(thisProject.colors, dynamicProject === thisProject.id)
+              "
+            >
+              <input
+                v-model="dynamicProject"
+                type="radio"
+                :value="thisProject.id"
+                name="projectSelection"
+                class="shrink-0"
+                @change="mutationErrorMessage = ''"
+              />
+              <span class="min-w-0 text-base font-semibold">{{ thisProject.name }}</span>
+            </label>
+          </div>
 
-        <ContainerCard v-if="hideTags" class="py-3 shadow-none" padding="compact" variant="muted">
-          <span v-if="showLegacyTagNotice" class="text-sm text-text-muted">
-            Existing tags on this session are preserved, but tag editing is hidden in project-first
-            mode.
-          </span>
-          <span v-else class="text-sm text-text-muted">
-            Tags are hidden in project-first mode. New sessions will save without tags.
-          </span>
-        </ContainerCard>
-      </section>
+          <ContainerCard v-if="hideTags" class="py-3 shadow-none" padding="compact" variant="muted">
+            <span v-if="showLegacyTagNotice" class="text-sm text-text-muted">
+              Existing tags on this session are preserved, but tag editing is hidden in
+              project-first mode.
+            </span>
+            <span v-else class="text-sm text-text-muted">
+              Tags are hidden in project-first mode. New sessions will save without tags.
+            </span>
+          </ContainerCard>
+        </section>
 
-      <section v-if="!hideTags" class="flex flex-col gap-3 border-t border-border-subtle pt-5">
-        <div class="text-sm font-semibold text-text">Tags</div>
+        <section
+          v-if="!hideTags"
+          class="flex min-w-0 flex-col gap-3 border-t border-border-subtle pt-5 md:border-t-0 md:pt-0"
+        >
+          <div class="text-sm font-semibold text-text">Tags</div>
 
-        <div class="flex flex-wrap gap-2.5">
-          <label
-            v-for="thisTag in sortedAllTags"
-            :key="thisTag.id"
-            class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
-            :class="
-              dynamicTags.includes(thisTag.id)
-                ? 'border-link bg-link/10 text-link'
-                : 'border-border-subtle bg-surface-muted text-text hover:bg-surface'
-            "
-          >
-            <input
-              v-model="dynamicTags"
-              type="checkbox"
-              :value="thisTag.id"
-              class="shrink-0"
-              @change="mutationErrorMessage = ''"
-            />
-            <span>{{ thisTag.name }}</span>
-          </label>
-        </div>
-      </section>
+          <div class="flex flex-wrap gap-2.5 md:flex-col md:flex-nowrap md:gap-2">
+            <label
+              v-for="thisTag in sortedAllTags"
+              :key="thisTag.id"
+              class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition md:w-full md:justify-start"
+              :class="
+                dynamicTags.includes(thisTag.id)
+                  ? 'border-link bg-link/10 text-link'
+                  : 'border-border-subtle bg-surface-muted text-text hover:bg-surface'
+              "
+            >
+              <input
+                v-model="dynamicTags"
+                type="checkbox"
+                :value="thisTag.id"
+                class="shrink-0"
+                @change="mutationErrorMessage = ''"
+              />
+              <span>{{ thisTag.name }}</span>
+            </label>
+          </div>
+        </section>
+      </div>
 
       <p v-if="mutationErrorMessage" class="text-sm text-danger">
         {{ mutationErrorMessage }}
