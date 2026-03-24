@@ -123,7 +123,7 @@ export const getProjectWorkspaceModeToggleStyles = (
   },
 })
 
-/** Session editor project radios: full gradient when selected, soft gradient when not. */
+/** Session editor project radios: full gradient when selected; unselected uses muted tint + CSS vars for hover. */
 export const getProjectPickerOptionStyle = (
   colors: ProjectColors,
   selected: boolean,
@@ -138,10 +138,14 @@ export const getProjectPickerOptionStyle = (
   const endColor = getGradientEndColor(colors)
 
   return {
-    backgroundImage: `linear-gradient(135deg, ${toRgba(colors.primary, 0.2)}, ${toRgba(endColor, 0.2)})`,
-    borderColor: toRgba(colors.primary, 0.38),
+    '--project-picker-from': toRgba(colors.primary, 0.1),
+    '--project-picker-to': toRgba(endColor, 0.1),
+    '--project-picker-border': toRgba(colors.primary, 0.26),
+    '--project-picker-from-hover': toRgba(colors.primary, 0.24),
+    '--project-picker-to-hover': toRgba(endColor, 0.24),
+    '--project-picker-border-hover': toRgba(colors.primary, 0.44),
     color: 'var(--color-text)',
-  }
+  } as CSSProperties
 }
 
 export const getProjectSwatchStyle = (colors: ProjectColors): CSSProperties => {

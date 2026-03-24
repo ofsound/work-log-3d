@@ -315,24 +315,8 @@ onBeforeUnmount(() => {
       class="flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-3xl [@container(min-width:44rem)]:bg-panel-editor [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
       padding="compact"
     >
-      <div class="flex flex-col gap-1">
-        <div class="text-[11px] font-semibold tracking-[0.18em] text-text-subtle uppercase">
-          {{ isEditingExistingTimeBox ? 'Edit Session' : 'Session Details' }}
-        </div>
-        <p class="text-sm text-text-muted">
-          {{
-            isEditingExistingTimeBox
-              ? 'Adjust timing, notes, and project details for this session.'
-              : 'Capture the timing, notes, and project for this session.'
-          }}
-        </p>
-      </div>
-
-      <ContainerCard
-        as="section"
-        class="grid min-w-0 gap-4 bg-surface-muted/70 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
-        padding="compact"
-        variant="muted"
+      <section
+        class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
       >
         <label class="flex min-w-0 flex-col gap-2">
           <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
@@ -412,7 +396,7 @@ onBeforeUnmount(() => {
             />
           </label>
         </div>
-      </ContainerCard>
+      </section>
 
       <label class="flex min-w-0 flex-col gap-2">
         <span class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase">
@@ -420,18 +404,15 @@ onBeforeUnmount(() => {
         </span>
         <textarea
           v-model="dynamicNotes"
-          class="min-h-36 w-full max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
-          rows="6"
+          class="min-h-24 w-full max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
+          rows="4"
           placeholder="What happened during this session?"
           @input="mutationErrorMessage = ''"
         ></textarea>
       </label>
 
       <section class="flex flex-col gap-3 border-t border-border-subtle pt-5">
-        <div class="flex flex-col gap-1">
-          <div class="text-sm font-semibold text-text">Project</div>
-          <p class="text-xs text-text-muted">Pick the project this session should belong to.</p>
-        </div>
+        <div class="text-sm font-semibold text-text">Project</div>
 
         <div
           class="project-radio-group grid gap-2.5"
@@ -440,8 +421,12 @@ onBeforeUnmount(() => {
           <label
             v-for="thisProject in sortedPickerProjects"
             :key="thisProject.id"
-            class="flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-solid px-3 py-3 transition-[box-shadow,filter] duration-150 ease-out select-none hover:brightness-[1.02]"
-            :class="dynamicProject === thisProject.id ? 'shadow-panel-selected' : 'shadow-control'"
+            class="flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-solid px-3 py-3 transition-[border-color,box-shadow,filter] duration-150 ease-out select-none"
+            :class="[
+              dynamicProject === thisProject.id
+                ? 'shadow-panel-selected hover:brightness-[1.02]'
+                : 'project-radio-option-muted shadow-control',
+            ]"
             :style="
               getProjectPickerOptionStyle(thisProject.colors, dynamicProject === thisProject.id)
             "
@@ -470,12 +455,7 @@ onBeforeUnmount(() => {
       </section>
 
       <section v-if="!hideTags" class="flex flex-col gap-3 border-t border-border-subtle pt-5">
-        <div class="flex flex-col gap-1">
-          <div class="text-sm font-semibold text-text">Tags</div>
-          <p class="text-xs text-text-muted">
-            Add any tags that should stay attached to this session.
-          </p>
-        </div>
+        <div class="text-sm font-semibold text-text">Tags</div>
 
         <div class="flex flex-wrap gap-2.5">
           <label
@@ -535,3 +515,19 @@ onBeforeUnmount(() => {
     </ContainerCard>
   </div>
 </template>
+
+<style scoped>
+.project-radio-option-muted {
+  background-image: linear-gradient(135deg, var(--project-picker-from), var(--project-picker-to));
+  border-color: var(--project-picker-border);
+}
+
+.project-radio-option-muted:hover {
+  background-image: linear-gradient(
+    135deg,
+    var(--project-picker-from-hover),
+    var(--project-picker-to-hover)
+  );
+  border-color: var(--project-picker-border-hover);
+}
+</style>

@@ -86,9 +86,9 @@ describe('settings page', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('Personal workspace')
-    expect(wrapper.text()).toContain('Fonts and shell')
-    expect(wrapper.text()).toContain('Tray and alerts')
+    expect(wrapper.text()).toContain('User Settings')
+    expect(wrapper.text()).toContain('Google Fonts import')
+    expect(wrapper.text()).toContain('Desktop app')
     expect(wrapper.text()).toContain('Timer completion sound')
     expect(wrapper.text()).toContain('Project-first mode')
     expect(wrapper.text()).toContain('Work Log 0.0.0-test')
