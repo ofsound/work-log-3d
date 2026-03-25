@@ -131,10 +131,12 @@ function syncDynamicDurationFromTimes() {
   dynamicDuration.value = durationMinutes === 0 ? '' : durationMinutes
 }
 
-const applyCreateDefaults = () => {
+const applyCreateDefaults = (options?: { preserveNotes?: boolean }) => {
   dynamicStartTime.value = props.initialStartTime || props.startTimeFromTimer || ''
   dynamicEndTime.value = props.initialEndTime || props.endTimeFromTimer || ''
-  dynamicNotes.value = props.initialNotes
+  if (!options?.preserveNotes) {
+    dynamicNotes.value = props.initialNotes
+  }
   dynamicProject.value = props.initialProject
   dynamicTags.value = [...props.initialTags]
   syncDynamicDurationFromTimes()
@@ -260,16 +262,19 @@ watch(
 )
 
 watch(
-  () => [
-    props.initialStartTime,
-    props.initialEndTime,
-    props.initialNotes,
-    props.initialProject,
-    props.initialTags,
-  ],
+  () => [props.initialStartTime, props.initialEndTime, props.initialProject, props.initialTags],
   () => {
     if (!props.id) {
-      applyCreateDefaults()
+      applyCreateDefaults({ preserveNotes: true })
+    }
+  },
+)
+
+watch(
+  () => props.initialNotes,
+  (nextNotes) => {
+    if (!props.id) {
+      dynamicNotes.value = nextNotes
     }
   },
 )
