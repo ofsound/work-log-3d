@@ -1,5 +1,5 @@
-import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { join, relative } from 'node:path'
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { spawn } from 'node:child_process'
 
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
@@ -9,34 +9,6 @@ const generatedRendererDir = join(projectRoot, '.output', 'public')
 const electronRendererDir = join(projectRoot, 'dist-electron', 'renderer')
 const electronAppDir = join(projectRoot, 'dist-electron', 'app')
 const electronPackagedDistDir = join(electronAppDir, 'dist-electron')
-
-const rewriteRendererAssetPaths = async (directory) => {
-  const entries = await readdir(directory, { withFileTypes: true })
-
-  await Promise.all(
-    entries.map(async (entry) => {
-      const entryPath = join(directory, entry.name)
-
-      if (entry.isDirectory()) {
-        await rewriteRendererAssetPaths(entryPath)
-        return
-      }
-
-      if (!entry.isFile() || !entry.name.endsWith('.html')) {
-        return
-      }
-
-      const html = await readFile(entryPath, 'utf8')
-      const assetPrefix = `${relative(directory, electronRendererDir) || '.'}/assets/`
-      const normalizedAssetPrefix = assetPrefix.replaceAll('\\', '/')
-      const rewrittenHtml = html.replaceAll('/assets/', `${normalizedAssetPrefix}`)
-
-      if (rewrittenHtml !== html) {
-        await writeFile(entryPath, rewrittenHtml)
-      }
-    }),
-  )
-}
 
 const run = (command, args, env) =>
   new Promise((resolve, reject) => {
@@ -73,7 +45,6 @@ await cp(electronResourcesSrc, electronMainResourcesDir, { recursive: true })
 
 await rm(electronRendererDir, { force: true, recursive: true })
 await cp(generatedRendererDir, electronRendererDir, { recursive: true })
-await rewriteRendererAssetPaths(electronRendererDir)
 
 const rootPackageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
 const electronPackageJson = {

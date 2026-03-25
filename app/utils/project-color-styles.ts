@@ -91,7 +91,7 @@ export const getProjectSoftSurfaceStyle = (colors: ProjectColors): CSSProperties
 })
 
 export const getProjectOpaqueSoftSurfaceStyle = (colors: ProjectColors): CSSProperties => ({
-  backgroundColor: mixColors(colors.primary, '#f8fafc', 0.9),
+  backgroundColor: `color-mix(in srgb, ${colors.primary} 10%, var(--color-surface))`,
   borderColor: toRgba(colors.primary, 0.42),
 })
 

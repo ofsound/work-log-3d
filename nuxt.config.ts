@@ -23,7 +23,7 @@ export default defineNuxtConfig({
   ssr: isElectronBuild ? false : true,
   app: isElectronBuild
     ? {
-        baseURL: './',
+        baseURL: '/',
         buildAssetsDir: 'assets/',
       }
     : undefined,
