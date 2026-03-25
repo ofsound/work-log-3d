@@ -17,6 +17,15 @@ withDefaults(
       </div>
     </div>
 
+    <Transition name="workspace-overlay-veil-fade">
+      <div
+        v-if="$slots.aside && overlayAside"
+        class="pointer-events-auto absolute inset-0 z-20 bg-surface-muted/10 backdrop-blur-sm backdrop-saturate-150"
+        role="presentation"
+        aria-hidden="true"
+      />
+    </Transition>
+
     <div
       v-if="$slots.aside && overlayAside"
       class="pointer-events-none absolute inset-y-0 right-0 z-30 flex w-full justify-end p-4"
@@ -29,3 +38,15 @@ withDefaults(
     <slot v-else name="aside" />
   </div>
 </template>
+
+<style scoped>
+.workspace-overlay-veil-fade-enter-active,
+.workspace-overlay-veil-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.workspace-overlay-veil-fade-enter-from,
+.workspace-overlay-veil-fade-leave-to {
+  opacity: 0;
+}
+</style>

@@ -34,8 +34,7 @@ export const CONTAINER_CARD_VARIANT_CLASS_NAMES = {
   day: 'rounded-md border-border-subtle bg-panel-day shadow-panel',
   timer: 'rounded-md border-border-subtle bg-panel-timer shadow-panel',
   session: 'rounded-md border-border-subtle bg-panel-session shadow-panel',
-  overlay:
-    'overflow-hidden rounded-3xl border-white/20 bg-surface/42 shadow-panel backdrop-blur-xl backdrop-saturate-150',
+  overlay: 'overflow-hidden rounded-3xl border-border bg-surface shadow-panel',
   warning:
     'rounded-3xl border-callout-warning-border bg-callout-warning-surface shadow-control text-callout-warning-text',
   danger: 'rounded-3xl border-callout-danger-border bg-callout-danger-surface shadow-control',
