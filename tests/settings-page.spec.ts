@@ -28,15 +28,15 @@ const currentUser = ref({
 
 const savedSettings = ref(cloneUserSettings(DEFAULT_USER_SETTINGS))
 
-;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-  useCurrentUser: () => currentUser,
-  useFirebaseAuth: () => ({ id: 'auth' }),
-  useFirestoreCollections: () => ({
-    projectsCollection: ref({ id: 'projects' }),
-    tagsCollection: ref({ id: 'tags' }),
-  }),
-  useRouter: () => ({ push: routerPush }),
-}
+  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+    useCurrentUser: () => currentUser,
+    useFirebaseAuth: () => ({ id: 'auth' }),
+    useFirestoreCollections: () => ({
+      projectsCollection: ref({ id: 'projects' }),
+      tagsCollection: ref({ id: 'tags' }),
+    }),
+    useRouter: () => ({ push: routerPush }),
+  }
 
 vi.mock('firebase/auth', () => ({
   signOut,
@@ -103,8 +103,10 @@ describe('settings page', () => {
     expect(wrapper.text()).toContain('User Settings')
     expect(wrapper.text()).toContain('Google Fonts import')
     expect(wrapper.text()).toContain('Desktop app')
-    expect(wrapper.text()).toContain('Timer completion sound')
-    expect(wrapper.text()).toContain('Project-first mode')
+    expect(wrapper.text()).toContain(
+      'Open the desktop app on this device to import a local sound file or manage tray shortcuts.',
+    )
+    expect(wrapper.text()).toContain('Project-only mode')
     expect(wrapper.text()).toContain('Work Log 0.0.0-test')
   })
 })

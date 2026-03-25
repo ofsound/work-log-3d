@@ -214,7 +214,7 @@ New projects are created from `/project/new`, where the initial notes and curate
 }
 ```
 
-`tags` may be empty when a user enables the project-first workflow mode and hides tag UI.
+`tags` may be empty when a user enables the project-only workflow mode and hides tag UI.
 
 `users/{uid}/reports/{reportId}`
 
@@ -295,7 +295,7 @@ Server-managed published report snapshots for anonymous client access. The top-l
 - `/reports` lets authenticated users save named report drafts with a date range, timezone, project filters, tag filters, and a plain-text summary
 - Project filtering is union-based because each session stores one project; tag filtering supports `any` or `all`
 - When both project and tag filters are selected, the report can combine them with `intersection` or `union`
-- When project-first mode hides tags, existing tag-based report data is preserved but tag editing controls are removed from the authenticated workspace
+- When project-only mode hides tags, existing tag-based report data is preserved but tag editing controls are removed from the authenticated workspace
 - Reports clamp session totals to the selected date range in the chosen timezone, so overnight sessions are split accurately across days
 - Publishing creates or refreshes a frozen public snapshot at `/r/:token`; unpublishing removes the public snapshot without deleting the private draft
 - Public reports include the summary, total hours, project/tag breakdowns, daily and weekly rollups, and individual session notes

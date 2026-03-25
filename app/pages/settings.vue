@@ -408,9 +408,6 @@ onBeforeUnmount(() => {
       <ContainerCard as="section">
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div class="flex flex-col gap-4">
-            <AppButton block variant="secondary" @click="handleResetFontsToDefaults">
-              Reset fonts to defaults
-            </AppButton>
             <AppField label="Google Fonts import">
               <AppTextInput
                 v-model="draft.appearance.fontImportUrl"
@@ -444,6 +441,10 @@ onBeforeUnmount(() => {
                 />
               </AppField>
             </div>
+
+            <AppButton class="self-start" variant="secondary" @click="handleResetFontsToDefaults">
+              Reset fonts to defaults
+            </AppButton>
           </div>
 
           <ContainerCard padding="compact" variant="muted">
@@ -499,7 +500,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="mt-6">
-          <AppFieldLabel as="div">Project-first mode</AppFieldLabel>
+          <AppFieldLabel as="div">Project-only mode</AppFieldLabel>
           <div class="mt-3">
             <label class="block">
               <ContainerCard class="flex items-start gap-4" padding="compact" variant="muted">
@@ -526,8 +527,7 @@ onBeforeUnmount(() => {
           padding="compact"
           variant="muted"
         >
-          Timer completion sounds and tray shortcuts are available in the Electron app. Open the
-          desktop app on this device to import a local sound file or manage tray shortcuts.
+          Open the desktop app to import a local sound file or manage tray shortcuts.
         </ContainerCard>
 
         <div v-else class="mt-5 flex flex-col gap-6">

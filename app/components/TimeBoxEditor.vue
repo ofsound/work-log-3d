@@ -609,11 +609,11 @@ onBeforeUnmount(() => {
 
           <ContainerCard v-if="hideTags" class="py-3 shadow-none" padding="compact" variant="muted">
             <span v-if="showLegacyTagNotice" class="text-sm text-text-muted">
-              Existing tags on this session are preserved, but tag editing is hidden in
-              project-first mode.
+              Existing tags on this session are preserved, but tag editing is hidden in project-only
+              mode.
             </span>
             <span v-else class="text-sm text-text-muted">
-              Tags are hidden in project-first mode. New sessions will save without tags.
+              Tags are hidden in project-only mode. New sessions will save without tags.
             </span>
           </ContainerCard>
         </section>

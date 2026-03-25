@@ -25,7 +25,7 @@ const tagId = computed(() => legacyTags.value[0]?.id ?? requestedTagId.value)
 <template>
   <ContainerCard v-if="hideTags" class="mx-auto mt-8 max-w-3xl" padding="comfortable">
     <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Tags hidden</div>
-    <div class="mt-2 text-2xl font-bold text-text">Project-first mode is active</div>
+    <div class="mt-2 text-2xl font-bold text-text">Project-only mode is active</div>
     <p class="mt-3 text-sm leading-6 text-text-muted">
       Existing tag data is still stored, but tag detail pages are hidden while tags are disabled in
       your workflow settings.

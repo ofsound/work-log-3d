@@ -518,7 +518,7 @@ const copyShareLink = async () => {
                 variant="muted"
               >
                 This report still includes legacy tag filters. They remain active for existing data,
-                but tag editing is hidden while project-first mode is on.
+                but tag editing is hidden while project-only mode is on.
               </ContainerCard>
             </div>
           </div>
