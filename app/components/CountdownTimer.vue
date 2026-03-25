@@ -1,11 +1,58 @@
 <script setup lang="ts">
-import { formatSecondsToMinutesSeconds } from '~~/shared/worklog'
+import { toUserSettings, type FirebaseUserSettingsDocument } from '~/utils/worklog-firebase'
+import {
+  cloneUserSettings,
+  DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
+  formatSecondsToMinutesSeconds,
+  normalizeCountdownDefaultMinutes,
+} from '~~/shared/worklog'
 
 const { isReady, snapshot, addCountdownMinutes, cancel, pause, resume, startCountdown } =
   useTimerService()
-const dynamicMinutes = ref('30')
+const { rawSettings, savedSettings, saveSettings } = useUserSettings()
+
+const dynamicMinutes = ref(String(DEFAULT_COUNTDOWN_DEFAULT_MINUTES))
 const route = useRoute()
 const hasStartedPomodoro = ref(false)
+
+let persistDebounce: number | null = null
+
+const clearPersistDebounce = () => {
+  if (persistDebounce !== null) {
+    window.clearTimeout(persistDebounce)
+    persistDebounce = null
+  }
+}
+
+const persistCountdownDefaultMinutes = async (minutes: number) => {
+  const normalized = normalizeCountdownDefaultMinutes(minutes)
+
+  if (normalized === savedSettings.value.workflow.countdownDefaultMinutes) {
+    return
+  }
+
+  const next = cloneUserSettings(savedSettings.value)
+  next.workflow.countdownDefaultMinutes = normalized
+  await saveSettings(next)
+}
+
+const schedulePersistFromDynamicInput = () => {
+  clearPersistDebounce()
+  persistDebounce = window.setTimeout(() => {
+    persistDebounce = null
+    const n = Number(dynamicMinutes.value || '0')
+
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+      return
+    }
+
+    void persistCountdownDefaultMinutes(n)
+  }, 450)
+}
+
+onBeforeUnmount(() => {
+  clearPersistDebounce()
+})
 
 const minuteDragBaselineIdleMinutes = ref(0)
 const minuteDragBaselineRemainingSeconds = ref(0)
@@ -52,12 +99,53 @@ const {
       void addCountdownMinutes(deltaMinutes)
     }
 
+    if (didDragBeyondThreshold && !minuteDragIsActiveTimer.value) {
+      const n = Number(dynamicMinutes.value || '0')
+
+      if (Number.isFinite(n) && Number.isInteger(n) && n > 0) {
+        void persistCountdownDefaultMinutes(n)
+      }
+    }
+
     minuteDragPreviewRemainingSeconds.value = null
   },
 })
 
 const startTimer = () => {
-  void startCountdown(Number(dynamicMinutes.value || '0'))
+  const n = Number(dynamicMinutes.value || '0')
+
+  if (!Number.isFinite(n) || n <= 0) {
+    return
+  }
+
+  const minutes = Math.floor(n)
+
+  void persistCountdownDefaultMinutes(minutes)
+  void startCountdown(minutes)
+}
+
+const handleCancel = async () => {
+  await cancel()
+  dynamicMinutes.value = String(savedSettings.value.workflow.countdownDefaultMinutes)
+}
+
+const onMinutesBlur = () => {
+  // useMinuteVerticalDrag blurs #dynamicMinutes when crossing the drag threshold, before onDrag
+  // runs — ignore that synthetic blur so we don't reset/persist from stale minutes.
+  if (minutePointerSession.value) {
+    return
+  }
+
+  clearPersistDebounce()
+  const n = Number(dynamicMinutes.value || '0')
+
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+    dynamicMinutes.value = String(savedSettings.value.workflow.countdownDefaultMinutes)
+
+    return
+  }
+
+  void persistCountdownDefaultMinutes(n)
 }
 
 const countdownMinutesDisplay = computed(() => {
@@ -92,11 +180,47 @@ watch(
     }
 
     if (nextSnapshot.mode === 'countdown') {
-      dynamicMinutes.value = nextSnapshot.display.split(':')[0] ?? dynamicMinutes.value
+      if (nextSnapshot.status === 'completed') {
+        dynamicMinutes.value = String(savedSettings.value.workflow.countdownDefaultMinutes)
+      } else {
+        dynamicMinutes.value = nextSnapshot.display.split(':')[0] ?? dynamicMinutes.value
+      }
     }
   },
   { deep: true },
 )
+
+watch(
+  rawSettings,
+  (doc) => {
+    if (timerIsRunning.value || timerIsPaused.value) {
+      return
+    }
+
+    if (minutePointerSession.value || minuteDragActive.value) {
+      return
+    }
+
+    // While `rawSettings` is missing (loading or a transient gap around `setDoc`), `savedSettings`
+    // falls back to defaults (30) — do not sync that into the field or it wipes local edits.
+    if (!doc) {
+      return
+    }
+
+    dynamicMinutes.value = String(
+      toUserSettings(doc as FirebaseUserSettingsDocument).workflow.countdownDefaultMinutes,
+    )
+  },
+  { deep: true, immediate: true },
+)
+
+watch(dynamicMinutes, () => {
+  if (timerIsRunning.value || timerIsPaused.value || minutePointerSession.value) {
+    return
+  }
+
+  schedulePersistFromDynamicInput()
+})
 
 watch(
   [isReady, () => route.path, () => snapshot.value.mode],
@@ -121,7 +245,7 @@ watch(
     <div
       class="relative flex h-14 shrink-0 items-center rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 font-data text-5xl leading-none font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
     >
-      <TimerCancelButton @click="cancel" />
+      <TimerCancelButton @click="handleCancel" />
       <div
         class="flex touch-none flex-nowrap items-center self-stretch"
         :class="minuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'"
@@ -136,6 +260,7 @@ watch(
             class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none select-text"
             @keyup.enter="($event.target as HTMLElement).blur()"
             @keyup.esc="($event.target as HTMLElement).blur()"
+            @blur="onMinutesBlur"
           />
           <div v-else class="w-14 text-right leading-none">
             {{ countdownMinutesDisplay }}

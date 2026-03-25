@@ -27,6 +27,9 @@ describe('user settings', () => {
     )
     expect(settings.appearance.fontFamilies.ui).toBe("'IBM Plex Sans', sans-serif")
     expect(settings.workflow.hideTags).toBe(true)
+    expect(settings.workflow.countdownDefaultMinutes).toBe(
+      DEFAULT_USER_SETTINGS.workflow.countdownDefaultMinutes,
+    )
     expect(settings.desktop.trayShortcuts).toEqual([])
   })
 
@@ -51,6 +54,7 @@ describe('user settings', () => {
       },
       workflow: {
         hideTags: false,
+        countdownDefaultMinutes: DEFAULT_USER_SETTINGS.workflow.countdownDefaultMinutes,
       },
       desktop: {
         trayShortcuts: [],

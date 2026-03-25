@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_USER_SETTINGS } from '~~/shared/worklog'
+
 const addDoc = vi.fn()
 const deleteDoc = vi.fn()
 const doc = vi.fn((_collection, id: string) => ({ id }))
@@ -154,6 +156,7 @@ describe('firestore worklog repositories', () => {
       },
       workflow: {
         hideTags: false,
+        countdownDefaultMinutes: DEFAULT_USER_SETTINGS.workflow.countdownDefaultMinutes,
       },
       desktop: {
         trayShortcuts: [],

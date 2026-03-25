@@ -109,6 +109,7 @@ export interface FirebaseUserSettingsDocument {
   }
   workflow?: {
     hideTags?: boolean
+    countdownDefaultMinutes?: number
   }
   desktop?: {
     trayShortcuts?: Array<{
@@ -219,6 +220,7 @@ export const toUserSettingsPayload = (input: UserSettings) => {
     },
     workflow: {
       hideTags: normalized.workflow.hideTags,
+      countdownDefaultMinutes: normalized.workflow.countdownDefaultMinutes,
     },
     desktop: {
       trayShortcuts: normalized.desktop.trayShortcuts.map((shortcut) => ({

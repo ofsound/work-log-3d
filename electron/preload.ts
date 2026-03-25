@@ -24,6 +24,9 @@ const api: DesktopApi = {
   async setTrayShortcuts(shortcuts) {
     await ipcRenderer.invoke('desktop:setTrayShortcuts', shortcuts)
   },
+  async setCountdownDefaultMinutes(minutes) {
+    await ipcRenderer.invoke('desktop:setCountdownDefaultMinutes', minutes)
+  },
   subscribeToTimer(listener) {
     const handler = (_event: IpcRendererEvent, payload: DesktopTimerEvent) => {
       listener(payload)

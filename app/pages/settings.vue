@@ -565,61 +565,87 @@ onBeforeUnmount(() => {
               padding="compact"
               variant="muted"
             >
-              <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div class="grid flex-1 gap-4 lg:grid-cols-2">
-                  <AppField label="Label">
-                    <AppTextInput v-model="shortcut.label" placeholder="Deep work" />
-                  </AppField>
+              <div class="grid min-w-0 gap-4 lg:grid-cols-2">
+                <AppField label="Label">
+                  <AppTextInput v-model="shortcut.label" placeholder="Deep work" />
+                </AppField>
 
-                  <fieldset class="flex min-w-0 flex-col gap-2">
-                    <AppFieldLabel as="legend">Timer</AppFieldLabel>
-                    <div class="flex flex-wrap gap-2">
-                      <AppToggleChip :selected="shortcut.timerMode === 'countup'">
-                        <input
-                          :checked="shortcut.timerMode === 'countup'"
-                          :name="`trayShortcutMode-${shortcut.id}`"
-                          type="radio"
-                          @change="setTrayShortcutTimerMode(shortcut, 'countup')"
-                        />
-                        <span>Count up</span>
-                      </AppToggleChip>
-                      <AppToggleChip :selected="shortcut.timerMode === 'countdown'">
-                        <input
-                          :checked="shortcut.timerMode === 'countdown'"
-                          :name="`trayShortcutMode-${shortcut.id}`"
-                          type="radio"
-                          @change="setTrayShortcutTimerMode(shortcut, 'countdown')"
-                        />
-                        <span>Countdown</span>
+                <AppField label="Timer">
+                  <div class="flex flex-wrap gap-2">
+                    <AppToggleChip :selected="shortcut.timerMode === 'countup'">
+                      <input
+                        :checked="shortcut.timerMode === 'countup'"
+                        :name="`trayShortcutMode-${shortcut.id}`"
+                        type="radio"
+                        @change="setTrayShortcutTimerMode(shortcut, 'countup')"
+                      />
+                      <span>Count up</span>
+                    </AppToggleChip>
+                    <AppToggleChip :selected="shortcut.timerMode === 'countdown'">
+                      <input
+                        :checked="shortcut.timerMode === 'countdown'"
+                        :name="`trayShortcutMode-${shortcut.id}`"
+                        type="radio"
+                        @change="setTrayShortcutTimerMode(shortcut, 'countdown')"
+                      />
+                      <span>Countdown</span>
+                    </AppToggleChip>
+                  </div>
+                </AppField>
+
+                <AppField v-if="shortcut.timerMode === 'countdown'" label="Countdown minutes">
+                  <AppTextInput
+                    :value="shortcut.durationMinutes ?? ''"
+                    min="1"
+                    step="1"
+                    type="number"
+                    placeholder="30"
+                    @input="handleTrayShortcutDurationInput(shortcut, $event)"
+                  />
+                </AppField>
+
+                <AppField label="Project">
+                  <AppSelect v-model="shortcut.project">
+                    <option value="">No project preselected</option>
+                    <option
+                      v-for="project in trayShortcutProjectOptions"
+                      :key="project.id"
+                      :value="project.id"
+                    >
+                      {{ project.name }}
+                    </option>
+                  </AppSelect>
+                </AppField>
+
+                <div class="min-w-0 lg:col-span-2">
+                  <AppField as="div" label="Tags">
+                    <template #description>
+                      <p class="text-xs text-text-muted">
+                        Tags apply when this shortcut opens the new session form.
+                      </p>
+                    </template>
+                    <div v-if="sortedTags.length" class="flex flex-wrap gap-2">
+                      <AppToggleChip
+                        v-for="tag in sortedTags"
+                        :key="tag.id"
+                        :selected="shortcut.tags.includes(tag.id)"
+                      >
+                        <input v-model="shortcut.tags" type="checkbox" :value="tag.id" />
+                        <span>{{ tag.name }}</span>
                       </AppToggleChip>
                     </div>
-                  </fieldset>
 
-                  <AppField v-if="shortcut.timerMode === 'countdown'" label="Countdown minutes">
-                    <AppTextInput
-                      :value="shortcut.durationMinutes ?? ''"
-                      min="1"
-                      step="1"
-                      type="number"
-                      placeholder="30"
-                      @input="handleTrayShortcutDurationInput(shortcut, $event)"
-                    />
-                  </AppField>
-
-                  <AppField label="Project">
-                    <AppSelect v-model="shortcut.project">
-                      <option value="">No project preselected</option>
-                      <option
-                        v-for="project in trayShortcutProjectOptions"
-                        :key="project.id"
-                        :value="project.id"
-                      >
-                        {{ project.name }}
-                      </option>
-                    </AppSelect>
+                    <p v-else class="text-sm text-text-muted">
+                      No tags available yet. Create tags first if you want to prefill them from tray
+                      shortcuts.
+                    </p>
                   </AppField>
                 </div>
+              </div>
 
+              <div
+                class="flex flex-wrap items-center justify-between gap-x-2 gap-y-2 border-t border-border-subtle pt-4"
+              >
                 <div class="flex flex-wrap gap-2">
                   <AppButton
                     variant="secondary"
@@ -635,35 +661,10 @@ onBeforeUnmount(() => {
                   >
                     Move down
                   </AppButton>
-                  <AppButton variant="danger" @click="removeTrayShortcut(shortcut.id)">
-                    Remove
-                  </AppButton>
                 </div>
-              </div>
-
-              <div class="min-w-0 border-t border-border-subtle pt-4">
-                <AppField as="div" label="Tags">
-                  <template #description>
-                    <p class="text-xs text-text-muted">
-                      Tags apply when this shortcut opens the new session form.
-                    </p>
-                  </template>
-                  <div v-if="sortedTags.length" class="flex flex-wrap gap-2">
-                    <AppToggleChip
-                      v-for="tag in sortedTags"
-                      :key="tag.id"
-                      :selected="shortcut.tags.includes(tag.id)"
-                    >
-                      <input v-model="shortcut.tags" type="checkbox" :value="tag.id" />
-                      <span>{{ tag.name }}</span>
-                    </AppToggleChip>
-                  </div>
-
-                  <p v-else class="text-sm text-text-muted">
-                    No tags available yet. Create tags first if you want to prefill them from tray
-                    shortcuts.
-                  </p>
-                </AppField>
+                <AppButton variant="danger" @click="removeTrayShortcut(shortcut.id)">
+                  Remove
+                </AppButton>
               </div>
             </ContainerCard>
 

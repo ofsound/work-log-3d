@@ -1,4 +1,4 @@
-import type { UserSettingsTrayShortcut } from './settings'
+import { DEFAULT_COUNTDOWN_DEFAULT_MINUTES, type UserSettingsTrayShortcut } from './settings'
 import type { TimerSnapshot, TimerState } from './timer'
 
 export interface DesktopTimerEvent {
@@ -99,6 +99,7 @@ export interface DesktopApi {
   chooseAlertSound(): Promise<DesktopAlertSoundState>
   clearAlertSound(): Promise<DesktopAlertSoundState>
   testAlertSound(): Promise<void>
+  setCountdownDefaultMinutes(minutes: number): Promise<void>
 }
 
 declare global {
@@ -178,6 +179,9 @@ const createTrayShortcutItems = (
     createActionItem(createDesktopTrayShortcutActionId(shortcut.id), shortcut.label),
   )
 
+export const formatPomodoroTrayLabel = (countdownDefaultMinutes: number) =>
+  `Pomodoro (${countdownDefaultMinutes}m)`
+
 const getTrayShortcutStructuralKey = (shortcuts: readonly UserSettingsTrayShortcut[]) =>
   shortcuts
     .map((shortcut) =>
@@ -200,14 +204,20 @@ const getTrayShortcutStructuralKey = (shortcuts: readonly UserSettingsTrayShortc
 export const getDesktopTrayStructuralKey = (
   snapshot: TimerSnapshot,
   shortcuts: readonly UserSettingsTrayShortcut[] = [],
+  countdownDefaultMinutes: number = DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
 ): string => {
   if (snapshot.status === 'running' || snapshot.status === 'paused') {
     return `${snapshot.status}:${snapshot.mode ?? 'timer'}`
   }
 
+  const focusSegment = `focus:${countdownDefaultMinutes}`
   const shortcutKey = getTrayShortcutStructuralKey(shortcuts)
 
-  return shortcutKey ? `${snapshot.status}:${shortcutKey}` : snapshot.status
+  if (!shortcutKey) {
+    return `${snapshot.status}:${focusSegment}`
+  }
+
+  return `${snapshot.status}:${focusSegment}:${shortcutKey}`
 }
 
 export const formatDesktopTrayBadgeText = (display: string) => {
@@ -224,8 +234,10 @@ export const getDesktopTrayState = (
   snapshot: TimerSnapshot,
   platform: NodeJS.Platform = process.platform,
   shortcuts: readonly UserSettingsTrayShortcut[] = [],
+  countdownDefaultMinutes: number = DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
 ): DesktopTrayState => {
   const trayShortcutItems = createTrayShortcutItems(shortcuts)
+  const pomodoroLabel = formatPomodoroTrayLabel(countdownDefaultMinutes)
 
   if (snapshot.status === 'idle') {
     const statusLabel = 'Timer idle'
@@ -241,7 +253,7 @@ export const getDesktopTrayState = (
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
-        createActionItem('start_focus', 'Pomodoro (30m)'),
+        createActionItem('start_focus', pomodoroLabel),
         createActionItem('start_countup', 'Start Timer'),
         ...trayShortcutItems,
         separatorItem,
@@ -319,7 +331,7 @@ export const getDesktopTrayState = (
     menuItems: [
       createStatusItem(statusLabel),
       separatorItem,
-      createActionItem('start_focus', 'Pomodoro (30m)'),
+      createActionItem('start_focus', pomodoroLabel),
       createActionItem('start_countup', 'Start Timer'),
       ...trayShortcutItems,
       separatorItem,

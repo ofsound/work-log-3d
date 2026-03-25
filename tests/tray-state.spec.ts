@@ -2,6 +2,7 @@ import {
   createDesktopTrayShortcutActionId,
   createIdleTimerState,
   formatDesktopTrayBadgeText,
+  formatPomodoroTrayLabel,
   getDesktopTrayStructuralKey,
   getDesktopTrayState,
   getTimerSnapshot,
@@ -35,6 +36,7 @@ describe('desktop tray state', () => {
   it('derives the idle tray menu with timer start actions', () => {
     const trayState = getDesktopTrayState(getTimerSnapshot(createIdleTimerState(), 0), 'darwin')
 
+    expect(formatPomodoroTrayLabel(30)).toBe('Pomodoro (30m)')
     expect(trayState.mode).toBe('idle')
     expect(trayState.title).toBe('')
     expect(trayState.visualMode).toBe('icon')
@@ -90,7 +92,8 @@ describe('desktop tray state', () => {
     expect(getDesktopTrayStructuralKey(runningA)).toBe('running:countup')
     expect(getDesktopTrayStructuralKey(runningB)).toBe('running:countup')
     expect(getDesktopTrayStructuralKey(runningCountdown)).toBe('running:countdown')
-    expect(getDesktopTrayStructuralKey(idleSnapshot)).toBe('idle')
+    expect(getDesktopTrayStructuralKey(idleSnapshot)).toBe('idle:focus:30')
+    expect(getDesktopTrayStructuralKey(idleSnapshot, [], 40)).toBe('idle:focus:40')
     expect(getDesktopTrayStructuralKey(idleSnapshot, customShortcuts)).not.toBe('idle')
     expect(
       getDesktopTrayStructuralKey(idleSnapshot, [

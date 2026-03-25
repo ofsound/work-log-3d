@@ -18,8 +18,15 @@ export interface UserSettingsAppearance {
   backgroundPreset: UserSettingsBackgroundPreset
 }
 
+/** Upper bound for `countdownDefaultMinutes` (24 hours). */
+export const USER_SETTINGS_COUNTDOWN_DEFAULT_MAX_MINUTES = 24 * 60
+
+export const DEFAULT_COUNTDOWN_DEFAULT_MINUTES = 30
+
 export interface UserSettingsWorkflow {
   hideTags: boolean
+  /** Last chosen idle countdown duration for the new time box timer (minutes). */
+  countdownDefaultMinutes: number
 }
 
 export interface UserSettingsTrayShortcut {
@@ -58,6 +65,7 @@ export interface PartialUserSettings {
   }
   workflow?: {
     hideTags?: boolean
+    countdownDefaultMinutes?: number
   }
   desktop?: {
     trayShortcuts?: PartialUserSettingsTrayShortcut[]
@@ -76,6 +84,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   },
   workflow: {
     hideTags: false,
+    countdownDefaultMinutes: DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
   },
   desktop: {
     trayShortcuts: [],
@@ -116,6 +125,7 @@ export const cloneUserSettings = (settings: UserSettings): UserSettings => ({
   },
   workflow: {
     hideTags: settings.workflow.hideTags,
+    countdownDefaultMinutes: settings.workflow.countdownDefaultMinutes,
   },
   desktop: {
     trayShortcuts: settings.desktop.trayShortcuts.map((shortcut) => ({
@@ -236,6 +246,20 @@ export const validateUserSettingsTrayShortcuts = (
 ): UserSettingsTrayShortcut[] =>
   shortcuts.map((shortcut, index) => normalizeUserSettingsTrayShortcut(shortcut, index))
 
+export const normalizeCountdownDefaultMinutes = (value: unknown): number => {
+  if (value === undefined || value === null) {
+    return DEFAULT_COUNTDOWN_DEFAULT_MINUTES
+  }
+
+  const raw = typeof value === 'number' ? value : Number(value)
+
+  if (!Number.isFinite(raw) || !Number.isInteger(raw) || raw <= 0) {
+    return DEFAULT_COUNTDOWN_DEFAULT_MINUTES
+  }
+
+  return Math.min(Math.max(1, raw), USER_SETTINGS_COUNTDOWN_DEFAULT_MAX_MINUTES)
+}
+
 export const resolveUserSettingsTrayShortcuts = (
   shortcuts: readonly PartialUserSettingsTrayShortcut[] | null | undefined,
 ): UserSettingsTrayShortcut[] => {
@@ -272,6 +296,9 @@ export const validateUserSettings = (input: UserSettings): UserSettings => ({
   },
   workflow: {
     hideTags: Boolean(input.workflow?.hideTags ?? DEFAULT_USER_SETTINGS.workflow.hideTags),
+    countdownDefaultMinutes: normalizeCountdownDefaultMinutes(
+      input.workflow?.countdownDefaultMinutes,
+    ),
   },
   desktop: {
     trayShortcuts: validateUserSettingsTrayShortcuts(
@@ -308,6 +335,9 @@ export const resolveUserSettings = (
       },
       workflow: {
         hideTags: input.workflow?.hideTags ?? DEFAULT_USER_SETTINGS.workflow.hideTags,
+        countdownDefaultMinutes: normalizeCountdownDefaultMinutes(
+          input.workflow?.countdownDefaultMinutes,
+        ),
       },
       desktop: {
         trayShortcuts: resolveUserSettingsTrayShortcuts(input.desktop?.trayShortcuts),

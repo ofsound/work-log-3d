@@ -62,8 +62,14 @@ const scrollAdderToTopAfterSave = () => {
 <template>
   <div ref="adderRootRef" class="flex flex-col gap-6">
     <div class="grid gap-4 lg:grid-cols-2">
-      <CountdownTimer :class="{ 'blur-[2px] grayscale-100': countUpIsActive }" />
-      <CountupTimer :class="{ 'blur-[2px] grayscale-100': countDownIsActive }" />
+      <CountdownTimer
+        :class="{ 'pointer-events-none blur-[2px] grayscale-100': countUpIsActive }"
+        :inert="countUpIsActive"
+      />
+      <CountupTimer
+        :class="{ 'pointer-events-none blur-[2px] grayscale-100': countDownIsActive }"
+        :inert="countDownIsActive"
+      />
     </div>
 
     <TimeBoxEditor

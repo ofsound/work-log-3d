@@ -5,6 +5,7 @@ import { Notification, app, BrowserWindow, dialog, ipcMain, session } from 'elec
 
 import type { DesktopTimerEvent, TimerState, UserSettingsTrayShortcut } from '~/shared/worklog'
 import {
+  DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
   addCountdownSeconds,
   cancelTimer,
   createIdleTimerState,
@@ -12,6 +13,7 @@ import {
   getDesktopTimerNotification,
   getTimerSnapshot,
   isDesktopTrayShortcutActionId,
+  normalizeCountdownDefaultMinutes,
   pauseTimer,
   resumeTimer,
   resolveUserSettingsTrayShortcuts,
@@ -45,12 +47,15 @@ let trayController: TrayController | null = null
 let desktopTrayShortcuts: UserSettingsTrayShortcut[] = []
 let pendingRouteRequest: string | null = null
 let desktopRendererServer: Awaited<ReturnType<typeof createDesktopRendererServer>> | null = null
+let countdownDefaultMinutes = DEFAULT_COUNTDOWN_DEFAULT_MINUTES
 
 /** Retain until `close` so macOS notification delivery is reliable (avoid premature GC). */
 const activeTimerNotifications: Notification[] = []
 
 const getTimerStatePath = () => join(app.getPath('userData'), 'timer-state.json')
 const getTrayShortcutsPath = () => join(app.getPath('userData'), 'tray-shortcuts.json')
+const getCountdownDefaultPath = () =>
+  join(app.getPath('userData'), 'countdown-default-minutes.json')
 const desktopRendererUrl = process.env.NUXT_DEV_SERVER_URL ?? process.env.ELECTRON_RENDERER_URL
 
 const persistTimerState = async () => {
@@ -85,8 +90,35 @@ const loadTrayShortcuts = async () => {
   }
 }
 
+const loadCountdownDefaultMinutes = async () => {
+  try {
+    const raw = JSON.parse(await readFile(getCountdownDefaultPath(), 'utf8')) as {
+      minutes?: unknown
+    }
+    countdownDefaultMinutes = normalizeCountdownDefaultMinutes(raw.minutes)
+  } catch {
+    countdownDefaultMinutes = DEFAULT_COUNTDOWN_DEFAULT_MINUTES
+  }
+}
+
+const persistCountdownDefaultMinutes = async () => {
+  const countdownDefaultPath = getCountdownDefaultPath()
+  await mkdir(dirname(countdownDefaultPath), { recursive: true })
+  await writeFile(countdownDefaultPath, JSON.stringify({ minutes: countdownDefaultMinutes }))
+}
+
+const setCountdownDefaultMinutesState = async (nextMinutes: number) => {
+  countdownDefaultMinutes = normalizeCountdownDefaultMinutes(nextMinutes)
+  await persistCountdownDefaultMinutes()
+  syncTrayController()
+}
+
 const syncTrayController = () => {
-  trayController?.sync(getTimerSnapshot(timerState, Date.now()), desktopTrayShortcuts)
+  trayController?.sync(
+    getTimerSnapshot(timerState, Date.now()),
+    desktopTrayShortcuts,
+    countdownDefaultMinutes,
+  )
 }
 
 const setTrayShortcuts = async (nextShortcuts: readonly UserSettingsTrayShortcut[]) => {
@@ -105,7 +137,7 @@ const emitTimerEvent = (previousStatus: TimerState['status']) => {
     previousStatus,
   }
 
-  trayController?.sync(snapshot, desktopTrayShortcuts)
+  syncTrayController()
   BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('timer:state', event)
   })
@@ -325,6 +357,9 @@ const registerIpc = () => {
       await setTrayShortcuts(shortcuts)
     },
   )
+  ipcMain.handle('desktop:setCountdownDefaultMinutes', async (_event, minutes: number) => {
+    await setCountdownDefaultMinutesState(minutes)
+  })
   ipcMain.handle('timer:startCountup', () => {
     setTimerState(startCountupTimer(Date.now()))
   })
@@ -377,6 +412,7 @@ app.whenReady().then(async () => {
   registerMediaPermissionHandler()
   await loadTimerState()
   await loadTrayShortcuts()
+  await loadCountdownDefaultMinutes()
 
   if (!desktopRendererUrl) {
     desktopRendererServer = await createDesktopRendererServer(join(__dirname, '../renderer'), {
@@ -403,7 +439,7 @@ app.whenReady().then(async () => {
           openMainWindow(buildNewTimeBoxPath())
           break
         case 'start_focus':
-          setTimerState(startCountdownTimer(30 * 60, Date.now()))
+          setTimerState(startCountdownTimer(countdownDefaultMinutes * 60, Date.now()))
           openMainWindow(buildNewTimeBoxPath())
           break
         case 'pause':

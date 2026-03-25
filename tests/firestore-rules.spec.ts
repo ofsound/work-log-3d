@@ -169,6 +169,7 @@ describe('firestore rules', () => {
         },
         workflow: {
           hideTags: true,
+          countdownDefaultMinutes: 30,
         },
         desktop: {
           trayShortcuts: [],
@@ -251,6 +252,7 @@ describe('firestore rules', () => {
         },
         workflow: {
           hideTags: true,
+          countdownDefaultMinutes: 30,
         },
         desktop: {
           trayShortcuts: [],

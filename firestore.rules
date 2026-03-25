@@ -179,8 +179,11 @@ service cloud.firestore {
           || request.resource.data.appearance.backgroundPreset == 'crosshatch'
           || request.resource.data.appearance.backgroundPreset == 'aurora'
         )
-        && hasExactMapKeys(request.resource.data.workflow, ['hideTags'])
+        && hasExactMapKeys(request.resource.data.workflow, ['hideTags', 'countdownDefaultMinutes'])
         && request.resource.data.workflow.hideTags is bool
+        && request.resource.data.workflow.countdownDefaultMinutes is int
+        && request.resource.data.workflow.countdownDefaultMinutes > 0
+        && request.resource.data.workflow.countdownDefaultMinutes <= 1440
         && hasExactMapKeys(request.resource.data.desktop, ['trayShortcuts'])
         && isUserSettingsTrayShortcutsList(request.resource.data.desktop.trayShortcuts);
     }
