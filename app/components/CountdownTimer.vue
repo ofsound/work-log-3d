@@ -122,12 +122,12 @@ watch(
       class="relative flex h-14 shrink-0 items-center rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 font-data text-5xl leading-none font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
     >
       <TimerCancelButton @click="cancel" />
-      <div class="flex flex-nowrap items-center">
-        <div
-          class="touch-none"
-          :class="minuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'"
-          @pointerdown="handleMinuteColumnPointerDown"
-        >
+      <div
+        class="flex touch-none flex-nowrap items-center self-stretch"
+        :class="minuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'"
+        @pointerdown="handleMinuteColumnPointerDown"
+      >
+        <div>
           <input
             v-if="!timerIsRunning && !timerIsPaused"
             id="dynamicMinutes"

@@ -2,7 +2,7 @@
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getProjectEditPathFromProject, getProjectPathFromProject } from '~/utils/worklog-routes'
-import { getTotalDurationLabel } from '~~/shared/worklog'
+import { getTotalDurationRoundedHoursLabel } from '~~/shared/worklog'
 
 import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import type { ProjectsPageLayout } from '~/utils/projects-page-layout'
@@ -29,7 +29,9 @@ const projectTimeBoxes = computed<TimeBox[]>(() =>
   ),
 )
 
-const projectTimeBoxesTotalDuration = computed(() => getTotalDurationLabel(projectTimeBoxes.value))
+const projectTimeBoxesTotalDuration = computed(() =>
+  getTotalDurationRoundedHoursLabel(projectTimeBoxes.value),
+)
 
 const projectSessionDateRangeLabel = computed(() => {
   const boxes = projectTimeBoxes.value

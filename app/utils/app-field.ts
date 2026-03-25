@@ -74,11 +74,11 @@ export const APP_FIELD_INLINE_CHOICE_PANEL_ROW_CLASS_NAME =
   'flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm text-text hover:bg-surface-subtle'
 
 const TOGGLE_CHIP_BASE =
-  'inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition'
+  'inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition'
 
-export const APP_TOGGLE_CHIP_SELECTED_CLASS_NAME = `${TOGGLE_CHIP_BASE} border-link bg-link/10 text-link`
+export const APP_TOGGLE_CHIP_SELECTED_CLASS_NAME = `${TOGGLE_CHIP_BASE} border-link/45 bg-link/10 text-link`
 
-export const APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME = `${TOGGLE_CHIP_BASE} border-border-subtle bg-surface-muted text-text hover:bg-surface`
+export const APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME = `${TOGGLE_CHIP_BASE} border-border-subtle bg-surface-muted text-text hover:border-link/45`
 
 export const getAppToggleChipClassName = ({ selected }: { selected: boolean }) =>
   selected ? APP_TOGGLE_CHIP_SELECTED_CLASS_NAME : APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME

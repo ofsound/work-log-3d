@@ -1,12 +1,13 @@
 <script setup lang="ts">
+import type { Ref } from 'vue'
+
 import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
-import type { Ref } from 'vue'
+import { APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME } from '~/utils/app-field'
+import { toTimeBoxes, type FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { getTagPathFromTag } from '~/utils/worklog-routes'
-import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
-import { toTimeBoxes } from '~/utils/worklog-firebase'
-import { getTotalDurationLabel, getWorklogErrorMessage } from '~~/shared/worklog'
+import { getTotalDurationRoundedHoursLabel, getWorklogErrorMessage } from '~~/shared/worklog'
 
 const repositories = useWorklogRepository()
 const { confirm } = useConfirmDialog()
@@ -19,12 +20,18 @@ const props = defineProps({
   slug: { type: String, default: '' },
 })
 
-const router = useRouter()
 const myInput: Ref<HTMLInputElement | null> = ref(null)
 const dynamicName = ref(props.name ?? '')
 const mutationErrorMessage = ref('')
 
 const isNameEditMode = ref(false)
+
+const tagPath = computed(() => getTagPathFromTag({ id: props.id, slug: props.slug }))
+
+const chipRowClass = computed(() => [
+  APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME,
+  'w-full min-w-0 justify-between',
+])
 
 const deleteTagDocument = async () => {
   const confirmed = await confirm({
@@ -75,7 +82,7 @@ const tagTimeBoxesTotalDuration = computed(() => {
     timeBox.tags.some((tagId: string) => tagId === props.id),
   )
 
-  return getTotalDurationLabel(tagTimeBoxes)
+  return getTotalDurationRoundedHoursLabel(tagTimeBoxes)
 })
 
 watch(
@@ -90,45 +97,57 @@ watch(
 </script>
 
 <template>
-  <div class="border-b border-divider py-1">
-    <div class="flex gap-2">
-      <input
-        v-if="isNameEditMode"
-        ref="myInput"
-        v-model="dynamicName"
-        type="text"
-        class="flex-1 p-1 font-bold text-text hover:underline focus:bg-input-focus focus:no-underline!"
-        @input="mutationErrorMessage = ''"
-        @keyup.enter="renameTagDocument"
-        @keyup.esc="cancelRenameAndLoseFocus"
-        @blur="resetNameToSaved"
-      />
-      <button
-        v-if="!isNameEditMode"
-        class="flex-1 cursor-pointer p-1 text-left font-bold text-text hover:underline"
-        @click="router.push(getTagPathFromTag({ id: props.id, slug: props.slug }))"
-      >
-        {{ dynamicName }}
-      </button>
-      <div
-        class="relative top-1 mt-1.5 mb-3 ml-4 w-max cursor-pointer self-start rounded-md bg-badge-neutral px-1.5 py-0.5 pt-px font-data text-xs tracking-wide text-badge-neutral-text"
-      >
-        {{ tagTimeBoxesTotalDuration }} hrs total
+  <div>
+    <div :class="chipRowClass">
+      <div v-if="isNameEditMode" class="flex min-h-11 min-w-0 flex-1 items-center gap-3">
+        <input
+          ref="myInput"
+          v-model="dynamicName"
+          type="text"
+          class="min-w-0 flex-1 bg-transparent font-bold text-text outline-none focus:ring-0"
+          @input="mutationErrorMessage = ''"
+          @keyup.enter="renameTagDocument"
+          @keyup.esc="cancelRenameAndLoseFocus"
+          @blur="resetNameToSaved"
+        />
+        <span
+          class="shrink-0 rounded-full border border-border px-1.5 py-px text-[10px] leading-none font-semibold text-text tabular-nums"
+        >
+          {{ tagTimeBoxesTotalDuration }} hrs
+        </span>
       </div>
-      <button
-        class="cursor-pointer px-1 text-text-subtle hover:text-text"
-        @click="isNameEditMode = !isNameEditMode"
+      <NuxtLink
+        v-else
+        :to="tagPath"
+        class="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left text-text no-underline hover:text-text"
       >
-        <EditIcon />
-      </button>
-      <button
-        class="cursor-pointer px-1 text-text-subtle hover:text-text"
-        @click="deleteTagDocument"
-      >
-        <DeleteIcon />
-      </button>
+        <span class="min-w-0 truncate font-bold">{{ dynamicName }}</span>
+        <span
+          class="shrink-0 rounded-full border border-border px-1.5 py-px text-[10px] leading-none font-semibold text-text tabular-nums"
+        >
+          {{ tagTimeBoxesTotalDuration }} hrs
+        </span>
+      </NuxtLink>
+      <div class="flex shrink-0 items-center gap-0.5">
+        <button
+          type="button"
+          class="cursor-pointer px-1 text-text-subtle hover:text-text"
+          :aria-label="`Rename tag ${dynamicName}`"
+          @click="isNameEditMode = !isNameEditMode"
+        >
+          <EditIcon />
+        </button>
+        <button
+          type="button"
+          class="cursor-pointer px-1 text-text-subtle hover:text-text"
+          :aria-label="`Delete tag ${dynamicName}`"
+          @click="deleteTagDocument"
+        >
+          <DeleteIcon />
+        </button>
+      </div>
     </div>
-    <p v-if="mutationErrorMessage" class="mt-2 px-1 text-sm text-danger">
+    <p v-if="mutationErrorMessage" class="mt-2 text-sm text-danger">
       {{ mutationErrorMessage }}
     </p>
   </div>

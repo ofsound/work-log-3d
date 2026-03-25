@@ -585,7 +585,7 @@ onBeforeUnmount(() => {
             <label
               v-for="thisProject in sortedPickerProjects"
               :key="thisProject.id"
-              class="flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-solid px-3 py-3 transition-[border-color,box-shadow,filter] duration-150 ease-out select-none"
+              class="flex min-w-0 cursor-pointer items-center gap-3 rounded-md border border-solid px-3 py-3 transition-[border-color,box-shadow,filter] duration-150 ease-out select-none"
               :class="[
                 dynamicProject === thisProject.id
                   ? 'shadow-panel-selected hover:brightness-[1.02]'

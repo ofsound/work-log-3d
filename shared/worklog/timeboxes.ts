@@ -44,6 +44,12 @@ export const getTotalDurationLabel = (timeBoxes: TimeBox[]) => {
   return formatDurationMinutesLabel(getTotalDurationMinutes(timeBoxes))
 }
 
+/** Whole hours (nearest), for compact badges where fractional hours are noisy. */
+export const getTotalDurationRoundedHoursLabel = (timeBoxes: TimeBox[]) => {
+  const totalMinutes = getTotalDurationMinutes(timeBoxes)
+  return String(Math.round(totalMinutes / 60))
+}
+
 export const groupTimeBoxesByStartDay = (timeBoxes: TimeBox[]) => {
   const groups: TimeBox[][] = []
   let previousDate = ''

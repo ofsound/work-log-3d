@@ -43,16 +43,18 @@ const cancelCreateAndLoseFocus = () => {
     class="mb-4 w-full rounded-sm py-4"
     padding="comfortable"
     style="width: 100%; min-width: 100%"
-    variant="tag"
+    variant="gradient"
   >
     <div class="mb-2 text-center text-xl font-bold uppercase">Tags</div>
-    <TagsManagerTag
-      v-for="item in sortedAllTags"
-      :id="item.id"
-      :key="item.id"
-      :name="item.name"
-      :slug="item.slug"
-    />
+    <div class="flex flex-col gap-2">
+      <TagsManagerTag
+        v-for="item in sortedAllTags"
+        :id="item.id"
+        :key="item.id"
+        :name="item.name"
+        :slug="item.slug"
+      />
+    </div>
     <div class="mt-8 flex">
       <input
         ref="myInput"
