@@ -26,7 +26,7 @@ const countupParts = computed(() => {
 
 <template>
   <ContainerCard
-    class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm py-4"
+    class="relative flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm pt-7 pb-4"
     padding="comfortable"
     variant="timer"
   >
@@ -47,5 +47,11 @@ const countupParts = computed(() => {
       <TimerButton v-if="timerIsPaused" @click="resume">Resume Timer </TimerButton>
       <TimerButton v-if="showCountupStop" @click="stop">Stop Timer</TimerButton>
     </div>
+    <span
+      class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-xs leading-none font-medium text-text-muted opacity-80"
+      aria-hidden="true"
+    >
+      Count Up
+    </span>
   </ContainerCard>
 </template>

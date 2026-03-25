@@ -114,7 +114,7 @@ watch(
 
 <template>
   <ContainerCard
-    class="flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm py-4"
+    class="relative flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm pt-7 pb-4"
     padding="comfortable"
     variant="timer"
   >
@@ -152,5 +152,11 @@ watch(
       >Pause Timer</TimerButton
     >
     <TimerButton v-if="timerIsPaused" class="shrink-0" @click="resume">Resume Timer </TimerButton>
+    <span
+      class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-xs leading-none font-medium text-text-muted opacity-80"
+      aria-hidden="true"
+    >
+      Count Down
+    </span>
   </ContainerCard>
 </template>

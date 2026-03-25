@@ -292,6 +292,26 @@ function isDurationFieldEmpty(value: string | number): boolean {
   return value === '' || value === null || value === undefined
 }
 
+/** Keeps start ≤ end when dragging hero times (minute steps). */
+function clampHeroDragTime(proposed: string, partner: string, role: 'start' | 'end'): string {
+  const proposedMs = new Date(proposed).getTime()
+  const partnerMs = new Date(partner).getTime()
+
+  if (Number.isNaN(proposedMs) || !partner || Number.isNaN(partnerMs)) {
+    return proposed
+  }
+
+  if (role === 'start' && proposedMs > partnerMs) {
+    return formatToDatetimeLocal(new Date(partnerMs))
+  }
+
+  if (role === 'end' && proposedMs < partnerMs) {
+    return formatToDatetimeLocal(new Date(partnerMs))
+  }
+
+  return proposed
+}
+
 watch(
   () => dynamicDuration.value,
   () => {
@@ -360,7 +380,10 @@ const { dragActive: startTimeMinuteDragActive, onPointerDown: onStartTimeMinuteP
         return
       }
 
-      dynamicStartTime.value = addMinutesToDatetimeLocal(startTimeDragBaseline, deltaMinutes)
+      const proposed = addMinutesToDatetimeLocal(startTimeDragBaseline, deltaMinutes)
+      dynamicStartTime.value = dynamicEndTime.value
+        ? clampHeroDragTime(proposed, dynamicEndTime.value, 'start')
+        : proposed
       mutationErrorMessage.value = ''
     },
     onSessionEnd({ didDragBeyondThreshold }) {
@@ -388,7 +411,10 @@ const { dragActive: endTimeMinuteDragActive, onPointerDown: onEndTimeMinutePoint
         return
       }
 
-      dynamicEndTime.value = addMinutesToDatetimeLocal(endTimeDragBaseline, deltaMinutes)
+      const proposed = addMinutesToDatetimeLocal(endTimeDragBaseline, deltaMinutes)
+      dynamicEndTime.value = dynamicStartTime.value
+        ? clampHeroDragTime(proposed, dynamicStartTime.value, 'end')
+        : proposed
       mutationErrorMessage.value = ''
     },
     onSessionEnd({ didDragBeyondThreshold }) {
@@ -429,107 +455,117 @@ onBeforeUnmount(() => {
       <section
         class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
       >
-        <AppField as="div" class="min-w-0" density="comfortable" label="Duration">
-          <div
-            class="flex min-w-0 items-end gap-2 rounded-2xl border border-input-border bg-input px-3 py-3 [@container(min-width:38rem)]:h-full"
-          >
-            <div
-              class="flex min-w-0 flex-1 touch-none"
-              :class="durationMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'"
-              @pointerdown="onDurationMinutePointerDown"
-            >
-              <input
-                id="timebox-duration-minutes"
-                v-model="dynamicDuration"
-                inputmode="numeric"
-                class="w-full min-w-0 bg-transparent text-right text-4xl font-bold tabular-nums outline-none select-text"
-                @input="mutationErrorMessage = ''"
-              />
+        <AppField as="div" class="min-w-0 self-start" density="comfortable" label="Duration">
+          <!-- Block wrapper: avoids a single flex row inheriting stretched height from the grid row. -->
+          <div class="rounded-md border border-input-border bg-input px-3 py-3">
+            <div class="flex min-w-0 items-end gap-2">
+              <div
+                class="flex min-w-0 flex-1 touch-none"
+                :class="
+                  durationMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'
+                "
+                @pointerdown="onDurationMinutePointerDown"
+              >
+                <input
+                  id="timebox-duration-minutes"
+                  v-model="dynamicDuration"
+                  inputmode="numeric"
+                  class="w-full min-w-0 bg-transparent text-right text-4xl leading-none font-bold tabular-nums outline-none select-text"
+                  @input="mutationErrorMessage = ''"
+                />
+              </div>
+              <span
+                class="inline-block -translate-y-1 pb-0.5 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
+                >min</span
+              >
             </div>
-            <span class="pb-1 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
-              >min</span
-            >
           </div>
         </AppField>
 
         <div class="ml-8 flex min-w-0 flex-col gap-4">
-          <div aria-live="polite" class="flex min-w-0 flex-col gap-1">
-            <p
-              v-if="sessionTimeHero"
-              class="min-w-0 text-3xl leading-tight font-bold tracking-tight tabular-nums [@container(min-width:44rem)]:text-4xl"
+          <div aria-live="polite" class="flex min-w-0 flex-col gap-3">
+            <AppFieldLabel v-if="sessionTimeHero">Start & End</AppFieldLabel>
+            <div
+              class="flex min-w-0 flex-col gap-1"
+              :class="
+                sessionTimeHero
+                  ? 'mt-[calc(0.75rem+4px)]'
+                  : 'mt-[calc(1.25rem+0.75rem+0.75rem+4px)]'
+              "
             >
-              <span
-                class="inline touch-none"
-                :class="
-                  startTimeMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'
-                "
-                @pointerdown="onStartTimeMinutePointerDown"
-                >{{ formatLocaleTime(new Date(dynamicStartTime)) }}</span
-              ><span aria-hidden="true"> – </span
-              ><span
-                class="inline touch-none"
-                :class="
-                  endTimeMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'
-                "
-                @pointerdown="onEndTimeMinutePointerDown"
-                >{{ formatLocaleTime(new Date(dynamicEndTime)) }}</span
-              >
-            </p>
-            <template v-else>
               <p
-                class="text-3xl leading-tight font-bold text-text-muted [@container(min-width:44rem)]:text-4xl"
+                v-if="sessionTimeHero"
+                class="min-w-0 text-3xl leading-tight font-bold tracking-tight tabular-nums [@container(min-width:44rem)]:text-4xl [@container(min-width:44rem)]:leading-none"
               >
-                —
+                <span
+                  class="inline touch-none"
+                  :class="
+                    startTimeMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'
+                  "
+                  @pointerdown="onStartTimeMinutePointerDown"
+                  >{{ formatLocaleTime(new Date(dynamicStartTime)) }}</span
+                ><span aria-hidden="true"> – </span
+                ><span
+                  class="inline touch-none"
+                  :class="
+                    endTimeMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'
+                  "
+                  @pointerdown="onEndTimeMinutePointerDown"
+                  >{{ formatLocaleTime(new Date(dynamicEndTime)) }}</span
+                >
               </p>
-              <p class="text-sm text-text-muted">Set start and end below.</p>
-            </template>
-            <p v-if="sessionTimeHero?.secondary" class="text-sm font-medium text-text-muted">
-              {{ sessionTimeHero.secondary }}
-            </p>
+              <template v-else>
+                <!--
+                  Placeholder line height only: the em dash never shows until `sessionTimeHero`
+                  (v-if above) — if only one of start/end is set, a visible dash looked like a
+                  broken hero. Keep `invisible` whenever we are not on the real hero branch.
+                -->
+                <p
+                  class="min-w-0 text-3xl leading-tight font-bold tracking-tight text-text-muted tabular-nums [@container(min-width:44rem)]:text-4xl [@container(min-width:44rem)]:leading-none"
+                >
+                  <span class="invisible" aria-hidden="true">—</span>
+                </p>
+              </template>
+              <p v-if="sessionTimeHero?.secondary" class="text-sm font-medium text-text-muted">
+                {{ sessionTimeHero.secondary }}
+              </p>
+            </div>
           </div>
 
-          <div class="flex min-w-0 flex-col gap-3 border-t border-border-subtle pt-4">
-            <p class="text-xs font-semibold tracking-[0.14em] text-text-muted uppercase">
-              Exact start & end
-            </p>
-            <div class="flex min-w-0 flex-wrap items-start gap-6">
-              <AppField class="min-w-0 shrink-0" density="comfortable" label="Start">
-                <AppTextInput
-                  v-model="datetimeLocalStartModel"
-                  type="datetime-local"
-                  class="w-[220px] max-w-full"
-                  density="comfortable"
-                  @input="mutationErrorMessage = ''"
-                />
-              </AppField>
+          <!--
+            Intentionally hidden: these native datetime-local inputs stay mounted so
+            start/end stay in sync with v-model, duration, and drag handlers on the hero.
+            The large hero line is the visible control surface; do not delete this block
+            thinking it is dead UI.
+          -->
+          <div class="hidden">
+            <AppField class="min-w-0 shrink-0" density="compact">
+              <AppTextInput
+                v-model="datetimeLocalStartModel"
+                type="datetime-local"
+                aria-label="Start"
+                class="w-[200px] max-w-full text-sm"
+                density="compact"
+                @input="mutationErrorMessage = ''"
+              />
+            </AppField>
 
-              <AppField class="min-w-0 shrink-0" density="comfortable" label="End">
-                <AppTextInput
-                  v-model="datetimeLocalEndModel"
-                  type="datetime-local"
-                  class="w-[220px] max-w-full"
-                  density="comfortable"
-                  @input="mutationErrorMessage = ''"
-                />
-              </AppField>
-            </div>
+            <AppField class="min-w-0 shrink-0" density="compact">
+              <AppTextInput
+                v-model="datetimeLocalEndModel"
+                type="datetime-local"
+                aria-label="End"
+                class="w-[200px] max-w-full text-sm"
+                density="compact"
+                @input="mutationErrorMessage = ''"
+              />
+            </AppField>
           </div>
         </div>
       </section>
 
-      <AppField class="min-w-0" density="comfortable" label="Notes">
-        <AppTextarea
-          v-model="dynamicNotes"
-          class="min-h-24"
-          rows="4"
-          density="comfortable"
-          placeholder="What happened during this session?"
-          @input="mutationErrorMessage = ''"
-        ></AppTextarea>
-      </AppField>
-
       <div
-        class="border-t border-border-subtle pt-5"
+        class="min-w-0"
         :class="
           hideTags
             ? ''
@@ -606,6 +642,19 @@ onBeforeUnmount(() => {
             </AppToggleChip>
           </div>
         </section>
+      </div>
+
+      <div class="border-t border-border-subtle pt-5">
+        <AppField class="min-w-0" density="comfortable" label="Notes">
+          <AppTextarea
+            v-model="dynamicNotes"
+            class="min-h-24"
+            rows="4"
+            density="comfortable"
+            placeholder="What happened during this session?"
+            @input="mutationErrorMessage = ''"
+          ></AppTextarea>
+        </AppField>
       </div>
 
       <p v-if="mutationErrorMessage" class="text-sm text-danger">
