@@ -21,7 +21,9 @@ export const isProjectsPageLayout = (
 export const coerceProjectsPageViewQuery = (raw: unknown): ProjectsPageLayout => {
   const value = Array.isArray(raw) ? raw[0] : raw
 
-  return typeof value === 'string' && isProjectsPageLayout(value) ? value : DEFAULT_PROJECTS_PAGE_LAYOUT
+  return typeof value === 'string' && isProjectsPageLayout(value)
+    ? value
+    : DEFAULT_PROJECTS_PAGE_LAYOUT
 }
 
 export const getProjectsLayoutStorageKey = (userId: string | null) =>

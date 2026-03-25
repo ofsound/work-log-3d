@@ -21,7 +21,9 @@ const route = useRoute()
 const router = useRouter()
 
 /** Grid is the default; `?view=list` opts into list. Omit `view` for grid. */
-const projectsLayout = computed<ProjectsPageLayout>(() => coerceProjectsPageViewQuery(route.query.view))
+const projectsLayout = computed<ProjectsPageLayout>(() =>
+  coerceProjectsPageViewQuery(route.query.view),
+)
 
 const setLayout = (next: ProjectsPageLayout) => {
   const query = { ...route.query }
