@@ -319,8 +319,7 @@ onBeforeUnmount(() => {
       <section
         class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
       >
-        <label class="flex min-w-0 flex-col gap-3">
-          <div class="text-sm font-semibold text-text">Duration</div>
+        <AppField as="div" class="min-w-0" density="comfortable" label="Duration">
           <div
             class="flex min-w-0 items-end gap-2 rounded-2xl border border-input-border bg-input px-3 py-3 [@container(min-width:38rem)]:h-full"
           >
@@ -372,41 +371,41 @@ onBeforeUnmount(() => {
               +10
             </AppButton>
           </div>
-        </label>
+        </AppField>
 
         <div class="ml-8 flex min-w-0 flex-wrap items-start gap-8">
-          <label class="flex min-w-0 shrink-0 flex-col gap-3">
-            <div class="text-sm font-semibold text-text">Start</div>
-            <input
+          <AppField class="min-w-0 shrink-0" density="comfortable" label="Start">
+            <AppTextInput
               v-model="dynamicStartTime"
               type="datetime-local"
-              class="w-[220px] max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
+              class="w-[220px] max-w-full"
+              density="comfortable"
               @input="mutationErrorMessage = ''"
             />
-          </label>
+          </AppField>
 
-          <label class="flex min-w-0 shrink-0 flex-col gap-3">
-            <div class="text-sm font-semibold text-text">End</div>
-            <input
+          <AppField class="min-w-0 shrink-0" density="comfortable" label="End">
+            <AppTextInput
               v-model="dynamicEndTime"
               type="datetime-local"
-              class="w-[220px] max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-3 py-3 text-text"
+              class="w-[220px] max-w-full"
+              density="comfortable"
               @input="mutationErrorMessage = ''"
             />
-          </label>
+          </AppField>
         </div>
       </section>
 
-      <label class="flex min-w-0 flex-col gap-3">
-        <div class="text-sm font-semibold text-text">Notes</div>
-        <textarea
+      <AppField class="min-w-0" density="comfortable" label="Notes">
+        <AppTextarea
           v-model="dynamicNotes"
-          class="min-h-24 w-full max-w-full min-w-0 rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
+          class="min-h-24"
           rows="4"
+          density="comfortable"
           placeholder="What happened during this session?"
           @input="mutationErrorMessage = ''"
-        ></textarea>
-      </label>
+        ></AppTextarea>
+      </AppField>
 
       <div
         class="border-t border-border-subtle pt-5"
@@ -420,7 +419,7 @@ onBeforeUnmount(() => {
           class="flex min-w-0 flex-col gap-3"
           :class="!hideTags ? 'md:border-r md:border-border-subtle md:pr-6' : ''"
         >
-          <div class="text-sm font-semibold text-text">Project</div>
+          <AppFieldLabel as="div">Project</AppFieldLabel>
 
           <div
             class="project-radio-group grid gap-2.5"
@@ -466,18 +465,14 @@ onBeforeUnmount(() => {
           v-if="!hideTags"
           class="flex min-w-0 flex-col gap-3 border-t border-border-subtle pt-5 md:border-t-0 md:pt-0"
         >
-          <div class="text-sm font-semibold text-text">Tags</div>
+          <AppFieldLabel as="div">Tags</AppFieldLabel>
 
           <div class="flex flex-wrap gap-2.5 md:flex-col md:flex-nowrap md:gap-2">
-            <label
+            <AppToggleChip
               v-for="thisTag in sortedAllTags"
               :key="thisTag.id"
-              class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition md:w-full md:justify-start"
-              :class="
-                dynamicTags.includes(thisTag.id)
-                  ? 'border-link bg-link/10 text-link'
-                  : 'border-border-subtle bg-surface-muted text-text hover:bg-surface'
-              "
+              :selected="dynamicTags.includes(thisTag.id)"
+              class="md:w-full md:justify-start"
             >
               <input
                 v-model="dynamicTags"
@@ -487,7 +482,7 @@ onBeforeUnmount(() => {
                 @change="mutationErrorMessage = ''"
               />
               <span>{{ thisTag.name }}</span>
-            </label>
+            </AppToggleChip>
           </div>
         </section>
       </div>

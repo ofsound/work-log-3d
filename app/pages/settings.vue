@@ -411,49 +411,43 @@ onBeforeUnmount(() => {
             <AppButton block variant="secondary" @click="handleResetFontsToDefaults">
               Reset fonts to defaults
             </AppButton>
-            <label class="flex flex-col gap-2">
-              <span class="text-sm font-semibold text-text">Google Fonts import</span>
-              <input
+            <AppField label="Google Fonts import">
+              <AppTextInput
                 v-model="draft.appearance.fontImportUrl"
-                class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
                 placeholder="https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap"
               />
-              <span class="text-xs text-text-subtle">
-                Paste either a raw `https://fonts.googleapis.com/css2...` URL or a full `@import
-                url(...)` rule.
-              </span>
-            </label>
+              <template #hint>
+                <span class="text-xs text-text-subtle">
+                  Paste either a raw `https://fonts.googleapis.com/css2...` URL or a full `@import
+                  url(...)` rule.
+                </span>
+              </template>
+            </AppField>
 
             <div class="grid gap-4 md:grid-cols-3">
-              <label class="flex flex-col gap-2">
-                <span class="text-sm font-semibold text-text">UI font family</span>
-                <input
+              <AppField label="UI font family">
+                <AppTextInput
                   v-model="draft.appearance.fontFamilies.ui"
-                  class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
                   placeholder="'National Park', sans-serif"
                 />
-              </label>
-              <label class="flex flex-col gap-2">
-                <span class="text-sm font-semibold text-text">Data font family</span>
-                <input
+              </AppField>
+              <AppField label="Data font family">
+                <AppTextInput
                   v-model="draft.appearance.fontFamilies.data"
-                  class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
                   placeholder="'Lato', sans-serif"
                 />
-              </label>
-              <label class="flex flex-col gap-2">
-                <span class="text-sm font-semibold text-text">Script font family</span>
-                <input
+              </AppField>
+              <AppField label="Script font family">
+                <AppTextInput
                   v-model="draft.appearance.fontFamilies.script"
-                  class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
                   placeholder="'Caveat', sans-serif"
                 />
-              </label>
+              </AppField>
             </div>
           </div>
 
           <ContainerCard padding="compact" variant="muted">
-            <div class="text-sm font-semibold text-text">Live font preview</div>
+            <AppFieldLabel as="div">Live font preview</AppFieldLabel>
             <div class="mt-4 flex flex-col gap-4">
               <div>
                 <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">UI</div>
@@ -476,7 +470,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="mt-6">
-          <div class="text-sm font-semibold text-text">Background style</div>
+          <AppFieldLabel as="div">Background style</AppFieldLabel>
           <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <label
               v-for="option in USER_SETTINGS_BACKGROUND_OPTIONS"
@@ -504,7 +498,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="mt-6">
-          <div class="text-sm font-semibold text-text">Project-first mode</div>
+          <AppFieldLabel as="div">Project-first mode</AppFieldLabel>
           <div class="mt-3">
             <label class="block">
               <ContainerCard class="flex items-start gap-4" padding="compact" variant="muted">
@@ -538,14 +532,14 @@ onBeforeUnmount(() => {
         <div v-else class="mt-5 flex flex-col gap-6">
           <section class="flex flex-col gap-4">
             <div class="flex flex-col gap-1">
-              <div class="text-sm font-semibold text-text">Timer completion sound</div>
+              <AppFieldLabel as="div">Timer completion sound</AppFieldLabel>
               <p class="text-sm leading-6 text-text-muted">
                 Choose the sound this device plays when a countdown completes.
               </p>
             </div>
 
             <ContainerCard padding="compact" variant="muted">
-              <div class="text-sm font-semibold text-text">Current sound</div>
+              <AppFieldLabel as="div">Current sound</AppFieldLabel>
               <div class="mt-2 text-text">
                 {{
                   isLoadingDesktopAlert
@@ -563,9 +557,8 @@ onBeforeUnmount(() => {
             </ContainerCard>
 
             <div class="flex flex-wrap gap-2">
-              <button
-                type="button"
-                class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover disabled:opacity-50"
+              <AppButton
+                variant="primary"
                 :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
                 @click="
                   runDesktopAlertAction(
@@ -575,10 +568,9 @@ onBeforeUnmount(() => {
                 "
               >
                 Choose file
-              </button>
-              <button
-                type="button"
-                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+              </AppButton>
+              <AppButton
+                variant="secondary"
                 :disabled="isLoadingDesktopAlert || isMutatingDesktopAlert"
                 @click="
                   runDesktopAlertAction(
@@ -588,10 +580,9 @@ onBeforeUnmount(() => {
                 "
               >
                 Test sound
-              </button>
-              <button
-                type="button"
-                class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+              </AppButton>
+              <AppButton
+                variant="secondary"
                 :disabled="
                   isLoadingDesktopAlert || isMutatingDesktopAlert || !hasCustomDesktopAlertSound
                 "
@@ -603,7 +594,7 @@ onBeforeUnmount(() => {
                 "
               >
                 Clear custom sound
-              </button>
+              </AppButton>
             </div>
 
             <div class="text-sm text-text-muted">Supported file types: mp3, wav, aiff.</div>
@@ -615,20 +606,14 @@ onBeforeUnmount(() => {
           <section class="flex flex-col gap-4 border-t border-border-subtle pt-6">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <div class="text-sm font-semibold text-text">Tray menu shortcuts</div>
+                <AppFieldLabel as="div">Tray menu shortcuts</AppFieldLabel>
                 <p class="mt-1 text-sm leading-6 text-text-muted">
                   Add desktop-only shortcuts that appear alongside Pomodoro and Start Timer. Each
                   shortcut can start count up or countdown and open `/new` with a project and tags
                   preselected.
                 </p>
               </div>
-              <button
-                type="button"
-                class="cursor-pointer rounded-lg bg-button-primary px-3 py-2 text-sm font-semibold text-button-primary-text shadow-button-primary hover:bg-button-primary-hover"
-                @click="addTrayShortcut"
-              >
-                Add shortcut
-              </button>
+              <AppButton variant="primary" @click="addTrayShortcut">Add shortcut</AppButton>
             </div>
 
             <ContainerCard
@@ -649,34 +634,14 @@ onBeforeUnmount(() => {
             >
               <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div class="grid flex-1 gap-4 lg:grid-cols-2">
-                  <label class="flex flex-col gap-2">
-                    <span
-                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
-                    >
-                      Label
-                    </span>
-                    <input
-                      v-model="shortcut.label"
-                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                      placeholder="Deep work"
-                    />
-                  </label>
+                  <AppField label="Label" label-variant="meta">
+                    <AppTextInput v-model="shortcut.label" placeholder="Deep work" />
+                  </AppField>
 
                   <fieldset class="flex flex-col gap-2">
-                    <legend
-                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
-                    >
-                      Timer
-                    </legend>
+                    <AppFieldLabel as="legend" variant="meta">Timer</AppFieldLabel>
                     <div class="flex flex-wrap gap-2.5">
-                      <label
-                        class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
-                        :class="
-                          shortcut.timerMode === 'countup'
-                            ? 'border-link bg-link/10 text-link'
-                            : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
-                        "
-                      >
+                      <AppToggleChip :selected="shortcut.timerMode === 'countup'">
                         <input
                           :checked="shortcut.timerMode === 'countup'"
                           :name="`trayShortcutMode-${shortcut.id}`"
@@ -684,15 +649,8 @@ onBeforeUnmount(() => {
                           @change="setTrayShortcutTimerMode(shortcut, 'countup')"
                         />
                         <span>Count up</span>
-                      </label>
-                      <label
-                        class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
-                        :class="
-                          shortcut.timerMode === 'countdown'
-                            ? 'border-link bg-link/10 text-link'
-                            : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
-                        "
-                      >
+                      </AppToggleChip>
+                      <AppToggleChip :selected="shortcut.timerMode === 'countdown'">
                         <input
                           :checked="shortcut.timerMode === 'countdown'"
                           :name="`trayShortcutMode-${shortcut.id}`"
@@ -700,37 +658,27 @@ onBeforeUnmount(() => {
                           @change="setTrayShortcutTimerMode(shortcut, 'countdown')"
                         />
                         <span>Countdown</span>
-                      </label>
+                      </AppToggleChip>
                     </div>
                   </fieldset>
 
-                  <label v-if="shortcut.timerMode === 'countdown'" class="flex flex-col gap-2">
-                    <span
-                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
-                    >
-                      Countdown minutes
-                    </span>
-                    <input
+                  <AppField
+                    v-if="shortcut.timerMode === 'countdown'"
+                    label="Countdown minutes"
+                    label-variant="meta"
+                  >
+                    <AppTextInput
                       :value="shortcut.durationMinutes ?? ''"
                       min="1"
                       step="1"
                       type="number"
-                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
                       placeholder="30"
                       @input="handleTrayShortcutDurationInput(shortcut, $event)"
                     />
-                  </label>
+                  </AppField>
 
-                  <label class="flex flex-col gap-2">
-                    <span
-                      class="text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase"
-                    >
-                      Project
-                    </span>
-                    <select
-                      v-model="shortcut.project"
-                      class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                    >
+                  <AppField label="Project" label-variant="meta">
+                    <AppSelect v-model="shortcut.project">
                       <option value="">No project preselected</option>
                       <option
                         v-for="project in trayShortcutProjectOptions"
@@ -739,59 +687,48 @@ onBeforeUnmount(() => {
                       >
                         {{ project.name }}
                       </option>
-                    </select>
-                  </label>
+                    </AppSelect>
+                  </AppField>
                 </div>
 
                 <div class="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                  <AppButton
+                    variant="secondary"
                     :disabled="index === 0"
                     @click="moveTrayShortcut(index, -1)"
                   >
                     Move up
-                  </button>
-                  <button
-                    type="button"
-                    class="cursor-pointer rounded-lg border border-button-secondary-border bg-button-secondary px-3 py-2 text-sm font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:opacity-50"
+                  </AppButton>
+                  <AppButton
+                    variant="secondary"
                     :disabled="index === draft.desktop.trayShortcuts.length - 1"
                     @click="moveTrayShortcut(index, 1)"
                   >
                     Move down
-                  </button>
-                  <button
-                    type="button"
-                    class="cursor-pointer rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger hover:bg-danger/15"
-                    @click="removeTrayShortcut(shortcut.id)"
-                  >
+                  </AppButton>
+                  <AppButton variant="danger" @click="removeTrayShortcut(shortcut.id)">
                     Remove
-                  </button>
+                  </AppButton>
                 </div>
               </div>
 
               <div class="flex flex-col gap-3 border-t border-border-subtle pt-4">
                 <div class="flex flex-col gap-1">
-                  <div class="text-sm font-semibold text-text">Tags</div>
+                  <AppFieldLabel as="div">Tags</AppFieldLabel>
                   <p class="text-xs text-text-muted">
                     Tags apply when this shortcut opens the new session form.
                   </p>
                 </div>
 
                 <div v-if="sortedTags.length" class="flex flex-wrap gap-2.5">
-                  <label
+                  <AppToggleChip
                     v-for="tag in sortedTags"
                     :key="tag.id"
-                    class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition"
-                    :class="
-                      shortcut.tags.includes(tag.id)
-                        ? 'border-link bg-link/10 text-link'
-                        : 'border-border-subtle bg-surface text-text hover:bg-surface-muted'
-                    "
+                    :selected="shortcut.tags.includes(tag.id)"
                   >
                     <input v-model="shortcut.tags" type="checkbox" :value="tag.id" />
                     <span>{{ tag.name }}</span>
-                  </label>
+                  </AppToggleChip>
                 </div>
 
                 <p v-else class="text-sm text-text-muted">

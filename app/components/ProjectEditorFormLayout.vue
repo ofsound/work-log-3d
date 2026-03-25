@@ -95,27 +95,25 @@ const toggleArchived = () => {
       </div>
 
       <div class="flex flex-col gap-5">
-        <label class="flex flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Project name</span>
-          <input
+        <AppField label="Project name">
+          <AppTextInput
+            density="comfortable"
             :value="name"
             type="text"
-            class="rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
             placeholder="Project name"
             @input="updateName"
           />
-        </label>
+        </AppField>
 
-        <label class="flex flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Internal notes</span>
-          <textarea
+        <AppField label="Internal notes">
+          <AppTextarea
+            density="comfortable"
             :value="notes"
             rows="8"
-            class="rounded-2xl border border-input-border bg-input px-4 py-3 text-text"
             placeholder="Reference notes, goals, reminders, or project context"
             @input="updateNotes"
-          ></textarea>
-        </label>
+          ></AppTextarea>
+        </AppField>
 
         <div
           v-if="showArchiveToggle"
@@ -129,7 +127,7 @@ const toggleArchived = () => {
               @change="toggleArchived"
             />
             <span class="min-w-0">
-              <span class="text-sm font-semibold text-text">Archived</span>
+              <AppFieldLabel>Archived</AppFieldLabel>
               <span class="mt-1 block text-sm text-text-muted">
                 Hides this project from session pickers and desktop tray shortcut lists. It still
                 appears in history, reports, and project pages until you change that behavior.
@@ -139,8 +137,7 @@ const toggleArchived = () => {
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <label class="flex flex-col gap-2">
-            <span class="text-sm font-semibold text-text">Primary color</span>
+          <AppField label="Primary color">
             <div
               class="flex items-center gap-3 rounded-2xl border border-input-border bg-input px-3 py-3"
             >
@@ -158,11 +155,11 @@ const toggleArchived = () => {
                 @input="updatePrimaryColor"
               />
             </div>
-          </label>
+          </AppField>
 
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between gap-3">
-              <span class="text-sm font-semibold text-text">Secondary color</span>
+              <AppFieldLabel>Secondary color</AppFieldLabel>
               <AppButton
                 shape="pill"
                 size="sm"
@@ -203,7 +200,7 @@ const toggleArchived = () => {
 
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between gap-3">
-            <span class="text-sm font-semibold text-text">Palette presets</span>
+            <AppFieldLabel>Palette presets</AppFieldLabel>
             <span class="text-xs text-text-subtle">Tap a swatch</span>
           </div>
 

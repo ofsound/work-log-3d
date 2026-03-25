@@ -262,12 +262,10 @@ const handleNotesStateChange = (value: string) => {
       </div>
 
       <div class="flex min-w-0 flex-col gap-4">
-        <label class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Search</span>
-          <input
+        <AppField class="min-w-0" label="Search">
+          <AppTextInput
             :value="filters.query"
             type="text"
-            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             :placeholder="
               hideTags ? 'Search notes and projects' : 'Search notes, projects, and tags'
             "
@@ -277,7 +275,7 @@ const handleNotesStateChange = (value: string) => {
               })
             "
           />
-        </label>
+        </AppField>
 
         <SessionListMultiSelect
           class="min-w-0"
@@ -305,11 +303,9 @@ const handleNotesStateChange = (value: string) => {
           @update:model-value="updateFilters({ tagIds: $event })"
         />
 
-        <label class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Sort</span>
-          <select
+        <AppField class="min-w-0" label="Sort">
+          <AppSelect
             :value="filters.sort"
-            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             @change="
               updateFilters({
                 sort: ($event.target as HTMLSelectElement).value as SessionListFilters['sort'],
@@ -320,13 +316,12 @@ const handleNotesStateChange = (value: string) => {
             <option value="oldest">Oldest</option>
             <option value="longest">Longest</option>
             <option value="shortest">Shortest</option>
-          </select>
-        </label>
+          </AppSelect>
+        </AppField>
       </div>
 
       <div class="flex min-w-0 flex-col gap-4">
-        <div v-if="!hideTags" class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Tag matching</span>
+        <AppField v-if="!hideTags" as="div" class="min-w-0" label="Tag matching">
           <div
             class="inline-flex w-fit max-w-full rounded-xl border border-border bg-surface-strong p-1 shadow-control"
           >
@@ -355,10 +350,9 @@ const handleNotesStateChange = (value: string) => {
               All
             </button>
           </div>
-        </div>
+        </AppField>
 
-        <div class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Quick ranges</span>
+        <AppField as="div" class="min-w-0" label="Quick ranges">
           <div class="flex flex-wrap gap-2">
             <AppButton
               v-for="preset in datePresets"
@@ -371,57 +365,49 @@ const handleNotesStateChange = (value: string) => {
               {{ preset.label }}
             </AppButton>
           </div>
-        </div>
+        </AppField>
 
-        <label class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">From</span>
-          <input
+        <AppField class="min-w-0" label="From">
+          <AppTextInput
             :value="filters.dateStart"
             type="date"
-            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             @input="
               updateFilters({
                 dateStart: ($event.target as HTMLInputElement).value,
               })
             "
           />
-        </label>
-        <label class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">To</span>
-          <input
+        </AppField>
+        <AppField class="min-w-0" label="To">
+          <AppTextInput
             :value="filters.dateEnd"
             type="date"
-            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             @input="
               updateFilters({
                 dateEnd: ($event.target as HTMLInputElement).value,
               })
             "
           />
-        </label>
+        </AppField>
 
-        <div class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Notes</span>
-          <select
+        <AppField as="div" class="min-w-0" label="Notes">
+          <AppSelect
             :value="filters.notesState"
-            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             @change="handleNotesStateChange(($event.target as HTMLSelectElement).value)"
           >
             <option value="any">Any</option>
             <option value="with">Has notes</option>
             <option value="empty">Empty notes</option>
-          </select>
-        </div>
+          </AppSelect>
+        </AppField>
       </div>
 
       <div class="flex min-w-0 flex-col gap-4">
-        <div class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Minimum duration</span>
-          <input
+        <AppField as="div" class="min-w-0" label="Minimum duration">
+          <AppTextInput
             :value="filters.minMinutes ?? ''"
             type="number"
             min="0"
-            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             placeholder="No minimum"
             @input="handleMinutesInput('minMinutes', ($event.target as HTMLInputElement).value)"
           />
@@ -438,15 +424,13 @@ const handleNotesStateChange = (value: string) => {
               {{ minutes }}m
             </AppButton>
           </div>
-        </div>
+        </AppField>
 
-        <div class="flex min-w-0 flex-col gap-2">
-          <span class="text-sm font-semibold text-text">Maximum duration</span>
-          <input
+        <AppField as="div" class="min-w-0" label="Maximum duration">
+          <AppTextInput
             :value="filters.maxMinutes ?? ''"
             type="number"
             min="0"
-            class="min-w-0 rounded-xl border border-input-border bg-input px-3 py-2 text-text"
             placeholder="No maximum"
             @input="handleMinutesInput('maxMinutes', ($event.target as HTMLInputElement).value)"
           />
@@ -463,7 +447,7 @@ const handleNotesStateChange = (value: string) => {
               {{ minutes }}m
             </AppButton>
           </div>
-        </div>
+        </AppField>
 
         <ContainerCard
           v-if="!hideTags"

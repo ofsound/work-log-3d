@@ -31,6 +31,7 @@
 - Firestore rules must stay aligned with the current document shape for `projects`, `tags`, and `timeBoxes`.
 - Avoid app-wide auth redirect watchers. Route middleware owns access control; the login page owns post-auth redirect behavior.
 - Use `ContainerCard` for substantial bordered/background content shells in the web app. Do not hand-roll new top-level or section-level card wrappers with inline Tailwind class bundles.
+- Use `AppField`, `AppFieldLabel`, `AppTextInput` / `AppSelect` / `AppTextarea`, and helpers in `app/utils/app-field.ts` for stacked label + control layout and shared input chrome. Do not hand-roll new `label` + `span` + `border-input-border` input bundles for app forms.
 - `ContainerCard` does **not** replace inputs, buttons, chips, badges, dropdown menus, table rows, calendar event pills, or tiny layout wrappers.
 - `ContainerCard` variants `gradient` and `projectGradient` use theme tokens `--background-image-container-card-gradient-surface` and `--background-image-container-card-gradient-project` in `app/assets/css/main.css` for a subtle diagonal fill (lighter in light mode, darker in dark).
 
@@ -38,8 +39,8 @@
 
 - Remaining raw card-like patterns to migrate after the first `ContainerCard` pass:
   - internal calendar event pills and cells in `app/components/SessionsTimedGrid.vue`, `app/components/SessionsMonthView.vue`, and `app/components/ProjectCalendarView.vue`
-  - dropdown/popover surfaces in `app/components/SessionListMultiSelect.vue`
-  - smaller option chips and picker rows that still use bespoke inline container classes in `app/components/TimeBoxEditor.vue`
+  - dropdown/popover panel chrome in `app/components/SessionListMultiSelect.vue` (field stack uses `AppField`; popover surface is still bespoke)
+  - project picker radio cards in `app/components/TimeBoxEditor.vue` (tag chips use `AppToggleChip`)
 
 ## Verification
 

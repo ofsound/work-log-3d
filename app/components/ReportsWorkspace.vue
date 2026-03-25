@@ -396,55 +396,32 @@ const copyShareLink = async () => {
 
           <div class="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)]">
             <div class="flex flex-col gap-4">
-              <label class="flex flex-col gap-2">
-                <span class="text-sm font-semibold text-text">Title</span>
-                <input
-                  v-model="draft.title"
-                  class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                  placeholder="Client Report"
-                />
-              </label>
+              <AppField label="Title">
+                <AppTextInput v-model="draft.title" placeholder="Client Report" />
+              </AppField>
 
-              <label class="flex flex-col gap-2">
-                <span class="text-sm font-semibold text-text">Summary</span>
-                <textarea
+              <AppField label="Summary">
+                <AppTextarea
                   v-model="draft.summary"
                   rows="6"
-                  class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
                   placeholder="High-level write-up for the client-facing report"
                 />
-              </label>
+              </AppField>
 
               <div class="grid gap-4 md:grid-cols-3">
-                <label class="flex flex-col gap-2">
-                  <span class="text-sm font-semibold text-text">Timezone</span>
-                  <input
-                    v-model="draft.timezone"
-                    class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                    placeholder="America/Denver"
-                  />
-                </label>
-                <label class="flex flex-col gap-2">
-                  <span class="text-sm font-semibold text-text">Start date</span>
-                  <input
-                    v-model="draft.filters.dateStart"
-                    type="date"
-                    class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                  />
-                </label>
-                <label class="flex flex-col gap-2">
-                  <span class="text-sm font-semibold text-text">End date</span>
-                  <input
-                    v-model="draft.filters.dateEnd"
-                    type="date"
-                    class="rounded-xl border border-input-border bg-input px-3 py-2 text-text"
-                  />
-                </label>
+                <AppField label="Timezone">
+                  <AppTextInput v-model="draft.timezone" placeholder="America/Denver" />
+                </AppField>
+                <AppField label="Start date">
+                  <AppTextInput v-model="draft.filters.dateStart" type="date" />
+                </AppField>
+                <AppField label="End date">
+                  <AppTextInput v-model="draft.filters.dateEnd" type="date" />
+                </AppField>
               </div>
 
-              <div>
-                <div class="text-sm font-semibold text-text">Quick ranges</div>
-                <div class="mt-3 flex flex-wrap gap-2">
+              <AppField as="div" class="!gap-3" label="Quick ranges">
+                <div class="flex flex-wrap gap-2">
                   <AppButton
                     v-for="preset in datePresets"
                     :key="preset.id"
@@ -456,51 +433,47 @@ const copyShareLink = async () => {
                     {{ preset.label }}
                   </AppButton>
                 </div>
-              </div>
+              </AppField>
             </div>
 
             <div class="grid gap-4">
               <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
-                <div class="text-sm font-semibold text-text">Group combination</div>
+                <AppFieldLabel as="div">Group combination</AppFieldLabel>
                 <div class="mt-3 grid gap-2 md:grid-cols-2">
-                  <label class="flex items-center gap-2 text-sm text-text">
+                  <AppFieldInlineChoice>
                     <input
                       v-model="draft.filters.groupOperator"
                       type="radio"
                       value="intersection"
                     />
                     Project AND tag
-                  </label>
-                  <label class="flex items-center gap-2 text-sm text-text">
+                  </AppFieldInlineChoice>
+                  <AppFieldInlineChoice>
                     <input v-model="draft.filters.groupOperator" type="radio" value="union" />
                     Project OR tag
-                  </label>
+                  </AppFieldInlineChoice>
                 </div>
               </ContainerCard>
 
               <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
-                <div class="text-sm font-semibold text-text">Tag matching</div>
+                <AppFieldLabel as="div">Tag matching</AppFieldLabel>
                 <div class="mt-3 grid gap-2 md:grid-cols-2">
-                  <label class="flex items-center gap-2 text-sm text-text">
+                  <AppFieldInlineChoice>
                     <input v-model="draft.filters.tagOperator" type="radio" value="any" />
                     Any selected tag
-                  </label>
-                  <label class="flex items-center gap-2 text-sm text-text">
+                  </AppFieldInlineChoice>
+                  <AppFieldInlineChoice>
                     <input v-model="draft.filters.tagOperator" type="radio" value="all" />
                     All selected tags
-                  </label>
+                  </AppFieldInlineChoice>
                 </div>
               </ContainerCard>
 
               <div class="grid gap-4 xl:grid-cols-2">
                 <ContainerCard padding="compact" variant="muted">
-                  <div class="text-sm font-semibold text-text">Projects</div>
+                  <AppFieldLabel as="div">Projects</AppFieldLabel>
                   <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
-                    <label
-                      v-for="project in sortedProjects"
-                      :key="project.id"
-                      class="flex items-center gap-2 text-sm text-text"
-                    >
+                    <AppFieldInlineChoice v-for="project in sortedProjects" :key="project.id">
                       <input
                         :checked="draft.filters.projectIds.includes(project.id)"
                         type="checkbox"
@@ -513,18 +486,14 @@ const copyShareLink = async () => {
                         "
                       />
                       {{ project.name }}
-                    </label>
+                    </AppFieldInlineChoice>
                   </div>
                 </ContainerCard>
 
                 <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
-                  <div class="text-sm font-semibold text-text">Tags</div>
+                  <AppFieldLabel as="div">Tags</AppFieldLabel>
                   <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
-                    <label
-                      v-for="tag in sortedTags"
-                      :key="tag.id"
-                      class="flex items-center gap-2 text-sm text-text"
-                    >
+                    <AppFieldInlineChoice v-for="tag in sortedTags" :key="tag.id">
                       <input
                         :checked="draft.filters.tagIds.includes(tag.id)"
                         type="checkbox"
@@ -537,7 +506,7 @@ const copyShareLink = async () => {
                         "
                       />
                       {{ tag.name }}
-                    </label>
+                    </AppFieldInlineChoice>
                   </div>
                 </ContainerCard>
               </div>

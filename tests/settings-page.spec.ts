@@ -3,6 +3,13 @@
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 
+import AppButton from '~/app/components/AppButton.vue'
+import AppField from '~/app/components/AppField.vue'
+import AppFieldLabel from '~/app/components/AppFieldLabel.vue'
+import AppSelect from '~/app/components/AppSelect.vue'
+import AppTextInput from '~/app/components/AppTextInput.vue'
+import AppTextarea from '~/app/components/AppTextarea.vue'
+import AppToggleChip from '~/app/components/AppToggleChip.vue'
 import ContainerCard from '~/app/components/ContainerCard.vue'
 import { DEFAULT_USER_SETTINGS, cloneUserSettings } from '~~/shared/worklog'
 
@@ -21,15 +28,15 @@ const currentUser = ref({
 
 const savedSettings = ref(cloneUserSettings(DEFAULT_USER_SETTINGS))
 
-;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-  useCurrentUser: () => currentUser,
-  useFirebaseAuth: () => ({ id: 'auth' }),
-  useFirestoreCollections: () => ({
-    projectsCollection: ref({ id: 'projects' }),
-    tagsCollection: ref({ id: 'tags' }),
-  }),
-  useRouter: () => ({ push: routerPush }),
-}
+  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+    useCurrentUser: () => currentUser,
+    useFirebaseAuth: () => ({ id: 'auth' }),
+    useFirestoreCollections: () => ({
+      projectsCollection: ref({ id: 'projects' }),
+      tagsCollection: ref({ id: 'tags' }),
+    }),
+    useRouter: () => ({ push: routerPush }),
+  }
 
 vi.mock('firebase/auth', () => ({
   signOut,
@@ -81,6 +88,13 @@ describe('settings page', () => {
     const wrapper = mount(SettingsPage, {
       global: {
         components: {
+          AppButton,
+          AppField,
+          AppFieldLabel,
+          AppSelect,
+          AppTextInput,
+          AppTextarea,
+          AppToggleChip,
           ContainerCard,
         },
       },

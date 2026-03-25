@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 
+import {
+  APP_FIELD_CONTROL_POPOVER_INPUT_CLASS_NAME,
+  APP_FIELD_INLINE_CHOICE_PANEL_ROW_CLASS_NAME,
+  getAppFieldControlTriggerClassName,
+} from '~/utils/app-field'
+
 interface SessionListMultiSelectOption {
   id: string
   label: string
@@ -126,56 +132,56 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="rootElement" class="relative flex min-w-0 flex-col gap-2">
-    <div class="text-sm font-semibold text-text">{{ label }}</div>
-    <button
-      type="button"
-      class="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-input-border bg-input px-3 py-2 text-left text-sm text-text"
-      :class="disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
-      :disabled="disabled"
-      @click="toggleOpen"
-    >
-      <span class="min-w-0 truncate" :class="modelValue.length === 0 ? 'text-text-muted' : ''">
-        {{ summaryLabel }}
-      </span>
-      <span class="shrink-0 text-text-subtle">{{ isOpen ? 'Close' : 'Select' }}</span>
-    </button>
+  <div ref="rootElement" class="relative min-w-0">
+    <AppField as="div" class="min-w-0" :label="label">
+      <button
+        type="button"
+        :class="getAppFieldControlTriggerClassName({ disabled })"
+        :disabled="disabled"
+        @click="toggleOpen"
+      >
+        <span class="min-w-0 truncate" :class="modelValue.length === 0 ? 'text-text-muted' : ''">
+          {{ summaryLabel }}
+        </span>
+        <span class="shrink-0 text-text-subtle">{{ isOpen ? 'Close' : 'Select' }}</span>
+      </button>
 
-    <div
-      v-if="isOpen"
-      class="absolute top-full right-0 left-0 z-20 mt-2 flex max-h-80 flex-col gap-3 rounded-2xl border border-border-subtle bg-surface px-3 py-3 shadow-panel"
-    >
-      <input
-        ref="searchInput"
-        v-model="searchQuery"
-        type="text"
-        class="rounded-xl border border-input-border bg-input px-3 py-2 text-sm text-text"
-        :placeholder="`Search ${label.toLowerCase()}`"
-        @keydown="handleEscape"
-      />
+      <div
+        v-if="isOpen"
+        class="absolute top-full right-0 left-0 z-20 mt-2 flex max-h-80 flex-col gap-3 rounded-2xl border border-border-subtle bg-surface px-3 py-3 shadow-panel"
+      >
+        <input
+          ref="searchInput"
+          v-model="searchQuery"
+          type="text"
+          :class="APP_FIELD_CONTROL_POPOVER_INPUT_CLASS_NAME"
+          :placeholder="`Search ${label.toLowerCase()}`"
+          @keydown="handleEscape"
+        />
 
-      <div class="max-h-52 overflow-auto">
-        <div v-if="visibleOptions.length === 0" class="px-2 py-3 text-sm text-text-muted">
-          No matches
+        <div class="max-h-52 overflow-auto">
+          <div v-if="visibleOptions.length === 0" class="px-2 py-3 text-sm text-text-muted">
+            No matches
+          </div>
+          <label
+            v-for="option in visibleOptions"
+            :key="option.id"
+            :class="APP_FIELD_INLINE_CHOICE_PANEL_ROW_CLASS_NAME"
+          >
+            <input
+              :checked="modelValue.includes(option.id)"
+              type="checkbox"
+              @change="toggleValue(option.id)"
+            />
+            <span
+              v-if="option.swatchStyle"
+              class="size-3.5 shrink-0 rounded-full border border-white/25"
+              :style="option.swatchStyle"
+            ></span>
+            <span class="min-w-0 truncate">{{ option.label }}</span>
+          </label>
         </div>
-        <label
-          v-for="option in visibleOptions"
-          :key="option.id"
-          class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm text-text hover:bg-surface-subtle"
-        >
-          <input
-            :checked="modelValue.includes(option.id)"
-            type="checkbox"
-            @change="toggleValue(option.id)"
-          />
-          <span
-            v-if="option.swatchStyle"
-            class="size-3.5 shrink-0 rounded-full border border-white/25"
-            :style="option.swatchStyle"
-          ></span>
-          <span class="min-w-0 truncate">{{ option.label }}</span>
-        </label>
       </div>
-    </div>
+    </AppField>
   </div>
 </template>
