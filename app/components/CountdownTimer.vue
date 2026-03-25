@@ -1,9 +1,121 @@
 <script setup lang="ts">
+import { formatSecondsToMinutesSeconds } from '~~/shared/worklog'
+
 const { isReady, snapshot, addCountdownMinutes, cancel, pause, resume, startCountdown } =
   useTimerService()
 const dynamicMinutes = ref('30')
 const route = useRoute()
 const hasStartedPomodoro = ref(false)
+
+const MINUTE_DRAG_THRESHOLD_PX = 6
+/** Vertical pixels of drag per one minute of change (higher = slower / finer). */
+const MINUTE_DRAG_PIXELS_PER_MINUTE = 6
+
+const minuteDragDeltaMinutes = (startY: number, clientY: number) =>
+  Math.round((startY - clientY) / MINUTE_DRAG_PIXELS_PER_MINUTE)
+
+const minutePointerSession = ref(false)
+const minuteDragActive = ref(false)
+const minuteDragStartY = ref(0)
+const lastMinuteDragClientY = ref(0)
+const minuteDragBaselineIdleMinutes = ref(0)
+const minuteDragBaselineRemainingSeconds = ref(0)
+const minuteDragIsActiveTimer = ref(false)
+const minuteDragPreviewRemainingSeconds = ref<number | null>(null)
+
+const parseBaselineIdleMinutes = () => {
+  const n = Number(dynamicMinutes.value || '0')
+
+  return Number.isFinite(n) ? n : 0
+}
+
+const updateMinuteDragPreview = (clientY: number) => {
+  lastMinuteDragClientY.value = clientY
+  const deltaMinutes = minuteDragDeltaMinutes(minuteDragStartY.value, clientY)
+
+  if (minuteDragIsActiveTimer.value) {
+    minuteDragPreviewRemainingSeconds.value = Math.max(
+      0,
+      minuteDragBaselineRemainingSeconds.value + deltaMinutes * 60,
+    )
+  } else {
+    dynamicMinutes.value = String(Math.max(0, minuteDragBaselineIdleMinutes.value + deltaMinutes))
+  }
+}
+
+const endMinutePointerSession = (event: PointerEvent) => {
+  if (!minutePointerSession.value) {
+    return
+  }
+
+  if (minuteDragActive.value && minuteDragIsActiveTimer.value) {
+    const y = Number.isFinite(event.clientY) ? event.clientY : lastMinuteDragClientY.value
+    const totalDelta = minuteDragDeltaMinutes(minuteDragStartY.value, y)
+
+    if (totalDelta !== 0) {
+      void addCountdownMinutes(totalDelta)
+    }
+  }
+
+  window.removeEventListener('pointermove', onMinuteWindowPointerMove)
+  window.removeEventListener('pointerup', onMinuteWindowPointerUp)
+  window.removeEventListener('pointercancel', onMinuteWindowPointerUp)
+
+  minuteDragPreviewRemainingSeconds.value = null
+  minutePointerSession.value = false
+  minuteDragActive.value = false
+}
+
+const onMinuteWindowPointerMove = (event: PointerEvent) => {
+  if (!minutePointerSession.value) {
+    return
+  }
+
+  const dy = Math.abs(event.clientY - minuteDragStartY.value)
+
+  if (!minuteDragActive.value) {
+    if (dy < MINUTE_DRAG_THRESHOLD_PX) {
+      return
+    }
+
+    minuteDragActive.value = true
+    const input = document.getElementById('dynamicMinutes') as HTMLInputElement | null
+
+    input?.blur()
+  }
+
+  event.preventDefault()
+  updateMinuteDragPreview(event.clientY)
+}
+
+const onMinuteWindowPointerUp = (event: PointerEvent) => {
+  endMinutePointerSession(event)
+}
+
+const handleMinuteColumnPointerDown = (event: PointerEvent) => {
+  if (event.button !== 0) {
+    return
+  }
+
+  minutePointerSession.value = true
+  minuteDragActive.value = false
+  minuteDragStartY.value = event.clientY
+  lastMinuteDragClientY.value = event.clientY
+  minuteDragBaselineIdleMinutes.value = parseBaselineIdleMinutes()
+  minuteDragBaselineRemainingSeconds.value = snapshot.value.remainingSeconds ?? 0
+  minuteDragIsActiveTimer.value = timerIsRunning.value || timerIsPaused.value
+  minuteDragPreviewRemainingSeconds.value = null
+
+  window.addEventListener('pointermove', onMinuteWindowPointerMove)
+  window.addEventListener('pointerup', onMinuteWindowPointerUp)
+  window.addEventListener('pointercancel', onMinuteWindowPointerUp)
+}
+
+onBeforeUnmount(() => {
+  window.removeEventListener('pointermove', onMinuteWindowPointerMove)
+  window.removeEventListener('pointerup', onMinuteWindowPointerUp)
+  window.removeEventListener('pointercancel', onMinuteWindowPointerUp)
+})
 
 const updateDraftMinutes = (minutesToAdd: number) => {
   const currentMinutes = Number(dynamicMinutes.value || '0')
@@ -31,9 +143,26 @@ const timerIsRunning = computed(
 const timerIsPaused = computed(
   () => snapshot.value.mode === 'countdown' && snapshot.value.status === 'paused',
 )
+
+const countdownMinutesDisplay = computed(() => {
+  const preview = minuteDragPreviewRemainingSeconds.value
+
+  if (preview !== null) {
+    return formatSecondsToMinutesSeconds(preview).split(':')[0] ?? '00'
+  }
+
+  return snapshot.value.display.split(':')[0] ?? '00'
+})
+
 const secondsProgress = computed(() => {
   if (snapshot.value.mode !== 'countdown') {
     return '00'
+  }
+
+  const preview = minuteDragPreviewRemainingSeconds.value
+
+  if (preview !== null) {
+    return formatSecondsToMinutesSeconds(preview).split(':')[1] ?? '00'
   }
 
   return snapshot.value.display.split(':')[1] ?? '00'
@@ -42,6 +171,10 @@ const secondsProgress = computed(() => {
 watch(
   () => snapshot.value,
   (nextSnapshot) => {
+    if (minutePointerSession.value) {
+      return
+    }
+
     if (nextSnapshot.mode === 'countdown') {
       dynamicMinutes.value = nextSnapshot.display.split(':')[0] ?? dynamicMinutes.value
     }
@@ -75,17 +208,23 @@ watch(
       >
         <TimerCancelButton @click="cancel" />
         <div class="flex flex-nowrap items-center">
-          <input
-            v-if="!timerIsRunning && !timerIsPaused"
-            id="dynamicMinutes"
-            v-model="dynamicMinutes"
-            type="text"
-            class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none"
-            @keyup.enter="($event.target as HTMLElement).blur()"
-            @keyup.esc="($event.target as HTMLElement).blur()"
-          />
-          <div v-else class="w-14 text-right leading-none">
-            {{ snapshot.display.split(':')[0] }}
+          <div
+            class="touch-none"
+            :class="minuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'"
+            @pointerdown="handleMinuteColumnPointerDown"
+          >
+            <input
+              v-if="!timerIsRunning && !timerIsPaused"
+              id="dynamicMinutes"
+              v-model="dynamicMinutes"
+              type="text"
+              class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none"
+              @keyup.enter="($event.target as HTMLElement).blur()"
+              @keyup.esc="($event.target as HTMLElement).blur()"
+            />
+            <div v-else class="w-14 text-right leading-none">
+              {{ countdownMinutesDisplay }}
+            </div>
           </div>
           <span class="relative -top-1">:</span>
           {{ secondsProgress }}
