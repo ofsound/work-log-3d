@@ -1,3 +1,5 @@
+import { onBeforeUnmount, ref } from 'vue'
+
 import { MINUTE_DRAG_THRESHOLD_PX, minuteDragDeltaMinutes } from '~/utils/minute-vertical-drag'
 
 export type MinuteVerticalDragSessionEndArgs = {

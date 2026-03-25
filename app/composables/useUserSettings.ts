@@ -1,3 +1,5 @@
+import type { Ref } from 'vue'
+
 import { doc, getFirestore, setDoc } from 'firebase/firestore'
 
 import type { FirebaseUserSettingsDocument } from '~/utils/worklog-firebase'
@@ -21,6 +23,13 @@ export function useUserSettings() {
 
   const rawSettings = useDocument(settingsDocument, {
     ssrKey: 'user-settings-preferences',
+  })
+
+  /** True while the preferences document snapshot is still loading from Firestore. */
+  const preferencesDocumentPending = computed(() => {
+    const binding = rawSettings as unknown as { pending?: Ref<boolean> }
+
+    return binding.pending?.value ?? false
   })
 
   const savedSettings = computed(() =>
@@ -56,6 +65,7 @@ export function useUserSettings() {
     defaultSettings: DEFAULT_USER_SETTINGS,
     hideTags,
     isReady,
+    preferencesDocumentPending,
     rawSettings,
     saveSettings,
     savedSettings,

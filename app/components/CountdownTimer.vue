@@ -1,17 +1,60 @@
 <script setup lang="ts">
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+
+import { useRoute } from '#imports'
+
+import { useMinuteVerticalDrag } from '~/composables/useMinuteVerticalDrag'
+import { useTimerService } from '~/composables/useTimerService'
+import { useUserSettings } from '~/composables/useUserSettings'
 import { toUserSettings, type FirebaseUserSettingsDocument } from '~/utils/worklog-firebase'
 import {
   cloneUserSettings,
-  DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
   formatSecondsToMinutesSeconds,
   normalizeCountdownDefaultMinutes,
 } from '~~/shared/worklog'
 
 const { isReady, snapshot, addCountdownMinutes, cancel, pause, resume, startCountdown } =
   useTimerService()
-const { rawSettings, savedSettings, saveSettings } = useUserSettings()
+const { rawSettings, savedSettings, saveSettings, preferencesDocumentPending } = useUserSettings()
 
-const dynamicMinutes = ref(String(DEFAULT_COUNTDOWN_DEFAULT_MINUTES))
+/** Empty until Firestore preferences finish loading so the default `30` does not flash before the saved value. */
+const dynamicMinutes = ref('')
+const idleMinutesHydrated = ref(false)
+
+/** When true, ignore Firestore-driven idle sync so stale snapshots cannot clobber in-progress edits. */
+const suppressingIdleMinutesRemoteSync = ref(false)
+const idleMinutesLocalOverride = ref<number | null>(null)
+
+/** When true, `dynamicMinutes` is being set from code (settings/timer), not the user — do not treat as a local edit. */
+const applyingProgrammaticDynamicMinutes = ref(false)
+
+const setDynamicMinutesProgrammatically = (next: string) => {
+  applyingProgrammaticDynamicMinutes.value = true
+  dynamicMinutes.value = next
+  void nextTick(() => {
+    applyingProgrammaticDynamicMinutes.value = false
+  })
+}
+
+const clearIdleMinutesLocalOverride = () => {
+  idleMinutesLocalOverride.value = null
+  suppressingIdleMinutesRemoteSync.value = false
+}
+
+const markIdleMinutesAsLocallyEdited = (minutes: number | null = normalizeParsedIdleMinutes()) => {
+  idleMinutesLocalOverride.value = minutes
+  suppressingIdleMinutesRemoteSync.value = true
+}
+
+const normalizeParsedIdleMinutes = (): number | null => {
+  const n = Number(dynamicMinutes.value || '0')
+
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+    return null
+  }
+
+  return normalizeCountdownDefaultMinutes(n)
+}
 const route = useRoute()
 const hasStartedPomodoro = ref(false)
 
@@ -28,12 +71,20 @@ const persistCountdownDefaultMinutes = async (minutes: number) => {
   const normalized = normalizeCountdownDefaultMinutes(minutes)
 
   if (normalized === savedSettings.value.workflow.countdownDefaultMinutes) {
+    clearIdleMinutesLocalOverride()
     return
   }
 
   const next = cloneUserSettings(savedSettings.value)
   next.workflow.countdownDefaultMinutes = normalized
-  await saveSettings(next)
+
+  try {
+    await saveSettings(next)
+  } catch (error) {
+    // Keep the local override active so stale saved settings do not snap the field back.
+    markIdleMinutesAsLocallyEdited(normalized)
+    console.warn('[worklog] unable to persist countdown default minutes', error)
+  }
 }
 
 const schedulePersistFromDynamicInput = () => {
@@ -72,6 +123,11 @@ const timerIsPaused = computed(
   () => snapshot.value.mode === 'countdown' && snapshot.value.status === 'paused',
 )
 
+/** Idle UI: hide minutes + ":ss" until preferences finish loading (no flash of ":00"). */
+const hideIdleTimeUntilPrefsLoaded = computed(
+  () => preferencesDocumentPending.value && !timerIsRunning.value && !timerIsPaused.value,
+)
+
 const {
   pointerSessionActive: minutePointerSession,
   dragActive: minuteDragActive,
@@ -91,7 +147,9 @@ const {
         minuteDragBaselineRemainingSeconds.value + deltaMinutes * 60,
       )
     } else {
-      dynamicMinutes.value = String(Math.max(0, minuteDragBaselineIdleMinutes.value + deltaMinutes))
+      const nextMinutes = Math.max(0, minuteDragBaselineIdleMinutes.value + deltaMinutes)
+      markIdleMinutesAsLocallyEdited(nextMinutes > 0 ? nextMinutes : null)
+      dynamicMinutes.value = String(nextMinutes)
     }
   },
   onSessionEnd({ deltaMinutes, didDragBeyondThreshold }) {
@@ -100,6 +158,7 @@ const {
     }
 
     if (didDragBeyondThreshold && !minuteDragIsActiveTimer.value) {
+      markIdleMinutesAsLocallyEdited()
       const n = Number(dynamicMinutes.value || '0')
 
       if (Number.isFinite(n) && Number.isInteger(n) && n > 0) {
@@ -126,7 +185,9 @@ const startTimer = () => {
 
 const handleCancel = async () => {
   await cancel()
-  dynamicMinutes.value = String(savedSettings.value.workflow.countdownDefaultMinutes)
+  clearIdleMinutesLocalOverride()
+  setDynamicMinutesProgrammatically(String(savedSettings.value.workflow.countdownDefaultMinutes))
+  idleMinutesHydrated.value = true
 }
 
 const onMinutesBlur = () => {
@@ -140,7 +201,9 @@ const onMinutesBlur = () => {
   const n = Number(dynamicMinutes.value || '0')
 
   if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
-    dynamicMinutes.value = String(savedSettings.value.workflow.countdownDefaultMinutes)
+    clearIdleMinutesLocalOverride()
+    setDynamicMinutesProgrammatically(String(savedSettings.value.workflow.countdownDefaultMinutes))
+    idleMinutesHydrated.value = true
 
     return
   }
@@ -181,9 +244,16 @@ watch(
 
     if (nextSnapshot.mode === 'countdown') {
       if (nextSnapshot.status === 'completed') {
-        dynamicMinutes.value = String(savedSettings.value.workflow.countdownDefaultMinutes)
+        clearIdleMinutesLocalOverride()
+        setDynamicMinutesProgrammatically(
+          String(savedSettings.value.workflow.countdownDefaultMinutes),
+        )
+        idleMinutesHydrated.value = true
       } else {
-        dynamicMinutes.value = nextSnapshot.display.split(':')[0] ?? dynamicMinutes.value
+        setDynamicMinutesProgrammatically(
+          nextSnapshot.display.split(':')[0] ?? dynamicMinutes.value,
+        )
+        idleMinutesHydrated.value = true
       }
     }
   },
@@ -191,8 +261,11 @@ watch(
 )
 
 watch(
-  rawSettings,
-  (doc) => {
+  () => ({
+    pending: preferencesDocumentPending.value,
+    doc: rawSettings.value as FirebaseUserSettingsDocument | null | undefined,
+  }),
+  ({ pending, doc }) => {
     if (timerIsRunning.value || timerIsPaused.value) {
       return
     }
@@ -201,15 +274,54 @@ watch(
       return
     }
 
-    // While `rawSettings` is missing (loading or a transient gap around `setDoc`), `savedSettings`
-    // falls back to defaults (30) — do not sync that into the field or it wipes local edits.
-    if (!doc) {
+    if (pending) {
       return
     }
 
-    dynamicMinutes.value = String(
-      toUserSettings(doc as FirebaseUserSettingsDocument).workflow.countdownDefaultMinutes,
-    )
+    if (!doc) {
+      if (suppressingIdleMinutesRemoteSync.value) {
+        const local = idleMinutesLocalOverride.value
+
+        if (local === null) {
+          return
+        }
+
+        const remote = savedSettings.value.workflow.countdownDefaultMinutes
+
+        if (remote !== local) {
+          return
+        }
+
+        clearIdleMinutesLocalOverride()
+      }
+
+      setDynamicMinutesProgrammatically(
+        String(savedSettings.value.workflow.countdownDefaultMinutes),
+      )
+      idleMinutesHydrated.value = true
+
+      return
+    }
+
+    const remote = toUserSettings(doc as FirebaseUserSettingsDocument).workflow
+      .countdownDefaultMinutes
+
+    if (suppressingIdleMinutesRemoteSync.value) {
+      const local = idleMinutesLocalOverride.value
+
+      if (local === null) {
+        return
+      }
+
+      if (remote !== local) {
+        return
+      }
+
+      clearIdleMinutesLocalOverride()
+    }
+
+    setDynamicMinutesProgrammatically(String(remote))
+    idleMinutesHydrated.value = true
   },
   { deep: true, immediate: true },
 )
@@ -219,6 +331,15 @@ watch(dynamicMinutes, () => {
     return
   }
 
+  if (applyingProgrammaticDynamicMinutes.value) {
+    return
+  }
+
+  if (!idleMinutesHydrated.value) {
+    return
+  }
+
+  markIdleMinutesAsLocallyEdited()
   schedulePersistFromDynamicInput()
 })
 
@@ -251,23 +372,25 @@ watch(
         :class="minuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'"
         @pointerdown="handleMinuteColumnPointerDown"
       >
-        <div>
-          <input
-            v-if="!timerIsRunning && !timerIsPaused"
-            id="dynamicMinutes"
-            v-model="dynamicMinutes"
-            type="text"
-            class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none select-text"
-            @keyup.enter="($event.target as HTMLElement).blur()"
-            @keyup.esc="($event.target as HTMLElement).blur()"
-            @blur="onMinutesBlur"
-          />
-          <div v-else class="w-14 text-right leading-none">
-            {{ countdownMinutesDisplay }}
+        <template v-if="!hideIdleTimeUntilPrefsLoaded">
+          <div>
+            <input
+              v-if="!timerIsRunning && !timerIsPaused"
+              id="dynamicMinutes"
+              v-model="dynamicMinutes"
+              type="text"
+              class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none select-text"
+              @keyup.enter="($event.target as HTMLElement).blur()"
+              @keyup.esc="($event.target as HTMLElement).blur()"
+              @blur="onMinutesBlur"
+            />
+            <div v-else class="w-14 text-right leading-none">
+              {{ countdownMinutesDisplay }}
+            </div>
           </div>
-        </div>
-        <span class="relative -top-1">:</span>
-        {{ secondsProgress }}
+          <span class="relative -top-1">:</span>
+          {{ secondsProgress }}
+        </template>
       </div>
     </div>
     <TimerButton v-if="!timerIsRunning && !timerIsPaused" class="shrink-0" @click="startTimer"
