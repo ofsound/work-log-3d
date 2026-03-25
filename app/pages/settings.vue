@@ -479,6 +479,7 @@ onBeforeUnmount(() => {
             >
               <ContainerCard
                 as="div"
+                flat-surface
                 padding="compact"
                 :interactive="draft.appearance.backgroundPreset !== option.id"
                 :selected="draft.appearance.backgroundPreset === option.id"

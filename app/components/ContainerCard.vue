@@ -16,6 +16,8 @@ defineOptions({
 const props = withDefaults(
   defineProps<{
     as?: ContainerCardRootTag
+    /** Omit panel shadows on the card, hover lift, and selected shadow (selection uses ring only). */
+    flatSurface?: boolean
     interactive?: boolean
     padding?: ContainerCardPadding
     selected?: boolean
@@ -23,6 +25,7 @@ const props = withDefaults(
   }>(),
   {
     as: 'div',
+    flatSurface: false,
     interactive: false,
     padding: 'default',
     selected: false,
@@ -42,6 +45,7 @@ const rootAttrs = computed(() => {
 
 const className = computed(() => [
   getContainerCardClassName({
+    flatSurface: props.flatSurface,
     interactive: props.interactive,
     padding: props.padding,
     selected: props.selected,

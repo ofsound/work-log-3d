@@ -286,7 +286,7 @@ const visibleInsights = computed(
                       {{ formatReportTime(session.clampedEndTimeIso, snapshot.timezone) }}
                     </div>
                   </div>
-                  <div class="mt-3 text-sm leading-6 whitespace-pre-line text-text">
+                  <div class="my-5 font-data whitespace-pre-line">
                     {{ session.notes }}
                   </div>
                   <div v-if="!hideTags" class="mt-3 flex flex-wrap gap-2">

@@ -2,6 +2,7 @@ import {
   DEFAULT_PROJECTS_PAGE_LAYOUT,
   PROJECTS_LAYOUT_GUEST_STORAGE_KEY,
   PROJECTS_LAYOUT_USER_STORAGE_KEY_PREFIX,
+  coerceProjectsPageViewQuery,
   getProjectsLayoutStorageKey,
   isProjectsPageLayout,
   readProjectsPageLayout,
@@ -55,6 +56,14 @@ describe('projects page layout storage', () => {
   })
 
   it('documents default layout', () => {
-    expect(DEFAULT_PROJECTS_PAGE_LAYOUT).toBe('list')
+    expect(DEFAULT_PROJECTS_PAGE_LAYOUT).toBe('grid')
+  })
+
+  it('coerces ?view= query for vue-router', () => {
+    expect(coerceProjectsPageViewQuery(undefined)).toBe('grid')
+    expect(coerceProjectsPageViewQuery('grid')).toBe('grid')
+    expect(coerceProjectsPageViewQuery(['grid'])).toBe('grid')
+    expect(coerceProjectsPageViewQuery('list')).toBe('list')
+    expect(coerceProjectsPageViewQuery('tiles')).toBe('grid')
   })
 })

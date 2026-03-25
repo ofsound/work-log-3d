@@ -203,15 +203,15 @@ const createTimeBoxDocument = async () => {
   try {
     mutationErrorMessage.value = ''
     const createdId = await repositories.timeBoxes.create(getTimeBoxInput())
-    emit('saved', createdId)
 
     if (props.resetAfterCreate) {
-      await showOverlayToast({
+      void showOverlayToast({
         title: 'Session logged successfully',
         message: 'Your session was saved to the calendar.',
       })
       resetTimeBoxEditor()
     }
+    emit('saved', createdId)
   } catch (error) {
     mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save the session.')
   }

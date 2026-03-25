@@ -115,16 +115,16 @@ const getCardStyle = (timeBox: TimeBox) => {
         variant="subtle"
         @click="emit('openSession', timeBox.id)"
       >
-        <div class="text-xs font-semibold tracking-[0.14em] text-text-subtle uppercase">
+        <div class="text-xs font-normal tracking-[0.08em] text-text uppercase">
           {{ getSessionTimeRange(timeBox) }}
         </div>
         <div
           v-if="showProjectName && getProjectName(timeBox)"
-          class="mt-2 text-[0.72rem] font-semibold tracking-[0.18em] text-text-subtle uppercase"
+          class="mt-1 text-xs font-bold text-text"
         >
           {{ getProjectName(timeBox) }}
         </div>
-        <div class="mt-1 text-sm font-semibold text-text">
+        <div class="mt-3 mb-2 font-data">
           {{ getSessionNotes(timeBox) }}
         </div>
       </ContainerCard>

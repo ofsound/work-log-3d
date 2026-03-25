@@ -49,10 +49,18 @@ const endTimeFromTimer = computed(() => {
 
   return formatToDatetimeLocal(new Date(snapshot.value.endedAtMs))
 })
+
+const adderRootRef = ref<HTMLElement | null>(null)
+
+const scrollAdderToTopAfterSave = () => {
+  nextTick(() => {
+    adderRootRef.value?.scrollIntoView({ behavior: 'auto', block: 'start' })
+  })
+}
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div ref="adderRootRef" class="flex flex-col gap-6">
     <div class="grid gap-4 lg:grid-cols-2">
       <CountdownTimer :class="{ 'blur-[2px] grayscale-100': countUpIsActive }" />
       <CountupTimer :class="{ 'blur-[2px] grayscale-100': countDownIsActive }" />
@@ -63,6 +71,7 @@ const endTimeFromTimer = computed(() => {
       :end-time-from-timer="endTimeFromTimer"
       :initial-project="routePrefill.project"
       :initial-tags="routePrefill.tags"
+      @saved="scrollAdderToTopAfterSave"
     />
   </div>
 </template>

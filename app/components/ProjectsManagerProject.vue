@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getProjectEditPathFromProject, getProjectPathFromProject } from '~/utils/worklog-routes'
 import { getTotalDurationRoundedHoursLabel } from '~~/shared/worklog'
 
 import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
-import type { ProjectsPageLayout } from '~/utils/projects-page-layout'
+import { DEFAULT_PROJECTS_PAGE_LAYOUT, type ProjectsPageLayout } from '~/utils/projects-page-layout'
 import type { Project, TimeBox } from '~~/shared/worklog'
 
 const { timeBoxesCollection } = useFirestoreCollections()
@@ -13,11 +15,12 @@ const timeBoxes = useCollection(timeBoxesCollection)
 
 const props = withDefaults(
   defineProps<{
-    layout?: ProjectsPageLayout
+    /** Not named `layout` — Nuxt injects route layout under that name in templates and would shadow this prop. */
+    viewMode?: ProjectsPageLayout
     project: Project
   }>(),
   {
-    layout: 'list',
+    viewMode: DEFAULT_PROJECTS_PAGE_LAYOUT,
   },
 )
 
@@ -74,7 +77,10 @@ const projectSessionDateRangeLabel = computed(() => {
   return `${minDate.toLocaleDateString(undefined, dateOpts)} – ${maxDate.toLocaleDateString(undefined, dateOpts)}`
 })
 
-const rowStyle = computed(() => getProjectSoftSurfaceStyle(props.project.colors))
+const rowStyle = computed(() => ({
+  ...getProjectSoftSurfaceStyle(props.project.colors),
+  '--project-edit-border-hover': props.project.colors.primary,
+}))
 const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.colors))
 </script>
 
@@ -84,13 +90,13 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
     padding="compact"
     :class="[
       'rounded-sm shadow-control hover:brightness-[1.03]',
-      layout === 'list' ? 'px-3 py-1.5' : 'flex h-full min-h-[148px] flex-col px-3 py-3',
+      viewMode === 'list' ? 'px-3 py-1.5' : 'flex h-full min-h-[148px] flex-col px-3 pt-3 pb-9',
     ]"
     :style="rowStyle"
     variant="subtle"
     @click="router.push(getProjectPathFromProject(project))"
   >
-    <template v-if="layout === 'list'">
+    <template v-if="viewMode === 'list'">
       <div class="flex gap-2">
         <div class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 p-1 text-left">
           <span class="font-bold text-text">{{ project.name }}</span>
@@ -101,25 +107,36 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
             {{ projectSessionDateRangeLabel }}
           </span>
         </div>
-        <div
-          class="relative top-1 mt-1.5 mb-3 ml-2 w-max self-start rounded-md border px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
-          :style="durationBadgeStyle"
-        >
-          {{ projectTimeBoxesTotalDuration }} hrs
+        <div class="flex shrink-0 flex-col items-end gap-1.5">
+          <button
+            type="button"
+            class="cursor-pointer rounded-md border border-solid border-button-secondary-border bg-transparent px-2 py-1 text-xs font-semibold text-button-secondary-text transition-[border-color] duration-150 hover:[border-color:var(--project-edit-border-hover)]"
+            @click.stop="router.push(getProjectEditPathFromProject(project))"
+          >
+            Edit
+          </button>
+          <div
+            class="w-max rounded-md border px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
+            :style="durationBadgeStyle"
+          >
+            {{ projectTimeBoxesTotalDuration }} hrs
+          </div>
         </div>
-        <button
-          type="button"
-          class="cursor-pointer rounded-md border border-button-secondary-border px-2 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-          @click.stop="router.push(getProjectEditPathFromProject(project))"
-        >
-          Edit
-        </button>
       </div>
     </template>
     <template v-else>
       <div class="flex h-full min-h-0 flex-1 flex-col gap-4">
+        <div class="flex shrink-0 justify-end">
+          <button
+            type="button"
+            class="cursor-pointer rounded-md border border-solid border-button-secondary-border bg-transparent px-2 py-1 text-xs font-semibold text-button-secondary-text transition-[border-color] duration-150 hover:[border-color:var(--project-edit-border-hover)]"
+            @click.stop="router.push(getProjectEditPathFromProject(project))"
+          >
+            Edit
+          </button>
+        </div>
         <div class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 px-1">
-          <span class="text-center font-bold text-text">{{ project.name }}</span>
+          <span class="text-center text-lg font-bold text-text">{{ project.name }}</span>
           <span
             v-if="projectSessionDateRangeLabel"
             class="text-center font-data text-xs font-normal text-text-muted italic"
@@ -134,13 +151,6 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
           >
             {{ projectTimeBoxesTotalDuration }} hrs
           </div>
-          <button
-            type="button"
-            class="cursor-pointer rounded-md border border-button-secondary-border px-2 py-1 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover"
-            @click.stop="router.push(getProjectEditPathFromProject(project))"
-          >
-            Edit
-          </button>
         </div>
       </div>
     </template>

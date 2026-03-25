@@ -45,7 +45,11 @@ const cancelCreateAndLoseFocus = () => {
     style="width: 100%; min-width: 100%"
     variant="gradient"
   >
-    <div class="mb-2 text-center text-xl font-bold uppercase">Tags</div>
+    <div class="mb-8 flex min-h-9 items-center gap-3">
+      <div class="flex min-w-0 flex-1 justify-start" aria-hidden="true" />
+      <div class="shrink-0 text-center text-2xl font-bold">Tags</div>
+      <div class="flex min-w-0 flex-1 justify-end" aria-hidden="true" />
+    </div>
     <div class="flex flex-col gap-2">
       <TagsManagerTag
         v-for="item in sortedAllTags"

@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
 
 import { mount } from '@vue/test-utils'
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 
 import ContainerCard from '~/app/components/ContainerCard.vue'
 
 const routerPush = vi.fn()
+const routerReplace = vi.fn()
+
+const route = reactive({
+  query: {} as Record<string, string | undefined>,
+})
+
 const projectDocuments = ref([
   {
     id: 'project-1',
@@ -19,32 +25,26 @@ const projectDocuments = ref([
   },
 ])
 
-const layoutRef = vi.hoisted(() => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { ref } = require('vue') as typeof import('vue')
-  return ref<'list' | 'grid'>('list')
-})
-
-vi.mock('~/composables/useProjectsPageLayout', () => ({
-  useProjectsPageLayout: () => ({
-    layout: layoutRef,
-    setLayout: (next: 'list' | 'grid') => {
-      layoutRef.value = next
-    },
-  }),
-}))
-;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-  useRouter: () => ({ push: routerPush }),
-}
-
-vi.mock('vuefire', () => ({
-  useCollection: () => projectDocuments,
-}))
-
 vi.mock('~/composables/useFirestoreCollections', () => ({
   useFirestoreCollections: () => ({
     projectsCollection: ref({ id: 'projects' }),
   }),
+}))
+;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+  useRouter: () => ({
+    push: routerPush,
+    replace: (opts: { query?: Record<string, string | undefined> }) => {
+      if (opts.query) {
+        route.query = { ...route.query, ...opts.query }
+      }
+      return routerReplace(opts)
+    },
+  }),
+  useRoute: () => route,
+}
+
+vi.mock('vuefire', () => ({
+  useCollection: () => projectDocuments,
 }))
 
 const { default: ProjectsManager } = await import('~/app/components/ProjectsManager.vue')
@@ -52,7 +52,8 @@ const { default: ProjectsManager } = await import('~/app/components/ProjectsMana
 describe('projects manager', () => {
   beforeEach(() => {
     routerPush.mockReset()
-    layoutRef.value = 'list'
+    routerReplace.mockReset()
+    route.query = {}
   })
 
   it('routes project creation to the dedicated new project page', async () => {
@@ -65,7 +66,7 @@ describe('projects manager', () => {
           GridLayoutIcon: true,
           ListLayoutIcon: true,
           ProjectsManagerProject: {
-            props: ['layout', 'project'],
+            props: ['viewMode', 'project'],
             template: '<div data-test="project-row">{{ project.name }}</div>',
           },
         },
@@ -74,7 +75,7 @@ describe('projects manager', () => {
 
     expect(wrapper.find('input').exists()).toBe(false)
 
-    await wrapper.get('[aria-label="Create project"]').trigger('click')
+    await wrapper.get('[aria-label="New project"]').trigger('click')
 
     expect(routerPush).toHaveBeenCalledWith('/project/new')
   })

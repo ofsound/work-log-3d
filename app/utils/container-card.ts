@@ -54,23 +54,59 @@ export const CONTAINER_CARD_INTERACTIVE_CLASS_NAME =
 export const CONTAINER_CARD_SELECTED_CLASS_NAME =
   'shadow-panel-selected ring-1 ring-link/35 ring-inset'
 
+/** Selected ring without panel shadow (for flat-surface cards). */
+export const CONTAINER_CARD_SELECTED_RING_ONLY_CLASS_NAME = 'ring-1 ring-link/35 ring-inset'
+
+/** Interactive affordances without shadow lift on hover (pairs with flat surface). */
+export const CONTAINER_CARD_INTERACTIVE_FLAT_CLASS_NAME =
+  'cursor-pointer transition-[filter] duration-150 ease-out hover:brightness-[1.02]'
+
+const stripShadowClasses = (className: string) =>
+  className
+    .split(/\s+/)
+    .filter((token) => token.length > 0 && !token.startsWith('shadow'))
+    .concat('shadow-none')
+    .join(' ')
+
 export const getContainerCardClassName = ({
+  flatSurface = false,
   interactive = false,
   padding = 'default',
   selected = false,
   variant = 'default',
 }: {
+  /** No panel shadow on the surface, hover, or selected states (border + ring only when selected). */
+  flatSurface?: boolean
   interactive?: boolean
   padding?: ContainerCardPadding
   selected?: boolean
   variant?: ContainerCardVariant
-}) =>
-  [
+}) => {
+  const variantClasses = flatSurface
+    ? stripShadowClasses(CONTAINER_CARD_VARIANT_CLASS_NAMES[variant])
+    : CONTAINER_CARD_VARIANT_CLASS_NAMES[variant]
+
+  const interactiveClasses =
+    interactive && flatSurface
+      ? CONTAINER_CARD_INTERACTIVE_FLAT_CLASS_NAME
+      : interactive
+        ? CONTAINER_CARD_INTERACTIVE_CLASS_NAME
+        : ''
+
+  const selectedClasses =
+    selected && flatSurface
+      ? CONTAINER_CARD_SELECTED_RING_ONLY_CLASS_NAME
+      : selected
+        ? CONTAINER_CARD_SELECTED_CLASS_NAME
+        : ''
+
+  return [
     BASE_CLASS_NAME,
-    CONTAINER_CARD_VARIANT_CLASS_NAMES[variant],
+    variantClasses,
     CONTAINER_CARD_PADDING_CLASS_NAMES[padding],
-    interactive ? CONTAINER_CARD_INTERACTIVE_CLASS_NAME : '',
-    selected ? CONTAINER_CARD_SELECTED_CLASS_NAME : '',
+    interactiveClasses,
+    selectedClasses,
   ]
     .filter(Boolean)
     .join(' ')
+}

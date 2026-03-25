@@ -6,7 +6,9 @@ import ContainerCard from '~/app/components/ContainerCard.vue'
 import {
   CONTAINER_CARD_PADDING_CLASS_NAMES,
   CONTAINER_CARD_SELECTED_CLASS_NAME,
+  CONTAINER_CARD_SELECTED_RING_ONLY_CLASS_NAME,
   CONTAINER_CARD_VARIANT_CLASS_NAMES,
+  getContainerCardClassName,
 } from '~/app/utils/container-card'
 
 describe('ContainerCard', () => {
@@ -71,6 +73,38 @@ describe('ContainerCard', () => {
 
     expect(wrapper.classes()).toContain('cursor-pointer')
     expect(wrapper.classes()).toContain('hover:brightness-[1.02]')
+  })
+
+  it('flat surface omits panel shadows and hover shadow lift while keeping selection ring', () => {
+    const unselected = mount(ContainerCard, {
+      props: {
+        flatSurface: true,
+        interactive: true,
+        variant: 'default',
+      },
+    })
+    const unselectedClass = unselected.classes().join(' ')
+    expect(unselectedClass).toContain('shadow-none')
+    expect(unselectedClass).not.toMatch(/\bshadow-panel\b/)
+    expect(unselectedClass).not.toMatch(/hover:shadow/)
+
+    const selected = mount(ContainerCard, {
+      props: {
+        flatSurface: true,
+        selected: true,
+        variant: 'muted',
+      },
+    })
+    for (const token of CONTAINER_CARD_SELECTED_RING_ONLY_CLASS_NAME.split(' ')) {
+      expect(selected.classes()).toContain(token)
+    }
+    expect(selected.classes()).not.toContain('shadow-panel-selected')
+  })
+
+  it('getContainerCardClassName flat surface strips shadow tokens from variants', () => {
+    const flat = getContainerCardClassName({ flatSurface: true, variant: 'default' })
+    expect(flat).toContain('shadow-none')
+    expect(flat).not.toContain('shadow-panel')
   })
 
   it('passes through attrs, classes, and inline styles to the root element', () => {

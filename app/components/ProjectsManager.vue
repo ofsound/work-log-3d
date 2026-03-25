@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from '#imports'
+import { useRoute, useRouter } from '#imports'
 import { useCollection } from 'vuefire'
 
 import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
-import { useProjectsPageLayout } from '~/composables/useProjectsPageLayout'
 import GridLayoutIcon from '~/icons/GridLayoutIcon.vue'
 import ListLayoutIcon from '~/icons/ListLayoutIcon.vue'
 
@@ -12,13 +11,27 @@ import { sortNamedEntities } from '~~/shared/worklog'
 import { toProjects } from '~/utils/worklog-firebase'
 import { getProjectNewPath } from '~/utils/worklog-routes'
 
+import { coerceProjectsPageViewQuery, type ProjectsPageLayout } from '~/utils/projects-page-layout'
 import type { Project } from '~~/shared/worklog'
 import type { FirebaseProjectDocument } from '~/utils/worklog-firebase'
 
 const { projectsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
+const route = useRoute()
 const router = useRouter()
-const { layout, setLayout } = useProjectsPageLayout()
+
+/** Grid is the default; `?view=list` opts into list. Omit `view` for grid. */
+const projectsLayout = computed<ProjectsPageLayout>(() => coerceProjectsPageViewQuery(route.query.view))
+
+const setLayout = (next: ProjectsPageLayout) => {
+  const query = { ...route.query }
+  if (next === 'grid') {
+    delete query.view
+  } else {
+    query.view = 'list'
+  }
+  router.replace({ query })
+}
 
 const allProjectsNormalized = computed<Project[]>(() =>
   sortNamedEntities(toProjects(allProjects.value as FirebaseProjectDocument[])),
@@ -30,14 +43,24 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
 <template>
   <ContainerCard
     as="section"
-    class="mb-4 w-full rounded-sm py-4"
+    class="mb-4 w-full min-w-0 rounded-sm py-4"
     padding="comfortable"
     style="width: 100%; min-width: 100%"
     variant="projectGradient"
   >
     <div class="mb-8 flex items-center gap-3">
-      <div class="min-w-0 flex-1" aria-hidden="true" />
-      <div class="shrink-0 text-center text-xl font-bold uppercase">Projects</div>
+      <div class="flex min-w-0 flex-1 justify-start">
+        <AppButton
+          class="w-max tracking-wide"
+          size="sm"
+          variant="primary"
+          aria-label="New project"
+          @click="router.push(getProjectNewPath())"
+        >
+          New Project
+        </AppButton>
+      </div>
+      <div class="shrink-0 text-center text-2xl font-bold">Projects</div>
       <div class="flex min-w-0 flex-1 justify-end">
         <div
           class="inline-flex rounded-md border border-border bg-surface-muted p-0.5 shadow-control"
@@ -47,10 +70,10 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
           <button
             type="button"
             class="inline-flex size-9 cursor-pointer items-center justify-center rounded-sm text-text-muted transition-colors hover:bg-surface-strong hover:text-text"
-            :class="layout === 'list' ? 'bg-surface text-text shadow-sm' : ''"
+            :class="projectsLayout === 'list' ? 'bg-surface text-text shadow-sm' : ''"
             aria-label="List layout"
             title="List layout"
-            :aria-pressed="layout === 'list'"
+            :aria-pressed="projectsLayout === 'list'"
             @click="setLayout('list')"
           >
             <ListLayoutIcon class="size-[18px]" />
@@ -58,10 +81,10 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
           <button
             type="button"
             class="inline-flex size-9 cursor-pointer items-center justify-center rounded-sm text-text-muted transition-colors hover:bg-surface-strong hover:text-text"
-            :class="layout === 'grid' ? 'bg-surface text-text shadow-sm' : ''"
+            :class="projectsLayout === 'grid' ? 'bg-surface text-text shadow-sm' : ''"
             aria-label="Grid layout"
             title="Grid layout"
-            :aria-pressed="layout === 'grid'"
+            :aria-pressed="projectsLayout === 'grid'"
             @click="setLayout('grid')"
           >
             <GridLayoutIcon class="size-[18px]" />
@@ -69,52 +92,50 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
         </div>
       </div>
     </div>
-    <div class="flex flex-col gap-6">
-      <div class="flex flex-col gap-3">
-        <div class="text-center text-sm font-semibold tracking-wide text-text-muted uppercase">
+    <div class="flex min-w-0 flex-col gap-6">
+      <div class="flex min-w-0 flex-col gap-3">
+        <div
+          v-if="archivedProjects.length > 0"
+          class="text-center text-sm font-semibold tracking-wide text-text-muted uppercase"
+        >
           Active
         </div>
         <div
-          :class="[
-            layout === 'list' ? 'flex flex-col gap-4' : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3',
-          ]"
+          :key="projectsLayout === 'grid' ? 'active-grid' : 'active-list'"
+          :class="
+            projectsLayout === 'list'
+              ? 'flex flex-col gap-4'
+              : 'grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
+          "
         >
           <ProjectsManagerProject
             v-for="item in activeProjects"
             :key="item.id"
-            :layout="layout"
+            :view-mode="projectsLayout"
             :project="item"
           />
         </div>
       </div>
-      <div v-if="archivedProjects.length > 0" class="flex flex-col gap-3">
+      <div v-if="archivedProjects.length > 0" class="flex min-w-0 flex-col gap-3">
         <div class="text-center text-sm font-semibold tracking-wide text-text-muted uppercase">
           Archived
         </div>
         <div
-          :class="[
-            layout === 'list' ? 'flex flex-col gap-4' : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3',
-          ]"
+          :key="projectsLayout === 'grid' ? 'archived-grid' : 'archived-list'"
+          :class="
+            projectsLayout === 'list'
+              ? 'flex flex-col gap-4'
+              : 'grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
+          "
         >
           <ProjectsManagerProject
             v-for="item in archivedProjects"
             :key="item.id"
-            :layout="layout"
+            :view-mode="projectsLayout"
             :project="item"
           />
         </div>
       </div>
-    </div>
-    <div class="mt-8 flex justify-end">
-      <AppButton
-        class="ml-auto w-max tracking-wide"
-        size="sm"
-        variant="primary"
-        aria-label="Create project"
-        @click="router.push(getProjectNewPath())"
-      >
-        + Create Project
-      </AppButton>
     </div>
   </ContainerCard>
 </template>

@@ -31,7 +31,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Shared validation lives in `shared/worklog/validation.ts`
 - Firestore rules in `firestore.rules` must match the current document shape
 - Theme preference is stored in `localStorage` per Firebase user, with a guest fallback before auth resolves
-- `/projects` list vs grid layout uses the same per-user (and guest) `localStorage` pattern
+- `/projects` defaults to **grid**; add **`?view=list`** for list. Grid leaves `view` out of the URL; toggling uses `router.replace`. **`ProjectsManagerProject` uses a `viewMode` prop** because Nuxt exposes the route layout name as `layout` in templates, which would shadow a prop named `layout`
 - Appearance, workflow, and tray shortcut settings are stored in Firestore at `users/{uid}/settings/preferences`, while desktop alert sounds stay local to each Electron install
 
 ## Setup

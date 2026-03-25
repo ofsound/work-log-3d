@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { definePageMeta } from '#imports'
 
-definePageMeta({ layout: 'main-simple' })
+definePageMeta({
+  layout: 'main-simple',
+})
 </script>
 
 <template>
