@@ -21,7 +21,7 @@ describe('ProjectEditorFormLayout', () => {
           sessionCount: 7,
           totalDurationLabel: '12.5',
         },
-        heading: 'Edit project details',
+        heading: 'Edit Project',
         lowContrastWarning: true,
         name: 'Client Portal',
         notes: 'Private working notes',
@@ -43,7 +43,7 @@ describe('ProjectEditorFormLayout', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('Edit project details')
+    expect(wrapper.text()).toContain('Edit Project')
     expect(wrapper.text()).toContain('Live preview')
     expect(wrapper.text()).toContain('Project context')
     expect(wrapper.text()).toContain('This color pairing may reduce contrast')

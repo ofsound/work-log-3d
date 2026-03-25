@@ -3,6 +3,7 @@
 import { mount } from '@vue/test-utils'
 import { nextTick, ref } from 'vue'
 
+import ProjectWorkspaceHeader from '~/app/components/ProjectWorkspaceHeader.vue'
 import { getProjectDefaultMetadata } from '../shared/worklog'
 
 const routerPush = vi.fn()
@@ -61,7 +62,7 @@ describe('project create workspace', () => {
     getDocs.mockResolvedValue({ size: 3 })
   })
 
-  it('renders a create-specific header without workspace tabs', async () => {
+  it('renders the create form without a workspace header strip', async () => {
     const wrapper = mount(ProjectCreateWorkspace, {
       global: {
         stubs: {
@@ -74,10 +75,6 @@ describe('project create workspace', () => {
               </div>
             `,
           },
-          ProjectWorkspaceHeader: {
-            props: ['tabs', 'title'],
-            template: '<div data-test="header" :data-title="title" :data-tabs="tabs.length"></div>',
-          },
         },
       },
     })
@@ -86,8 +83,7 @@ describe('project create workspace', () => {
 
     expect(wrapper.get('[data-test="heading"]').text()).toBe('Create project')
     expect(wrapper.get('[data-test="submit-label"]').text()).toBe('Create project')
-    expect(wrapper.get('[data-test="header"]').attributes('data-title')).toBe('New project')
-    expect(wrapper.get('[data-test="header"]').attributes('data-tabs')).toBe('0')
+    expect(wrapper.findComponent(ProjectWorkspaceHeader).exists()).toBe(false)
   })
 
   it('creates a project and redirects to its overview route', async () => {
@@ -107,10 +103,6 @@ describe('project create workspace', () => {
                 <button data-test="cancel" @click="$emit('cancel')"></button>
               </div>
             `,
-          },
-          ProjectWorkspaceHeader: {
-            props: ['tabs', 'title'],
-            template: '<div data-test="header" :data-title="title" :data-tabs="tabs.length"></div>',
           },
         },
       },
@@ -137,10 +129,6 @@ describe('project create workspace', () => {
           ProjectEditorFormLayout: {
             emits: ['cancel'],
             template: '<button data-test="cancel" @click="$emit(\'cancel\')"></button>',
-          },
-          ProjectWorkspaceHeader: {
-            props: ['tabs', 'title'],
-            template: '<div data-test="header" :data-title="title" :data-tabs="tabs.length"></div>',
           },
         },
       },

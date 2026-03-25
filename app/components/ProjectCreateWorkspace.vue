@@ -186,43 +186,33 @@ onBeforeRouteLeave(async (to) => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-hidden">
-    <ProjectWorkspaceHeader
-      :active-mode="null"
-      :badges="[]"
-      :error-message="mutationErrorMessage"
-      :header-style="previewHeaderStyle as Record<string, string>"
-      :tabs="[]"
-      :title="dynamicName.trim() || 'New project'"
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <p v-if="mutationErrorMessage" class="text-sm text-danger">
+      {{ mutationErrorMessage }}
+    </p>
+    <ProjectEditorFormLayout
+      heading="Create project"
+      :is-saving="isSaving"
+      :low-contrast-warning="lowContrastWarning"
+      :name="dynamicName"
+      :notes="dynamicNotes"
+      :preview-badge-style="previewBadgeStyle as Record<string, string>"
+      :preview-header-style="previewHeaderStyle as Record<string, string>"
+      preview-notes-fallback="Notes can help you frame the project before the first session."
+      :preview-surface-style="previewSurfaceStyle as Record<string, string>"
+      :primary-color="dynamicPrimaryColor"
+      :secondary-color="dynamicSecondaryColor"
+      :secondary-color-enabled="secondaryColorEnabled"
+      submit-label="Create project"
+      @apply-palette="applyPalette"
+      @cancel="leaveCreateWorkspace"
+      @clear-error="mutationErrorMessage = ''"
+      @save="saveProject"
+      @update:name="dynamicName = $event"
+      @update:notes="dynamicNotes = $event"
+      @update:primary-color="dynamicPrimaryColor = $event"
+      @update:secondary-color="dynamicSecondaryColor = $event"
+      @update:secondary-color-enabled="secondaryColorEnabled = $event"
     />
-
-    <div class="flex-1 overflow-auto px-11 py-6">
-      <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <ProjectEditorFormLayout
-          heading="Create project"
-          :is-saving="isSaving"
-          :low-contrast-warning="lowContrastWarning"
-          :name="dynamicName"
-          :notes="dynamicNotes"
-          :preview-badge-style="previewBadgeStyle as Record<string, string>"
-          :preview-header-style="previewHeaderStyle as Record<string, string>"
-          preview-notes-fallback="Notes can help you frame the project before the first session."
-          :preview-surface-style="previewSurfaceStyle as Record<string, string>"
-          :primary-color="dynamicPrimaryColor"
-          :secondary-color="dynamicSecondaryColor"
-          :secondary-color-enabled="secondaryColorEnabled"
-          submit-label="Create project"
-          @apply-palette="applyPalette"
-          @cancel="leaveCreateWorkspace"
-          @clear-error="mutationErrorMessage = ''"
-          @save="saveProject"
-          @update:name="dynamicName = $event"
-          @update:notes="dynamicNotes = $event"
-          @update:primary-color="dynamicPrimaryColor = $event"
-          @update:secondary-color="dynamicSecondaryColor = $event"
-          @update:secondary-color-enabled="secondaryColorEnabled = $event"
-        />
-      </div>
-    </div>
   </div>
 </template>

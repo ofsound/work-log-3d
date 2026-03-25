@@ -322,7 +322,7 @@ onBeforeRouteLeave(async () => {
         <ProjectEditorFormLayout
           :archived="dynamicArchived"
           :context-summary="projectSummary"
-          heading="Edit project details"
+          heading="Edit Project"
           :is-saving="isSaving"
           :low-contrast-warning="lowContrastWarning"
           :name="dynamicName"

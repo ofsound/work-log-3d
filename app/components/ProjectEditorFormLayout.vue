@@ -90,17 +90,16 @@ const toggleArchived = () => {
   <div class="flex w-full min-w-0 flex-col gap-6">
     <ContainerCard as="section" class="w-full rounded-3xl" padding="comfortable">
       <div class="mb-6">
-        <div class="text-xs tracking-[0.2em] text-text-subtle uppercase">Metadata</div>
-        <h1 class="mt-2 text-2xl font-bold text-text">{{ heading }}</h1>
+        <h1 class="text-2xl font-bold text-text">{{ heading }}</h1>
       </div>
 
       <div class="flex flex-col gap-5">
-        <AppField label="Project name">
+        <AppField label="Name">
           <AppTextInput
             density="comfortable"
             :value="name"
             type="text"
-            placeholder="Project name"
+            placeholder=""
             @input="updateName"
           />
         </AppField>
