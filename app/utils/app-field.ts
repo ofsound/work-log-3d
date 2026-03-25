@@ -29,7 +29,7 @@ export const getAppFieldLabelClassName = ({
   variant?: AppFieldLabelVariant
 }) => APP_FIELD_LABEL_CLASS_NAMES[variant]
 
-const CONTROL_BASE = 'min-w-0 border border-input-border bg-input text-text'
+const CONTROL_BASE = 'min-w-0 border border-input-border bg-input text-text select-text'
 
 const CONTROL_DENSITY_CLASS_NAMES: Record<AppFieldDensity, string> = {
   compact: 'rounded-md px-3 py-2',

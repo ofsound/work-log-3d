@@ -4,6 +4,7 @@ import type { PropType } from 'vue'
 import { doc } from 'firebase/firestore'
 
 import { getProjectPickerOptionStyle } from '~/utils/project-color-styles'
+import { addMinutesToDatetimeLocal } from '~/utils/minute-vertical-drag'
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -12,6 +13,7 @@ import type {
 import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
 import type { TimeBoxInput } from '~~/shared/worklog'
 import {
+  formatLocaleTime,
   formatSessionTimeHero,
   formatToDatetimeLocal,
   getWorklogErrorMessage,
@@ -318,14 +320,83 @@ watch(
   },
 )
 
-function adjustDurationMinutes(delta: number) {
-  mutationErrorMessage.value = ''
-  const raw = dynamicDuration.value
-  const current = Number(typeof raw === 'string' ? raw.trim() || '0' : raw || 0)
-  const base = Number.isFinite(current) ? current : 0
-  const next = Math.max(0, base + delta)
-  dynamicDuration.value = next === 0 ? '' : next
-}
+let durationDragBaselineMinutes = 0
+
+const { dragActive: durationMinuteDragActive, onPointerDown: onDurationMinutePointerDown } =
+  useMinuteVerticalDrag({
+    blurSelector: '#timebox-duration-minutes',
+    onSessionStart() {
+      const raw = dynamicDuration.value
+      const current = Number(typeof raw === 'string' ? raw.trim() || '0' : raw || 0)
+      durationDragBaselineMinutes = Number.isFinite(current) ? current : 0
+    },
+    onDrag(deltaMinutes) {
+      const next = Math.max(0, durationDragBaselineMinutes + deltaMinutes)
+      dynamicDuration.value = next === 0 ? '' : next
+      mutationErrorMessage.value = ''
+    },
+    onSessionEnd({ didDragBeyondThreshold }) {
+      if (didDragBeyondThreshold) {
+        mutationErrorMessage.value = ''
+      }
+    },
+  })
+
+let startTimeDragBaseline = ''
+
+const { dragActive: startTimeMinuteDragActive, onPointerDown: onStartTimeMinutePointerDown } =
+  useMinuteVerticalDrag({
+    onSessionStart() {
+      startTimeDragBaseline = dynamicStartTime.value
+    },
+    onDrag(deltaMinutes) {
+      if (!startTimeDragBaseline) {
+        return
+      }
+
+      const parsed = new Date(startTimeDragBaseline)
+
+      if (Number.isNaN(parsed.getTime())) {
+        return
+      }
+
+      dynamicStartTime.value = addMinutesToDatetimeLocal(startTimeDragBaseline, deltaMinutes)
+      mutationErrorMessage.value = ''
+    },
+    onSessionEnd({ didDragBeyondThreshold }) {
+      if (didDragBeyondThreshold) {
+        mutationErrorMessage.value = ''
+      }
+    },
+  })
+
+let endTimeDragBaseline = ''
+
+const { dragActive: endTimeMinuteDragActive, onPointerDown: onEndTimeMinutePointerDown } =
+  useMinuteVerticalDrag({
+    onSessionStart() {
+      endTimeDragBaseline = dynamicEndTime.value
+    },
+    onDrag(deltaMinutes) {
+      if (!endTimeDragBaseline) {
+        return
+      }
+
+      const parsed = new Date(endTimeDragBaseline)
+
+      if (Number.isNaN(parsed.getTime())) {
+        return
+      }
+
+      dynamicEndTime.value = addMinutesToDatetimeLocal(endTimeDragBaseline, deltaMinutes)
+      mutationErrorMessage.value = ''
+    },
+    onSessionEnd({ didDragBeyondThreshold }) {
+      if (didDragBeyondThreshold) {
+        mutationErrorMessage.value = ''
+      }
+    },
+  })
 
 const handleEscape = (event: { key: string }) => {
   if (event.key === 'Escape') {
@@ -362,53 +433,22 @@ onBeforeUnmount(() => {
           <div
             class="flex min-w-0 items-end gap-2 rounded-2xl border border-input-border bg-input px-3 py-3 [@container(min-width:38rem)]:h-full"
           >
-            <input
-              v-model="dynamicDuration"
-              inputmode="numeric"
-              class="min-w-0 flex-1 bg-transparent text-right text-4xl font-bold tabular-nums outline-none"
-              @input="mutationErrorMessage = ''"
-            />
+            <div
+              class="flex min-w-0 flex-1 touch-none"
+              :class="durationMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'"
+              @pointerdown="onDurationMinutePointerDown"
+            >
+              <input
+                id="timebox-duration-minutes"
+                v-model="dynamicDuration"
+                inputmode="numeric"
+                class="w-full min-w-0 bg-transparent text-right text-4xl font-bold tabular-nums outline-none select-text"
+                @input="mutationErrorMessage = ''"
+              />
+            </div>
             <span class="pb-1 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
               >min</span
             >
-          </div>
-          <div
-            class="flex min-w-0 flex-nowrap items-center gap-0.5 [@container(min-width:38rem)]:gap-1"
-            role="group"
-            aria-label="Adjust duration in minutes"
-          >
-            <AppButton
-              size="xs"
-              variant="secondary"
-              class="min-w-0 flex-1 [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
-              @click="adjustDurationMinutes(-10)"
-            >
-              -10
-            </AppButton>
-            <AppButton
-              size="xs"
-              variant="secondary"
-              class="min-w-0 flex-1 [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
-              @click="adjustDurationMinutes(-5)"
-            >
-              -5
-            </AppButton>
-            <AppButton
-              size="xs"
-              variant="secondary"
-              class="min-w-0 flex-1 [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
-              @click="adjustDurationMinutes(5)"
-            >
-              +5
-            </AppButton>
-            <AppButton
-              size="xs"
-              variant="secondary"
-              class="min-w-0 flex-1 [@container(min-width:38rem)]:px-1 [@container(min-width:38rem)]:text-xs"
-              @click="adjustDurationMinutes(10)"
-            >
-              +10
-            </AppButton>
           </div>
         </AppField>
 
@@ -418,7 +458,22 @@ onBeforeUnmount(() => {
               v-if="sessionTimeHero"
               class="min-w-0 text-3xl leading-tight font-bold tracking-tight tabular-nums [@container(min-width:44rem)]:text-4xl"
             >
-              {{ sessionTimeHero.primary }}
+              <span
+                class="inline touch-none"
+                :class="
+                  startTimeMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'
+                "
+                @pointerdown="onStartTimeMinutePointerDown"
+                >{{ formatLocaleTime(new Date(dynamicStartTime)) }}</span
+              ><span aria-hidden="true"> – </span
+              ><span
+                class="inline touch-none"
+                :class="
+                  endTimeMinuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'
+                "
+                @pointerdown="onEndTimeMinutePointerDown"
+                >{{ formatLocaleTime(new Date(dynamicEndTime)) }}</span
+              >
             </p>
             <template v-else>
               <p
