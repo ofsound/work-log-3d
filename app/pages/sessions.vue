@@ -543,7 +543,11 @@ const handleOpenSessionFromMonth = async (payload: { day: Date; sessionId: strin
 }
 
 const handleNavigate = async (direction: -1 | 1) => {
-  await flushScratchpadIfNeeded()
+  if (currentMode.value === 'week' || currentMode.value === 'month') {
+    await closePanel()
+  } else {
+    await flushScratchpadIfNeeded()
+  }
 
   if (currentMode.value === 'day') {
     await updateRouteState({ date: addDays(anchorDate.value, direction) })
@@ -559,7 +563,11 @@ const handleNavigate = async (direction: -1 | 1) => {
 }
 
 const handleGoToday = async () => {
-  await flushScratchpadIfNeeded()
+  if (currentMode.value === 'week' || currentMode.value === 'month') {
+    await closePanel()
+  } else {
+    await flushScratchpadIfNeeded()
+  }
   await updateRouteState({ date: new Date() })
 }
 
