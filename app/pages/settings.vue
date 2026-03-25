@@ -172,6 +172,7 @@ const loadDesktopAlertState = async () => {
 const runDesktopAlertAction = async (
   action: () => Promise<DesktopAlertSoundState | undefined>,
   successMessage = '',
+  options?: { transientNotification?: boolean },
 ) => {
   if (!desktopApi) {
     return
@@ -179,12 +180,23 @@ const runDesktopAlertAction = async (
 
   isMutatingDesktopAlert.value = true
 
+  const transient = options?.transientNotification === true
+  if (transient && successMessage) {
+    desktopAlertMessage.value = successMessage
+  }
+
+  let clearTransientAfterSuccess = false
+
   try {
     const nextState = await action()
     if (nextState) {
       desktopAlertState.value = nextState
     }
-    desktopAlertMessage.value = successMessage
+    if (!transient) {
+      desktopAlertMessage.value = successMessage
+    } else {
+      clearTransientAfterSuccess = true
+    }
   } catch (error) {
     desktopAlertMessage.value = getWorklogErrorMessage(
       error,
@@ -192,6 +204,9 @@ const runDesktopAlertAction = async (
     )
   } finally {
     isMutatingDesktopAlert.value = false
+    if (clearTransientAfterSuccess) {
+      desktopAlertMessage.value = ''
+    }
   }
 }
 
@@ -532,12 +547,133 @@ onBeforeUnmount(() => {
 
         <div v-else class="mt-5 flex flex-col gap-6">
           <section class="flex flex-col gap-4">
-            <div class="flex flex-col gap-1">
-              <AppFieldLabel as="div">Timer completion sound</AppFieldLabel>
-              <p class="text-sm leading-6 text-text-muted">
-                Choose the sound this device plays when a countdown completes.
-              </p>
+            <AppFieldLabel as="div">Tray menu shortcuts</AppFieldLabel>
+
+            <ContainerCard
+              v-if="draft.desktop.trayShortcuts.length === 0"
+              class="py-5 text-sm text-text-muted shadow-none"
+              padding="compact"
+              variant="muted"
+            >
+              No custom tray shortcuts yet.
+            </ContainerCard>
+
+            <ContainerCard
+              v-for="(shortcut, index) in draft.desktop.trayShortcuts"
+              :key="shortcut.id"
+              class="flex flex-col gap-4"
+              padding="compact"
+              variant="muted"
+            >
+              <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div class="grid flex-1 gap-4 lg:grid-cols-2">
+                  <AppField label="Label">
+                    <AppTextInput v-model="shortcut.label" placeholder="Deep work" />
+                  </AppField>
+
+                  <fieldset class="flex min-w-0 flex-col gap-2">
+                    <AppFieldLabel as="legend">Timer</AppFieldLabel>
+                    <div class="flex flex-wrap gap-2">
+                      <AppToggleChip :selected="shortcut.timerMode === 'countup'">
+                        <input
+                          :checked="shortcut.timerMode === 'countup'"
+                          :name="`trayShortcutMode-${shortcut.id}`"
+                          type="radio"
+                          @change="setTrayShortcutTimerMode(shortcut, 'countup')"
+                        />
+                        <span>Count up</span>
+                      </AppToggleChip>
+                      <AppToggleChip :selected="shortcut.timerMode === 'countdown'">
+                        <input
+                          :checked="shortcut.timerMode === 'countdown'"
+                          :name="`trayShortcutMode-${shortcut.id}`"
+                          type="radio"
+                          @change="setTrayShortcutTimerMode(shortcut, 'countdown')"
+                        />
+                        <span>Countdown</span>
+                      </AppToggleChip>
+                    </div>
+                  </fieldset>
+
+                  <AppField v-if="shortcut.timerMode === 'countdown'" label="Countdown minutes">
+                    <AppTextInput
+                      :value="shortcut.durationMinutes ?? ''"
+                      min="1"
+                      step="1"
+                      type="number"
+                      placeholder="30"
+                      @input="handleTrayShortcutDurationInput(shortcut, $event)"
+                    />
+                  </AppField>
+
+                  <AppField label="Project">
+                    <AppSelect v-model="shortcut.project">
+                      <option value="">No project preselected</option>
+                      <option
+                        v-for="project in trayShortcutProjectOptions"
+                        :key="project.id"
+                        :value="project.id"
+                      >
+                        {{ project.name }}
+                      </option>
+                    </AppSelect>
+                  </AppField>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <AppButton
+                    variant="secondary"
+                    :disabled="index === 0"
+                    @click="moveTrayShortcut(index, -1)"
+                  >
+                    Move up
+                  </AppButton>
+                  <AppButton
+                    variant="secondary"
+                    :disabled="index === draft.desktop.trayShortcuts.length - 1"
+                    @click="moveTrayShortcut(index, 1)"
+                  >
+                    Move down
+                  </AppButton>
+                  <AppButton variant="danger" @click="removeTrayShortcut(shortcut.id)">
+                    Remove
+                  </AppButton>
+                </div>
+              </div>
+
+              <div class="min-w-0 border-t border-border-subtle pt-4">
+                <AppField as="div" label="Tags">
+                  <template #description>
+                    <p class="text-xs text-text-muted">
+                      Tags apply when this shortcut opens the new session form.
+                    </p>
+                  </template>
+                  <div v-if="sortedTags.length" class="flex flex-wrap gap-2">
+                    <AppToggleChip
+                      v-for="tag in sortedTags"
+                      :key="tag.id"
+                      :selected="shortcut.tags.includes(tag.id)"
+                    >
+                      <input v-model="shortcut.tags" type="checkbox" :value="tag.id" />
+                      <span>{{ tag.name }}</span>
+                    </AppToggleChip>
+                  </div>
+
+                  <p v-else class="text-sm text-text-muted">
+                    No tags available yet. Create tags first if you want to prefill them from tray
+                    shortcuts.
+                  </p>
+                </AppField>
+              </div>
+            </ContainerCard>
+
+            <div class="flex flex-wrap gap-2">
+              <AppButton variant="primary" @click="addTrayShortcut">Add shortcut</AppButton>
             </div>
+          </section>
+
+          <section class="flex flex-col gap-4 border-t border-border-subtle pt-6">
+            <AppFieldLabel as="div">Timer completion sound</AppFieldLabel>
 
             <ContainerCard padding="compact" variant="muted">
               <AppFieldLabel as="div">Current sound</AppFieldLabel>
@@ -577,6 +713,7 @@ onBeforeUnmount(() => {
                   runDesktopAlertAction(
                     () => desktopApi!.testAlertSound().then(() => undefined),
                     'Playing alert sound…',
+                    { transientNotification: true },
                   )
                 "
               >
@@ -602,142 +739,6 @@ onBeforeUnmount(() => {
             <p v-if="desktopAlertMessage" class="text-sm text-text-muted">
               {{ desktopAlertMessage }}
             </p>
-          </section>
-
-          <section class="flex flex-col gap-4 border-t border-border-subtle pt-6">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <AppFieldLabel as="div">Tray menu shortcuts</AppFieldLabel>
-                <p class="mt-1 text-sm leading-6 text-text-muted">
-                  Add desktop-only shortcuts that appear alongside Pomodoro and Start Timer. Each
-                  shortcut can start count up or countdown and open `/new` with a project and tags
-                  preselected.
-                </p>
-              </div>
-              <AppButton variant="primary" @click="addTrayShortcut">Add shortcut</AppButton>
-            </div>
-
-            <ContainerCard
-              v-if="draft.desktop.trayShortcuts.length === 0"
-              class="py-5 text-sm text-text-muted shadow-none"
-              padding="compact"
-              variant="muted"
-            >
-              No custom tray shortcuts yet.
-            </ContainerCard>
-
-            <ContainerCard
-              v-for="(shortcut, index) in draft.desktop.trayShortcuts"
-              :key="shortcut.id"
-              class="flex flex-col gap-4"
-              padding="compact"
-              variant="muted"
-            >
-              <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div class="grid flex-1 gap-4 lg:grid-cols-2">
-                  <AppField label="Label" label-variant="meta">
-                    <AppTextInput v-model="shortcut.label" placeholder="Deep work" />
-                  </AppField>
-
-                  <fieldset class="flex flex-col gap-2">
-                    <AppFieldLabel as="legend" variant="meta">Timer</AppFieldLabel>
-                    <div class="flex flex-wrap gap-2.5">
-                      <AppToggleChip :selected="shortcut.timerMode === 'countup'">
-                        <input
-                          :checked="shortcut.timerMode === 'countup'"
-                          :name="`trayShortcutMode-${shortcut.id}`"
-                          type="radio"
-                          @change="setTrayShortcutTimerMode(shortcut, 'countup')"
-                        />
-                        <span>Count up</span>
-                      </AppToggleChip>
-                      <AppToggleChip :selected="shortcut.timerMode === 'countdown'">
-                        <input
-                          :checked="shortcut.timerMode === 'countdown'"
-                          :name="`trayShortcutMode-${shortcut.id}`"
-                          type="radio"
-                          @change="setTrayShortcutTimerMode(shortcut, 'countdown')"
-                        />
-                        <span>Countdown</span>
-                      </AppToggleChip>
-                    </div>
-                  </fieldset>
-
-                  <AppField
-                    v-if="shortcut.timerMode === 'countdown'"
-                    label="Countdown minutes"
-                    label-variant="meta"
-                  >
-                    <AppTextInput
-                      :value="shortcut.durationMinutes ?? ''"
-                      min="1"
-                      step="1"
-                      type="number"
-                      placeholder="30"
-                      @input="handleTrayShortcutDurationInput(shortcut, $event)"
-                    />
-                  </AppField>
-
-                  <AppField label="Project" label-variant="meta">
-                    <AppSelect v-model="shortcut.project">
-                      <option value="">No project preselected</option>
-                      <option
-                        v-for="project in trayShortcutProjectOptions"
-                        :key="project.id"
-                        :value="project.id"
-                      >
-                        {{ project.name }}
-                      </option>
-                    </AppSelect>
-                  </AppField>
-                </div>
-
-                <div class="flex flex-wrap gap-2">
-                  <AppButton
-                    variant="secondary"
-                    :disabled="index === 0"
-                    @click="moveTrayShortcut(index, -1)"
-                  >
-                    Move up
-                  </AppButton>
-                  <AppButton
-                    variant="secondary"
-                    :disabled="index === draft.desktop.trayShortcuts.length - 1"
-                    @click="moveTrayShortcut(index, 1)"
-                  >
-                    Move down
-                  </AppButton>
-                  <AppButton variant="danger" @click="removeTrayShortcut(shortcut.id)">
-                    Remove
-                  </AppButton>
-                </div>
-              </div>
-
-              <div class="flex flex-col gap-3 border-t border-border-subtle pt-4">
-                <div class="flex flex-col gap-1">
-                  <AppFieldLabel as="div">Tags</AppFieldLabel>
-                  <p class="text-xs text-text-muted">
-                    Tags apply when this shortcut opens the new session form.
-                  </p>
-                </div>
-
-                <div v-if="sortedTags.length" class="flex flex-wrap gap-2.5">
-                  <AppToggleChip
-                    v-for="tag in sortedTags"
-                    :key="tag.id"
-                    :selected="shortcut.tags.includes(tag.id)"
-                  >
-                    <input v-model="shortcut.tags" type="checkbox" :value="tag.id" />
-                    <span>{{ tag.name }}</span>
-                  </AppToggleChip>
-                </div>
-
-                <p v-else class="text-sm text-text-muted">
-                  No tags available yet. Create tags first if you want to prefill them from tray
-                  shortcuts.
-                </p>
-              </div>
-            </ContainerCard>
           </section>
         </div>
       </ContainerCard>

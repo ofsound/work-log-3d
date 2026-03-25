@@ -6,7 +6,7 @@
 export const APP_FIELD_DENSITIES = ['compact', 'comfortable'] as const
 export type AppFieldDensity = (typeof APP_FIELD_DENSITIES)[number]
 
-export const APP_FIELD_LABEL_VARIANTS = ['default', 'meta'] as const
+export const APP_FIELD_LABEL_VARIANTS = ['default'] as const
 export type AppFieldLabelVariant = (typeof APP_FIELD_LABEL_VARIANTS)[number]
 
 const FIELD_ROOT_GAP_CLASS_NAMES: Record<AppFieldDensity, string> = {
@@ -20,7 +20,6 @@ export const getAppFieldRootClassName = ({ density = 'compact' }: { density?: Ap
 
 export const APP_FIELD_LABEL_CLASS_NAMES: Record<AppFieldLabelVariant, string> = {
   default: 'text-sm font-semibold text-text',
-  meta: 'text-xs font-semibold tracking-[0.16em] text-text-subtle uppercase',
 }
 
 export const getAppFieldLabelClassName = ({
