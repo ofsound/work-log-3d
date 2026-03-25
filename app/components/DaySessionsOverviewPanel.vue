@@ -4,7 +4,7 @@ import type { PropType } from 'vue'
 
 import { getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import type { Project, TimeBox } from '~~/shared/worklog'
-import { getTotalDurationLabel } from '~~/shared/worklog'
+import { formatLocaleTime, getTotalDurationLabel } from '~~/shared/worklog'
 
 const props = defineProps({
   day: { type: Date, required: true },
@@ -38,11 +38,7 @@ const daySummary = computed(() => ({
   durationLabel: getTotalDurationLabel(props.timeBoxes),
 }))
 
-const formatTime = (date: Date | null | undefined) =>
-  date?.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-  }) ?? ''
+const formatTime = (date: Date | null | undefined) => (date ? formatLocaleTime(date) : '')
 
 const getSessionTimeRange = (timeBox: TimeBox) => {
   const startLabel = formatTime(timeBox.startTime)

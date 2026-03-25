@@ -12,6 +12,8 @@ import type {
 import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
 import type { TimeBoxInput } from '~~/shared/worklog'
 import {
+  formatSessionTimeHero,
+  formatToDatetimeLocal,
   getWorklogErrorMessage,
   projectsForSessionPicker,
   sortNamedEntities,
@@ -71,6 +73,38 @@ const showLegacyTagNotice = computed(() => hideTags.value && dynamicTags.value.l
 
 const projectRadiosTwoColumns = computed(() => sortedPickerProjects.value.length > 4)
 const isEditingExistingTimeBox = computed(() => Boolean(props.id))
+
+const sessionTimeHero = computed(() => {
+  if (!dynamicStartTime.value || !dynamicEndTime.value) {
+    return null
+  }
+  return formatSessionTimeHero(new Date(dynamicStartTime.value), new Date(dynamicEndTime.value))
+})
+
+/** Normalize to `datetime-local` shape so inputs stay visually in sync when times change from duration/timer. */
+const datetimeLocalStartModel = computed({
+  get() {
+    const raw = dynamicStartTime.value
+    if (!raw) return ''
+    const parsed = new Date(raw)
+    return Number.isNaN(parsed.getTime()) ? raw : formatToDatetimeLocal(parsed)
+  },
+  set(value: string) {
+    dynamicStartTime.value = value
+  },
+})
+
+const datetimeLocalEndModel = computed({
+  get() {
+    const raw = dynamicEndTime.value
+    if (!raw) return ''
+    const parsed = new Date(raw)
+    return Number.isNaN(parsed.getTime()) ? raw : formatToDatetimeLocal(parsed)
+  },
+  set(value: string) {
+    dynamicEndTime.value = value
+  },
+})
 
 function timeBoxDuration() {
   const date1 = new Date(dynamicStartTime.value)
@@ -373,26 +407,53 @@ onBeforeUnmount(() => {
           </div>
         </AppField>
 
-        <div class="ml-8 flex min-w-0 flex-wrap items-start gap-8">
-          <AppField class="min-w-0 shrink-0" density="comfortable" label="Start">
-            <AppTextInput
-              v-model="dynamicStartTime"
-              type="datetime-local"
-              class="w-[220px] max-w-full"
-              density="comfortable"
-              @input="mutationErrorMessage = ''"
-            />
-          </AppField>
+        <div class="ml-8 flex min-w-0 flex-col gap-4">
+          <div aria-live="polite" class="flex min-w-0 flex-col gap-1">
+            <p
+              v-if="sessionTimeHero"
+              class="min-w-0 text-3xl leading-tight font-bold tracking-tight tabular-nums [@container(min-width:44rem)]:text-4xl"
+            >
+              {{ sessionTimeHero.primary }}
+            </p>
+            <template v-else>
+              <p
+                class="text-3xl leading-tight font-bold text-text-muted [@container(min-width:44rem)]:text-4xl"
+              >
+                —
+              </p>
+              <p class="text-sm text-text-muted">Set start and end below.</p>
+            </template>
+            <p v-if="sessionTimeHero?.secondary" class="text-sm font-medium text-text-muted">
+              {{ sessionTimeHero.secondary }}
+            </p>
+          </div>
 
-          <AppField class="min-w-0 shrink-0" density="comfortable" label="End">
-            <AppTextInput
-              v-model="dynamicEndTime"
-              type="datetime-local"
-              class="w-[220px] max-w-full"
-              density="comfortable"
-              @input="mutationErrorMessage = ''"
-            />
-          </AppField>
+          <div class="flex min-w-0 flex-col gap-3 border-t border-border-subtle pt-4">
+            <p class="text-xs font-semibold tracking-[0.14em] text-text-muted uppercase">
+              Exact start & end
+            </p>
+            <div class="flex min-w-0 flex-wrap items-start gap-6">
+              <AppField class="min-w-0 shrink-0" density="comfortable" label="Start">
+                <AppTextInput
+                  v-model="datetimeLocalStartModel"
+                  type="datetime-local"
+                  class="w-[220px] max-w-full"
+                  density="comfortable"
+                  @input="mutationErrorMessage = ''"
+                />
+              </AppField>
+
+              <AppField class="min-w-0 shrink-0" density="comfortable" label="End">
+                <AppTextInput
+                  v-model="datetimeLocalEndModel"
+                  type="datetime-local"
+                  class="w-[220px] max-w-full"
+                  density="comfortable"
+                  @input="mutationErrorMessage = ''"
+                />
+              </AppField>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -415,15 +476,15 @@ onBeforeUnmount(() => {
             : 'flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,25%)] md:items-start md:gap-x-6 md:gap-y-0'
         "
       >
-        <section
-          class="flex min-w-0 flex-col gap-3"
-          :class="!hideTags ? 'md:border-r md:border-border-subtle md:pr-6' : ''"
-        >
+        <section class="flex min-w-0 flex-col gap-3">
           <AppFieldLabel as="div">Project</AppFieldLabel>
 
           <div
             class="project-radio-group grid gap-2.5"
-            :class="projectRadiosTwoColumns ? '[@container(min-width:52rem)]:grid-cols-2' : ''"
+            :class="[
+              projectRadiosTwoColumns ? '[@container(min-width:52rem)]:grid-cols-2' : '',
+              !hideTags ? 'md:border-r md:border-border-subtle md:pr-6' : '',
+            ]"
           >
             <label
               v-for="thisProject in sortedPickerProjects"

@@ -15,6 +15,54 @@ export const formatToDatetimeLocal = (date: Date) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
+/** Locale-aware time for session UIs (matches typical list/overview formatting). */
+export const formatLocaleTime = (date: Date) =>
+  date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+
+function isSameCalendarDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
+export type SessionTimeHeroLabels = {
+  primary: string
+  secondary?: string
+}
+
+/**
+ * Large hero line is always start–end times; when the range crosses calendar days,
+ * a secondary line carries unambiguous dates.
+ */
+export function formatSessionTimeHero(start: Date, end: Date): SessionTimeHeroLabels | null {
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return null
+  }
+
+  const startTime = formatLocaleTime(start)
+  const endTime = formatLocaleTime(end)
+  const primary = `${startTime} – ${endTime}`
+
+  if (isSameCalendarDay(start, end)) {
+    return { primary }
+  }
+
+  const sameYear = start.getFullYear() === end.getFullYear()
+  const dateOpts: Intl.DateTimeFormatOptions = sameYear
+    ? { weekday: 'short', month: 'short', day: 'numeric' }
+    : { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }
+
+  return {
+    primary,
+    secondary: `${start.toLocaleDateString(undefined, dateOpts)} → ${end.toLocaleDateString(undefined, dateOpts)}`,
+  }
+}
+
 export const formatSecondsToMinutesSeconds = (totalSeconds: number) => {
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
