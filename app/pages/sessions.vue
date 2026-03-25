@@ -89,7 +89,7 @@ const mutationErrorMessage = ref('')
 const sessionsHeaderRef = ref<HTMLElement | null>(null)
 const sessionsSidePanelRef = ref<{ flushScratchpad: () => Promise<void> } | null>(null)
 const hasMounted = ref(false)
-const isDesktop = useMediaQuery('(min-width: 1024px)', false)
+const isWideViewport = useMediaQuery('(min-width: 1024px)', false)
 
 const routeState = computed(() =>
   parseSessionsRouteState(route.query as Record<string, string | string[] | undefined>),
@@ -99,11 +99,11 @@ const anchorDate = computed(() => routeState.value.date)
 const listFilters = computed(() => routeState.value.listFilters)
 const scratchpadDateKey = computed(() => formatDateKey(anchorDate.value))
 const isPersistentScratchpad = computed(
-  () => currentMode.value === 'day' && hasMounted.value && isDesktop.value,
+  () => currentMode.value === 'day' && hasMounted.value && isWideViewport.value,
 )
 const shouldOverlaySidePanel = computed(
   () =>
-    isDesktop.value &&
+    isWideViewport.value &&
     (currentMode.value === 'week' || currentMode.value === 'month') &&
     panelMode.value !== 'closed',
 )
@@ -705,14 +705,14 @@ const handleCalendarKeyboard = (event: KeyboardEvent) => {
 }
 
 watch(
-  () => [currentMode.value, isDesktop.value, hasMounted.value],
-  ([mode, desktop, mounted]) => {
+  () => [currentMode.value, isWideViewport.value, hasMounted.value],
+  ([mode, wideViewport, mounted]) => {
     if (!mounted) {
       resetPanelState('closed')
       return
     }
 
-    if (mode === 'day' && desktop) {
+    if (mode === 'day' && wideViewport) {
       if (panelMode.value === 'closed') {
         panelMode.value = daySidebarTab.value
       }

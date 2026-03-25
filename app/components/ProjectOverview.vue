@@ -67,9 +67,9 @@ const panelSessionId = ref('')
 const selectedSessionId = ref('')
 const mutationErrorMessage = ref('')
 
-const isDesktop = useMediaQuery('(min-width: 1024px)', false)
+const isWideViewport = useMediaQuery('(min-width: 1024px)', false)
 const shouldOverlayProjectCalendarPanel = computed(
-  () => isDesktop.value && currentMode.value === 'calendar' && panelMode.value !== 'closed',
+  () => isWideViewport.value && currentMode.value === 'calendar' && panelMode.value !== 'closed',
 )
 
 const routeState = computed(() =>
