@@ -565,7 +565,7 @@ onBeforeUnmount(() => {
       </section>
 
       <div
-        class="min-w-0"
+        class="min-w-0 border-t border-border-subtle pt-5"
         :class="
           hideTags
             ? ''
