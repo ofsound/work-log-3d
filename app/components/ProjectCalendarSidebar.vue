@@ -50,7 +50,7 @@ const projectById = computed(() =>
   >
     <div
       class="flex shrink-0 items-center justify-between gap-3 px-3 py-3"
-      :class="overlay ? 'border-b border-white/12 bg-white/10' : 'border-b border-border'"
+      :class="overlay ? 'border-b border-white/12' : 'border-b border-border'"
     >
       <button
         v-if="mode === 'session'"

@@ -42,7 +42,6 @@ describe('SessionsYearView', () => {
       },
       props: {
         months,
-        selectedDate: new Date('2026-03-02T12:00:00.000Z'),
       },
     })
 

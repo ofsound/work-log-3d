@@ -1014,7 +1014,6 @@ onBeforeUnmount(() => {
 
         <SessionsYearView
           v-else-if="currentMode === 'year'"
-          :selected-date="anchorDate"
           :months="yearHeatmapMonths"
           @open-day="handleOpenDay"
         />

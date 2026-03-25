@@ -2,10 +2,8 @@
 import type { PropType } from 'vue'
 
 import type { YearHeatmapCell, YearHeatmapIntensity, YearHeatmapMonth } from '~~/shared/worklog'
-import { isSameDay } from '~~/shared/worklog'
 
-const props = defineProps({
-  selectedDate: { type: Date, required: true },
+defineProps({
   months: { type: Array as PropType<YearHeatmapMonth[]>, default: () => [] },
 })
 
@@ -46,8 +44,6 @@ const getCellLabel = (cell: YearHeatmapCell) =>
     year: 'numeric',
   })}: ${getCellSummary(cell)}`
 
-const isSelectedCell = (cell: YearHeatmapCell) => isSameDay(cell.date, props.selectedDate)
-
 const getToneClass = (intensity: YearHeatmapIntensity, inactive: boolean) => {
   if (inactive) {
     return 'border-border-subtle bg-surface-subtle/40 opacity-45'
@@ -80,8 +76,7 @@ const getCellClass = (cell: YearHeatmapCell) => [
   'relative block aspect-square w-full rounded-[5px] border transition',
   getToneClass(cell.intensity, cell.inactive),
   cell.inactive ? 'cursor-default' : 'cursor-pointer hover:scale-[1.08] hover:shadow-control',
-  cell.isToday ? '[box-shadow:inset_0_0_0_1px_var(--color-danger)]' : '',
-  isSelectedCell(cell) ? 'ring-2 ring-link ring-offset-1 ring-offset-surface' : '',
+  cell.isToday ? '[box-shadow:inset_0_0_0_1px_var(--color-calendar-today-ring)]' : '',
 ]
 
 /** Day-of-month label: theme tokens; stronger on emerald tiles for contrast. */

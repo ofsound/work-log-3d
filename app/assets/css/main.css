@@ -103,6 +103,11 @@
   --color-year-heatmap-4-edge: light-dark(var(--color-emerald-500), var(--color-emerald-600));
   --color-year-heatmap-5: light-dark(var(--color-emerald-600), var(--color-emerald-500));
   --color-year-heatmap-5-edge: light-dark(var(--color-emerald-700), var(--color-emerald-500));
+  /* Inset “today” outline on year heatmap cells: neutral, readable on all intensity swatches. */
+  --color-calendar-today-ring: light-dark(
+    color-mix(in srgb, var(--color-zinc-600) 78%, var(--color-zinc-800) 22%),
+    color-mix(in srgb, var(--color-zinc-300) 72%, var(--color-zinc-100) 28%)
+  );
 
   --color-callout-warning-border: light-dark(var(--color-amber-300), var(--color-amber-700));
   --color-callout-warning-surface: light-dark(
