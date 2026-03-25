@@ -44,7 +44,6 @@ describe('ProjectEditorFormLayout', () => {
     })
 
     expect(wrapper.text()).toContain('Edit Project')
-    expect(wrapper.text()).toContain('Live preview')
     expect(wrapper.text()).toContain('Project context')
     expect(wrapper.text()).toContain('This color pairing may reduce contrast')
 

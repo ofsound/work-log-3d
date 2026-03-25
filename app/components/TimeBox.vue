@@ -4,6 +4,8 @@ import type { PropType } from 'vue'
 const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },
+  /** Tighter vertical spacing between minimized session rows (project list view). */
+  compact: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   flushTop: { type: Boolean, default: false },
   opaqueSurface: { type: Boolean, default: false },
@@ -28,6 +30,7 @@ const toggleEditor = () => {
   <TimeBoxViewer
     v-if="!showEditor"
     :id
+    :compact="props.compact"
     :flush-top="props.flushTop"
     :highlight-tokens="highlightTokens"
     :opaque-surface="opaqueSurface"

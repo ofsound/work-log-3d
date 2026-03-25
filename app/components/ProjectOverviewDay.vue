@@ -37,12 +37,15 @@ const dayBadgeStyle = computed(() =>
       padding="comfortable"
       variant="day"
     >
-      <TimeBox
-        v-for="item in projectOverviewDayData"
-        :id="item.id"
-        :key="item.id"
-        variant="project"
-      />
+      <div class="flex flex-col gap-1">
+        <TimeBox
+          v-for="item in projectOverviewDayData"
+          :id="item.id"
+          :key="item.id"
+          compact
+          variant="project"
+        />
+      </div>
     </ContainerCard>
   </div>
 </template>

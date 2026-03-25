@@ -37,6 +37,8 @@ const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },
   isMinimized: { type: Boolean, default: false },
+  /** Tighter vertical stack for minimized rows (e.g. project list view). */
+  compact: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   flushTop: { type: Boolean, default: false },
   opaqueSurface: { type: Boolean, default: false },
@@ -186,7 +188,9 @@ const projectBadgeStyle = computed(() =>
       <DeleteIcon />
     </button>
     <div class="flex items-baseline gap-2 border-b border-border pb-2">
-      <div class="w-max rounded-sm text-2xl font-bold">
+      <div
+        class="inline-flex w-max shrink-0 items-center rounded-lg bg-badge-duration px-3 py-1.5 text-2xl font-bold tracking-tight text-badge-duration-text tabular-nums shadow-sm"
+      >
         {{ timeBoxDuration }}
       </div>
       <div v-if="variant !== 'project'" class="flex items-baseline gap-2">
@@ -233,10 +237,9 @@ const projectBadgeStyle = computed(() =>
   </ContainerCard>
   <ContainerCard
     v-if="isMinimized"
-    class="mb-2.5 rounded-xl px-3 py-2 shadow-none"
-    :class="variant === 'project' ? 'border-border-subtle bg-surface-subtle' : ''"
+    class="!rounded-none !border-0 !bg-transparent px-3 py-2 shadow-none"
+    :class="props.compact ? 'mb-0' : 'mb-2.5'"
     padding="compact"
-    :style="variant === 'project' ? {} : projectSurfaceStyle"
     :variant="variant === 'project' ? 'muted' : 'subtle'"
   >
     <NuxtLink
@@ -256,9 +259,10 @@ const projectBadgeStyle = computed(() =>
     </div>
     <div class="pb-2 font-data">
       <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
-      <span class="ml-2 text-xs font-bold italic"
-        ><span class="text-text-subtle">[</span> {{ timeBoxDuration }}
-        <span class="text-text-subtle">]</span></span
+      <span
+        class="ml-2 inline-flex shrink-0 items-center rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+        :style="projectBadgeStyle"
+        >{{ timeBoxDuration }}</span
       >
     </div>
   </ContainerCard>

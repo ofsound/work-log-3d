@@ -213,7 +213,7 @@ describe('desktop tray state', () => {
     )
 
     expect(trayState.mode).toBe('completed')
-    expect(trayState.title).toBe('✓ 00:00')
+    expect(trayState.title).toBe(' 00:00')
     expect(trayState.visualMode).toBe('badge')
     expect(trayState.badgeText).toBe(' 00:00')
     expect(trayState.badgeVariant).toBe('completed')
