@@ -67,19 +67,25 @@
   --color-link-hover: light-dark(var(--color-slate-800), var(--color-slate-200));
   --color-danger: light-dark(var(--color-red-700), var(--color-red-400));
   --color-panel-project: light-dark(var(--color-neutral-100), var(--color-neutral-950));
+  --color-panel-workspace-neutral: light-dark(
+    color-mix(in srgb, var(--color-slate-50) 86%, var(--color-white)),
+    color-mix(in srgb, var(--color-zinc-900) 88%, var(--color-zinc-950))
+  );
   --color-panel-tag: light-dark(var(--color-purple-200), var(--color-purple-950));
   --color-panel-editor: light-dark(var(--color-neutral-100), var(--color-neutral-950));
   --color-panel-timer: light-dark(var(--color-green-400), var(--color-green-700));
   --color-panel-session: light-dark(var(--color-slate-100), var(--color-slate-950));
   --color-panel-day: light-dark(var(--color-gray-100), var(--color-zinc-900));
+  --spacing-workspace-subheader-x: 2.75rem;
+  --spacing-workspace-subheader-y: 1.25rem;
+  --spacing-workspace-content-x: 2.75rem;
+  --width-workspace-content-max: 72rem;
   --color-badge-duration: light-dark(var(--color-emerald-800), var(--color-emerald-300));
   --color-badge-duration-text: light-dark(var(--color-white), var(--color-emerald-950));
   --color-badge-neutral: light-dark(var(--color-zinc-100), var(--color-zinc-800));
   --color-badge-neutral-text: light-dark(var(--color-black), var(--color-zinc-100));
   --color-chip: light-dark(var(--color-gray-300), var(--color-zinc-700));
   --color-chip-text: light-dark(var(--color-zinc-900), var(--color-zinc-100));
-  --color-hero-start: light-dark(var(--color-cyan-500), var(--color-cyan-700));
-  --color-hero-end: light-dark(var(--color-blue-400), var(--color-blue-700));
   --color-overview-start: light-dark(var(--color-slate-800), var(--color-slate-900));
   --color-overview-end: light-dark(var(--color-zinc-900), var(--color-zinc-950));
 
@@ -153,6 +159,11 @@
         color-mix(in srgb, var(--color-black) 76%, transparent)
       );
   --shadow-overview: 0 2px 4px
+    light-dark(
+      color-mix(in srgb, var(--color-gray-700) 40%, transparent),
+      color-mix(in srgb, var(--color-black) 70%, transparent)
+    );
+  --shadow-workspace-subheader: 0 2px 4px
     light-dark(
       color-mix(in srgb, var(--color-gray-700) 40%, transparent),
       color-mix(in srgb, var(--color-black) 70%, transparent)

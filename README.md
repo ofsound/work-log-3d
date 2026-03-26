@@ -129,7 +129,9 @@ Firestore rules tests:
 npm run test:rules
 ```
 
-This requires a local Java runtime because the Firestore emulator runs on Java.
+This requires a local Java runtime because the Firestore emulator runs on Java. The command uses a
+dedicated Vitest config so the emulator-backed rules spec can run even though the regular unit-test
+suite excludes it.
 
 Full verification:
 

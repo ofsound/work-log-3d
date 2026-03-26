@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { PropType } from 'vue'
+import { computed, type PropType } from 'vue'
+
+import WorkspaceSubheaderShell from '~/components/WorkspaceSubheaderShell.vue'
 
 import {
   PROJECT_WORKSPACE_TABS,
@@ -89,14 +91,8 @@ const getModeButtonClassName = (tab: ProjectWorkspaceTab) => {
 </script>
 
 <template>
-  <ContainerCard
-    as="div"
-    variant="gradient"
-    padding="none"
-    class="relative z-10 !rounded-none border-0 !shadow-overview"
-    :style="headerStyle"
-  >
-    <div class="px-11 py-5">
+  <WorkspaceSubheaderShell layout="fluid" :surface-style="headerStyle" variant="project">
+    <div>
       <div class="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex flex-col gap-3">
           <div class="text-3xl font-bold tracking-tight">{{ title }}</div>
@@ -139,5 +135,5 @@ const getModeButtonClassName = (tab: ProjectWorkspaceTab) => {
         {{ errorMessage }}
       </p>
     </div>
-  </ContainerCard>
+  </WorkspaceSubheaderShell>
 </template>

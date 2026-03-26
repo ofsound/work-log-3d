@@ -12,6 +12,10 @@ import {
   type ProjectViewMode,
   type ProjectWorkspaceMode,
 } from '~/utils/project-route-state'
+import {
+  WORKSPACE_BODY_CONTENT_CLASS_NAME,
+  WORKSPACE_BODY_X_CLASS_NAME,
+} from '~/utils/workspace-subheader'
 import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
 import type { TimeBoxInput } from '~~/shared/worklog'
@@ -407,13 +411,18 @@ onUnmounted(() => {
       :overlay-aside="shouldOverlayProjectCalendarPanel"
       @dismiss-aside="closePanel"
     >
-      <div v-if="currentMode === 'list'" class="flex-1 overflow-auto px-11 pt-8">
-        <ProjectOverviewDay
-          v-for="(item, index) in projectOverviewDayObjects"
-          :key="index"
-          :project-colors="project?.colors"
-          :project-overview-day-data="item"
-        />
+      <div
+        v-if="currentMode === 'list'"
+        :class="['flex-1 overflow-auto pt-8 pb-6', WORKSPACE_BODY_X_CLASS_NAME]"
+      >
+        <div :class="WORKSPACE_BODY_CONTENT_CLASS_NAME">
+          <ProjectOverviewDay
+            v-for="(item, index) in projectOverviewDayObjects"
+            :key="index"
+            :project-colors="project?.colors"
+            :project-overview-day-data="item"
+          />
+        </div>
       </div>
 
       <ProjectCalendarView

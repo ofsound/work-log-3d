@@ -5,7 +5,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { definePageMeta } from '#imports'
 
-import CloseIcon from '@/icons/CloseIcon.vue'
+import ContainerCard from '~/components/ContainerCard.vue'
+import SessionsWorkspaceHeader from '~/components/SessionsWorkspaceHeader.vue'
 
 import type {
   FirebaseProjectDocument,
@@ -22,6 +23,7 @@ import {
   parseSessionsRouteState,
   type SessionsViewMode,
 } from '~/utils/sessions-route-state'
+import { WORKSPACE_BODY_X_CLASS_NAME } from '~/utils/workspace-subheader'
 import type { SessionListFilters, TimeBoxInput } from '~~/shared/worklog'
 import {
   addDays,
@@ -228,7 +230,9 @@ const calendarHeaderSummary = computed(() => {
       ? visibleDayTimeBoxes.value
       : mode === 'week' || mode === 'month'
         ? visibleCalendarTimeBoxes.value
-        : null
+        : mode === 'year'
+          ? resolvedTimeBoxes.value
+          : null
   if (!boxes) {
     return null
   }
@@ -507,10 +511,6 @@ const clearListFilters = async () => {
       sort: listFilters.value.sort,
     }),
   })
-}
-
-const handleModeSelect = (modeId: string) => {
-  void handleModeChange(modeId as SessionsViewMode)
 }
 
 const handleModeChange = async (mode: SessionsViewMode) => {
@@ -822,118 +822,19 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="flex h-full min-h-0 flex-col overflow-hidden">
-    <div ref="sessionsHeaderRef" class="shrink-0 border-b border-border px-6 py-5">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <div class="text-3xl font-bold tracking-tight">{{ pageTitle }}</div>
-          <div v-if="calendarHeaderSummary" class="mt-3 flex flex-wrap gap-2">
-            <div
-              class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums"
-            >
-              {{ calendarHeaderSummary.durationLabel }} hrs
-            </div>
-            <div
-              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
-            >
-              {{ calendarHeaderSummary.count }} sessions
-            </div>
-            <div
-              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
-            >
-              {{ calendarHeaderSummary.projectCount }} projects
-            </div>
-          </div>
-
-          <div v-else-if="currentMode === 'search'" class="mt-3 flex flex-wrap items-center gap-2">
-            <div
-              class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums"
-            >
-              {{ listSummary.durationLabel }} hrs
-            </div>
-            <div
-              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
-            >
-              {{ listSummary.count }} matches
-            </div>
-            <div
-              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
-            >
-              {{ listSummary.projectCount }} projects
-            </div>
-            <AppButton
-              shape="pill"
-              size="sm"
-              variant="secondary"
-              class="ms-4 shrink-0 gap-1.5 border border-dashed border-border-strong bg-surface-muted font-semibold text-text shadow-none hover:border-border hover:bg-surface-strong"
-              @click="clearListFilters"
-            >
-              <CloseIcon aria-hidden="true" class="!h-3.5 !w-3.5 shrink-0 opacity-[0.85]" />
-              Clear all
-            </AppButton>
-          </div>
-        </div>
-
-        <div class="flex flex-col items-end gap-2">
-          <AppSegmentedControl
-            :active-id="currentMode"
-            aria-label="Sessions view modes"
-            :items="SESSION_VIEW_ITEMS"
-            size="large"
-            @select="handleModeSelect"
-          />
-
-          <div
-            v-if="currentMode !== 'search' && currentMode !== 'year'"
-            class="flex items-center gap-2"
-          >
-            <button
-              type="button"
-              class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"
-              aria-label="Previous period"
-              @click="handleNavigate(-1)"
-            >
-              <svg
-                class="h-5 w-5 shrink-0"
-                aria-hidden="true"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <AppButton size="sm" variant="secondary" @click="handleGoToday">Today</AppButton>
-            <button
-              type="button"
-              class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"
-              aria-label="Next period"
-              @click="handleNavigate(1)"
-            >
-              <svg
-                class="h-5 w-5 shrink-0"
-                aria-hidden="true"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M9 6l6 6-6 6" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <p v-if="mutationErrorMessage" class="mt-4 text-sm text-danger">
-        {{ mutationErrorMessage }}
-      </p>
+    <div ref="sessionsHeaderRef" class="shrink-0">
+      <SessionsWorkspaceHeader
+        :calendar-header-summary="calendarHeaderSummary"
+        :current-mode="currentMode"
+        :list-summary="listSummary"
+        :mutation-error-message="mutationErrorMessage"
+        :page-title="pageTitle"
+        :session-view-items="SESSION_VIEW_ITEMS"
+        @clear-filters="clearListFilters"
+        @go-today="handleGoToday"
+        @navigate-period="handleNavigate"
+        @select-mode="handleModeChange"
+      />
     </div>
 
     <SessionsWorkspaceShell
@@ -957,7 +858,10 @@ onBeforeUnmount(() => {
         </aside>
 
         <div
-          class="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-auto overscroll-contain px-6 py-6 pb-2"
+          :class="[
+            'flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-auto overscroll-contain py-6 pb-2',
+            WORKSPACE_BODY_X_CLASS_NAME,
+          ]"
         >
           <ContainerCard
             v-if="filteredSessionListTimeBoxes.length === 0"

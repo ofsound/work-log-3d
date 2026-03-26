@@ -14,6 +14,10 @@ import {
   type ProjectRouteQuery,
   type ProjectWorkspaceMode,
 } from '~/utils/project-route-state'
+import {
+  WORKSPACE_BODY_CONTENT_CLASS_NAME,
+  WORKSPACE_BODY_X_CLASS_NAME,
+} from '~/utils/workspace-subheader'
 import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
 import type { ProjectColors, ProjectInput } from '~~/shared/worklog'
@@ -329,8 +333,8 @@ onBeforeRouteLeave(async () => {
       @select-mode="handleWorkspaceModeSelect"
     />
 
-    <div class="flex-1 overflow-auto px-11 py-6">
-      <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div :class="['flex-1 overflow-auto py-6', WORKSPACE_BODY_X_CLASS_NAME]">
+      <div :class="[WORKSPACE_BODY_CONTENT_CLASS_NAME, 'flex flex-col gap-6']">
         <ProjectEditorFormLayout
           :archived="dynamicArchived"
           heading="Edit Project"
