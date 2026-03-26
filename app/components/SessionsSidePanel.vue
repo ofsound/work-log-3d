@@ -86,7 +86,7 @@ defineExpose({
     padding="compact"
     :variant="props.overlay ? 'overlay' : 'subtle'"
   >
-    <div class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-3 py-3">
+    <div class="flex shrink-0 items-center justify-between gap-3 px-3 py-3">
       <div v-if="props.persistent" class="flex min-w-0 flex-wrap items-center gap-2">
         <AppSegmentedControl
           :active-id="persistentPanelActiveId"
