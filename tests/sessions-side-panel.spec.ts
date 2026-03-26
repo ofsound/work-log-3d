@@ -3,7 +3,9 @@
 import { mount, type VueWrapper } from '@vue/test-utils'
 
 import AppSegmentedControl from '~/app/components/AppSegmentedControl.vue'
+import ContainerCard from '~/app/components/ContainerCard.vue'
 import SessionsSidePanel from '~/app/components/SessionsSidePanel.vue'
+import WorkspaceSidePanelFrame from '~/app/components/WorkspaceSidePanelFrame.vue'
 
 type SessionsSidePanelMode = 'scratchpad' | 'overview' | 'session' | 'create'
 
@@ -19,11 +21,10 @@ const mountSidePanel = (mode: SessionsSidePanelMode) =>
     global: {
       components: {
         AppSegmentedControl,
+        ContainerCard,
+        WorkspaceSidePanelFrame,
       },
       stubs: {
-        ContainerCard: {
-          template: '<div><slot /></div>',
-        },
         DailyScratchpadPanel: true,
         DaySessionsOverviewPanel: true,
         TimeBox: true,

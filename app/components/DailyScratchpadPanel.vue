@@ -354,7 +354,7 @@ defineExpose({
 <template>
   <div class="flex h-full min-h-0 flex-col gap-3">
     <div class="flex flex-col gap-2">
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center justify-center gap-2">
         <button
           type="button"
           :class="toolbarButtonClass(editor?.isActive('bulletList') ?? false)"
@@ -384,31 +384,34 @@ defineExpose({
           Link
         </button>
       </div>
-      <div class="flex min-h-4 flex-wrap items-center gap-2">
-        <button
-          type="button"
-          :class="toolbarButtonClass(false)"
-          @click="editor?.chain().focus().undo().run()"
-        >
-          Undo
-        </button>
-        <button
-          type="button"
-          :class="toolbarButtonClass(false)"
-          @click="editor?.chain().focus().redo().run()"
-        >
-          Redo
-        </button>
-      </div>
     </div>
 
     <div class="flex min-h-0 flex-1 flex-col gap-1.5 pb-4">
       <EditorContent v-if="editor" class="min-h-0 flex-1" :editor="editor" />
-      <div class="shrink-0 text-right text-xs text-text-subtle">
-        <span v-if="saveStatus === 'saving'">Saving...</span>
-        <span v-else-if="saveStatus === 'saved'">{{ savedStatusLabel }}</span>
-        <span v-else-if="saveStatus === 'error'">{{ saveErrorMessage }}</span>
-        <span v-else-if="isEnsuringNote">Preparing note...</span>
+      <div class="flex shrink-0 items-center justify-between gap-3">
+        <div class="flex min-h-4 flex-wrap items-center gap-2">
+          <button
+            type="button"
+            :class="toolbarButtonClass(false)"
+            @click="editor?.chain().focus().undo().run()"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            :class="toolbarButtonClass(false)"
+            @click="editor?.chain().focus().redo().run()"
+          >
+            Redo
+          </button>
+        </div>
+
+        <div class="shrink-0 text-right text-xs text-text-subtle">
+          <span v-if="saveStatus === 'saving'">Saving...</span>
+          <span v-else-if="saveStatus === 'saved'">{{ savedStatusLabel }}</span>
+          <span v-else-if="saveStatus === 'error'">{{ saveErrorMessage }}</span>
+          <span v-else-if="isEnsuringNote">Preparing note...</span>
+        </div>
       </div>
     </div>
   </div>

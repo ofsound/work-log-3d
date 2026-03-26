@@ -37,7 +37,7 @@ const toggleEditor = () => {
     <TimeBoxViewer
       v-if="!showEditor"
       :id
-      :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1 overflow-y-auto' : undefined"
+      :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1' : undefined"
       :compact="props.compact"
       :flush-top="props.flushTop"
       :highlight-tokens="highlightTokens"

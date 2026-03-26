@@ -468,7 +468,7 @@ const editorRootBind = computed(() =>
     <component :is="editorRootIs" v-bind="editorRootBind">
       <div
         class="flex min-w-0 flex-col gap-5"
-        :class="embeddedInPanel ? 'min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1' : ''"
+        :class="embeddedInPanel ? 'min-h-0 flex-1 overflow-x-hidden' : ''"
       >
         <section
           class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
@@ -699,13 +699,10 @@ const editorRootBind = computed(() =>
             : 'mt-1 pt-4'
         "
       >
-        <div
-          class="flex w-full min-w-0 flex-col gap-3 [@container(min-width:30rem)]:flex-row [@container(min-width:30rem)]:items-stretch"
-        >
+        <div class="flex w-full min-w-0 flex-row items-stretch gap-3">
           <AppButton
             v-if="isEditingExistingTimeBox || props.showCreateCancel"
-            block
-            class="shrink-0 [@container(min-width:30rem)]:w-auto"
+            class="min-w-0 flex-1"
             variant="secondary"
             @click="emit('toggleEditor')"
           >
@@ -713,20 +710,13 @@ const editorRootBind = computed(() =>
           </AppButton>
           <AppButton
             v-if="isEditingExistingTimeBox"
-            block
-            class="min-w-0 [@container(min-width:30rem)]:flex-1"
+            class="min-w-0 flex-1"
             variant="primary"
             @click="updateTimeBoxDocument"
           >
             Update
           </AppButton>
-          <AppButton
-            v-else
-            block
-            class="min-w-0 [@container(min-width:30rem)]:flex-1"
-            variant="primary"
-            @click="createTimeBoxDocument"
-          >
+          <AppButton v-else class="min-w-0 flex-1" variant="primary" @click="createTimeBoxDocument">
             {{ createButtonLabel }}
           </AppButton>
         </div>

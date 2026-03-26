@@ -717,7 +717,7 @@ onBeforeUnmount(() => {
           <div
             :ref="(el) => setCalendarSurfaceRef(el, dayIndex)"
             class="relative select-none"
-            :class="{ 'bg-link/5': isSameDay(day, now) }"
+            :class="{ 'bg-link/5': isWeekView && isSameDay(day, now) }"
             :style="{ height: `${HOUR_HEIGHT * 24}px` }"
             @pointerdown="handleCreatePointerDown"
           >
@@ -863,7 +863,7 @@ onBeforeUnmount(() => {
                 <div
                   :ref="(el) => setCalendarSurfaceRef(el, dayIndex)"
                   class="relative select-none"
-                  :class="{ 'bg-link/5': isSameDay(day, now) }"
+                  :class="{ 'bg-link/5': isWeekView && isSameDay(day, now) }"
                   :style="{ height: `${HOUR_HEIGHT * 24}px` }"
                   @pointerdown="handleCreatePointerDown"
                   @dblclick="handleWeekColumnBackingDblClick(day, $event)"
