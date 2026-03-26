@@ -1,3 +1,5 @@
+import type { RouteLocationRaw } from 'vue-router'
+
 import {
   createDefaultSessionListFilters,
   formatDateKey,
@@ -196,3 +198,22 @@ export const buildSessionsRouteQuery = (
 
   return query
 }
+
+/** Sessions search with a single tag filter; pass `{}` as the merge base in {@link buildSessionsRouteQuery}. */
+export const getSessionsSearchRouteForTag = (
+  tagId: string,
+  anchorDate: Date = new Date(),
+): RouteLocationRaw => ({
+  path: '/sessions',
+  query: buildSessionsRouteQuery(
+    {
+      mode: 'search',
+      date: anchorDate,
+      listFilters: normalizeSessionListFilters({
+        ...createDefaultSessionListFilters(),
+        tagIds: [tagId],
+      }),
+    },
+    {},
+  ),
+})

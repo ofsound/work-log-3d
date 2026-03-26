@@ -10,11 +10,8 @@ import {
   getProjectOpaqueSoftSurfaceStyle,
   getProjectSoftSurfaceStyle,
 } from '~/utils/project-color-styles'
-import {
-  getProjectPath,
-  getProjectPathFromProject,
-  getTagPathFromTag,
-} from '~/utils/worklog-routes'
+import { getSessionsSearchRouteForTag } from '~/utils/sessions-route-state'
+import { getProjectPath, getProjectPathFromProject } from '~/utils/worklog-routes'
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -223,7 +220,7 @@ const projectBadgeStyle = computed(() =>
       <NuxtLink
         v-for="thisTag in tagEntries"
         :key="thisTag.id"
-        :to="getTagPathFromTag({ id: thisTag.id, slug: thisTag.slug })"
+        :to="getSessionsSearchRouteForTag(thisTag.id)"
         class="inline-flex max-w-full min-w-0 items-center rounded-xl bg-chip px-3 py-0.5 font-data text-sm text-chip-text no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <div class="relative -top-px">

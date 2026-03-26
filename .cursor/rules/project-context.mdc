@@ -17,8 +17,8 @@ alwaysApply: true
 
 ## Routing and Data
 
-- Project and tag pages live at `/project/:segment` and `/tag/:segment` where `segment` is usually a **slug** in app-generated links; it may also be a **document id** (e.g. old bookmarks).
-- Prefer slug-based links via `~/utils/worklog-routes` helpers (`getProjectPathFromProject`, `getTagPathFromTag`). Firestore and `timeBoxes` still use **document ids** as the primary keys.
+- Project pages live at `/project/:segment` (and `/project/:segment/edit`). **`/tag/:segment` is a redirect-only route** (slug or legacy document id in the path) to **`/sessions` search** with that tag as the only filter, or to `/tags` when tags are hidden or unknown.
+- Prefer `~/utils/worklog-routes` for project links (`getProjectPathFromProject`, etc.) and `~/utils/sessions-route-state` **`getSessionsSearchRouteForTag`** for in-app tag navigation. Firestore and `timeBoxes` still use **document ids** as the primary keys.
 - Deleting a project or tag must respect active `timeBoxes` references
 
 ## Import Order

@@ -1,4 +1,8 @@
-import { buildSessionsRouteQuery, parseSessionsRouteState } from '~/app/utils/sessions-route-state'
+import {
+  buildSessionsRouteQuery,
+  getSessionsSearchRouteForTag,
+  parseSessionsRouteState,
+} from '~/app/utils/sessions-route-state'
 
 describe('sessions route state', () => {
   it('defaults to day mode, fallback date, and default list filters', () => {
@@ -197,5 +201,33 @@ describe('sessions route state', () => {
     })
 
     expect(state.mode).toBe('search')
+  })
+
+  it('builds sessions search route for a single tag id with default list filters', () => {
+    const anchor = new Date(2026, 2, 21, 12, 0, 0, 0)
+    const route = getSessionsSearchRouteForTag('tag-doc-id', anchor)
+
+    expect(route.path).toBe('/sessions')
+    const state = parseSessionsRouteState(
+      route.query as Record<string, string | string[] | undefined>,
+      anchor,
+    )
+    expect(state.mode).toBe('search')
+    expect(state.date.getFullYear()).toBe(anchor.getFullYear())
+    expect(state.date.getMonth()).toBe(anchor.getMonth())
+    expect(state.date.getDate()).toBe(anchor.getDate())
+    expect(state.listFilters).toEqual({
+      query: '',
+      projectIds: [],
+      tagIds: ['tag-doc-id'],
+      tagMode: 'any',
+      dateStart: '',
+      dateEnd: '',
+      minMinutes: null,
+      maxMinutes: null,
+      untaggedOnly: false,
+      notesState: 'any',
+      sort: 'newest',
+    })
   })
 })

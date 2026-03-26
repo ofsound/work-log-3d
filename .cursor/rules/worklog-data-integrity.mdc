@@ -6,8 +6,8 @@ alwaysApply: false
 
 # Work Log Data Integrity
 
-- **Navigation:** build `/project/...` and `/tag/...` links with shared helpers using each entity’s **slug** (`slug || id` fallback). **Data:** treat **document IDs** as the stable keys in Firestore and in `timeBoxes.project` / tag id arrays.
-- Generate routes with shared helpers; do not hand-build `/project/...` or `/tag/...` strings in components.
+- **Navigation:** build `/project/...` links with shared helpers (`getProjectPathFromProject`, etc.) using each entity’s **slug** (`slug || id` fallback). For **tags**, use **`getSessionsSearchRouteForTag`** (`~/utils/sessions-route-state`) so navigation opens **`/sessions` search** with that tag’s **document id** as the filter; **`/tag/:segment`** is redirect-only, not an in-app destination. **Data:** treat **document IDs** as the stable keys in Firestore and in `timeBoxes.project` / tag id arrays.
+- Generate routes with shared helpers; do not hand-build `/project/...` or ad-hoc `/sessions` query strings in components.
 - Do **not** delete a project or tag if any `timeBoxes` still reference it. Block the delete and surface a user-facing message.
 - Keep input validation centralized in shared code so UI, repositories, and tests agree on the same rules.
 - When changing Firestore document shape, update:

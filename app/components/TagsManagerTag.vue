@@ -6,7 +6,6 @@ import EditIcon from '@/icons/EditIcon.vue'
 
 import { APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME } from '~/utils/app-field'
 import { toTimeBoxes, type FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
-import { getTagPathFromTag } from '~/utils/worklog-routes'
 import { getTotalDurationRoundedHoursLabel, getWorklogErrorMessage } from '~~/shared/worklog'
 
 const repositories = useWorklogRepository()
@@ -25,8 +24,6 @@ const dynamicName = ref(props.name ?? '')
 const mutationErrorMessage = ref('')
 
 const isNameEditMode = ref(false)
-
-const tagPath = computed(() => getTagPathFromTag({ id: props.id, slug: props.slug }))
 
 const chipRowClass = computed(() => [
   APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME,
@@ -116,18 +113,14 @@ watch(
           {{ tagTimeBoxesTotalDuration }} hrs
         </span>
       </div>
-      <NuxtLink
-        v-else
-        :to="tagPath"
-        class="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left text-text no-underline hover:text-text"
-      >
+      <div v-else class="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left text-text">
         <span class="min-w-0 truncate font-bold">{{ dynamicName }}</span>
         <span
           class="shrink-0 rounded-full border border-border px-1.5 py-px text-[10px] leading-none font-semibold text-text tabular-nums"
         >
           {{ tagTimeBoxesTotalDuration }} hrs
         </span>
-      </NuxtLink>
+      </div>
       <div class="flex shrink-0 items-center gap-0.5">
         <button
           type="button"

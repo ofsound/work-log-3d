@@ -634,6 +634,20 @@ const handleDayHeaderClick = (day: Date) => {
   }
 }
 
+/** Week view: double-click empty column (not a session) opens that day, same as the day header. */
+const handleWeekColumnBackingDblClick = (day: Date, event: MouseEvent) => {
+  if (!props.headerClickEnabled) {
+    return
+  }
+
+  if (event.target !== event.currentTarget) {
+    return
+  }
+
+  event.preventDefault()
+  emit('openDay', day)
+}
+
 let syncingHorizontalScroll = false
 
 const syncHorizontalScroll = (source: 'header' | 'body') => {
@@ -891,6 +905,7 @@ onBeforeUnmount(() => {
                 :class="{ 'bg-link/5': isSameDay(day, now) }"
                 :style="{ height: `${HOUR_HEIGHT * 24}px` }"
                 @pointerdown="handleCreatePointerDown"
+                @dblclick="handleWeekColumnBackingDblClick(day, $event)"
               >
                 <div
                   v-if="dayIndex === 0"
