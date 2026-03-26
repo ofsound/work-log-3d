@@ -53,7 +53,7 @@ export interface FirebaseProjectDocument {
   archived?: boolean
   colors?: {
     primary?: string
-    secondary?: string | null
+    secondary?: string
   } | null
 }
 

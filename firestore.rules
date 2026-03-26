@@ -44,10 +44,7 @@ service cloud.firestore {
         && request.resource.data.archived is bool
         && hasExactMapKeys(request.resource.data.colors, ['primary', 'secondary'])
         && isHexColor(request.resource.data.colors.primary)
-        && (
-          request.resource.data.colors.secondary == null
-          || isHexColor(request.resource.data.colors.secondary)
-        );
+        && isHexColor(request.resource.data.colors.secondary);
     }
 
     function isTagDocument() {

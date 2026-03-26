@@ -186,7 +186,7 @@ npm run preview
   notes: string
   colors: {
     primary: string
-    secondary: string | null
+    secondary: string
   }
 }
 ```

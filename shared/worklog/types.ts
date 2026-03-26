@@ -2,7 +2,7 @@ export type EntityId = string
 
 export interface ProjectColors {
   primary: string
-  secondary: string | null
+  secondary: string
 }
 
 export interface Project {

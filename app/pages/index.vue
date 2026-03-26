@@ -5,7 +5,15 @@ definePageMeta({ layout: 'main-bleed' })
 </script>
 
 <template>
-  <div class="flex h-2/3 items-center justify-center">
+  <div class="flex h-2/3 flex-col items-center justify-center gap-8">
+    <img
+      src="/icon-white-not-so-thin.svg"
+      alt=""
+      width="400"
+      height="400"
+      class="h-[400px] w-[400px] max-w-[min(400px,calc(100vw-2rem))] shrink-0 object-contain"
+      decoding="async"
+    />
     <div
       class="rounded-lg bg-linear-to-b from-hero-start to-hero-end px-20 py-12 text-3xl font-bold tracking-wider text-text-inverse shadow-hero text-shadow-hero"
     >

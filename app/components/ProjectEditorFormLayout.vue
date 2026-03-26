@@ -36,7 +36,6 @@ const props = defineProps({
   },
   primaryColor: { type: String, required: true },
   secondaryColor: { type: String, required: true },
-  secondaryColorEnabled: { type: Boolean, default: true },
   showArchiveToggle: { type: Boolean, default: false },
   archived: { type: Boolean, default: false },
   submitLabel: { type: String, required: true },
@@ -51,7 +50,6 @@ const emit = defineEmits<{
   'update:notes': [value: string]
   'update:primary-color': [value: string]
   'update:secondary-color': [value: string]
-  'update:secondary-color-enabled': [value: boolean]
   'update:archived': [value: boolean]
 }>()
 
@@ -72,11 +70,6 @@ const updatePrimaryColor = (event: Event) => {
 
 const updateSecondaryColor = (event: Event) => {
   emit('update:secondary-color', (event.target as HTMLInputElement).value)
-  emit('clear-error')
-}
-
-const toggleSecondaryColor = () => {
-  emit('update:secondary-color-enabled', !props.secondaryColorEnabled)
   emit('clear-error')
 }
 
@@ -160,33 +153,14 @@ const toggleArchived = () => {
                 </div>
               </AppField>
 
-              <div class="flex min-w-0 flex-col gap-2">
-                <div class="flex items-center justify-between gap-3">
-                  <AppFieldLabel>Secondary color</AppFieldLabel>
-                  <AppButton
-                    shape="pill"
-                    size="sm"
-                    variant="secondary"
-                    class="py-1 text-xs font-semibold"
-                    @click="toggleSecondaryColor"
-                  >
-                    {{ secondaryColorEnabled ? 'Disable' : 'Enable' }}
-                  </AppButton>
-                </div>
-
+              <AppField label="Secondary color" class="min-w-0">
                 <div
-                  class="flex items-center gap-3 rounded-2xl border px-3 py-3"
-                  :class="
-                    secondaryColorEnabled
-                      ? 'border-input-border bg-input'
-                      : 'border-border-subtle bg-surface-muted opacity-65'
-                  "
+                  class="flex items-center gap-3 rounded-2xl border border-input-border bg-input px-3 py-3"
                 >
                   <input
                     :value="secondaryColor"
                     type="color"
                     class="h-10 w-14 cursor-pointer rounded-lg border border-input-border bg-transparent"
-                    :disabled="!secondaryColorEnabled"
                     @input="updateSecondaryColor"
                   />
                   <input
@@ -194,11 +168,10 @@ const toggleArchived = () => {
                     type="text"
                     class="min-w-0 flex-1 rounded-xl border border-input-border bg-surface px-3 py-2 font-data text-text"
                     placeholder="#06b6d4"
-                    :disabled="!secondaryColorEnabled"
                     @input="updateSecondaryColor"
                   />
                 </div>
-              </div>
+              </AppField>
             </div>
 
             <div class="flex flex-col gap-2">
@@ -215,7 +188,7 @@ const toggleArchived = () => {
                   class="size-9 shrink-0 cursor-pointer rounded-full border border-white/25 shadow-control transition-[box-shadow,filter] duration-150 ease-out hover:shadow-[var(--shadow-panel)] hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
                   :style="getProjectSwatchStyle(palette)"
                   :aria-label="`Apply color preset ${index + 1}`"
-                  :title="`${palette.primary}${palette.secondary ? ` / ${palette.secondary}` : ''}`"
+                  :title="`${palette.primary} / ${palette.secondary}`"
                   @click="emit('apply-palette', palette)"
                 />
               </div>

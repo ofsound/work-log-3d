@@ -79,9 +79,8 @@ export const resolveProjectColors = (
   const hasStoredColors = colors !== null && typeof colors === 'object'
 
   const primary = normalizeHexColor(colors?.primary ?? '') ?? fallback.primary
-  const secondary = hasStoredColors
-    ? (normalizeHexColor(colors?.secondary ?? '') ?? null)
-    : fallback.secondary
+  const secondary =
+    normalizeHexColor(hasStoredColors ? (colors?.secondary ?? '') : '') ?? fallback.secondary
 
   return {
     primary,

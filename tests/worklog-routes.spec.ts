@@ -26,7 +26,7 @@ describe('worklog routes', () => {
         slug: 'client-work',
         name: '',
         notes: '',
-        colors: { primary: '#000', secondary: null },
+        colors: { primary: '#000', secondary: '#111111' },
       }),
     ).toBe('/project/client-work')
     expect(
@@ -35,7 +35,7 @@ describe('worklog routes', () => {
         slug: 'client-work',
         name: '',
         notes: '',
-        colors: { primary: '#000', secondary: null },
+        colors: { primary: '#000', secondary: '#111111' },
       }),
     ).toBe('/project/client-work/edit')
     expect(getTagPathFromTag({ id: 'tag-1', slug: 'deep-work' })).toBe('/tag/deep-work')
@@ -50,7 +50,7 @@ describe('worklog routes', () => {
         slug: '',
         name: '',
         notes: '',
-        colors: { primary: '#000', secondary: null },
+        colors: { primary: '#000', secondary: '#111111' },
       }),
     ).toBe('/project/proj-1')
   })

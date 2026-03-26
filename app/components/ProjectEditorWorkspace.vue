@@ -54,7 +54,6 @@ const dynamicName = ref('')
 const dynamicNotes = ref('')
 const dynamicPrimaryColor = ref('#2563eb')
 const dynamicSecondaryColor = ref('#06b6d4')
-const secondaryColorEnabled = ref(true)
 const dynamicArchived = ref(false)
 const mutationErrorMessage = ref('')
 const isSaving = ref(false)
@@ -84,9 +83,8 @@ const projectSummary = computed(() => ({
 const previewColors = computed<ProjectColors>(() => ({
   primary:
     normalizeHexColor(dynamicPrimaryColor.value) ?? project.value?.colors.primary ?? '#2563eb',
-  secondary: secondaryColorEnabled.value
-    ? (normalizeHexColor(dynamicSecondaryColor.value) ?? null)
-    : null,
+  secondary:
+    normalizeHexColor(dynamicSecondaryColor.value) ?? project.value?.colors.secondary ?? '#06b6d4',
 }))
 /** In-form preview card only; workspace sub-header uses neutral bar + `modeToggleStyles`. */
 const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
@@ -124,8 +122,7 @@ const applyProjectToForm = (value: FirebaseProjectDocument | null | undefined) =
   dynamicName.value = normalized.name
   dynamicNotes.value = normalized.notes
   dynamicPrimaryColor.value = normalized.colors.primary
-  dynamicSecondaryColor.value = normalized.colors.secondary ?? normalized.colors.primary
-  secondaryColorEnabled.value = normalized.colors.secondary !== null
+  dynamicSecondaryColor.value = normalized.colors.secondary
   dynamicArchived.value = normalized.archived
   mutationErrorMessage.value = ''
   initialFormSnapshot.value = createProjectInputSnapshot({
@@ -149,8 +146,7 @@ watch(
 
 const applyPalette = (colors: ProjectColors) => {
   dynamicPrimaryColor.value = colors.primary
-  dynamicSecondaryColor.value = colors.secondary ?? colors.primary
-  secondaryColorEnabled.value = colors.secondary !== null
+  dynamicSecondaryColor.value = colors.secondary
   mutationErrorMessage.value = ''
 }
 
@@ -159,7 +155,7 @@ const buildProjectInput = (): ProjectInput => ({
   notes: dynamicNotes.value,
   colors: {
     primary: dynamicPrimaryColor.value,
-    secondary: secondaryColorEnabled.value ? dynamicSecondaryColor.value : null,
+    secondary: dynamicSecondaryColor.value,
   },
   archived: dynamicArchived.value,
 })
@@ -332,7 +328,6 @@ onBeforeRouteLeave(async () => {
           :preview-surface-style="previewSurfaceStyle as Record<string, string>"
           :primary-color="dynamicPrimaryColor"
           :secondary-color="dynamicSecondaryColor"
-          :secondary-color-enabled="secondaryColorEnabled"
           show-archive-toggle
           submit-label="Save project"
           @apply-palette="applyPalette"
@@ -344,7 +339,6 @@ onBeforeRouteLeave(async () => {
           @update:notes="dynamicNotes = $event"
           @update:primary-color="dynamicPrimaryColor = $event"
           @update:secondary-color="dynamicSecondaryColor = $event"
-          @update:secondary-color-enabled="secondaryColorEnabled = $event"
         />
 
         <ContainerCard as="section" padding="default" variant="danger">

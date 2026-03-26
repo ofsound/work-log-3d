@@ -49,26 +49,6 @@ const requireNonEmptyString = (value: string, label: string) => {
 
 const normalizeOptionalString = (value: string) => value.trim()
 
-const normalizeNullableHexColor = (value: string | null | undefined, label: string) => {
-  if (value === null || value === undefined) {
-    return null
-  }
-
-  const normalized = value.trim()
-
-  if (!normalized) {
-    return null
-  }
-
-  const color = normalizeHexColor(normalized)
-
-  if (!color) {
-    throw new WorklogError('validation', `${label} must be a valid hex color.`)
-  }
-
-  return color
-}
-
 const requireHexColor = (value: string, label: string) => {
   const normalized = normalizeHexColor(value)
 
@@ -141,7 +121,7 @@ export const validateProjectInput = (input: ProjectInput): ProjectInput => ({
   notes: normalizeOptionalString(input.notes),
   colors: {
     primary: requireHexColor(input.colors.primary, 'Primary color'),
-    secondary: normalizeNullableHexColor(input.colors.secondary, 'Secondary color'),
+    secondary: requireHexColor(input.colors.secondary, 'Secondary color'),
   },
   archived: input.archived === true,
 })

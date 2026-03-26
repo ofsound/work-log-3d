@@ -204,7 +204,7 @@ describe('firestore worklog repositories', () => {
       notes: '  Notes for the edit page  ',
       colors: {
         primary: '#ABCDEF',
-        secondary: null,
+        secondary: '#112233',
       },
       archived: false,
     })
@@ -273,7 +273,7 @@ describe('firestore worklog repositories', () => {
         notes: 'Notes for the edit page',
         colors: {
           primary: '#abcdef',
-          secondary: null,
+          secondary: '#112233',
         },
         archived: false,
       }),

@@ -24,16 +24,6 @@ const toRgba = (value: string, alpha: number) => {
   return `rgba(${rgb.red}, ${rgb.green}, ${rgb.blue}, ${alpha})`
 }
 
-const mixColors = (left: string, right: string, ratio: number) => {
-  const leftRgb = hexToRgb(left)
-  const rightRgb = hexToRgb(right)
-  const blend = (leftChannel: number, rightChannel: number) =>
-    Math.round(leftChannel * (1 - ratio) + rightChannel * ratio)
-  const toHex = (value: number) => value.toString(16).padStart(2, '0')
-
-  return `#${toHex(blend(leftRgb.red, rightRgb.red))}${toHex(blend(leftRgb.green, rightRgb.green))}${toHex(blend(leftRgb.blue, rightRgb.blue))}`
-}
-
 const getRelativeLuminance = (value: string) => {
   const rgb = hexToRgb(value)
   const channels = [rgb.red, rgb.green, rgb.blue].map((channel) => {
@@ -65,15 +55,7 @@ const getAutoTextColor = (backgrounds: string[]) => {
   return lightScore >= darkScore ? light : dark
 }
 
-const getGradientEndColor = (colors: ProjectColors) => {
-  if (colors.secondary) {
-    return colors.secondary
-  }
-
-  return getRelativeLuminance(colors.primary) > 0.45
-    ? mixColors(colors.primary, '#111827', 0.34)
-    : mixColors(colors.primary, '#f8fafc', 0.24)
-}
+const getGradientEndColor = (colors: ProjectColors) => colors.secondary
 
 export const getProjectBadgeStyle = (colors: ProjectColors): CSSProperties => {
   const textColor = getAutoTextColor([colors.primary])

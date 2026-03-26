@@ -30,7 +30,6 @@ const dynamicName = ref('')
 const dynamicNotes = ref('')
 const dynamicPrimaryColor = ref('#2563eb')
 const dynamicSecondaryColor = ref('#06b6d4')
-const secondaryColorEnabled = ref(true)
 const mutationErrorMessage = ref('')
 const isSaving = ref(false)
 const initialFormSnapshot = ref<string | null>(null)
@@ -38,9 +37,7 @@ const allowNextNavigation = ref(false)
 
 const previewColors = computed<ProjectColors>(() => ({
   primary: normalizeHexColor(dynamicPrimaryColor.value) ?? '#2563eb',
-  secondary: secondaryColorEnabled.value
-    ? (normalizeHexColor(dynamicSecondaryColor.value) ?? null)
-    : null,
+  secondary: normalizeHexColor(dynamicSecondaryColor.value) ?? '#06b6d4',
 }))
 const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
 const previewSurfaceStyle = computed(() => getProjectSoftSurfaceStyle(previewColors.value))
@@ -54,7 +51,7 @@ const buildProjectInput = (): ProjectInput => ({
   notes: dynamicNotes.value,
   colors: {
     primary: dynamicPrimaryColor.value,
-    secondary: secondaryColorEnabled.value ? dynamicSecondaryColor.value : null,
+    secondary: dynamicSecondaryColor.value,
   },
   archived: false,
 })
@@ -68,16 +65,14 @@ const isDirty = computed(
 const applyProjectDefaults = (defaults: ReturnType<typeof getProjectDefaultMetadata>) => {
   dynamicNotes.value = defaults.notes
   dynamicPrimaryColor.value = defaults.colors.primary
-  dynamicSecondaryColor.value = defaults.colors.secondary ?? defaults.colors.primary
-  secondaryColorEnabled.value = defaults.colors.secondary !== null
+  dynamicSecondaryColor.value = defaults.colors.secondary
   mutationErrorMessage.value = ''
   initialFormSnapshot.value = createProjectInputSnapshot(buildProjectInput())
 }
 
 const applyPalette = (colors: ProjectColors) => {
   dynamicPrimaryColor.value = colors.primary
-  dynamicSecondaryColor.value = colors.secondary ?? colors.primary
-  secondaryColorEnabled.value = colors.secondary !== null
+  dynamicSecondaryColor.value = colors.secondary
   mutationErrorMessage.value = ''
 }
 
@@ -202,7 +197,6 @@ onBeforeRouteLeave(async (to) => {
       :preview-surface-style="previewSurfaceStyle as Record<string, string>"
       :primary-color="dynamicPrimaryColor"
       :secondary-color="dynamicSecondaryColor"
-      :secondary-color-enabled="secondaryColorEnabled"
       submit-label="Create project"
       @apply-palette="applyPalette"
       @cancel="leaveCreateWorkspace"
@@ -212,7 +206,6 @@ onBeforeRouteLeave(async (to) => {
       @update:notes="dynamicNotes = $event"
       @update:primary-color="dynamicPrimaryColor = $event"
       @update:secondary-color="dynamicSecondaryColor = $event"
-      @update:secondary-color-enabled="secondaryColorEnabled = $event"
     />
   </div>
 </template>

@@ -38,7 +38,6 @@ describe('ProjectEditorFormLayout', () => {
         },
         primaryColor: '#2563eb',
         secondaryColor: '#06b6d4',
-        secondaryColorEnabled: true,
         submitLabel: 'Save project',
       },
     })

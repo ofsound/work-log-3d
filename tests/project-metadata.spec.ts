@@ -42,11 +42,25 @@ describe('project metadata helpers', () => {
         notes: '',
         colors: {
           primary: 'blue',
-          secondary: null,
+          secondary: '#06b6d4',
         },
         archived: false,
       }),
     ).toThrow('Primary color must be a valid hex color.')
+  })
+
+  it('rejects invalid secondary color', () => {
+    expect(() =>
+      validateProjectInput({
+        name: 'Project Atlas',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '',
+        },
+        archived: false,
+      }),
+    ).toThrow('Secondary color must be a valid hex color.')
   })
 
   it('rejects reserved project routes as generated slugs', () => {
@@ -71,6 +85,14 @@ describe('project metadata helpers', () => {
     expect(PROJECT_COLOR_PALETTE).toContainEqual(firstResolution)
   })
 
+  it('uses palette secondary fallback when stored colors omit a valid secondary', () => {
+    const fullFallback = resolveProjectColors('seed-a', undefined)
+    const partial = resolveProjectColors('seed-a', { primary: fullFallback.primary })
+
+    expect(partial.primary).toBe(fullFallback.primary)
+    expect(partial.secondary).toBe(fullFallback.secondary)
+  })
+
   it('exposes duplicate slug errors for repository and UI messaging', () => {
     const projectError = createDuplicateSlugError('project')
     const tagError = createDuplicateSlugError('tag')
@@ -88,7 +110,7 @@ describe('project metadata helpers', () => {
       createProjectPayload({
         name: 'Alpha',
         notes: '',
-        colors: { primary: '#2563eb', secondary: null },
+        colors: { primary: '#2563eb', secondary: '#06b6d4' },
         archived: true,
       }).archived,
     ).toBe(true)
@@ -96,7 +118,7 @@ describe('project metadata helpers', () => {
       validateProjectInput({
         name: 'Beta',
         notes: '',
-        colors: { primary: '#2563eb', secondary: null },
+        colors: { primary: '#2563eb', secondary: '#06b6d4' },
         archived: false,
       }).archived,
     ).toBe(false)
@@ -109,7 +131,7 @@ describe('project metadata helpers', () => {
         name: 'Active',
         slug: 'active',
         notes: '',
-        colors: { primary: '#111111', secondary: null },
+        colors: { primary: '#111111', secondary: '#333333' },
         archived: false,
       },
       {
@@ -117,7 +139,7 @@ describe('project metadata helpers', () => {
         name: 'Gone',
         slug: 'gone',
         notes: '',
-        colors: { primary: '#222222', secondary: null },
+        colors: { primary: '#222222', secondary: '#444444' },
         archived: true,
       },
     ] as const
