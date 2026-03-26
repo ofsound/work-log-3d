@@ -540,6 +540,20 @@ const handleOpenDay = async (day: Date) => {
     return
   }
 
+  if (currentMode.value === 'week') {
+    const dayBoxes = getTimeBoxesForDay(visibleCalendarTimeBoxes.value, day)
+    if (dayBoxes.length === 0) {
+      await closePanel()
+      await updateRouteState({ date: day }, { history: 'push' })
+      return
+    }
+
+    selectedSessionId.value = ''
+    resetPanelState('overview')
+    await updateRouteState({ date: day }, { history: 'push' })
+    return
+  }
+
   resetPanelState('closed')
   await updateRouteState({ mode: 'day', date: day }, { history: 'push' })
 }

@@ -1,6 +1,6 @@
 {
   "name": "work-log-3d",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Work Log 3D time-tracking app",
   "type": "module",
   "main": "dist-electron/main/main.js",
