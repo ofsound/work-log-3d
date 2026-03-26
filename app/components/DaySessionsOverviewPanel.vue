@@ -2,9 +2,8 @@
 import { computed } from 'vue'
 import type { PropType } from 'vue'
 
-import { getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import type { Project, TimeBox } from '~~/shared/worklog'
-import { formatLocaleTime, getTotalDurationLabel } from '~~/shared/worklog'
+import { getTotalDurationLabel } from '~~/shared/worklog'
 
 const props = defineProps({
   day: { type: Date, required: true },
@@ -46,37 +45,7 @@ const daySummary = computed(() => ({
   durationLabel: getTotalDurationLabel(props.timeBoxes),
 }))
 
-const formatTime = (date: Date | null | undefined) => (date ? formatLocaleTime(date) : '')
-
-const getSessionTimeRange = (timeBox: TimeBox) => {
-  const startLabel = formatTime(timeBox.startTime)
-  const endLabel = formatTime(timeBox.endTime)
-
-  if (!startLabel || !endLabel) {
-    return 'Time unavailable'
-  }
-
-  return `${startLabel} - ${endLabel}`
-}
-
-const getSessionNotes = (timeBox: TimeBox) => {
-  const trimmedNotes = timeBox.notes.trim()
-
-  return trimmedNotes.length > 0 ? trimmedNotes : 'Untitled session'
-}
-
-const getProjectName = (timeBox: TimeBox) =>
-  props.projectNameById[timeBox.project] ?? props.projectById[timeBox.project]?.name ?? ''
-
-const getCardStyle = (timeBox: TimeBox) => {
-  if (!props.useProjectCardStyles) {
-    return {}
-  }
-
-  const project = props.projectById[timeBox.project]
-
-  return project ? getProjectSoftSurfaceStyle(project.colors) : {}
-}
+const showProjectChip = computed(() => props.showProjectName)
 </script>
 
 <template>
@@ -110,32 +79,20 @@ const getCardStyle = (timeBox: TimeBox) => {
     </ContainerCard>
 
     <div v-else class="flex flex-col gap-3">
-      <ContainerCard
+      <TimeBox
         v-for="timeBox in timeBoxes"
+        :id="timeBox.id"
         :key="timeBox.id"
-        as="button"
-        class="px-4 py-3 text-left"
+        compact
+        flush-top
+        hide-actions
+        :hide-project-chip="!showProjectChip"
         interactive
-        padding="compact"
         :selected="selectedSessionId === timeBox.id"
-        :style="getCardStyle(timeBox)"
-        type="button"
-        variant="subtle"
-        @click="emit('openSession', timeBox.id)"
-      >
-        <div class="text-xs font-normal tracking-[0.08em] text-text uppercase">
-          {{ getSessionTimeRange(timeBox) }}
-        </div>
-        <div
-          v-if="showProjectName && getProjectName(timeBox)"
-          class="mt-1 text-xs font-bold text-text"
-        >
-          {{ getProjectName(timeBox) }}
-        </div>
-        <div class="mt-3 mb-2 font-data">
-          {{ getSessionNotes(timeBox) }}
-        </div>
-      </ContainerCard>
+        :use-project-card-styles="useProjectCardStyles"
+        variant="overview"
+        @open="emit('openSession', timeBox.id)"
+      />
     </div>
   </div>
 </template>

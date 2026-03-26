@@ -59,7 +59,7 @@ const cancelCreateAndLoseFocus = (event?: KeyboardEvent) => {
         :slug="item.slug"
       />
     </div>
-    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
       <div :class="[APP_CHIP_ROW_STATIC_CLASS_NAME, 'w-full max-w-[160px] min-w-0 py-1.5']">
         <input
           v-model="newTagName"

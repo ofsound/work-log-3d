@@ -962,7 +962,10 @@ onBeforeUnmount(() => {
       </p>
     </div>
 
-    <SessionsWorkspaceShell :overlay-aside="shouldOverlaySidePanel">
+    <SessionsWorkspaceShell
+      :overlay-aside="shouldOverlaySidePanel"
+      @dismiss-aside="applyCalendarEscapeDismiss"
+    >
       <div
         v-if="currentMode === 'search'"
         class="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row"
@@ -980,7 +983,7 @@ onBeforeUnmount(() => {
         </aside>
 
         <div
-          class="mx-auto flex min-h-0 w-full max-w-6xl min-w-0 flex-1 flex-col gap-6 overflow-auto overscroll-contain px-6 py-6 pb-2"
+          class="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-auto overscroll-contain px-6 py-6 pb-2"
         >
           <ContainerCard
             v-if="filteredSessionListTimeBoxes.length === 0"
@@ -1006,6 +1009,7 @@ onBeforeUnmount(() => {
               :id="item.id"
               :key="item.id"
               :highlight-tokens="listSearchTokens"
+              :opaque-surface="true"
             />
           </div>
         </div>

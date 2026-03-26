@@ -94,7 +94,7 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
 <template>
   <div class="min-h-0 flex-1 overflow-hidden">
     <div class="h-full overflow-auto overscroll-contain px-6 py-6">
-      <ContainerCard class="flex flex-col gap-6 md:px-6" padding="compact" variant="subtle">
+      <ContainerCard class="flex flex-col gap-6 md:px-6" padding="compact" variant="gradient">
         <div class="flex items-center justify-end gap-3 text-xs font-semibold text-text-subtle">
           <span>Less</span>
           <div class="flex items-center gap-1">
@@ -108,96 +108,89 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
           <span>More</span>
         </div>
 
-        <ContainerCard
-          as="section"
-          class="bg-surface-subtle/35 p-4 shadow-none md:p-5"
-          padding="compact"
-          variant="muted"
-        >
-          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <template
-              v-for="(month, monthIndex) in months"
-              :key="`${month.year}-${month.monthIndex}`"
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <template
+            v-for="(month, monthIndex) in months"
+            :key="`${month.year}-${month.monthIndex}`"
+          >
+            <div
+              v-if="monthIndex === 0 || month.year !== months[monthIndex - 1]!.year"
+              class="col-span-full pb-4"
             >
+              <h2 class="font-data text-2xl font-bold tracking-[0.08em]">
+                {{ month.year }}
+              </h2>
+            </div>
+
+            <ContainerCard
+              as="article"
+              class="px-3 py-3 shadow-control"
+              padding="compact"
+              variant="default"
+            >
+              <div class="mb-3 text-lg font-semibold tracking-tight">{{ month.label }}</div>
+
               <div
-                v-if="monthIndex === 0 || month.year !== months[monthIndex - 1]!.year"
-                class="col-span-full border-b border-border-subtle pb-4"
+                class="mb-2 grid grid-cols-7 gap-1 text-center text-[0.65rem] font-semibold tracking-[0.18em] text-text-subtle uppercase"
               >
-                <h2 class="font-data text-3xl font-bold tracking-[0.08em] md:text-4xl">
-                  {{ month.year }}
-                </h2>
+                <div
+                  v-for="weekday in weekdays"
+                  :key="`${month.year}-${month.monthIndex}-${weekday}`"
+                >
+                  {{ weekday }}
+                </div>
               </div>
 
-              <ContainerCard
-                as="article"
-                class="px-3 py-3 shadow-control"
-                padding="compact"
-                variant="default"
-              >
-                <div class="mb-3 text-lg font-semibold tracking-tight">{{ month.label }}</div>
-
+              <div class="flex flex-col gap-1">
                 <div
-                  class="mb-2 grid grid-cols-7 gap-1 text-center text-[0.65rem] font-semibold tracking-[0.18em] text-text-subtle uppercase"
+                  v-for="(week, weekIndex) in month.weeks"
+                  :key="`${month.year}-${month.monthIndex}-${weekIndex}`"
+                  class="grid grid-cols-7 gap-1"
                 >
-                  <div
-                    v-for="weekday in weekdays"
-                    :key="`${month.year}-${month.monthIndex}-${weekday}`"
-                  >
-                    {{ weekday }}
-                  </div>
-                </div>
+                  <template v-for="(cell, dayIndex) in week" :key="dayIndex">
+                    <span
+                      v-if="cell === null"
+                      aria-hidden="true"
+                      class="block aspect-square w-full"
+                    />
 
-                <div class="flex flex-col gap-1">
-                  <div
-                    v-for="(week, weekIndex) in month.weeks"
-                    :key="`${month.year}-${month.monthIndex}-${weekIndex}`"
-                    class="grid grid-cols-7 gap-1"
-                  >
-                    <template v-for="(cell, dayIndex) in week" :key="dayIndex">
+                    <button
+                      v-else-if="!cell.inactive"
+                      type="button"
+                      :aria-label="getCellLabel(cell)"
+                      :class="getCellClass(cell)"
+                      :title="getCellLabel(cell)"
+                      @click="emit('openDay', cell.date)"
+                    >
                       <span
-                        v-if="cell === null"
+                        class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
+                        :class="getDayNumberClass(cell)"
                         aria-hidden="true"
-                        class="block aspect-square w-full"
-                      />
-
-                      <button
-                        v-else-if="!cell.inactive"
-                        type="button"
-                        :aria-label="getCellLabel(cell)"
-                        :class="getCellClass(cell)"
-                        :title="getCellLabel(cell)"
-                        @click="emit('openDay', cell.date)"
                       >
-                        <span
-                          class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
-                          :class="getDayNumberClass(cell)"
-                          aria-hidden="true"
-                        >
-                          {{ cell.date.getDate() }}
-                        </span>
-                      </button>
+                        {{ cell.date.getDate() }}
+                      </span>
+                    </button>
 
-                      <div
-                        v-else
-                        :aria-label="getCellLabel(cell)"
-                        :class="getCellClass(cell)"
-                        :title="getCellLabel(cell)"
+                    <div
+                      v-else
+                      :aria-label="getCellLabel(cell)"
+                      :class="getCellClass(cell)"
+                      :title="getCellLabel(cell)"
+                    >
+                      <span
+                        class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
+                        :class="getDayNumberClass(cell)"
+                        aria-hidden="true"
                       >
-                        <span
-                          class="pointer-events-none absolute top-0.5 right-0.5 z-[1] text-[0.55rem] leading-none font-medium tabular-nums"
-                          :class="getDayNumberClass(cell)"
-                          aria-hidden="true"
-                        >
-                          {{ cell.date.getDate() }}
-                        </span>
-                      </div>
-                    </template>
-                  </div>
+                        {{ cell.date.getDate() }}
+                      </span>
+                    </div>
+                  </template>
                 </div>
-              </ContainerCard>
-            </template>
-          </div>
-        </ContainerCard>
+              </div>
+            </ContainerCard>
+          </template>
+        </div>
       </ContainerCard>
     </div>
   </div>

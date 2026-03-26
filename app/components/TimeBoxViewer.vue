@@ -35,15 +35,19 @@ const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },
   isMinimized: { type: Boolean, default: false },
+  interactive: { type: Boolean, default: false },
+  selected: { type: Boolean, default: false },
   /** Tighter vertical stack for minimized rows (e.g. project list view). */
   compact: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   hideProjectChip: { type: Boolean, default: false },
   flushTop: { type: Boolean, default: false },
   opaqueSurface: { type: Boolean, default: false },
+  hideActions: { type: Boolean, default: false },
+  useProjectCardStyles: { type: Boolean, default: true },
 })
 
-const emit = defineEmits(['toggleEditor', 'deleted'])
+const emit = defineEmits(['toggleEditor', 'deleted', 'open'])
 const mutationErrorMessage = ref('')
 
 const allProjects = useCollection(projectsCollection)
@@ -151,7 +155,7 @@ const requestDeleteSession = async () => {
 
 /** Same soft tint as project rows on `/projects` (ProjectsManagerProject). */
 const sessionCardStyle = computed(() => {
-  if (props.variant === 'project' || !project.value) {
+  if (!props.useProjectCardStyles || props.variant === 'project' || !project.value) {
     return {}
   }
 
@@ -165,19 +169,24 @@ const projectBadgeStyle = computed(() =>
 const projectTextStyle = computed(() =>
   project.value ? getProjectAccentTextStyle(project.value.colors) : {},
 )
+const isOverviewVariant = computed(() => props.variant === 'overview')
 </script>
 
 <template>
   <ContainerCard
     v-if="!isMinimized"
-    as="article"
-    class="rounded-xl py-4"
-    :class="props.flushTop ? 'mt-0 mb-4' : 'my-4'"
+    :as="isOverviewVariant ? 'button' : 'article'"
+    class="relative rounded-xl py-4"
+    :class="[props.flushTop ? 'mt-0 mb-4' : 'my-4', isOverviewVariant ? 'text-left' : '']"
+    :interactive="isOverviewVariant ? props.interactive : false"
     padding="compact"
+    :selected="isOverviewVariant ? props.selected : false"
     :style="sessionCardStyle"
+    :type="isOverviewVariant ? 'button' : undefined"
     variant="subtle"
+    @click="isOverviewVariant ? emit('open') : undefined"
   >
-    <div class="mb-2 flex justify-end gap-0.5">
+    <div v-if="!isOverviewVariant && !hideActions" class="absolute top-4 right-4 z-10 flex gap-0.5">
       <button
         type="button"
         class="cursor-pointer px-1 text-text-subtle hover:text-text"
@@ -196,45 +205,47 @@ const projectTextStyle = computed(() =>
       </button>
     </div>
 
-    <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-3 pr-14">
       <div class="min-w-0">
-        <div v-if="variant !== 'project'" class="flex flex-wrap items-center gap-2">
-          <NuxtLink
-            v-if="!hideProjectChip && timeBox?.project"
-            :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
-            class="inline-flex max-w-full min-w-0 items-center text-base font-bold no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
-            :style="projectTextStyle"
-          >
-            <HighlightedText :text="projectName" :tokens="highlightTokens" />
-          </NuxtLink>
-          <div
-            v-else-if="!hideProjectChip"
-            class="inline-flex text-base font-bold"
-            :style="projectTextStyle"
-          >
-            <HighlightedText :text="projectName" :tokens="highlightTokens" />
+        <div v-if="variant !== 'project'" class="flex flex-col">
+          <div class="inline-flex items-center gap-2">
+            <NuxtLink
+              v-if="!isOverviewVariant && !hideProjectChip && timeBox?.project"
+              :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
+              class="mb-1 inline-flex max-w-full min-w-0 items-center text-xl font-bold no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+              :style="projectTextStyle"
+            >
+              <HighlightedText :text="projectName" :tokens="highlightTokens" />
+            </NuxtLink>
+            <div
+              v-else-if="!hideProjectChip"
+              class="mb-1 inline-flex text-xl font-bold"
+              :style="projectTextStyle"
+            >
+              <HighlightedText :text="projectName" :tokens="highlightTokens" />
+            </div>
+            <div
+              v-if="variant !== 'project'"
+              class="inline-flex rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+              :style="projectBadgeStyle"
+            >
+              {{ timeBoxDuration }}
+            </div>
           </div>
           <div
-            v-if="variant !== 'project'"
-            class="inline-flex rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
-            :style="projectBadgeStyle"
-          >
-            {{ timeBoxDuration }}
-          </div>
-          <div
-            v-if="variant !== 'sessions-day' && sessionStartMetaLabel"
-            class="w-full text-text-subtle"
+            v-if="variant !== 'sessions-day' && !isOverviewVariant && sessionStartMetaLabel"
+            class="w-full font-medium text-text"
           >
             {{ sessionStartMetaLabel }}
           </div>
-          <div class="text-sm text-text-subtle tabular-nums">
+          <div class="text-sm text-text tabular-nums">
             {{ startTimeFormatted }} &mdash; {{ endTimeFormatted }}
           </div>
         </div>
-        <div class="my-5 font-data">
+        <div class="mt-4 mb-5 font-data">
           <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
         </div>
-        <div v-if="!hideTags" class="flex flex-wrap gap-2">
+        <div v-if="!hideTags && !isOverviewVariant" class="flex flex-wrap gap-2">
           <NuxtLink
             v-for="thisTag in tagEntries"
             :key="thisTag.id"

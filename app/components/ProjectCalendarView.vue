@@ -331,7 +331,7 @@ const handleSegmentDragEnd = () => {
                     day,
                     month.anchorDate,
                   ),
-                  'ring-2 ring-link/35 ring-inset': showCalendarSelectionRing(
+                  'ring-1 ring-link/20 ring-inset': showCalendarSelectionRing(
                     month.segmentsByKey,
                     day,
                   ),
@@ -358,8 +358,7 @@ const handleSegmentDragEnd = () => {
                     :key="segment.id"
                     class="cursor-pointer rounded-md border px-2 py-1 text-left text-xs text-text hover:brightness-97"
                     :class="{
-                      'shadow-panel-selected ring-1 ring-link/35 ring-inset':
-                        selectedSessionId === segment.timeBox.id,
+                      'ring-2 ring-link/20 ring-inset': selectedSessionId === segment.timeBox.id,
                     }"
                     :style="projectStyle"
                     draggable="true"

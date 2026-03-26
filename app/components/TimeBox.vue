@@ -4,16 +4,20 @@ import type { PropType } from 'vue'
 const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },
+  interactive: { type: Boolean, default: false },
+  selected: { type: Boolean, default: false },
   /** Tighter vertical spacing between minimized session rows (project list view). */
   compact: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   hideProjectChip: { type: Boolean, default: false },
   flushTop: { type: Boolean, default: false },
   opaqueSurface: { type: Boolean, default: false },
+  hideActions: { type: Boolean, default: false },
+  useProjectCardStyles: { type: Boolean, default: true },
   embeddedInPanel: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['deleted'])
+const emit = defineEmits(['deleted', 'open'])
 
 const showEditor = ref(false)
 
@@ -37,11 +41,16 @@ const toggleEditor = () => {
       :compact="props.compact"
       :flush-top="props.flushTop"
       :highlight-tokens="highlightTokens"
+      :hide-actions="hideActions"
       :hide-project-chip="hideProjectChip"
+      :interactive="props.interactive"
       :opaque-surface="opaqueSurface"
+      :selected="props.selected"
+      :use-project-card-styles="props.useProjectCardStyles"
       :variant
       :is-minimized
       @deleted="emit('deleted')"
+      @open="emit('open')"
       @toggle-editor="toggleEditor"
     />
     <TimeBoxEditor

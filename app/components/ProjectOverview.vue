@@ -403,7 +403,10 @@ onUnmounted(() => {
       @select-mode="handleWorkspaceModeSelect"
     />
 
-    <SessionsWorkspaceShell :overlay-aside="shouldOverlayProjectCalendarPanel">
+    <SessionsWorkspaceShell
+      :overlay-aside="shouldOverlayProjectCalendarPanel"
+      @dismiss-aside="closePanel"
+    >
       <div v-if="currentMode === 'list'" class="flex-1 overflow-auto px-11 pt-8">
         <ProjectOverviewDay
           v-for="(item, index) in projectOverviewDayObjects"

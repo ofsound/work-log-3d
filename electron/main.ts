@@ -1,7 +1,8 @@
 import { dirname, join } from 'node:path'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
-import { Notification, app, BrowserWindow, dialog, ipcMain, session } from 'electron'
+import { Notification, app, BrowserWindow, dialog, ipcMain, screen, session } from 'electron'
+import type { Rectangle } from 'electron'
 
 import type { DesktopTimerEvent, TimerState, UserSettingsTrayShortcut } from '~/shared/worklog'
 import {
@@ -48,6 +49,7 @@ let desktopTrayShortcuts: UserSettingsTrayShortcut[] = []
 let pendingRouteRequest: string | null = null
 let desktopRendererServer: Awaited<ReturnType<typeof createDesktopRendererServer>> | null = null
 let countdownDefaultMinutes = DEFAULT_COUNTDOWN_DEFAULT_MINUTES
+let restoredWindowState: PersistedWindowState | null = null
 
 /** Retain until `close` so macOS notification delivery is reliable (avoid premature GC). */
 const activeTimerNotifications: Notification[] = []
@@ -56,7 +58,70 @@ const getTimerStatePath = () => join(app.getPath('userData'), 'timer-state.json'
 const getTrayShortcutsPath = () => join(app.getPath('userData'), 'tray-shortcuts.json')
 const getCountdownDefaultPath = () =>
   join(app.getPath('userData'), 'countdown-default-minutes.json')
+const getWindowStatePath = () => join(app.getPath('userData'), 'window-state.json')
 const desktopRendererUrl = process.env.NUXT_DEV_SERVER_URL ?? process.env.ELECTRON_RENDERER_URL
+
+type PersistedWindowState = {
+  bounds: Rectangle
+  isMaximized: boolean
+}
+
+const isBoundsVisible = (bounds: Rectangle) => {
+  const displayBounds = screen.getDisplayMatching(bounds).workArea
+  const overlapWidth =
+    Math.min(bounds.x + bounds.width, displayBounds.x + displayBounds.width) -
+    Math.max(bounds.x, displayBounds.x)
+  const overlapHeight =
+    Math.min(bounds.y + bounds.height, displayBounds.y + displayBounds.height) -
+    Math.max(bounds.y, displayBounds.y)
+
+  return overlapWidth > 0 && overlapHeight > 0
+}
+
+const loadWindowState = async (): Promise<PersistedWindowState | null> => {
+  try {
+    const savedState = JSON.parse(await readFile(getWindowStatePath(), 'utf8')) as {
+      bounds?: Rectangle
+      isMaximized?: boolean
+    }
+
+    const bounds = savedState.bounds
+    if (
+      !bounds ||
+      typeof bounds.x !== 'number' ||
+      typeof bounds.y !== 'number' ||
+      typeof bounds.width !== 'number' ||
+      typeof bounds.height !== 'number' ||
+      bounds.width < 600 ||
+      bounds.height < 400 ||
+      !isBoundsVisible(bounds)
+    ) {
+      return null
+    }
+
+    return {
+      bounds,
+      isMaximized: savedState.isMaximized === true,
+    }
+  } catch {
+    return null
+  }
+}
+
+const persistWindowState = async (window: BrowserWindow) => {
+  if (window.isMinimized()) {
+    return
+  }
+
+  const windowStatePath = getWindowStatePath()
+  const payload: PersistedWindowState = {
+    bounds: window.getBounds(),
+    isMaximized: window.isMaximized(),
+  }
+
+  await mkdir(dirname(windowStatePath), { recursive: true })
+  await writeFile(windowStatePath, JSON.stringify(payload))
+}
 
 const persistTimerState = async () => {
   const timerStatePath = getTimerStatePath()
@@ -235,9 +300,16 @@ const createMainWindow = () => {
     return mainWindow
   }
 
-  const window = new BrowserWindow({
+  const defaultBounds = {
     width: 1025,
     height: 1025,
+  }
+
+  const window = new BrowserWindow({
+    width: restoredWindowState?.bounds.width ?? defaultBounds.width,
+    height: restoredWindowState?.bounds.height ?? defaultBounds.height,
+    x: restoredWindowState?.bounds.x,
+    y: restoredWindowState?.bounds.y,
     minWidth: 600,
     minHeight: 400,
     backgroundColor: '#f8fafc',
@@ -260,6 +332,28 @@ const createMainWindow = () => {
   window.on('closed', () => {
     mainWindow = null
   })
+
+  window.on('resize', () => {
+    void persistWindowState(window)
+  })
+
+  window.on('move', () => {
+    void persistWindowState(window)
+  })
+
+  window.on('maximize', () => {
+    void persistWindowState(window)
+  })
+
+  window.on('unmaximize', () => {
+    void persistWindowState(window)
+  })
+
+  if (restoredWindowState?.isMaximized) {
+    window.maximize()
+  }
+
+  restoredWindowState = null
 
   window.webContents.on('did-finish-load', () => {
     flushPendingRouteRequest()
@@ -408,6 +502,7 @@ app.whenReady().then(async () => {
   await loadTimerState()
   await loadTrayShortcuts()
   await loadCountdownDefaultMinutes()
+  restoredWindowState = await loadWindowState()
 
   if (!desktopRendererUrl) {
     desktopRendererServer = await createDesktopRendererServer(join(__dirname, '../renderer'), {

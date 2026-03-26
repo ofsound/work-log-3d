@@ -1,9 +1,19 @@
 // @vitest-environment jsdom
 
 import { mount } from '@vue/test-utils'
+import { defineComponent } from 'vue'
 
 import ContainerCard from '~/app/components/ContainerCard.vue'
 import DaySessionsOverviewPanel from '~/app/components/DaySessionsOverviewPanel.vue'
+
+const TimeBoxStub = defineComponent({
+  props: {
+    id: { type: String, required: true },
+  },
+  emits: ['open'],
+  template:
+    '<button data-testid="overview-row" type="button" @click="$emit(\'open\')">{{ id }}</button>',
+})
 
 describe('DaySessionsOverviewPanel', () => {
   it('shows mixed-project details and emits the clicked session id', async () => {
@@ -11,6 +21,7 @@ describe('DaySessionsOverviewPanel', () => {
       global: {
         components: {
           ContainerCard,
+          TimeBox: TimeBoxStub,
         },
       },
       props: {
@@ -65,11 +76,11 @@ describe('DaySessionsOverviewPanel', () => {
     })
 
     expect(wrapper.find('[data-testid="day-summary"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Client Portal')
-    expect(wrapper.text()).toContain('Marketing Site')
-    expect(wrapper.text()).toContain('Untitled session')
+    expect(wrapper.findAll('[data-testid="overview-row"]')).toHaveLength(2)
+    expect(wrapper.text()).toContain('session-1')
+    expect(wrapper.text()).toContain('session-2')
 
-    await wrapper.findAll('button')[0]!.trigger('click')
+    await wrapper.findAll('[data-testid="overview-row"]')[0]!.trigger('click')
 
     expect(wrapper.emitted('openSession')).toEqual([['session-1']])
   })
@@ -79,6 +90,7 @@ describe('DaySessionsOverviewPanel', () => {
       global: {
         components: {
           ContainerCard,
+          TimeBox: TimeBoxStub,
         },
       },
       props: {
@@ -98,7 +110,7 @@ describe('DaySessionsOverviewPanel', () => {
     })
 
     expect(wrapper.find('[data-testid="day-summary"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('Deep work')
+    expect(wrapper.text()).toContain('session-1')
   })
 
   it('renders the configured empty-state copy', () => {

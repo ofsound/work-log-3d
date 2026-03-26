@@ -1,4 +1,8 @@
 <script setup lang="ts">
+defineEmits<{
+  dismissAside: []
+}>()
+
 withDefaults(
   defineProps<{
     overlayAside?: boolean
@@ -23,6 +27,7 @@ withDefaults(
         class="pointer-events-auto absolute inset-0 z-20 bg-surface-muted/10 backdrop-blur-sm backdrop-saturate-150"
         role="presentation"
         aria-hidden="true"
+        @click="$emit('dismissAside')"
       />
     </Transition>
 
