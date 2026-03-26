@@ -69,7 +69,6 @@ const emit = defineEmits([
 const HOUR_HEIGHT = 72
 const TIME_GUTTER_WIDTH = 72
 const MIN_DAY_COLUMN_WIDTH = 160
-const SINGLE_DAY_COLUMN_WIDTH = 720
 const SNAP_MINUTES = 10
 const MINIMUM_DURATION_MINUTES = 10
 const INTERACTION_THRESHOLD = 4
@@ -124,9 +123,6 @@ const calendarRange = computed(() => {
   }
 })
 const hours = computed(() => Array.from({ length: 24 }, (_, index) => index))
-const dayColumnMinWidth = computed(() =>
-  visibleDays.value.length === 1 ? SINGLE_DAY_COLUMN_WIDTH : MIN_DAY_COLUMN_WIDTH,
-)
 
 const segmentsByDayKey = computed(() => {
   const map = new Map<string, TimeBoxDaySegment[]>()
@@ -702,8 +698,8 @@ onBeforeUnmount(() => {
         padding="none"
         variant="subtle"
         :style="{
-          gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${dayColumnMinWidth}px, 1fr))`,
-          minWidth: `${TIME_GUTTER_WIDTH + dayColumnMinWidth * visibleDays.length}px`,
+          gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${MIN_DAY_COLUMN_WIDTH}px, 1fr))`,
+          minWidth: `${TIME_GUTTER_WIDTH + MIN_DAY_COLUMN_WIDTH * visibleDays.length}px`,
         }"
       >
         <div class="relative border-r border-border bg-surface-muted">
@@ -831,8 +827,8 @@ onBeforeUnmount(() => {
           <div
             class="grid w-full border-b border-border bg-surface"
             :style="{
-              gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${dayColumnMinWidth}px, 1fr))`,
-              minWidth: `${TIME_GUTTER_WIDTH + dayColumnMinWidth * visibleDays.length}px`,
+              gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${MIN_DAY_COLUMN_WIDTH}px, 1fr))`,
+              minWidth: `${TIME_GUTTER_WIDTH + MIN_DAY_COLUMN_WIDTH * visibleDays.length}px`,
             }"
           >
             <div class="border-r border-border bg-surface"></div>
@@ -864,8 +860,8 @@ onBeforeUnmount(() => {
             ref="weekCalendarGridRef"
             class="grid min-h-full w-full"
             :style="{
-              gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${dayColumnMinWidth}px, 1fr))`,
-              minWidth: `${TIME_GUTTER_WIDTH + dayColumnMinWidth * visibleDays.length}px`,
+              gridTemplateColumns: `${TIME_GUTTER_WIDTH}px repeat(${visibleDays.length}, minmax(${MIN_DAY_COLUMN_WIDTH}px, 1fr))`,
+              minWidth: `${TIME_GUTTER_WIDTH + MIN_DAY_COLUMN_WIDTH * visibleDays.length}px`,
             }"
           >
             <div class="relative border-r border-border bg-surface-muted">
