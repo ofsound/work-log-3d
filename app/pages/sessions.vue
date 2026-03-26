@@ -70,6 +70,14 @@ interface SessionCreatePreview {
 type DaySidebarTab = 'scratchpad' | 'overview'
 type PanelMode = 'closed' | DaySidebarTab | 'session' | 'create'
 
+const SESSION_VIEW_ITEMS = [
+  { id: 'day', label: 'Day' },
+  { id: 'week', label: 'Week' },
+  { id: 'month', label: 'Month' },
+  { id: 'year', label: 'Year' },
+  { id: 'search', label: 'Search' },
+] satisfies ReadonlyArray<{ id: SessionsViewMode; label: string }>
+
 const route = useRoute()
 const router = useRouter()
 const { hideTags } = useUserSettings()
@@ -501,6 +509,10 @@ const clearListFilters = async () => {
   })
 }
 
+const handleModeSelect = (modeId: string) => {
+  void handleModeChange(modeId as SessionsViewMode)
+}
+
 const handleModeChange = async (mode: SessionsViewMode) => {
   if (mode === currentMode.value) {
     return
@@ -862,65 +874,13 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="flex flex-col items-end gap-2">
-          <div
-            class="inline-flex rounded-xl border border-border bg-surface-strong p-1 shadow-control"
-          >
-            <button
-              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-              :class="
-                currentMode === 'day'
-                  ? 'bg-header text-header-text'
-                  : 'text-text-muted hover:bg-surface'
-              "
-              @click="handleModeChange('day')"
-            >
-              Day
-            </button>
-            <button
-              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-              :class="
-                currentMode === 'week'
-                  ? 'bg-header text-header-text'
-                  : 'text-text-muted hover:bg-surface'
-              "
-              @click="handleModeChange('week')"
-            >
-              Week
-            </button>
-            <button
-              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-              :class="
-                currentMode === 'month'
-                  ? 'bg-header text-header-text'
-                  : 'text-text-muted hover:bg-surface'
-              "
-              @click="handleModeChange('month')"
-            >
-              Month
-            </button>
-            <button
-              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-              :class="
-                currentMode === 'year'
-                  ? 'bg-header text-header-text'
-                  : 'text-text-muted hover:bg-surface'
-              "
-              @click="handleModeChange('year')"
-            >
-              Year
-            </button>
-            <button
-              class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-              :class="
-                currentMode === 'search'
-                  ? 'bg-header text-header-text'
-                  : 'text-text-muted hover:bg-surface'
-              "
-              @click="handleModeChange('search')"
-            >
-              Search
-            </button>
-          </div>
+          <AppSegmentedControl
+            :active-id="currentMode"
+            aria-label="Sessions view modes"
+            :items="SESSION_VIEW_ITEMS"
+            size="large"
+            @select="handleModeSelect"
+          />
 
           <div
             v-if="currentMode !== 'search' && currentMode !== 'year'"

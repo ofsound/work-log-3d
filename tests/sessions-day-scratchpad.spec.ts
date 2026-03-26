@@ -156,6 +156,18 @@ const SessionsSidePanelStub = defineComponent({
   },
 })
 
+const pageStubs = {
+  AppSegmentedControl: true,
+  SessionListFilterPanel: true,
+  SessionsDayView: SessionsDayViewStub,
+  SessionsMonthView: true,
+  SessionsSidePanel: SessionsSidePanelStub,
+  SessionsWeekView: true,
+  SessionsWorkspaceShell: SessionsWorkspaceShellStub,
+  SessionsYearView: true,
+  TimeBox: true,
+}
+
 const flushPendingWork = async () => {
   await Promise.resolve()
   await nextTick()
@@ -246,16 +258,7 @@ describe('sessions day scratchpad', () => {
   it('defaults to the scratchpad sidebar on desktop Day view', async () => {
     const wrapper = mount(SessionsPage, {
       global: {
-        stubs: {
-          SessionListFilterPanel: true,
-          SessionsDayView: SessionsDayViewStub,
-          SessionsMonthView: true,
-          SessionsSidePanel: SessionsSidePanelStub,
-          SessionsWeekView: true,
-          SessionsWorkspaceShell: SessionsWorkspaceShellStub,
-          SessionsYearView: true,
-          TimeBox: true,
-        },
+        stubs: pageStubs,
       },
     })
 
@@ -269,16 +272,7 @@ describe('sessions day scratchpad', () => {
   it('switches to overview, opens a session from it, and can switch back to scratchpad', async () => {
     const wrapper = mount(SessionsPage, {
       global: {
-        stubs: {
-          SessionListFilterPanel: true,
-          SessionsDayView: SessionsDayViewStub,
-          SessionsMonthView: true,
-          SessionsSidePanel: SessionsSidePanelStub,
-          SessionsWeekView: true,
-          SessionsWorkspaceShell: SessionsWorkspaceShellStub,
-          SessionsYearView: true,
-          TimeBox: true,
-        },
+        stubs: pageStubs,
       },
     })
 
@@ -304,16 +298,7 @@ describe('sessions day scratchpad', () => {
   it('returns to the remembered overview tab on Escape and after day navigation', async () => {
     const wrapper = mount(SessionsPage, {
       global: {
-        stubs: {
-          SessionListFilterPanel: true,
-          SessionsDayView: SessionsDayViewStub,
-          SessionsMonthView: true,
-          SessionsSidePanel: SessionsSidePanelStub,
-          SessionsWeekView: true,
-          SessionsWorkspaceShell: SessionsWorkspaceShellStub,
-          SessionsYearView: true,
-          TimeBox: true,
-        },
+        stubs: pageStubs,
       },
     })
 
@@ -341,16 +326,7 @@ describe('sessions day scratchpad', () => {
 
     const wrapper = mount(SessionsPage, {
       global: {
-        stubs: {
-          SessionListFilterPanel: true,
-          SessionsDayView: SessionsDayViewStub,
-          SessionsMonthView: true,
-          SessionsSidePanel: SessionsSidePanelStub,
-          SessionsWeekView: true,
-          SessionsWorkspaceShell: SessionsWorkspaceShellStub,
-          SessionsYearView: true,
-          TimeBox: true,
-        },
+        stubs: pageStubs,
       },
     })
 

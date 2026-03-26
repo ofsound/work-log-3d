@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { PropType } from 'vue'
 
 import CloseIcon from '@/icons/CloseIcon.vue'
 
 import type { Project, TimeBox } from '~~/shared/worklog'
 
-defineProps({
+const props = defineProps({
   mode: {
     type: String as PropType<'scratchpad' | 'overview' | 'session' | 'create'>,
     required: true,
@@ -32,8 +32,37 @@ const emit = defineEmits(['close', 'created', 'openSession', 'showOverview', 'sh
 
 const scratchpadPanelRef = ref<{ flushPendingChanges: () => Promise<void> } | null>(null)
 
+const persistentPanelItems = computed(() => {
+  const items = [
+    { id: 'scratchpad', label: 'Scratchpad' },
+    { id: 'overview', label: 'Overview' },
+  ]
+
+  if (props.mode === 'session' || props.mode === 'create') {
+    items.push({
+      id: 'session',
+      label: props.mode === 'session' ? 'Session' : 'New Session',
+    })
+  }
+
+  return items
+})
+
+const persistentPanelActiveId = computed(() => (props.mode === 'create' ? 'session' : props.mode))
+
 const handleCreated = (sessionId: string) => {
   emit('created', sessionId)
+}
+
+const handlePersistentPanelSelect = (itemId: string) => {
+  if (itemId === 'scratchpad') {
+    emit('showScratchpad')
+    return
+  }
+
+  if (itemId === 'overview') {
+    emit('showOverview')
+  }
 }
 
 const flushScratchpad = async () => {
@@ -50,57 +79,29 @@ defineExpose({
     as="aside"
     class="flex h-full w-full min-w-0 shrink-0 flex-col p-0"
     :class="
-      overlay
+      props.overlay
         ? ''
         : 'max-w-108 rounded-none border-y-0 border-r-0 border-l border-border bg-surface-strong'
     "
     padding="compact"
-    :variant="overlay ? 'overlay' : 'subtle'"
+    :variant="props.overlay ? 'overlay' : 'subtle'"
   >
     <div class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-3 py-3">
-      <div v-if="persistent" class="flex min-w-0 flex-wrap items-center gap-2">
-        <button
-          type="button"
-          class="rounded-lg px-3 py-1.5 text-sm font-semibold transition"
-          :class="
-            mode === 'scratchpad'
-              ? 'bg-header text-header-text'
-              : overlay
-                ? 'text-text-muted hover:bg-white/16'
-                : 'text-text-muted hover:bg-surface'
-          "
-          @click="emit('showScratchpad')"
-        >
-          Scratchpad
-        </button>
-        <button
-          type="button"
-          class="rounded-lg px-3 py-1.5 text-sm font-semibold transition"
-          :class="
-            mode === 'overview'
-              ? 'bg-header text-header-text'
-              : overlay
-                ? 'text-text-muted hover:bg-white/16'
-                : 'text-text-muted hover:bg-surface'
-          "
-          @click="emit('showOverview')"
-        >
-          Overview
-        </button>
-        <button
-          v-if="mode === 'session' || mode === 'create'"
-          type="button"
-          class="rounded-lg bg-header px-3 py-1.5 text-sm font-semibold text-header-text"
-        >
-          {{ mode === 'session' ? 'Session' : 'New Session' }}
-        </button>
+      <div v-if="props.persistent" class="flex min-w-0 flex-wrap items-center gap-2">
+        <AppSegmentedControl
+          :active-id="persistentPanelActiveId"
+          aria-label="Day sidebar sections"
+          :items="persistentPanelItems"
+          size="medium"
+          @select="handlePersistentPanelSelect"
+        />
       </div>
 
       <button
-        v-if="!persistent"
+        v-if="!props.persistent"
         type="button"
         class="cursor-pointer rounded-md p-2 text-text-subtle hover:text-text"
-        :class="overlay ? 'hover:bg-white/16' : 'hover:bg-surface'"
+        :class="props.overlay ? 'hover:bg-white/16' : 'hover:bg-surface'"
         aria-label="Close"
         @click="emit('close')"
       >
@@ -109,46 +110,56 @@ defineExpose({
     </div>
 
     <div class="min-h-0 min-w-0 flex-1 px-4 pt-4 pb-4">
-      <div v-if="persistent" v-show="mode === 'scratchpad'" class="h-full min-h-0 overflow-hidden">
+      <div
+        v-if="props.persistent"
+        v-show="props.mode === 'scratchpad'"
+        class="h-full min-h-0 overflow-hidden"
+      >
         <DailyScratchpadPanel
           ref="scratchpadPanelRef"
-          :active="mode === 'scratchpad'"
-          :date-key="dateKey"
+          :active="props.mode === 'scratchpad'"
+          :date-key="props.dateKey"
         />
       </div>
 
-      <div v-if="mode === 'overview' && day" class="h-full min-w-0 overflow-y-auto pr-1">
+      <div
+        v-if="props.mode === 'overview' && props.day"
+        class="h-full min-w-0 overflow-y-auto pr-1"
+      >
         <DaySessionsOverviewPanel
-          :day="day"
+          :day="props.day"
           empty-message="No sessions on the selected day."
-          :project-by-id="projectById"
-          :project-name-by-id="projectNameById"
-          :selected-session-id="selectedSessionId"
-          :show-day-summary="!persistent"
+          :project-by-id="props.projectById"
+          :project-name-by-id="props.projectNameById"
+          :selected-session-id="props.selectedSessionId"
+          :show-day-summary="!props.persistent"
           show-project-name
-          :time-boxes="timeBoxes"
+          :time-boxes="props.timeBoxes"
           use-project-card-styles
           @open-session="emit('openSession', $event)"
         />
       </div>
 
-      <div v-if="mode === 'session' && sessionId" class="flex h-full min-h-0 min-w-0 flex-col">
+      <div
+        v-if="props.mode === 'session' && props.sessionId"
+        class="flex h-full min-h-0 min-w-0 flex-col"
+      >
         <TimeBox
-          :id="sessionId"
+          :id="props.sessionId"
           embedded-in-panel
-          :variant="sessionsViewMode === 'day' ? 'sessions-day' : undefined"
-          :opaque-surface="overlay"
+          :variant="props.sessionsViewMode === 'day' ? 'sessions-day' : undefined"
+          :opaque-surface="props.overlay"
           flush-top
           @deleted="emit('close')"
         />
       </div>
 
-      <div v-else-if="mode === 'create'" class="flex h-full min-h-0 min-w-0 flex-col pb-4">
+      <div v-else-if="props.mode === 'create'" class="flex h-full min-h-0 min-w-0 flex-col pb-4">
         <TimeBoxEditor
           embedded-in-panel
           class="min-h-0 flex-1"
-          :initial-start-time="initialStartTime"
-          :initial-end-time="initialEndTime"
+          :initial-start-time="props.initialStartTime"
+          :initial-end-time="props.initialEndTime"
           :reset-after-create="false"
           :show-create-cancel="true"
           create-button-label="Save Session"

@@ -5,7 +5,7 @@ definePageMeta({ layout: 'main-bleed' })
 </script>
 
 <template>
-  <div class="flex h-2/3 flex-col items-center justify-center gap-8">
+  <div class="flex h-3/4 flex-col items-center justify-center gap-8">
     <img
       src="/icon-white-not-so-thin.svg"
       alt=""
@@ -14,12 +14,5 @@ definePageMeta({ layout: 'main-bleed' })
       class="h-[400px] w-[400px] max-w-[min(400px,calc(100vw-2rem))] shrink-0 object-contain"
       decoding="async"
     />
-    <div class="px-20 py-12">
-      <span
-        class="inline-block bg-linear-to-b from-hero-start to-hero-end bg-clip-text text-4xl font-bold tracking-wider text-transparent text-shadow-hero"
-      >
-        Work Log
-      </span>
-    </div>
   </div>
 </template>

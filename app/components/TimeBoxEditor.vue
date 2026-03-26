@@ -472,6 +472,7 @@ const editorRootBind = computed(() =>
       >
         <section
           class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
+          :class="embeddedInPanel ? 'grid-cols-[minmax(0,8rem)_minmax(0,1fr)]' : ''"
         >
           <AppField as="div" class="min-w-0 self-start" density="comfortable" label="Duration">
             <!-- Block wrapper: avoids a single flex row inheriting stretched height from the grid row. -->
@@ -500,7 +501,9 @@ const editorRootBind = computed(() =>
             </div>
           </AppField>
 
-          <div class="ml-8 flex min-w-0 flex-col gap-4">
+          <div
+            class="col-span-2 ml-0 flex min-w-0 flex-col gap-4 [@container(min-width:38rem)]:col-span-1 [@container(min-width:38rem)]:ml-8"
+          >
             <div aria-live="polite" class="flex min-w-0 flex-col gap-3">
               <AppFieldLabel v-if="sessionTimeHero">Start & End</AppFieldLabel>
               <div
@@ -587,7 +590,7 @@ const editorRootBind = computed(() =>
           :class="
             hideTags
               ? ''
-              : 'flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,25%)] md:items-start md:gap-x-6 md:gap-y-0'
+              : 'flex flex-col gap-6 [@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[minmax(0,1fr)_minmax(0,25%)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-6 [@container(min-width:38rem)]:gap-y-0'
           "
         >
           <section class="flex min-w-0 flex-col gap-3">
@@ -597,7 +600,9 @@ const editorRootBind = computed(() =>
               class="project-radio-group grid gap-2.5"
               :class="[
                 projectRadiosTwoColumns ? '[@container(min-width:52rem)]:grid-cols-2' : '',
-                !hideTags ? 'md:border-r md:border-border-subtle md:pr-6' : '',
+                !hideTags
+                  ? '[@container(min-width:38rem)]:border-r [@container(min-width:38rem)]:border-border-subtle [@container(min-width:38rem)]:pr-6'
+                  : '',
               ]"
             >
               <label
@@ -643,16 +648,18 @@ const editorRootBind = computed(() =>
 
           <section
             v-if="!hideTags"
-            class="flex min-w-0 flex-col gap-3 border-t border-border-subtle pt-5 md:border-t-0 md:pt-0"
+            class="flex min-w-0 flex-col gap-3 border-t border-border-subtle pt-5 [@container(min-width:38rem)]:border-t-0 [@container(min-width:38rem)]:pt-0"
           >
             <AppFieldLabel as="div">Tags</AppFieldLabel>
 
-            <div class="flex flex-wrap gap-2.5 md:flex-col md:flex-nowrap md:gap-2">
+            <div
+              class="flex flex-wrap gap-2.5 [@container(min-width:38rem)]:flex-col [@container(min-width:38rem)]:flex-nowrap [@container(min-width:38rem)]:gap-2"
+            >
               <AppToggleChip
                 v-for="thisTag in sortedAllTags"
                 :key="thisTag.id"
                 :selected="dynamicTags.includes(thisTag.id)"
-                class="md:w-full md:justify-start"
+                class="[@container(min-width:38rem)]:w-full [@container(min-width:38rem)]:justify-start"
               >
                 <input
                   v-model="dynamicTags"
