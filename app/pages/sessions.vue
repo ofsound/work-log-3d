@@ -5,6 +5,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { definePageMeta } from '#imports'
 
+import CloseIcon from '@/icons/CloseIcon.vue'
+
 import type {
   FirebaseProjectDocument,
   FirebaseTagDocument,
@@ -832,7 +834,14 @@ onBeforeUnmount(() => {
             >
               {{ listSummary.projectCount }} projects
             </div>
-            <AppButton shape="pill" size="sm" variant="secondary" @click="clearListFilters">
+            <AppButton
+              shape="pill"
+              size="sm"
+              variant="secondary"
+              class="ms-4 shrink-0 gap-1.5 border border-dashed border-border-strong bg-surface-muted font-semibold text-text shadow-none hover:border-border hover:bg-surface-strong"
+              @click="clearListFilters"
+            >
+              <CloseIcon aria-hidden="true" class="!h-3.5 !w-3.5 shrink-0 opacity-[0.85]" />
               Clear all
             </AppButton>
           </div>

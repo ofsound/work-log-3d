@@ -235,14 +235,6 @@ const handleNotesStateChange = (value: string) => {
 <template>
   <div class="h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5">
     <div class="flex min-w-0 flex-col gap-5">
-      <div class="flex min-w-0 flex-col gap-3">
-        <div>
-          <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">List filters</div>
-          <div class="mt-1 text-xl font-bold text-text lg:text-2xl">Search your sessions</div>
-        </div>
-
-      </div>
-
       <div class="flex min-w-0 flex-col gap-4">
         <AppField class="min-w-0" label="Search">
           <AppTextInput
