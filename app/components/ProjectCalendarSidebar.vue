@@ -87,7 +87,13 @@ const projectById = computed(() =>
           <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Session</div>
           <div class="mt-1 text-lg font-bold tracking-tight">{{ dayTitle }}</div>
         </div>
-        <TimeBox :id="sessionId" :opaque-surface="overlay" flush-top @deleted="emit('close')" />
+        <TimeBox
+          :id="sessionId"
+          embedded-in-panel
+          :opaque-surface="overlay"
+          flush-top
+          @deleted="emit('close')"
+        />
       </div>
 
       <div v-else class="h-full min-w-0 overflow-y-auto overscroll-contain pr-1">

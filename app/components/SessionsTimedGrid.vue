@@ -567,7 +567,7 @@ const getEventStyle = (layout: TimeBoxDaySegmentLayout) => {
 const previewStyle = computed(() => {
   const preview =
     previewEvent.value ??
-    (props.createPreviewRange
+    (props.createPreviewRange && interactionState.value?.mode !== 'create'
       ? {
           input: {
             startTime: props.createPreviewRange.startTime,

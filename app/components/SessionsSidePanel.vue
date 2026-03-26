@@ -129,11 +129,18 @@ defineExpose({
       </div>
 
       <div v-if="mode === 'session' && sessionId" class="h-full min-w-0 overflow-y-auto pr-1">
-        <TimeBox :id="sessionId" :opaque-surface="overlay" flush-top @deleted="emit('close')" />
+        <TimeBox
+          :id="sessionId"
+          embedded-in-panel
+          :opaque-surface="overlay"
+          flush-top
+          @deleted="emit('close')"
+        />
       </div>
 
       <div v-else-if="mode === 'create'" class="h-full min-w-0 overflow-y-auto pr-1 pb-4">
         <TimeBoxEditor
+          embedded-in-panel
           :initial-start-time="initialStartTime"
           :initial-end-time="initialEndTime"
           :reset-after-create="false"

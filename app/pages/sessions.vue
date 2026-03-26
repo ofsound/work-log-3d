@@ -403,15 +403,15 @@ const openSessionPanel = async (
 }
 
 const openCreatePanel = async (range: SessionCreatePayload) => {
-  await flushScratchpadIfNeeded()
-  panelMode.value = 'create'
-  panelSessionId.value = ''
-  selectedSessionId.value = ''
   createRange.value = range
   createPreview.value = {
     range,
     createdSessionId: null,
   }
+  panelSessionId.value = ''
+  selectedSessionId.value = ''
+  await flushScratchpadIfNeeded()
+  panelMode.value = 'create'
 }
 
 const markCreatePreviewSaved = (sessionId: string) => {

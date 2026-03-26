@@ -181,13 +181,19 @@ const handleSegmentDragEnd = () => {
                   @dragstart="handleSegmentDragStart(segment.timeBox, $event)"
                   @dragend="handleSegmentDragEnd"
                 >
-                  <span class="font-semibold">{{ formatSegmentTime(segment.segmentStart) }}</span>
-                  <span
-                    class="ml-1 shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
-                    :style="durationBadgeStyle"
+                  <div
+                    class="flex min-h-0 w-full items-center justify-between gap-2 overflow-hidden"
                   >
-                    {{ getSegmentDuration(segment.timeBox) }}
-                  </span>
+                    <span class="min-w-0 truncate font-semibold">{{
+                      formatSegmentTime(segment.segmentStart)
+                    }}</span>
+                    <span
+                      class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                      :style="durationBadgeStyle"
+                    >
+                      {{ getSegmentDuration(segment.timeBox) }}
+                    </span>
+                  </div>
                 </button>
 
                 <button

@@ -3,6 +3,8 @@ import type { PropType } from 'vue'
 
 import { doc } from 'firebase/firestore'
 
+import ContainerCard from '~/components/ContainerCard.vue'
+
 import { getProjectPickerOptionStyle } from '~/utils/project-color-styles'
 import { addMinutesToDatetimeLocal } from '~/utils/minute-vertical-drag'
 import type {
@@ -33,6 +35,8 @@ const props = defineProps({
   resetAfterCreate: { type: Boolean, default: true },
   showCreateCancel: { type: Boolean, default: false },
   createButtonLabel: { type: String, default: 'Log Session' },
+  /** Sidebar / calendar side panel: no outer card border, shadow, or extra padding (aside already frames content). */
+  embeddedInPanel: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['toggleEditor', 'saved'])
@@ -440,6 +444,19 @@ onBeforeUnmount(() => {
     clearTimeout(dynamicDurationTypingTimer.value)
   }
 })
+
+const editorRootIs = computed(() => (props.embeddedInPanel ? 'div' : ContainerCard))
+
+const editorRootBind = computed(() =>
+  props.embeddedInPanel
+    ? { class: 'flex min-w-0 flex-col gap-5 grayscale-10' }
+    : {
+        padding: 'compact' as const,
+        variant: 'gradient' as const,
+        class:
+          'flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-md [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5',
+      },
+)
 </script>
 
 <template>
@@ -447,11 +464,7 @@ onBeforeUnmount(() => {
     ref="timeBoxEditorRef"
     class="[container-type:inline-size] w-full max-w-full min-w-0 font-data text-text"
   >
-    <ContainerCard
-      class="flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-md [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5"
-      padding="compact"
-      variant="gradient"
-    >
+    <component :is="editorRootIs" v-bind="editorRootBind">
       <section
         class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
       >
@@ -692,7 +705,7 @@ onBeforeUnmount(() => {
           {{ createButtonLabel }}
         </AppButton>
       </div>
-    </ContainerCard>
+    </component>
   </div>
 </template>
 

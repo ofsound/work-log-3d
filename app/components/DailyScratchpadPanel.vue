@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { doc } from 'firebase/firestore'
-import Placeholder from '@tiptap/extension-placeholder'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import StarterKit from '@tiptap/starter-kit'
@@ -106,9 +105,6 @@ const editor = useEditor({
     TaskList,
     TaskItem.configure({
       nested: false,
-    }),
-    Placeholder.configure({
-      placeholder: 'Capture the day, decisions, follow-ups, and anything you want to remember.',
     }),
   ],
   editorProps: {
@@ -357,102 +353,61 @@ defineExpose({
 
 <template>
   <div class="flex h-full min-h-0 flex-col gap-3">
-    <div class="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('bold') ?? false)"
-        @click="editor?.chain().focus().toggleBold().run()"
-      >
-        Bold
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('italic') ?? false)"
-        @click="editor?.chain().focus().toggleItalic().run()"
-      >
-        Italic
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('heading', { level: 1 }) ?? false)"
-        @click="editor?.chain().focus().toggleHeading({ level: 1 }).run()"
-      >
-        H1
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('heading', { level: 2 }) ?? false)"
-        @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
-      >
-        H2
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('heading', { level: 3 }) ?? false)"
-        @click="editor?.chain().focus().toggleHeading({ level: 3 }).run()"
-      >
-        H3
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('bulletList') ?? false)"
-        @click="editor?.chain().focus().toggleBulletList().run()"
-      >
-        Bullets
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('orderedList') ?? false)"
-        @click="editor?.chain().focus().toggleOrderedList().run()"
-      >
-        Numbered
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('taskList') ?? false)"
-        @click="editor?.chain().focus().toggleTaskList().run()"
-      >
-        Checklist
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(editor?.isActive('link') ?? false)"
-        @click="openLinkPrompt"
-      >
-        Link
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(false)"
-        @click="editor?.chain().focus().undo().run()"
-      >
-        Undo
-      </button>
-      <button
-        type="button"
-        :class="toolbarButtonClass(false)"
-        @click="editor?.chain().focus().redo().run()"
-      >
-        Redo
-      </button>
-    </div>
-
-    <div class="flex items-center justify-between gap-3 text-xs text-text-subtle">
-      <div>
-        <span v-if="saveStatus === 'saving'">Saving...</span>
-        <span v-else-if="saveStatus === 'saved'">{{ savedStatusLabel }}</span>
-        <span v-else-if="saveStatus === 'error'">{{ saveErrorMessage }}</span>
-        <span v-else-if="isEnsuringNote">Preparing note...</span>
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          :class="toolbarButtonClass(editor?.isActive('bulletList') ?? false)"
+          @click="editor?.chain().focus().toggleBulletList().run()"
+        >
+          Bullets
+        </button>
+        <button
+          type="button"
+          :class="toolbarButtonClass(editor?.isActive('orderedList') ?? false)"
+          @click="editor?.chain().focus().toggleOrderedList().run()"
+        >
+          Numbered
+        </button>
+        <button
+          type="button"
+          :class="toolbarButtonClass(editor?.isActive('taskList') ?? false)"
+          @click="editor?.chain().focus().toggleTaskList().run()"
+        >
+          Checklist
+        </button>
+        <button
+          type="button"
+          :class="toolbarButtonClass(editor?.isActive('link') ?? false)"
+          @click="openLinkPrompt"
+        >
+          Link
+        </button>
       </div>
-
-      <button
-        type="button"
-        class="rounded-md border border-button-secondary-border bg-button-secondary px-3 py-1.5 text-xs font-semibold text-button-secondary-text hover:bg-button-secondary-hover disabled:cursor-default disabled:opacity-60"
-        :disabled="saveStatus === 'saving' || !isDirty"
-        @click="flushPendingChanges"
-      >
-        Save
-      </button>
+      <div class="flex min-h-4 flex-wrap items-center justify-between gap-x-2 gap-y-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            :class="toolbarButtonClass(false)"
+            @click="editor?.chain().focus().undo().run()"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            :class="toolbarButtonClass(false)"
+            @click="editor?.chain().focus().redo().run()"
+          >
+            Redo
+          </button>
+        </div>
+        <div class="flex min-w-0 items-center text-right text-xs text-text-subtle">
+          <span v-if="saveStatus === 'saving'">Saving...</span>
+          <span v-else-if="saveStatus === 'saved'">{{ savedStatusLabel }}</span>
+          <span v-else-if="saveStatus === 'error'">{{ saveErrorMessage }}</span>
+          <span v-else-if="isEnsuringNote">Preparing note...</span>
+        </div>
+      </div>
     </div>
 
     <div class="min-h-0 flex-1 pb-4">

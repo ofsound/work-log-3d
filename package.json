@@ -36,7 +36,6 @@
     "@nuxtjs/color-mode": "^4.0.0",
     "@pinia/nuxt": "^0.11.3",
     "@tiptap/extension-link": "^3.20.4",
-    "@tiptap/extension-placeholder": "^3.20.4",
     "@tiptap/extension-task-item": "^3.20.4",
     "@tiptap/extension-task-list": "^3.20.4",
     "@tiptap/starter-kit": "^3.20.4",

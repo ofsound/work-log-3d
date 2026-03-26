@@ -9,6 +9,7 @@ const props = defineProps({
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   flushTop: { type: Boolean, default: false },
   opaqueSurface: { type: Boolean, default: false },
+  embeddedInPanel: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['deleted'])
@@ -39,5 +40,10 @@ const toggleEditor = () => {
     @deleted="emit('deleted')"
     @toggle-editor="toggleEditor"
   />
-  <TimeBoxEditor v-if="showEditor" :id @toggle-editor="toggleEditor" />
+  <TimeBoxEditor
+    v-if="showEditor"
+    :id
+    :embedded-in-panel="embeddedInPanel"
+    @toggle-editor="toggleEditor"
+  />
 </template>
