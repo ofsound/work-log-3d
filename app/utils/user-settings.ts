@@ -67,5 +67,4 @@ export const getShellBackgroundStyle = (preset: UserSettingsBackgroundPreset): C
 export const getUserSettingsFontVariables = (settings: UserSettings) => ({
   '--font-sans': settings.appearance.fontFamilies.ui,
   '--font-data': settings.appearance.fontFamilies.data,
-  '--font-script': settings.appearance.fontFamilies.script,
 })

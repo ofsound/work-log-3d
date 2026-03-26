@@ -13,7 +13,6 @@ describe('user settings', () => {
         fontFamilies: {
           ui: "  'IBM Plex Sans', sans-serif  ",
           data: "  'IBM Plex Mono', monospace ",
-          script: "  'Caveat', cursive ",
         },
         backgroundPreset: 'aurora',
       },
@@ -26,6 +25,7 @@ describe('user settings', () => {
       'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap',
     )
     expect(settings.appearance.fontFamilies.ui).toBe("'IBM Plex Sans', sans-serif")
+    expect(settings.appearance.fontFamilies.data).toBe("'IBM Plex Mono', monospace")
     expect(settings.workflow.hideTags).toBe(true)
     expect(settings.workflow.countdownDefaultMinutes).toBe(
       DEFAULT_USER_SETTINGS.workflow.countdownDefaultMinutes,
@@ -48,7 +48,6 @@ describe('user settings', () => {
         fontFamilies: {
           ui: "'IBM Plex Sans', sans-serif",
           data: DEFAULT_USER_SETTINGS.appearance.fontFamilies.data,
-          script: DEFAULT_USER_SETTINGS.appearance.fontFamilies.script,
         },
         backgroundPreset: 'grid',
       },

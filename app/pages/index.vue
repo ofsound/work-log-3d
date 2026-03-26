@@ -14,10 +14,12 @@ definePageMeta({ layout: 'main-bleed' })
       class="h-[400px] w-[400px] max-w-[min(400px,calc(100vw-2rem))] shrink-0 object-contain"
       decoding="async"
     />
-    <div
-      class="rounded-lg bg-linear-to-b from-hero-start to-hero-end px-20 py-12 text-3xl font-bold tracking-wider text-text-inverse shadow-hero text-shadow-hero"
-    >
-      Work Log
+    <div class="px-20 py-12">
+      <span
+        class="inline-block bg-linear-to-b from-hero-start to-hero-end bg-clip-text text-4xl font-bold tracking-wider text-transparent text-shadow-hero"
+      >
+        Work Log
+      </span>
     </div>
   </div>
 </template>

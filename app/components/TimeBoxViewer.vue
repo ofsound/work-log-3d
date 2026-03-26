@@ -92,12 +92,18 @@ const timeBoxDuration = computed(() =>
   timeBox.value ? getDurationMinutesLabel(timeBox.value) : '0m',
 )
 
-const startDayFormatted = computed(() => {
-  return timeBox.value?.startTime?.toLocaleDateString([], {
+const sessionStartMetaLabel = computed(() => {
+  const start = timeBox.value?.startTime
+  if (!start) {
+    return ''
+  }
+
+  return start.toLocaleString([], {
     weekday: 'short',
-    year: '2-digit',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   })
 })
 
@@ -143,12 +149,9 @@ const requestDeleteSession = async () => {
   }
 }
 
-const projectSurfaceStyle = computed(() => {
-  if (props.variant === 'project') {
-    return {}
-  }
-
-  if (!project.value) {
+/** Same soft tint as project rows on `/projects` (ProjectsManagerProject). */
+const sessionCardStyle = computed(() => {
+  if (props.variant === 'project' || !project.value) {
     return {}
   }
 
@@ -164,69 +167,78 @@ const projectBadgeStyle = computed(() =>
 <template>
   <ContainerCard
     v-if="!isMinimized"
-    class="relative rounded-sm py-4"
+    as="article"
+    class="rounded-xl py-4"
     :class="props.flushTop ? 'mt-0 mb-4' : 'my-4'"
-    padding="comfortable"
-    :style="projectSurfaceStyle"
-    variant="session"
+    padding="compact"
+    :style="sessionCardStyle"
+    variant="subtle"
   >
-    <button
-      class="absolute right-4 bottom-3 cursor-pointer px-1 text-text-subtle hover:text-text"
-      @click="emit('toggleEditor')"
-    >
-      <EditIcon />
-    </button>
-    <button
-      type="button"
-      class="absolute right-4 cursor-pointer px-1 text-text-subtle hover:text-text"
-      aria-label="Delete session"
-      @click="requestDeleteSession"
-    >
-      <DeleteIcon />
-    </button>
-    <div class="flex items-baseline gap-2 border-b border-border pb-2">
+    <div class="mb-2 flex justify-end gap-0.5">
+      <button
+        type="button"
+        class="cursor-pointer px-1 text-text-subtle hover:text-text"
+        aria-label="Edit session"
+        @click="emit('toggleEditor')"
+      >
+        <EditIcon />
+      </button>
+      <button
+        type="button"
+        class="cursor-pointer px-1 text-text-subtle hover:text-text"
+        aria-label="Delete session"
+        @click="requestDeleteSession"
+      >
+        <DeleteIcon />
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div class="max-w-3xl min-w-0 flex-1">
+        <div v-if="variant !== 'project'" class="flex flex-wrap items-center gap-2">
+          <NuxtLink
+            v-if="timeBox?.project"
+            :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
+            class="inline-flex max-w-full min-w-0 items-center rounded-full border px-3 py-1 text-sm font-bold no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+            :style="projectBadgeStyle"
+          >
+            <HighlightedText :text="projectName" :tokens="highlightTokens" />
+          </NuxtLink>
+          <div
+            v-else
+            class="inline-flex rounded-full border px-3 py-1 text-sm font-bold"
+            :style="projectBadgeStyle"
+          >
+            <HighlightedText :text="projectName" :tokens="highlightTokens" />
+          </div>
+          <div class="text-sm text-text-subtle tabular-nums">
+            {{ startTimeFormatted }} &mdash; {{ endTimeFormatted }}
+          </div>
+        </div>
+        <div class="my-5 font-data">
+          <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
+        </div>
+        <div v-if="!hideTags" class="flex flex-wrap gap-2">
+          <NuxtLink
+            v-for="thisTag in tagEntries"
+            :key="thisTag.id"
+            :to="getSessionsSearchRouteForTag(thisTag.id)"
+            class="inline-flex max-w-full min-w-0 items-center rounded-xl bg-chip px-3 py-0.5 font-data text-sm text-chip-text no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+          >
+            <div class="relative -top-px">
+              <HighlightedText :text="thisTag.name" :tokens="highlightTokens" />
+            </div>
+          </NuxtLink>
+        </div>
+      </div>
       <div
-        class="inline-flex w-max shrink-0 items-center rounded-lg bg-badge-duration px-3 py-1.5 text-2xl font-bold tracking-tight text-badge-duration-text tabular-nums shadow-sm"
+        class="w-full shrink-0 rounded-xl bg-surface-subtle px-3 py-2 text-sm lg:w-auto lg:min-w-[7.5rem] lg:text-right"
       >
-        {{ timeBoxDuration }}
-      </div>
-      <div v-if="variant !== 'project'" class="flex items-baseline gap-2">
-        <div class="relative -top-0.5 font-bold">–</div>
-        <NuxtLink
-          v-if="timeBox?.project"
-          :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
-          class="relative -top-px inline-flex max-w-full min-w-0 items-center rounded-full border px-3 py-1 text-sm font-bold no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
-          :style="projectBadgeStyle"
-        >
-          <HighlightedText :text="projectName" :tokens="highlightTokens" />
-        </NuxtLink>
-        <div
-          v-else
-          class="relative -top-px rounded-full border px-3 py-1 text-sm font-bold"
-          :style="projectBadgeStyle"
-        >
-          <HighlightedText :text="projectName" :tokens="highlightTokens" />
+        <div class="font-semibold tabular-nums">{{ timeBoxDuration }}</div>
+        <div v-if="sessionStartMetaLabel" class="mt-1 text-text-subtle">
+          {{ sessionStartMetaLabel }}
         </div>
       </div>
-    </div>
-    <div class="mt-3 font-data">{{ startDayFormatted }}</div>
-    <div class="mt-px font-data text-sm italic">
-      {{ startTimeFormatted }} &mdash; {{ endTimeFormatted }}
-    </div>
-    <div class="my-5 font-data">
-      <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
-    </div>
-    <div v-if="!hideTags" class="flex flex-wrap gap-2">
-      <NuxtLink
-        v-for="thisTag in tagEntries"
-        :key="thisTag.id"
-        :to="getSessionsSearchRouteForTag(thisTag.id)"
-        class="inline-flex max-w-full min-w-0 items-center rounded-xl bg-chip px-3 py-0.5 font-data text-sm text-chip-text no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
-      >
-        <div class="relative -top-px">
-          <HighlightedText :text="thisTag.name" :tokens="highlightTokens" />
-        </div>
-      </NuxtLink>
     </div>
     <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
       {{ mutationErrorMessage }}

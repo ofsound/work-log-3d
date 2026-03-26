@@ -236,7 +236,6 @@ const handleResetFontsToDefaults = () => {
   draft.value.appearance.fontFamilies = {
     ui: defaultSettings.appearance.fontFamilies.ui,
     data: defaultSettings.appearance.fontFamilies.data,
-    script: defaultSettings.appearance.fontFamilies.script,
   }
   mutationErrorMessage.value = ''
   saveMessage.value = ''
@@ -436,7 +435,7 @@ onBeforeUnmount(() => {
               </template>
             </AppField>
 
-            <div class="grid gap-4 md:grid-cols-3">
+            <div class="grid gap-4 md:grid-cols-2">
               <AppField label="UI font family">
                 <AppTextInput
                   v-model="draft.appearance.fontFamilies.ui"
@@ -447,12 +446,6 @@ onBeforeUnmount(() => {
                 <AppTextInput
                   v-model="draft.appearance.fontFamilies.data"
                   placeholder="'Lato', sans-serif"
-                />
-              </AppField>
-              <AppField label="Script font family">
-                <AppTextInput
-                  v-model="draft.appearance.fontFamilies.script"
-                  placeholder="'Caveat', sans-serif"
                 />
               </AppField>
             </div>
@@ -476,10 +469,6 @@ onBeforeUnmount(() => {
                 <div class="mt-2 font-data text-3xl font-bold text-text tabular-nums">
                   03:45 · 128.4 hrs
                 </div>
-              </div>
-              <div>
-                <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Script</div>
-                <div class="mt-2 font-script text-4xl text-text">Daily rhythm</div>
               </div>
             </div>
           </ContainerCard>

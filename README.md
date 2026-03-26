@@ -257,7 +257,6 @@ New projects are created from `/project/new`, where the initial notes and curate
     fontFamilies: {
       ui: string
       data: string
-      script: string
     }
     backgroundPreset: 'grid' | 'dots' | 'crosshatch' | 'aurora'
   }

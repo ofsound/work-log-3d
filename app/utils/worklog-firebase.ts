@@ -103,7 +103,6 @@ export interface FirebaseUserSettingsDocument {
     fontFamilies?: {
       ui?: string
       data?: string
-      script?: string
     }
     backgroundPreset?: string
   }
@@ -214,7 +213,6 @@ export const toUserSettingsPayload = (input: UserSettings) => {
       fontFamilies: {
         ui: normalized.appearance.fontFamilies.ui,
         data: normalized.appearance.fontFamilies.data,
-        script: normalized.appearance.fontFamilies.script,
       },
       backgroundPreset: normalized.appearance.backgroundPreset,
     },

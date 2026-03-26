@@ -9,7 +9,6 @@ export type UserSettingsTrayShortcutTimerMode =
 export interface UserSettingsFontFamilies {
   ui: string
   data: string
-  script: string
 }
 
 export interface UserSettingsAppearance {
@@ -78,7 +77,6 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
     fontFamilies: {
       ui: "'National Park', sans-serif",
       data: "'Lato', sans-serif",
-      script: "'Caveat', sans-serif",
     },
     backgroundPreset: 'grid',
   },
@@ -119,7 +117,6 @@ export const cloneUserSettings = (settings: UserSettings): UserSettings => ({
     fontFamilies: {
       ui: settings.appearance.fontFamilies.ui,
       data: settings.appearance.fontFamilies.data,
-      script: settings.appearance.fontFamilies.script,
     },
     backgroundPreset: settings.appearance.backgroundPreset,
   },
@@ -286,13 +283,12 @@ export const validateUserSettings = (input: UserSettings): UserSettings => ({
     fontFamilies: {
       ui: normalizeRequiredFontFamily(input.appearance.fontFamilies.ui, 'UI'),
       data: normalizeRequiredFontFamily(input.appearance.fontFamilies.data, 'Data'),
-      script: normalizeRequiredFontFamily(input.appearance.fontFamilies.script, 'Script'),
     },
     backgroundPreset: isUserSettingsBackgroundPreset(input.appearance.backgroundPreset)
       ? input.appearance.backgroundPreset
       : (() => {
-          throw new Error('Background preset is invalid.')
-        })(),
+        throw new Error('Background preset is invalid.')
+      })(),
   },
   workflow: {
     hideTags: Boolean(input.workflow?.hideTags ?? DEFAULT_USER_SETTINGS.workflow.hideTags),
@@ -325,9 +321,6 @@ export const resolveUserSettings = (
           data:
             input.appearance?.fontFamilies?.data ??
             DEFAULT_USER_SETTINGS.appearance.fontFamilies.data,
-          script:
-            input.appearance?.fontFamilies?.script ??
-            DEFAULT_USER_SETTINGS.appearance.fontFamilies.script,
         },
         backgroundPreset: isUserSettingsBackgroundPreset(input.appearance?.backgroundPreset)
           ? input.appearance.backgroundPreset

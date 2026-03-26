@@ -2,14 +2,11 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
 
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&display=swap');
-
 @import 'tailwindcss';
 
 @theme static {
   --font-sans: 'National Park', sans-serif;
   --font-data: 'Lato', sans-serif;
-  --font-script: 'Caveat', sans-serif;
 
   --animate-blink-once: blink-once 0.3s ease-in-out forwards;
 

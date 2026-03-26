@@ -141,7 +141,6 @@ describe('firestore worklog repositories', () => {
       },
     })
 
-    expect(settings.appearance.fontFamilies.script).toBe("'Caveat', sans-serif")
     expect(settings.workflow.hideTags).toBe(false)
     expect(toUserSettingsPayload(settings)).toEqual({
       appearance: {
@@ -150,7 +149,6 @@ describe('firestore worklog repositories', () => {
         fontFamilies: {
           ui: "'National Park', sans-serif",
           data: "'Lato', sans-serif",
-          script: "'Caveat', sans-serif",
         },
         backgroundPreset: 'grid',
       },

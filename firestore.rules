@@ -166,10 +166,9 @@ service cloud.firestore {
             'backgroundPreset'
           ])
         && request.resource.data.appearance.fontImportUrl is string
-        && hasExactMapKeys(request.resource.data.appearance.fontFamilies, ['ui', 'data', 'script'])
+        && hasExactMapKeys(request.resource.data.appearance.fontFamilies, ['ui', 'data'])
         && isNonEmptyString(request.resource.data.appearance.fontFamilies.ui)
         && isNonEmptyString(request.resource.data.appearance.fontFamilies.data)
-        && isNonEmptyString(request.resource.data.appearance.fontFamilies.script)
         && (
           request.resource.data.appearance.backgroundPreset == 'grid'
           || request.resource.data.appearance.backgroundPreset == 'dots'

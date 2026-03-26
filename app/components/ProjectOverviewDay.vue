@@ -12,19 +12,27 @@ const dayDuration = computed(() => getTotalDurationLabel(props.projectOverviewDa
 const dayBadgeStyle = computed(() =>
   props.projectColors ? getProjectBadgeStyle(props.projectColors) : {},
 )
+
+/** Same wording and typography as session sidebars (e.g. ProjectCalendarSidebar `dayTitle`). */
+const dayHeading = computed(() => {
+  const start = props.projectOverviewDayData[0]?.startTime
+  if (!start) {
+    return ''
+  }
+
+  return start.toLocaleDateString([], {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+})
 </script>
 
 <template>
   <div class="mb-12">
-    <div class="px-2 font-script text-4xl font-bold">
-      {{
-        projectOverviewDayData[0]?.startTime?.toLocaleDateString([], {
-          weekday: 'long',
-          year: '2-digit',
-          month: '2-digit',
-          day: '2-digit',
-        })
-      }}
+    <div class="px-2 text-lg font-bold tracking-tight">
+      {{ dayHeading }}
     </div>
     <div
       class="mt-1.5 mr-2 mb-3 ml-2.5 w-max rounded-md border px-1.5 py-0.5 pt-px font-data text-sm tracking-wide"

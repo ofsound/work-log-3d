@@ -163,7 +163,30 @@ describe('firestore rules', () => {
           fontFamilies: {
             ui: "'National Park', sans-serif",
             data: "'Lato', sans-serif",
-            script: "'Caveat', sans-serif",
+          },
+          backgroundPreset: 'dots',
+        },
+        workflow: {
+          hideTags: true,
+          countdownDefaultMinutes: 30,
+        },
+        desktop: {
+          trayShortcuts: [],
+        },
+      }),
+    )
+  })
+
+  it('rejects user settings fontFamilies that include a legacy script key', async () => {
+    await assertFails(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
+        appearance: {
+          fontImportUrl:
+            'https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap',
+          fontFamilies: {
+            ui: "'National Park', sans-serif",
+            data: "'Lato', sans-serif",
+            script: "'Anything', sans-serif",
           },
           backgroundPreset: 'dots',
         },
@@ -246,7 +269,6 @@ describe('firestore rules', () => {
           fontFamilies: {
             ui: '',
             data: "'Lato', sans-serif",
-            script: "'Caveat', sans-serif",
           },
           backgroundPreset: 'unknown',
         },
