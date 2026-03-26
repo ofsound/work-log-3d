@@ -450,7 +450,7 @@ onBeforeUnmount(() => {
               </AppField>
             </div>
 
-            <AppButton class="self-start" variant="secondary" @click="handleResetFontsToDefaults">
+            <AppButton class="self-start" variant="primary" @click="handleResetFontsToDefaults">
               Reset fonts to defaults
             </AppButton>
           </div>
@@ -459,14 +459,12 @@ onBeforeUnmount(() => {
             <AppFieldLabel as="div">Live font preview</AppFieldLabel>
             <div class="mt-4 flex flex-col gap-4">
               <div>
-                <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">UI</div>
-                <div class="mt-2 text-2xl text-text">
+                <div class="text-2xl text-text">
                   Settings should feel personal, but still readable at a glance.
                 </div>
               </div>
               <div>
-                <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Data</div>
-                <div class="mt-2 font-data text-3xl font-bold text-text tabular-nums">
+                <div class="font-data text-3xl font-bold text-text tabular-nums">
                   03:45 · 128.4 hrs
                 </div>
               </div>
@@ -510,10 +508,9 @@ onBeforeUnmount(() => {
               <ContainerCard class="flex items-start gap-4" padding="compact" variant="muted">
                 <input v-model="draft.workflow.hideTags" type="checkbox" class="mt-1" />
                 <div>
-                  <div class="font-semibold text-text">Hide tags across the authenticated app</div>
+                  <div class="font-semibold text-text">Hide tags</div>
                   <p class="mt-2 text-sm leading-6 text-text-muted">
-                    Removes tag navigation, filters, badges, editors, and tag report controls while
-                    preserving any existing tag data already attached to sessions and reports.
+                    Hides tags from the UI but preserves all existing tag data.
                   </p>
                 </div>
               </ContainerCard>
@@ -582,7 +579,7 @@ onBeforeUnmount(() => {
                   </div>
                 </AppField>
 
-                <AppField v-if="shortcut.timerMode === 'countdown'" label="Countdown minutes">
+                <AppField v-if="shortcut.timerMode === 'countdown'" label="Minutes">
                   <AppTextInput
                     :value="shortcut.durationMinutes ?? ''"
                     min="1"
@@ -608,11 +605,6 @@ onBeforeUnmount(() => {
 
                 <div class="min-w-0 lg:col-span-2">
                   <AppField as="div" label="Tags">
-                    <template #description>
-                      <p class="text-xs text-text-muted">
-                        Tags apply when this shortcut opens the new session form.
-                      </p>
-                    </template>
                     <div v-if="sortedTags.length" class="flex flex-wrap gap-2">
                       <AppToggleChip
                         v-for="tag in sortedTags"
