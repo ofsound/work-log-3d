@@ -783,7 +783,8 @@ onBeforeUnmount(() => {
             >
               <button
                 v-if="layout.startsOnThisDay"
-                class="absolute inset-x-0 top-0 h-2 cursor-ns-resize rounded-t-lg"
+                type="button"
+                class="absolute inset-x-0 -top-1.5 z-[11] h-3.5 cursor-ns-resize rounded-t-lg"
                 @pointerdown="handleResizePointerDown(layout.timeBox, 'start', $event)"
               ></button>
 
@@ -803,7 +804,8 @@ onBeforeUnmount(() => {
 
               <button
                 v-if="layout.endsOnThisDay"
-                class="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize rounded-b-lg"
+                type="button"
+                class="absolute inset-x-0 -bottom-1.5 z-[11] h-3.5 cursor-ns-resize rounded-b-lg"
                 @pointerdown="handleResizePointerDown(layout.timeBox, 'end', $event)"
               ></button>
             </div>
@@ -945,7 +947,8 @@ onBeforeUnmount(() => {
                 >
                   <button
                     v-if="layout.startsOnThisDay"
-                    class="absolute inset-x-0 top-0 h-2 cursor-ns-resize rounded-t-lg"
+                    type="button"
+                    class="absolute inset-x-0 -top-1.5 z-[11] h-3.5 cursor-ns-resize rounded-t-lg"
                     @pointerdown="handleResizePointerDown(layout.timeBox, 'start', $event)"
                   ></button>
 
@@ -965,7 +968,8 @@ onBeforeUnmount(() => {
 
                   <button
                     v-if="layout.endsOnThisDay"
-                    class="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize rounded-b-lg"
+                    type="button"
+                    class="absolute inset-x-0 -bottom-1.5 z-[11] h-3.5 cursor-ns-resize rounded-b-lg"
                     @pointerdown="handleResizePointerDown(layout.timeBox, 'end', $event)"
                   ></button>
                 </div>
