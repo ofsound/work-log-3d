@@ -278,7 +278,7 @@ New projects are created from `/project/new`, where the initial notes and curate
 }
 ```
 
-`countdownDefaultMinutes` is written when you start or edit the countdown on `/new` (and on the next full save from `/settings`). The Electron app mirrors it to the main process so the tray **Pomodoro** action matches the web app.
+`countdownDefaultMinutes` is written when you start or edit the countdown on `/new` (and on the next full save from `/settings`). The Electron app mirrors it to the main process so desktop countdown shortcuts and `/new` defaults stay aligned with the web app.
 
 `publicReports/{token}`
 

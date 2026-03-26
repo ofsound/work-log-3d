@@ -1,4 +1,4 @@
-import { DEFAULT_COUNTDOWN_DEFAULT_MINUTES, type UserSettingsTrayShortcut } from './settings'
+import type { UserSettingsTrayShortcut } from './settings'
 import type { TimerSnapshot, TimerState } from './timer'
 
 export interface DesktopTimerEvent {
@@ -15,7 +15,6 @@ export interface DesktopWindowState {
 
 export type DesktopTrayActionId =
   | 'start_countup'
-  | 'start_focus'
   | 'add_countdown_5_minutes'
   | 'add_countdown_10_minutes'
   | 'pause'
@@ -33,19 +32,19 @@ export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
 
 export type DesktopTrayMenuItem =
   | {
-      kind: 'status'
-      label: string
-      enabled: false
-    }
+    kind: 'status'
+    label: string
+    enabled: false
+  }
   | {
-      kind: 'separator'
-    }
+    kind: 'separator'
+  }
   | {
-      kind: 'action'
-      id: DesktopTrayActionId
-      label: string
-      enabled: boolean
-    }
+    kind: 'action'
+    id: DesktopTrayActionId
+    label: string
+    enabled: boolean
+  }
 
 export interface DesktopTrayState {
   mode: TimerState['status']
@@ -180,9 +179,6 @@ const createTrayShortcutItems = (
     createActionItem(createDesktopTrayShortcutActionId(shortcut.id), shortcut.label),
   )
 
-export const formatPomodoroTrayLabel = (countdownDefaultMinutes: number) =>
-  `Pomodoro (${countdownDefaultMinutes}m)`
-
 const getTrayShortcutStructuralKey = (shortcuts: readonly UserSettingsTrayShortcut[]) =>
   shortcuts
     .map((shortcut) =>
@@ -205,20 +201,18 @@ const getTrayShortcutStructuralKey = (shortcuts: readonly UserSettingsTrayShortc
 export const getDesktopTrayStructuralKey = (
   snapshot: TimerSnapshot,
   shortcuts: readonly UserSettingsTrayShortcut[] = [],
-  countdownDefaultMinutes: number = DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
 ): string => {
   if (snapshot.status === 'running' || snapshot.status === 'paused') {
     return `${snapshot.status}:${snapshot.mode ?? 'timer'}`
   }
 
-  const focusSegment = `focus:${countdownDefaultMinutes}`
   const shortcutKey = getTrayShortcutStructuralKey(shortcuts)
 
   if (!shortcutKey) {
-    return `${snapshot.status}:${focusSegment}`
+    return snapshot.status
   }
 
-  return `${snapshot.status}:${focusSegment}:${shortcutKey}`
+  return `${snapshot.status}:${shortcutKey}`
 }
 
 export const formatDesktopTrayBadgeText = (display: string) => {
@@ -235,10 +229,8 @@ export const getDesktopTrayState = (
   snapshot: TimerSnapshot,
   platform: NodeJS.Platform = process.platform,
   shortcuts: readonly UserSettingsTrayShortcut[] = [],
-  countdownDefaultMinutes: number = DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
 ): DesktopTrayState => {
   const trayShortcutItems = createTrayShortcutItems(shortcuts)
-  const pomodoroLabel = formatPomodoroTrayLabel(countdownDefaultMinutes)
 
   if (snapshot.status === 'idle') {
     const statusLabel = 'Timer idle'
@@ -254,7 +246,6 @@ export const getDesktopTrayState = (
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
-        createActionItem('start_focus', pomodoroLabel),
         createActionItem('start_countup', 'Start Timer'),
         ...trayShortcutItems,
         separatorItem,
@@ -303,26 +294,26 @@ export const getDesktopTrayState = (
     const menuItems =
       snapshot.mode === 'countup'
         ? [
-            createStatusItem(statusLabel),
-            separatorItem,
-            createActionItem('resume', 'Resume'),
-            createActionItem('open_window_to_log_session', 'Log'),
-            createActionItem('reset', 'Reset'),
-            separatorItem,
-            createActionItem('show_window', 'Show Window'),
-            createActionItem('quit', 'Quit'),
-          ]
+          createStatusItem(statusLabel),
+          separatorItem,
+          createActionItem('resume', 'Resume'),
+          createActionItem('open_window_to_log_session', 'Log'),
+          createActionItem('reset', 'Reset'),
+          separatorItem,
+          createActionItem('show_window', 'Show Window'),
+          createActionItem('quit', 'Quit'),
+        ]
         : [
-            createStatusItem(statusLabel),
-            separatorItem,
-            createActionItem('resume', 'Resume'),
-            ...countdownActions,
-            createActionItem('stop', 'Stop'),
-            createActionItem('reset', 'Reset'),
-            separatorItem,
-            createActionItem('show_window', 'Show Window'),
-            createActionItem('quit', 'Quit'),
-          ]
+          createStatusItem(statusLabel),
+          separatorItem,
+          createActionItem('resume', 'Resume'),
+          ...countdownActions,
+          createActionItem('stop', 'Stop'),
+          createActionItem('reset', 'Reset'),
+          separatorItem,
+          createActionItem('show_window', 'Show Window'),
+          createActionItem('quit', 'Quit'),
+        ]
 
     return {
       mode: 'paused',
@@ -351,7 +342,6 @@ export const getDesktopTrayState = (
       createStatusItem(statusLabel),
       separatorItem,
       ...countdownActions,
-      createActionItem('start_focus', pomodoroLabel),
       createActionItem('start_countup', 'Start Timer'),
       ...trayShortcutItems,
       separatorItem,

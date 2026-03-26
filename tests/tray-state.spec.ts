@@ -2,7 +2,6 @@ import {
   createDesktopTrayShortcutActionId,
   createIdleTimerState,
   formatDesktopTrayBadgeText,
-  formatPomodoroTrayLabel,
   getDesktopTrayStructuralKey,
   getDesktopTrayState,
   getTimerSnapshot,
@@ -36,7 +35,6 @@ describe('desktop tray state', () => {
   it('derives the idle tray menu with timer start actions', () => {
     const trayState = getDesktopTrayState(getTimerSnapshot(createIdleTimerState(), 0), 'darwin')
 
-    expect(formatPomodoroTrayLabel(30)).toBe('Pomodoro (30m)')
     expect(trayState.mode).toBe('idle')
     expect(trayState.title).toBe('')
     expect(trayState.visualMode).toBe('icon')
@@ -45,7 +43,6 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Timer idle', enabled: false },
       { kind: 'separator' },
-      { kind: 'action', id: 'start_focus', label: 'Pomodoro (30m)', enabled: true },
       { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
@@ -63,7 +60,6 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Timer idle', enabled: false },
       { kind: 'separator' },
-      { kind: 'action', id: 'start_focus', label: 'Pomodoro (30m)', enabled: true },
       { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
       {
         kind: 'action',
@@ -92,8 +88,7 @@ describe('desktop tray state', () => {
     expect(getDesktopTrayStructuralKey(runningA)).toBe('running:countup')
     expect(getDesktopTrayStructuralKey(runningB)).toBe('running:countup')
     expect(getDesktopTrayStructuralKey(runningCountdown)).toBe('running:countdown')
-    expect(getDesktopTrayStructuralKey(idleSnapshot)).toBe('idle:focus:30')
-    expect(getDesktopTrayStructuralKey(idleSnapshot, [], 40)).toBe('idle:focus:40')
+    expect(getDesktopTrayStructuralKey(idleSnapshot)).toBe('idle')
     expect(getDesktopTrayStructuralKey(idleSnapshot, customShortcuts)).not.toBe('idle')
     expect(
       getDesktopTrayStructuralKey(idleSnapshot, [
@@ -235,7 +230,6 @@ describe('desktop tray state', () => {
       { kind: 'separator' },
       { kind: 'action', id: 'add_countdown_5_minutes', label: '+5 min', enabled: true },
       { kind: 'action', id: 'add_countdown_10_minutes', label: '+10 min', enabled: true },
-      { kind: 'action', id: 'start_focus', label: 'Pomodoro (30m)', enabled: true },
       { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
       { kind: 'separator' },
       {
