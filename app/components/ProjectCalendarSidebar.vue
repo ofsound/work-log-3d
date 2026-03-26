@@ -125,6 +125,7 @@ const projectById = computed(() =>
           <TimeBox
             :id="sessionId"
             embedded-in-panel
+            hide-project-chip
             :opaque-surface="overlay"
             flush-top
             @deleted="emit('close')"

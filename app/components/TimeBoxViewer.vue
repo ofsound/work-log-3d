@@ -6,6 +6,7 @@ import EditIcon from '@/icons/EditIcon.vue'
 
 import type { PropType } from 'vue'
 import {
+  getProjectAccentTextStyle,
   getProjectBadgeStyle,
   getProjectOpaqueSoftSurfaceStyle,
   getProjectSoftSurfaceStyle,
@@ -37,6 +38,7 @@ const props = defineProps({
   /** Tighter vertical stack for minimized rows (e.g. project list view). */
   compact: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
+  hideProjectChip: { type: Boolean, default: false },
   flushTop: { type: Boolean, default: false },
   opaqueSurface: { type: Boolean, default: false },
 })
@@ -99,11 +101,9 @@ const sessionStartMetaLabel = computed(() => {
   }
 
   return start.toLocaleString([], {
-    weekday: 'short',
+    weekday: 'long',
     month: 'short',
     day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
   })
 })
 
@@ -162,6 +162,9 @@ const sessionCardStyle = computed(() => {
 const projectBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},
 )
+const projectTextStyle = computed(() =>
+  project.value ? getProjectAccentTextStyle(project.value.colors) : {},
+)
 </script>
 
 <template>
@@ -193,23 +196,36 @@ const projectBadgeStyle = computed(() =>
       </button>
     </div>
 
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-      <div class="max-w-3xl min-w-0 flex-1">
+    <div class="flex flex-col gap-3">
+      <div class="min-w-0">
         <div v-if="variant !== 'project'" class="flex flex-wrap items-center gap-2">
           <NuxtLink
-            v-if="timeBox?.project"
+            v-if="!hideProjectChip && timeBox?.project"
             :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
-            class="inline-flex max-w-full min-w-0 items-center rounded-full border px-3 py-1 text-sm font-bold no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
-            :style="projectBadgeStyle"
+            class="inline-flex max-w-full min-w-0 items-center text-base font-bold no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+            :style="projectTextStyle"
           >
             <HighlightedText :text="projectName" :tokens="highlightTokens" />
           </NuxtLink>
           <div
-            v-else
-            class="inline-flex rounded-full border px-3 py-1 text-sm font-bold"
-            :style="projectBadgeStyle"
+            v-else-if="!hideProjectChip"
+            class="inline-flex text-base font-bold"
+            :style="projectTextStyle"
           >
             <HighlightedText :text="projectName" :tokens="highlightTokens" />
+          </div>
+          <div
+            v-if="variant !== 'project'"
+            class="inline-flex rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+            :style="projectBadgeStyle"
+          >
+            {{ timeBoxDuration }}
+          </div>
+          <div
+            v-if="variant !== 'sessions-day' && sessionStartMetaLabel"
+            class="w-full text-text-subtle"
+          >
+            {{ sessionStartMetaLabel }}
           </div>
           <div class="text-sm text-text-subtle tabular-nums">
             {{ startTimeFormatted }} &mdash; {{ endTimeFormatted }}
@@ -231,14 +247,6 @@ const projectBadgeStyle = computed(() =>
           </NuxtLink>
         </div>
       </div>
-      <div
-        class="w-full shrink-0 rounded-xl bg-surface-subtle px-3 py-2 text-sm lg:w-auto lg:min-w-[7.5rem] lg:text-right"
-      >
-        <div class="font-semibold tabular-nums">{{ timeBoxDuration }}</div>
-        <div v-if="sessionStartMetaLabel" class="mt-1 text-text-subtle">
-          {{ sessionStartMetaLabel }}
-        </div>
-      </div>
     </div>
     <p v-if="mutationErrorMessage" class="mt-3 text-sm text-danger">
       {{ mutationErrorMessage }}
@@ -254,15 +262,15 @@ const projectBadgeStyle = computed(() =>
     <NuxtLink
       v-if="variant !== 'project' && timeBox?.project"
       :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
-      class="mb-2 inline-flex max-w-full min-w-0 items-center rounded-full border px-2.5 py-1 text-xs font-bold tracking-[0.16em] uppercase no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
-      :style="projectBadgeStyle"
+      class="mb-2 inline-flex max-w-full min-w-0 items-center text-xs font-bold tracking-[0.16em] uppercase no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+      :style="projectTextStyle"
     >
       <HighlightedText :text="projectName" :tokens="highlightTokens" />
     </NuxtLink>
     <div
       v-else-if="variant !== 'project'"
-      class="mb-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-bold tracking-[0.16em] uppercase"
-      :style="projectBadgeStyle"
+      class="mb-2 inline-flex text-xs font-bold tracking-[0.16em] uppercase"
+      :style="projectTextStyle"
     >
       <HighlightedText :text="projectName" :tokens="highlightTokens" />
     </div>

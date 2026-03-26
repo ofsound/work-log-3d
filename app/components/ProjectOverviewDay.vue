@@ -13,7 +13,7 @@ const dayBadgeStyle = computed(() =>
   props.projectColors ? getProjectBadgeStyle(props.projectColors) : {},
 )
 
-/** Same wording and typography as session sidebars (e.g. ProjectCalendarSidebar `dayTitle`). */
+/** Long weekday + abbreviated month (e.g. “Thursday, Nov 20, 2025” in en-US). */
 const dayHeading = computed(() => {
   const start = props.projectOverviewDayData[0]?.startTime
   if (!start) {
@@ -22,7 +22,7 @@ const dayHeading = computed(() => {
 
   return start.toLocaleDateString([], {
     weekday: 'long',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
@@ -31,14 +31,16 @@ const dayHeading = computed(() => {
 
 <template>
   <div class="mb-12">
-    <div class="px-2 text-lg font-bold tracking-tight">
-      {{ dayHeading }}
-    </div>
-    <div
-      class="mt-1.5 mr-2 mb-3 ml-2.5 w-max rounded-md border px-1.5 py-0.5 pt-px font-data text-sm tracking-wide"
-      :style="dayBadgeStyle"
-    >
-      {{ dayDuration }} hrs
+    <div class="flex flex-wrap items-center gap-2 px-2">
+      <div class="text-2xl font-bold tracking-tight">
+        {{ dayHeading }}
+      </div>
+      <div
+        class="w-max rounded-full border px-2.5 py-1 font-data text-xs tracking-wide"
+        :style="dayBadgeStyle"
+      >
+        {{ dayDuration }} hrs
+      </div>
     </div>
     <ContainerCard
       class="relative my-4 rounded-sm px-6 pt-6 pb-3.5"

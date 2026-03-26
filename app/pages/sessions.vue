@@ -1076,6 +1076,7 @@ onBeforeUnmount(() => {
           :persistent="isPersistentScratchpad"
           :project-by-id="projectById"
           :project-name-by-id="projectNameById"
+          :sessions-view-mode="currentMode"
           :selected-session-id="selectedSessionId"
           :session-id="panelSessionId"
           :time-boxes="visibleDayTimeBoxes"

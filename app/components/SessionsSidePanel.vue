@@ -22,6 +22,10 @@ defineProps({
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
   projectById: { type: Object as PropType<Record<string, Project>>, default: () => ({}) },
   projectNameById: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
+  sessionsViewMode: {
+    type: String as PropType<'search' | 'day' | 'week' | 'month' | 'year'>,
+    default: 'search',
+  },
 })
 
 const emit = defineEmits(['close', 'created', 'openSession', 'showOverview', 'showScratchpad'])
@@ -132,6 +136,7 @@ defineExpose({
         <TimeBox
           :id="sessionId"
           embedded-in-panel
+          :variant="sessionsViewMode === 'day' ? 'sessions-day' : undefined"
           :opaque-surface="overlay"
           flush-top
           @deleted="emit('close')"

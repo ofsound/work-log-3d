@@ -102,7 +102,10 @@ export const getProjectWorkspaceModeToggleStyles = (
   activeButton: getProjectBadgeStyle(colors),
   inactiveButton: {
     color: toRgba(colors.primary, 0.82),
-  },
+    /** Hover gradient in `ProjectWorkspaceHeader` (mix rail → solid active). */
+    '--project-mode-toggle-rail': toRgba(colors.primary, 0.14),
+    '--project-mode-toggle-active': colors.primary,
+  } as CSSProperties,
 })
 
 /** Session editor project radios: full gradient when selected; unselected uses muted tint + CSS vars for hover. */

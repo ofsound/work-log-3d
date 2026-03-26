@@ -7,6 +7,7 @@ const props = defineProps({
   /** Tighter vertical spacing between minimized session rows (project list view). */
   compact: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
+  hideProjectChip: { type: Boolean, default: false },
   flushTop: { type: Boolean, default: false },
   opaqueSurface: { type: Boolean, default: false },
   embeddedInPanel: { type: Boolean, default: false },
@@ -18,7 +19,7 @@ const showEditor = ref(false)
 
 const isMinimized = ref(false)
 
-if (props.variant === 'project' || props.variant === 'tag') {
+if (props.variant === 'project') {
   isMinimized.value = true
 }
 
@@ -36,6 +37,7 @@ const toggleEditor = () => {
       :compact="props.compact"
       :flush-top="props.flushTop"
       :highlight-tokens="highlightTokens"
+      :hide-project-chip="hideProjectChip"
       :opaque-surface="opaqueSurface"
       :variant
       :is-minimized

@@ -331,7 +331,6 @@ const handleSegmentDragEnd = () => {
                     day,
                     month.anchorDate,
                   ),
-                  'ring-1 ring-danger ring-inset': isSameDay(day, new Date()),
                   'ring-2 ring-link/35 ring-inset': showCalendarSelectionRing(
                     month.segmentsByKey,
                     day,

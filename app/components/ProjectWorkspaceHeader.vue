@@ -46,6 +46,13 @@ const emit = defineEmits<{
   'select-mode': [mode: ProjectWorkspaceMode]
 }>()
 
+/** Inactive segment when project tint is off (neutral rail): subtle darken toward header. */
+const MODE_TOGGLE_INACTIVE_NEUTRAL_CLASS =
+  'cursor-pointer text-text-muted hover:text-text hover:bg-[linear-gradient(135deg,_color-mix(in_srgb,var(--color-surface-strong)_96%,var(--color-header)_4%),_color-mix(in_srgb,var(--color-surface-strong)_92%,var(--color-header)_8%))]'
+/** Inactive segment with `modeToggleStyles`: subtle mix toward solid primary (see project-color-styles). */
+const MODE_TOGGLE_INACTIVE_PROJECT_CLASS =
+  'cursor-pointer hover:bg-[linear-gradient(135deg,_color-mix(in_srgb,var(--project-mode-toggle-rail)_96%,var(--project-mode-toggle-active)_4%),_color-mix(in_srgb,var(--project-mode-toggle-rail)_92%,var(--project-mode-toggle-active)_8%))]'
+
 const outlineBadgeClassName = computed(() =>
   props.headerStyle.backgroundImage
     ? 'rounded-full border border-white/20 px-3 py-1.5 text-sm font-semibold'
@@ -69,15 +76,15 @@ const getModeButtonStyle = (tab: ProjectWorkspaceTab) => {
 const getModeButtonClassName = (tab: ProjectWorkspaceTab) => {
   if (tab.id !== props.activeMode) {
     return props.modeToggleStyles?.inactiveButton
-      ? 'hover:bg-surface'
-      : 'text-text-muted hover:bg-surface'
+      ? MODE_TOGGLE_INACTIVE_PROJECT_CLASS
+      : MODE_TOGGLE_INACTIVE_NEUTRAL_CLASS
   }
 
   if (props.modeToggleStyles?.activeButton) {
-    return 'bg-transparent'
+    return 'cursor-pointer bg-transparent'
   }
 
-  return 'bg-header text-header-text'
+  return 'cursor-pointer bg-header text-header-text'
 }
 </script>
 

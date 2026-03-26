@@ -454,11 +454,23 @@
   .daily-scratchpad-editor ul[data-type='taskList'] li {
     display: flex;
     gap: 0.625rem;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .daily-scratchpad-editor ul[data-type='taskList'] li > label {
-    margin-top: 0.2rem;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+
+  .daily-scratchpad-editor ul[data-type='taskList'] li > div {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .daily-scratchpad-editor ul[data-type='taskList'] li > div > p {
+    margin-top: 0;
   }
 
   .daily-scratchpad-editor a {
