@@ -229,10 +229,14 @@ const calendarHeaderSummary = computed(() => {
     projectCount: new Set(boxes.map((timeBox) => timeBox.project)).size,
   }
 })
-const listSummary = computed(() => ({
-  count: filteredSessionListTimeBoxes.value.length,
-  durationLabel: getTotalDurationLabel(filteredSessionListTimeBoxes.value),
-}))
+const listSummary = computed(() => {
+  const boxes = filteredSessionListTimeBoxes.value
+  return {
+    count: boxes.length,
+    durationLabel: getTotalDurationLabel(boxes),
+    projectCount: new Set(boxes.map((timeBox) => timeBox.project)).size,
+  }
+})
 
 const weekTitle = computed(() => {
   const start = getStartOfWeek(anchorDate.value)
@@ -811,6 +815,27 @@ onBeforeUnmount(() => {
               {{ calendarHeaderSummary.projectCount }} projects
             </div>
           </div>
+
+          <div v-else-if="currentMode === 'search'" class="mt-3 flex flex-wrap items-center gap-2">
+            <div
+              class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums"
+            >
+              {{ listSummary.durationLabel }} hrs
+            </div>
+            <div
+              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+            >
+              {{ listSummary.count }} matches
+            </div>
+            <div
+              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+            >
+              {{ listSummary.projectCount }} projects
+            </div>
+            <AppButton shape="pill" size="sm" variant="secondary" @click="clearListFilters">
+              Clear all
+            </AppButton>
+          </div>
         </div>
 
         <div class="flex flex-col items-end gap-2">
@@ -940,10 +965,7 @@ onBeforeUnmount(() => {
             :filters="listFilters"
             :hide-tags="hideTags"
             :projects="sortedProjects"
-            :result-count="listSummary.count"
             :tags="sortedTags"
-            :total-duration-label="listSummary.durationLabel"
-            @clear-filters="clearListFilters"
             @update-filters="updateListFilters"
           />
         </aside>

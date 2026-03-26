@@ -61,6 +61,8 @@ const getDurationBadgeStyle = (projectId: string) => {
 
 const getDaySegments = (day: Date) => daySegmentsByKey.value.get(formatDateKey(day)) ?? []
 
+const dayHasSessions = (day: Date) => getDaySegments(day).length > 0
+
 const getVisibleSegments = (day: Date) => getDaySegments(day).slice(0, MONTH_GRID_VISIBLE_ROWS)
 
 const getHiddenCount = (day: Date) =>
@@ -74,7 +76,11 @@ const formatSegmentTime = (date: Date) =>
 
 const isOutsideAnchorMonth = (day: Date) => day.getMonth() !== props.anchorDate.getMonth()
 
-const handleDayClick = (day: Date) => {
+const handleDayCellClick = (day: Date) => {
+  if (!dayHasSessions(day)) {
+    return
+  }
+
   emit('openDay', day)
 }
 
@@ -127,68 +133,75 @@ const handleSegmentDragEnd = () => {
         </div>
 
         <div class="grid grid-cols-7">
-          <button
-            v-for="day in gridDays"
-            :key="formatDateKey(day)"
-            class="flex min-h-40 cursor-pointer flex-col gap-2 border-r border-b border-border px-3 py-3 text-left align-top transition last:border-r-0 hover:bg-surface-muted"
-            :class="{
-              'bg-surface-muted/50 text-text-subtle': isOutsideAnchorMonth(day),
-              'ring-1 ring-link/20 ring-inset': isSameDay(day, new Date()),
-              'ring-2 ring-link/35 ring-inset':
-                props.selectedDate != null && isSameDay(day, props.selectedDate),
-            }"
-            @click="handleDayClick(day)"
-            @dragover.prevent
-            @drop="handleSegmentDrop(day, $event)"
-          >
-            <div class="flex items-center justify-between">
-              <div class="text-lg font-semibold">{{ day.getDate() }}</div>
-              <div
-                v-if="isSameDay(day, new Date())"
-                class="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white"
-              >
-                Today
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-1.5">
-              <button
-                v-for="segment in getVisibleSegments(day)"
-                :key="segment.id"
-                class="cursor-pointer rounded-md border px-2 py-1 text-left text-xs text-text hover:brightness-97"
-                :class="{
-                  'shadow-panel-selected ring-1 ring-link/35 ring-inset':
-                    selectedSessionId === segment.timeBox.id,
-                }"
-                :style="getProjectStyle(segment.timeBox.project)"
-                draggable="true"
-                @click.stop="emit('openSession', { day, sessionId: segment.timeBox.id })"
-                @dragstart="handleSegmentDragStart(segment.timeBox, $event)"
-                @dragend="handleSegmentDragEnd"
-              >
-                <div class="flex min-h-0 items-start justify-between gap-2 overflow-hidden">
-                  <div class="min-w-0 flex-1 truncate">
-                    <span class="font-semibold">{{ formatSegmentTime(segment.segmentStart) }}</span>
-                    <span class="ml-1">{{ getProjectName(segment.timeBox.project) }}</span>
-                  </div>
-                  <div
-                    class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
-                    :style="getDurationBadgeStyle(segment.timeBox.project)"
-                  >
-                    {{ getDurationMinutesLabel(segment.timeBox) }}
-                  </div>
+          <template v-for="day in gridDays" :key="formatDateKey(day)">
+            <component
+              :is="dayHasSessions(day) ? 'button' : 'div'"
+              :type="dayHasSessions(day) ? 'button' : undefined"
+              class="flex min-h-40 flex-col gap-2 border-r border-b border-border px-3 py-3 text-left align-top transition last:border-r-0"
+              :class="{
+                'cursor-pointer hover:bg-surface-muted': dayHasSessions(day),
+                'bg-surface-muted/50 text-text-subtle': isOutsideAnchorMonth(day),
+                'ring-1 ring-link/20 ring-inset': isSameDay(day, new Date()),
+                'ring-2 ring-link/35 ring-inset':
+                  dayHasSessions(day) &&
+                  props.selectedDate != null &&
+                  isSameDay(day, props.selectedDate),
+              }"
+              @click="handleDayCellClick(day)"
+              @dragover.prevent
+              @drop="handleSegmentDrop(day, $event)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="text-lg font-semibold">{{ day.getDate() }}</div>
+                <div
+                  v-if="isSameDay(day, new Date())"
+                  class="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white"
+                >
+                  Today
                 </div>
-              </button>
+              </div>
 
-              <button
-                v-if="getHiddenCount(day) > 0"
-                class="cursor-pointer rounded-md border border-dashed border-border px-2 py-1 text-left text-xs font-semibold text-text-subtle hover:bg-surface"
-                @click.stop="emit('openDay', day)"
-              >
-                +{{ getHiddenCount(day) }} more
-              </button>
-            </div>
-          </button>
+              <div class="flex flex-col gap-1.5">
+                <button
+                  v-for="segment in getVisibleSegments(day)"
+                  :key="segment.id"
+                  class="cursor-pointer rounded-md border px-2 py-1 text-left text-xs text-text hover:brightness-97"
+                  :class="{
+                    'shadow-panel-selected ring-1 ring-link/35 ring-inset':
+                      selectedSessionId === segment.timeBox.id,
+                  }"
+                  :style="getProjectStyle(segment.timeBox.project)"
+                  draggable="true"
+                  @click.stop="emit('openSession', { day, sessionId: segment.timeBox.id })"
+                  @dragstart="handleSegmentDragStart(segment.timeBox, $event)"
+                  @dragend="handleSegmentDragEnd"
+                >
+                  <div class="flex min-h-0 items-start justify-between gap-2 overflow-hidden">
+                    <div class="min-w-0 flex-1 truncate">
+                      <span class="font-semibold">{{
+                        formatSegmentTime(segment.segmentStart)
+                      }}</span>
+                      <span class="ml-1">{{ getProjectName(segment.timeBox.project) }}</span>
+                    </div>
+                    <div
+                      class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                      :style="getDurationBadgeStyle(segment.timeBox.project)"
+                    >
+                      {{ getDurationMinutesLabel(segment.timeBox) }}
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  v-if="getHiddenCount(day) > 0"
+                  class="cursor-pointer rounded-md border border-dashed border-border px-2 py-1 text-left text-xs font-semibold text-text-subtle hover:bg-surface"
+                  @click.stop="emit('openDay', day)"
+                >
+                  +{{ getHiddenCount(day) }} more
+                </button>
+              </div>
+            </component>
+          </template>
         </div>
       </ContainerCard>
     </div>

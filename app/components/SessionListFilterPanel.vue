@@ -29,13 +29,10 @@ const props = defineProps<{
   projects: Project[]
   tags: NamedEntity[]
   hideTags?: boolean
-  resultCount: number
-  totalDurationLabel: string
 }>()
 
 const emit = defineEmits<{
   'update-filters': [value: Partial<SessionListFilters>]
-  'clear-filters': []
 }>()
 
 const projectNameById = computed(() =>
@@ -244,21 +241,6 @@ const handleNotesStateChange = (value: string) => {
           <div class="mt-1 text-xl font-bold text-text lg:text-2xl">Search your sessions</div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <div
-            class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text shadow-sm"
-          >
-            {{ resultCount }} matches
-          </div>
-          <div
-            class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums shadow-sm"
-          >
-            {{ totalDurationLabel }} hrs
-          </div>
-          <AppButton shape="pill" size="sm" variant="secondary" @click="emit('clear-filters')">
-            Clear all
-          </AppButton>
-        </div>
       </div>
 
       <div class="flex min-w-0 flex-col gap-4">
