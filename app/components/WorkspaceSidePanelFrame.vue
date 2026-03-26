@@ -14,13 +14,13 @@ withDefaults(
 <template>
   <ContainerCard
     as="aside"
-    class="flex h-full w-full min-w-0 shrink-0 flex-col p-0"
+    class="flex h-full w-full min-w-0 shrink-0 flex-col"
     :class="
       overlay
-        ? ''
+        ? 'bg-surface/85'
         : 'max-w-108 rounded-none border-y-0 border-r-0 border-l border-border bg-surface-strong'
     "
-    padding="compact"
+    padding="none"
     :variant="overlay ? 'overlay' : 'subtle'"
   >
     <div v-if="$slots.header" class="shrink-0">

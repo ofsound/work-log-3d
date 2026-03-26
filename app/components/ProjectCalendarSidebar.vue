@@ -68,6 +68,8 @@ const rangeEmptyMessage = computed(() =>
 const projectById = computed(() =>
   props.project ? ({ [props.project.id]: props.project } as Record<string, Project>) : {},
 )
+
+const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'day')
 </script>
 
 <template>
@@ -114,6 +116,16 @@ const projectById = computed(() =>
       </div>
     </template>
 
+    <template v-else-if="showOverlayDaySummary" #subheader>
+      <div class="border-b border-white/12 px-4 pt-4 pb-3">
+        <DaySummaryHeader
+          :summary-eyebrow="isRangeSummary ? 'Date range' : 'Day'"
+          :summary-title="isRangeSummary ? rangeSummaryTitle : dayTitle"
+          :time-boxes="timeBoxes"
+        />
+      </div>
+    </template>
+
     <div v-if="mode === 'session' && sessionId" class="flex min-h-0 min-w-0 flex-1 flex-col">
       <TimeBox
         :id="sessionId"
@@ -131,6 +143,7 @@ const projectById = computed(() =>
       :empty-message="rangeEmptyMessage"
       :project-by-id="projectById"
       :selected-session-id="selectedSessionId"
+      :show-day-summary="!showOverlayDaySummary"
       :summary-eyebrow="isRangeSummary ? 'Date range' : 'Day'"
       :summary-title-override="isRangeSummary ? rangeSummaryTitle : ''"
       :time-boxes="timeBoxes"

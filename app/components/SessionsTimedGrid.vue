@@ -106,6 +106,8 @@ const weekCalendarGridRef = ref<HTMLElement | null>(null)
 const calendarSurfaceRef = ref<HTMLElement | null>(null)
 const sevenThirtyLineRef = ref<HTMLElement | null>(null)
 const interactionState = ref<InteractionState | null>(null)
+/** Week view: ignore the next backing click after a drag gesture (click can still fire on the column surface). */
+const suppressNextWeekColumnBackingClick = ref(false)
 const lastPointerSlot = ref<{ dayIndex: number; minutes: number } | null>(null)
 const pointerOrigin = ref({ x: 0, y: 0 })
 const now = ref(new Date())
@@ -360,6 +362,10 @@ const handleWindowPointerUp = (event: PointerEvent) => {
     const startTime = startSlot.valueOf() <= endSlot.valueOf() ? startSlot : endSlot
     const endTime = startSlot.valueOf() <= endSlot.valueOf() ? endSlot : startSlot
 
+    if (isWeekView.value) {
+      suppressNextWeekColumnBackingClick.value = true
+    }
+
     emit('createSession', {
       startTime,
       endTime: enforceMinimumEnd(startTime, endTime),
@@ -387,6 +393,10 @@ const handleWindowPointerUp = (event: PointerEvent) => {
       (state.segmentStart.valueOf() - (state.timeBox.startTime?.valueOf() ?? 0)) / 60_000,
     )
 
+    if (isWeekView.value) {
+      suppressNextWeekColumnBackingClick.value = true
+    }
+
     emit('changeSession', {
       id: state.timeBox.id,
       input: moveTimeBoxToStart(state.timeBox, addMinutes(nextSegmentStart, -segmentDeltaMinutes)),
@@ -406,6 +416,10 @@ const handleWindowPointerUp = (event: PointerEvent) => {
   }
 
   const nextDate = addMinutes(getStartOfDay(visibleDays.value[slot.dayIndex]!), slot.minutes)
+
+  if (isWeekView.value) {
+    suppressNextWeekColumnBackingClick.value = true
+  }
 
   emit('changeSession', {
     id: state.timeBox.id,
@@ -429,6 +443,10 @@ const beginInteraction = (state: InteractionState, event: PointerEvent) => {
 const handleCreatePointerDown = (event: PointerEvent) => {
   if (event.button !== 0) {
     return
+  }
+
+  if (isWeekView.value) {
+    suppressNextWeekColumnBackingClick.value = false
   }
 
   const slot = getPointerSlot(event.clientX, event.clientY)
@@ -643,9 +661,14 @@ const handleDayHeaderClick = (day: Date) => {
   }
 }
 
-/** Week view: double-click empty column (not a session) opens that day, same as the day header. */
-const handleWeekColumnBackingDblClick = (day: Date, event: MouseEvent) => {
+/** Week view: single-click empty column (not a session) opens that day, same as the day header. */
+const handleWeekColumnBackingClick = (day: Date, event: MouseEvent) => {
   if (!props.headerClickEnabled) {
+    return
+  }
+
+  if (suppressNextWeekColumnBackingClick.value) {
+    suppressNextWeekColumnBackingClick.value = false
     return
   }
 
@@ -866,7 +889,7 @@ onBeforeUnmount(() => {
                   :class="{ 'bg-link/5': isWeekView && isSameDay(day, now) }"
                   :style="{ height: `${HOUR_HEIGHT * 24}px` }"
                   @pointerdown="handleCreatePointerDown"
-                  @dblclick="handleWeekColumnBackingDblClick(day, $event)"
+                  @click="handleWeekColumnBackingClick(day, $event)"
                 >
                   <div
                     v-if="dayIndex === 0"

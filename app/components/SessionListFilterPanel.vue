@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { getProjectSoftSurfaceStyle, getProjectSwatchStyle } from '~/utils/project-color-styles'
 import {
   addDays,
@@ -233,8 +235,8 @@ const handleNotesStateChange = (value: string) => {
 </script>
 
 <template>
-  <div class="h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5">
-    <div class="flex min-w-0 flex-col gap-5">
+  <div class="h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto overscroll-contain py-5">
+    <div class="flex min-w-0 flex-col gap-5 px-4">
       <div class="flex min-w-0 flex-col gap-4">
         <AppField class="min-w-0" label="Search">
           <AppTextInput

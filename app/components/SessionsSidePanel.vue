@@ -69,6 +69,20 @@ const flushScratchpad = async () => {
   await scratchpadPanelRef.value?.flushPendingChanges()
 }
 
+const showOverlayOverviewSummary = computed(
+  () => props.overlay && !props.persistent && props.mode === 'overview' && props.day != null,
+)
+
+const overlayOverviewSummaryTitle = computed(
+  () =>
+    props.day?.toLocaleDateString([], {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    }) ?? '',
+)
+
 defineExpose({
   flushScratchpad,
 })
@@ -104,6 +118,16 @@ defineExpose({
       </div>
     </template>
 
+    <template v-if="showOverlayOverviewSummary" #subheader>
+      <div class="border-b border-white/12 px-4 pt-4 pb-3">
+        <DaySummaryHeader
+          summary-eyebrow=""
+          :summary-title="overlayOverviewSummaryTitle"
+          :time-boxes="props.timeBoxes"
+        />
+      </div>
+    </template>
+
     <div
       v-if="props.persistent"
       v-show="props.mode === 'scratchpad'"
@@ -124,7 +148,7 @@ defineExpose({
       :project-by-id="props.projectById"
       :project-name-by-id="props.projectNameById"
       :selected-session-id="props.selectedSessionId"
-      :show-day-summary="!props.persistent"
+      :show-day-summary="!props.persistent && !showOverlayOverviewSummary"
       summary-eyebrow=""
       show-project-name
       :time-boxes="props.timeBoxes"
