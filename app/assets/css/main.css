@@ -66,8 +66,8 @@
   --color-input: light-dark(var(--color-white), var(--color-zinc-950));
   --color-input-focus: light-dark(var(--color-white), var(--color-zinc-900));
   --color-input-border: light-dark(var(--color-gray-300), var(--color-zinc-600));
-  --color-link: light-dark(var(--color-slate-600), var(--color-sky-300));
-  --color-link-hover: light-dark(var(--color-slate-800), var(--color-sky-200));
+  --color-link: light-dark(var(--color-slate-600), var(--color-slate-300));
+  --color-link-hover: light-dark(var(--color-slate-800), var(--color-slate-200));
   --color-danger: light-dark(var(--color-red-700), var(--color-red-400));
   --color-panel-project: light-dark(var(--color-neutral-100), var(--color-neutral-950));
   --color-panel-tag: light-dark(var(--color-purple-200), var(--color-purple-950));

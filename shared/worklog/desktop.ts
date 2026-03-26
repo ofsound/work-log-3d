@@ -32,19 +32,19 @@ export type DesktopTrayBadgeVariant = 'running' | 'paused' | 'completed'
 
 export type DesktopTrayMenuItem =
   | {
-    kind: 'status'
-    label: string
-    enabled: false
-  }
+      kind: 'status'
+      label: string
+      enabled: false
+    }
   | {
-    kind: 'separator'
-  }
+      kind: 'separator'
+    }
   | {
-    kind: 'action'
-    id: DesktopTrayActionId
-    label: string
-    enabled: boolean
-  }
+      kind: 'action'
+      id: DesktopTrayActionId
+      label: string
+      enabled: boolean
+    }
 
 export interface DesktopTrayState {
   mode: TimerState['status']
@@ -294,26 +294,26 @@ export const getDesktopTrayState = (
     const menuItems =
       snapshot.mode === 'countup'
         ? [
-          createStatusItem(statusLabel),
-          separatorItem,
-          createActionItem('resume', 'Resume'),
-          createActionItem('open_window_to_log_session', 'Log'),
-          createActionItem('reset', 'Reset'),
-          separatorItem,
-          createActionItem('show_window', 'Show Window'),
-          createActionItem('quit', 'Quit'),
-        ]
+            createStatusItem(statusLabel),
+            separatorItem,
+            createActionItem('resume', 'Resume'),
+            createActionItem('open_window_to_log_session', 'Log'),
+            createActionItem('reset', 'Reset'),
+            separatorItem,
+            createActionItem('show_window', 'Show Window'),
+            createActionItem('quit', 'Quit'),
+          ]
         : [
-          createStatusItem(statusLabel),
-          separatorItem,
-          createActionItem('resume', 'Resume'),
-          ...countdownActions,
-          createActionItem('stop', 'Stop'),
-          createActionItem('reset', 'Reset'),
-          separatorItem,
-          createActionItem('show_window', 'Show Window'),
-          createActionItem('quit', 'Quit'),
-        ]
+            createStatusItem(statusLabel),
+            separatorItem,
+            createActionItem('resume', 'Resume'),
+            ...countdownActions,
+            createActionItem('stop', 'Stop'),
+            createActionItem('reset', 'Reset'),
+            separatorItem,
+            createActionItem('show_window', 'Show Window'),
+            createActionItem('quit', 'Quit'),
+          ]
 
     return {
       mode: 'paused',
