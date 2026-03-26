@@ -5,17 +5,7 @@ import { getProjectSwatchStyle } from '~/utils/project-color-styles'
 import type { ProjectColors } from '~~/shared/worklog'
 import { PROJECT_COLOR_PALETTE } from '~~/shared/worklog'
 
-interface ProjectContextSummary {
-  sessionCount: number
-  totalDurationLabel: string
-  lastSession: Date | null
-}
-
 const props = defineProps({
-  contextSummary: {
-    type: Object as PropType<ProjectContextSummary | null>,
-    default: null,
-  },
   heading: { type: String, required: true },
   isSaving: { type: Boolean, default: false },
   lowContrastWarning: { type: Boolean, default: false },
@@ -175,10 +165,7 @@ const toggleArchived = () => {
             </div>
 
             <div class="flex flex-col gap-2">
-              <div class="flex items-center justify-between gap-3">
-                <AppFieldLabel>Palette presets</AppFieldLabel>
-                <span class="text-xs text-text-subtle">Tap a swatch</span>
-              </div>
+              <AppFieldLabel>Palette presets</AppFieldLabel>
 
               <div class="flex flex-wrap gap-2">
                 <button
@@ -250,35 +237,5 @@ const toggleArchived = () => {
         </div>
       </div>
     </ContainerCard>
-
-    <div class="flex w-full min-w-0 flex-col gap-4">
-      <ContainerCard v-if="contextSummary" class="rounded-3xl">
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Project context</div>
-        <div class="mt-4 flex flex-col gap-3 text-sm text-text">
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-text-subtle">Sessions</span>
-            <span class="font-semibold">{{ contextSummary.sessionCount }}</span>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-text-subtle">Logged hours</span>
-            <span class="font-semibold">{{ contextSummary.totalDurationLabel }} hrs</span>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-text-subtle">Last activity</span>
-            <span class="font-semibold">
-              {{
-                contextSummary.lastSession
-                  ? contextSummary.lastSession.toLocaleDateString([], {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })
-                  : 'No sessions yet'
-              }}
-            </span>
-          </div>
-        </div>
-      </ContainerCard>
-    </div>
   </div>
 </template>

@@ -3,6 +3,10 @@
 import { mount } from '@vue/test-utils'
 
 import AppButton from '~/app/components/AppButton.vue'
+import AppField from '~/app/components/AppField.vue'
+import AppFieldLabel from '~/app/components/AppFieldLabel.vue'
+import AppTextInput from '~/app/components/AppTextInput.vue'
+import AppTextarea from '~/app/components/AppTextarea.vue'
 import ContainerCard from '~/app/components/ContainerCard.vue'
 import ProjectEditorFormLayout from '~/app/components/ProjectEditorFormLayout.vue'
 
@@ -12,6 +16,10 @@ describe('ProjectEditorFormLayout', () => {
       global: {
         components: {
           AppButton,
+          AppField,
+          AppFieldLabel,
+          AppTextInput,
+          AppTextarea,
           ContainerCard,
         },
       },
@@ -43,7 +51,7 @@ describe('ProjectEditorFormLayout', () => {
     })
 
     expect(wrapper.text()).toContain('Edit Project')
-    expect(wrapper.text()).toContain('Project context')
+    expect(wrapper.text()).toContain('Internal notes')
     expect(wrapper.text()).toContain('This color pairing may reduce contrast')
 
     const cancelButton = wrapper

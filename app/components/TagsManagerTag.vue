@@ -4,7 +4,7 @@ import type { Ref } from 'vue'
 import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
-import { APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME } from '~/utils/app-field'
+import { APP_CHIP_ROW_STATIC_CLASS_NAME } from '~/utils/app-field'
 import { toTimeBoxes, type FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { getTotalDurationRoundedHoursLabel, getWorklogErrorMessage } from '~~/shared/worklog'
 
@@ -26,7 +26,7 @@ const mutationErrorMessage = ref('')
 const isNameEditMode = ref(false)
 
 const chipRowClass = computed(() => [
-  APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME,
+  APP_CHIP_ROW_STATIC_CLASS_NAME,
   'w-full min-w-0 justify-between',
 ])
 

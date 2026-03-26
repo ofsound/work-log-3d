@@ -79,5 +79,9 @@ export const APP_TOGGLE_CHIP_SELECTED_CLASS_NAME = `${TOGGLE_CHIP_BASE} border-l
 
 export const APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME = `${TOGGLE_CHIP_BASE} border-border-subtle bg-surface-muted text-text hover:border-link/45`
 
+/** Chip-shaped row (e.g. tags list): same surface as toggle chips but no pointer/hover affordance—interactive children set cursor. */
+export const APP_CHIP_ROW_STATIC_CLASS_NAME =
+  'inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-muted px-3 py-2 text-sm text-text transition'
+
 export const getAppToggleChipClassName = ({ selected }: { selected: boolean }) =>
   selected ? APP_TOGGLE_CHIP_SELECTED_CLASS_NAME : APP_TOGGLE_CHIP_UNSELECTED_CLASS_NAME

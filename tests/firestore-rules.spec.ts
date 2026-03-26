@@ -164,7 +164,7 @@ describe('firestore rules', () => {
             ui: "'National Park', sans-serif",
             data: "'Lato', sans-serif",
           },
-          backgroundPreset: 'dots',
+          backgroundPreset: 'mist',
         },
         workflow: {
           hideTags: true,
@@ -188,7 +188,7 @@ describe('firestore rules', () => {
             data: "'Lato', sans-serif",
             script: "'Anything', sans-serif",
           },
-          backgroundPreset: 'dots',
+          backgroundPreset: 'mist',
         },
         workflow: {
           hideTags: true,

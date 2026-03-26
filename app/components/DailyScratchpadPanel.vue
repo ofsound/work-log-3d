@@ -384,34 +384,32 @@ defineExpose({
           Link
         </button>
       </div>
-      <div class="flex min-h-4 flex-wrap items-center justify-between gap-x-2 gap-y-2">
-        <div class="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            :class="toolbarButtonClass(false)"
-            @click="editor?.chain().focus().undo().run()"
-          >
-            Undo
-          </button>
-          <button
-            type="button"
-            :class="toolbarButtonClass(false)"
-            @click="editor?.chain().focus().redo().run()"
-          >
-            Redo
-          </button>
-        </div>
-        <div class="flex min-w-0 items-center text-right text-xs text-text-subtle">
-          <span v-if="saveStatus === 'saving'">Saving...</span>
-          <span v-else-if="saveStatus === 'saved'">{{ savedStatusLabel }}</span>
-          <span v-else-if="saveStatus === 'error'">{{ saveErrorMessage }}</span>
-          <span v-else-if="isEnsuringNote">Preparing note...</span>
-        </div>
+      <div class="flex min-h-4 flex-wrap items-center gap-2">
+        <button
+          type="button"
+          :class="toolbarButtonClass(false)"
+          @click="editor?.chain().focus().undo().run()"
+        >
+          Undo
+        </button>
+        <button
+          type="button"
+          :class="toolbarButtonClass(false)"
+          @click="editor?.chain().focus().redo().run()"
+        >
+          Redo
+        </button>
       </div>
     </div>
 
-    <div class="min-h-0 flex-1 pb-4">
-      <EditorContent v-if="editor" class="h-full" :editor="editor" />
+    <div class="flex min-h-0 flex-1 flex-col gap-1.5 pb-4">
+      <EditorContent v-if="editor" class="min-h-0 flex-1" :editor="editor" />
+      <div class="shrink-0 text-right text-xs text-text-subtle">
+        <span v-if="saveStatus === 'saving'">Saving...</span>
+        <span v-else-if="saveStatus === 'saved'">{{ savedStatusLabel }}</span>
+        <span v-else-if="saveStatus === 'error'">{{ saveErrorMessage }}</span>
+        <span v-else-if="isEnsuringNote">Preparing note...</span>
+      </div>
     </div>
   </div>
 </template>

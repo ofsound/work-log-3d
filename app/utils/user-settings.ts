@@ -15,14 +15,14 @@ export const USER_SETTINGS_BACKGROUND_OPTIONS: UserSettingsBackgroundOption[] = 
     description: 'The current structured shell pattern.',
   },
   {
-    id: 'dots',
-    label: 'Dots',
-    description: 'A lighter drafting-board dot field.',
+    id: 'mist',
+    label: 'Mist',
+    description: 'A soft vignette that fades from center to edge.',
   },
   {
-    id: 'crosshatch',
-    label: 'Crosshatch',
-    description: 'Diagonal texture with a more tactile feel.',
+    id: 'dusk',
+    label: 'Dusk',
+    description: 'Multi-point neutral gradient wash with depth.',
   },
   {
     id: 'aurora',
@@ -37,16 +37,16 @@ export const getUserSettingsBackgroundOption = (preset: UserSettingsBackgroundPr
 
 export const getShellBackgroundStyle = (preset: UserSettingsBackgroundPreset): CSSProperties => {
   switch (preset) {
-    case 'dots':
+    case 'mist':
       return {
-        backgroundImage: 'var(--background-image-shell-dots)',
-        backgroundSize: '18px 18px',
+        backgroundImage: 'var(--background-image-shell-mist)',
+        backgroundSize: 'cover',
         backgroundPosition: 'center center',
       }
-    case 'crosshatch':
+    case 'dusk':
       return {
-        backgroundImage: 'var(--background-image-shell-crosshatch)',
-        backgroundSize: '22px 22px',
+        backgroundImage: 'var(--background-image-shell-dusk)',
+        backgroundSize: 'cover',
         backgroundPosition: 'center center',
       }
     case 'aurora':

@@ -213,33 +213,67 @@
         1px,
       transparent 1px
     );
-  --background-image-shell-dots: radial-gradient(
-    circle at center,
-    light-dark(
-        color-mix(in srgb, var(--color-slate-700) 16%, transparent),
-        color-mix(in srgb, var(--color-slate-200) 18%, transparent)
-      )
-      0 1.2px,
-    transparent 1.5px
-  );
-  --background-image-shell-crosshatch:
-    repeating-linear-gradient(
-      45deg,
+  /** Mist: classic centered radial vignette — transparent center, neutral shadow at edges. */
+  --background-image-shell-mist:
+    radial-gradient(
+      ellipse at 50% 40%,
+      transparent 28%,
       light-dark(
-          color-mix(in srgb, var(--color-slate-600) 10%, transparent),
-          color-mix(in srgb, var(--color-slate-200) 12%, transparent)
+          color-mix(in srgb, var(--color-zinc-500) 16%, transparent),
+          color-mix(in srgb, var(--color-zinc-950) 50%, transparent)
         )
-        0 1px,
-      transparent 1px 9px
+        100%
     ),
-    repeating-linear-gradient(
-      -45deg,
+    linear-gradient(
+      180deg,
       light-dark(
-          color-mix(in srgb, var(--color-slate-500) 7%, transparent),
-          color-mix(in srgb, var(--color-slate-100) 10%, transparent)
+        color-mix(in srgb, var(--color-zinc-100) 90%, var(--color-white)),
+        color-mix(in srgb, var(--color-zinc-900) 84%, var(--color-zinc-950))
+      ),
+      light-dark(
+        color-mix(in srgb, var(--color-white) 98%, var(--color-zinc-50)),
+        color-mix(in srgb, var(--color-zinc-950) 94%, var(--color-black))
+      )
+    );
+  /** Dusk: three neutral radial blobs at corner/base positions over a linear base. */
+  --background-image-shell-dusk:
+    radial-gradient(
+      circle at 15% 20%,
+      light-dark(
+          color-mix(in srgb, var(--color-zinc-400) 18%, transparent),
+          color-mix(in srgb, var(--color-zinc-500) 24%, transparent)
         )
-        0 1px,
-      transparent 1px 11px
+        0,
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 82% 12%,
+      light-dark(
+          color-mix(in srgb, var(--color-zinc-300) 14%, transparent),
+          color-mix(in srgb, var(--color-zinc-600) 20%, transparent)
+        )
+        0,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 48% 95%,
+      light-dark(
+          color-mix(in srgb, var(--color-zinc-500) 12%, transparent),
+          color-mix(in srgb, var(--color-zinc-400) 16%, transparent)
+        )
+        0,
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      light-dark(
+        color-mix(in srgb, var(--color-slate-100) 85%, var(--color-white)),
+        color-mix(in srgb, var(--color-zinc-900) 82%, var(--color-zinc-950))
+      ),
+      light-dark(
+        color-mix(in srgb, var(--color-white) 98%, var(--color-slate-50)),
+        color-mix(in srgb, var(--color-zinc-950) 94%, var(--color-black))
+      )
     );
   --background-image-shell-aurora:
     radial-gradient(

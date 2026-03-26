@@ -1,4 +1,4 @@
-export const USER_SETTINGS_BACKGROUND_PRESETS = ['grid', 'dots', 'crosshatch', 'aurora'] as const
+export const USER_SETTINGS_BACKGROUND_PRESETS = ['grid', 'mist', 'dusk', 'aurora'] as const
 
 export type UserSettingsBackgroundPreset = (typeof USER_SETTINGS_BACKGROUND_PRESETS)[number]
 export const USER_SETTINGS_TRAY_SHORTCUT_TIMER_MODES = ['countup', 'countdown'] as const
@@ -287,8 +287,8 @@ export const validateUserSettings = (input: UserSettings): UserSettings => ({
     backgroundPreset: isUserSettingsBackgroundPreset(input.appearance.backgroundPreset)
       ? input.appearance.backgroundPreset
       : (() => {
-        throw new Error('Background preset is invalid.')
-      })(),
+          throw new Error('Background preset is invalid.')
+        })(),
   },
   workflow: {
     hideTags: Boolean(input.workflow?.hideTags ?? DEFAULT_USER_SETTINGS.workflow.hideTags),

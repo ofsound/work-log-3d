@@ -258,7 +258,7 @@ New projects are created from `/project/new`, where the initial notes and curate
       ui: string
       data: string
     }
-    backgroundPreset: 'grid' | 'dots' | 'crosshatch' | 'aurora'
+    backgroundPreset: 'grid' | 'mist' | 'dusk' | 'aurora'
   }
   workflow: {
     hideTags: boolean

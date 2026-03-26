@@ -100,16 +100,32 @@ const modeToggleStyles = computed(() => {
 })
 const previewBadgeStyle = computed(() => getProjectBadgeStyle(previewColors.value))
 const lowContrastWarning = computed(() => hasLowProjectContrast(previewColors.value))
-const headerBadges = computed(() => [
-  {
-    label: `${projectSummary.value.totalDurationLabel} hrs`,
-    style: previewBadgeStyle.value as Record<string, string>,
-  },
-  {
-    label: `${projectSummary.value.sessionCount} sessions`,
-    variant: 'outline' as const,
-  },
-])
+const lastActivityLabel = computed(() => {
+  const last = projectSummary.value.lastSession
+  return last
+    ? last.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+})
+const headerBadges = computed(() => {
+  const badges: {
+    label: string
+    style?: Record<string, string>
+    variant?: 'outline' | 'accent'
+  }[] = [
+    {
+      label: `${projectSummary.value.totalDurationLabel} hrs`,
+      style: previewBadgeStyle.value as Record<string, string>,
+    },
+    {
+      label: `${projectSummary.value.sessionCount} sessions`,
+      variant: 'outline',
+    },
+  ]
+  if (lastActivityLabel.value) {
+    badges.push({ label: `Last activity ${lastActivityLabel.value}`, variant: 'outline' })
+  }
+  return badges
+})
 
 const createProjectInputSnapshot = (input: ProjectInput) => JSON.stringify(input)
 
@@ -317,7 +333,6 @@ onBeforeRouteLeave(async () => {
       <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <ProjectEditorFormLayout
           :archived="dynamicArchived"
-          :context-summary="projectSummary"
           heading="Edit Project"
           :is-saving="isSaving"
           :low-contrast-warning="lowContrastWarning"

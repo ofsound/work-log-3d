@@ -122,16 +122,34 @@ const modeToggleStyles = computed(() => {
 const durationBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},
 )
-const headerBadges = computed(() => [
-  {
-    label: `${projectTimeBoxesTotalDuration.value} hrs`,
-    style: durationBadgeStyle.value as Record<string, string>,
-  },
-  {
-    label: `${rawProjectTimeBoxes.value.length} sessions`,
-    variant: 'outline' as const,
-  },
-])
+const lastActivityLabel = computed(() => {
+  const last = rawProjectTimeBoxes.value
+    .filter((tb) => tb.startTime)
+    .sort((a, b) => (b.startTime?.valueOf() ?? 0) - (a.startTime?.valueOf() ?? 0))[0]?.startTime
+  return last
+    ? last.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+})
+const headerBadges = computed(() => {
+  const badges: {
+    label: string
+    style?: Record<string, string>
+    variant?: 'outline' | 'accent'
+  }[] = [
+    {
+      label: `${projectTimeBoxesTotalDuration.value} hrs`,
+      style: durationBadgeStyle.value as Record<string, string>,
+    },
+    {
+      label: `${rawProjectTimeBoxes.value.length} sessions`,
+      variant: 'outline',
+    },
+  ]
+  if (lastActivityLabel.value) {
+    badges.push({ label: `Last activity ${lastActivityLabel.value}`, variant: 'outline' })
+  }
+  return badges
+})
 
 const hasSameQueryState = (
   left: Record<string, string | string[] | undefined>,

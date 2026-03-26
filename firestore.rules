@@ -171,8 +171,8 @@ service cloud.firestore {
         && isNonEmptyString(request.resource.data.appearance.fontFamilies.data)
         && (
           request.resource.data.appearance.backgroundPreset == 'grid'
-          || request.resource.data.appearance.backgroundPreset == 'dots'
-          || request.resource.data.appearance.backgroundPreset == 'crosshatch'
+          || request.resource.data.appearance.backgroundPreset == 'mist'
+          || request.resource.data.appearance.backgroundPreset == 'dusk'
           || request.resource.data.appearance.backgroundPreset == 'aurora'
         )
         && hasExactMapKeys(request.resource.data.workflow, ['hideTags', 'countdownDefaultMinutes'])
