@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
+import { CALENDAR_SEVEN_DAY_MIN_WIDTH_PX } from '~/utils/calendar-grid'
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import {
   buildMonthGridDaySegments,
@@ -121,7 +122,12 @@ const handleSegmentDragEnd = () => {
 <template>
   <div class="min-h-0 flex-1 overflow-hidden">
     <div class="h-full overflow-auto overscroll-contain px-6 py-6">
-      <ContainerCard class="min-w-[980px] overflow-hidden" padding="none" variant="subtle">
+      <ContainerCard
+        class="overflow-hidden"
+        padding="none"
+        variant="subtle"
+        :style="{ minWidth: `${CALENDAR_SEVEN_DAY_MIN_WIDTH_PX}px` }"
+      >
         <div class="grid grid-cols-7 border-b border-border bg-surface-muted">
           <div
             v-for="weekday in weekdays"
