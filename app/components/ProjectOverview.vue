@@ -17,7 +17,9 @@ import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
 import type { TimeBoxInput } from '~~/shared/worklog'
 import {
   buildYearHeatmapMonths,
+  formatDateKey,
   getTimeBoxesForDay,
+  getTimeBoxesForInclusiveDayRange,
   getTotalDurationLabel,
   getWorklogErrorMessage,
   groupTimeBoxesByStartDay,
@@ -92,11 +94,18 @@ const projectTimeBoxesTotalDuration = computed(() =>
   getTotalDurationLabel(rawProjectTimeBoxes.value),
 )
 const calendarMonths = computed(() => buildYearHeatmapMonths(rawProjectTimeBoxes.value, new Date()))
-const selectedDayTimeBoxes = computed(() =>
-  selectedDate.value == null
-    ? []
-    : getTimeBoxesForDay(rawProjectTimeBoxes.value, selectedDate.value),
-)
+const calendarSidebarTimeBoxes = computed(() => {
+  if (selectedDate.value == null) {
+    return []
+  }
+
+  const end = routeState.value.dateEnd
+  if (end != null && formatDateKey(end) !== formatDateKey(selectedDate.value)) {
+    return getTimeBoxesForInclusiveDayRange(rawProjectTimeBoxes.value, selectedDate.value, end)
+  }
+
+  return getTimeBoxesForDay(rawProjectTimeBoxes.value, selectedDate.value)
+})
 const modeToggleStyles = computed(() => {
   if (!project.value) {
     return undefined
@@ -215,21 +224,38 @@ const openDayPanel = async (day: Date) => {
   const dayBoxes = getTimeBoxesForDay(rawProjectTimeBoxes.value, day)
   if (dayBoxes.length === 0) {
     closePanel()
-    await updateRouteState({ mode: 'calendar', date: day })
+    await updateRouteState({ mode: 'calendar', date: day, dateEnd: null })
     return
   }
 
   selectedSessionId.value = ''
   panelSessionId.value = ''
   panelMode.value = 'day'
-  await updateRouteState({ mode: 'calendar', date: day })
+  await updateRouteState({ mode: 'calendar', date: day, dateEnd: null })
+}
+
+const openDayRangePanel = async (payload: { start: Date; end: Date }) => {
+  const { start, end } = payload
+  if (formatDateKey(start) === formatDateKey(end)) {
+    await openDayPanel(start)
+    return
+  }
+
+  selectedSessionId.value = ''
+  panelSessionId.value = ''
+  panelMode.value = 'day'
+  await updateRouteState({
+    mode: 'calendar',
+    date: start,
+    dateEnd: end,
+  })
 }
 
 const openSessionPanel = async ({ day, sessionId }: { day: Date; sessionId: string }) => {
   selectedSessionId.value = sessionId
   panelSessionId.value = sessionId
   panelMode.value = 'session'
-  await updateRouteState({ mode: 'calendar', date: day })
+  await updateRouteState({ mode: 'calendar', date: day, dateEnd: null })
 }
 
 const openSelectedDayPanel = () => {
@@ -315,7 +341,7 @@ const clearCalendarSelectionFromEscape = async () => {
   }
 
   closePanel()
-  await updateRouteState({ date: null })
+  await updateRouteState({ date: null, dateEnd: null })
 }
 
 const handleProjectOverviewKeydown = (event: KeyboardEvent) => {
@@ -374,11 +400,13 @@ onUnmounted(() => {
         :months="calendarMonths"
         :project="project"
         :selected-date="selectedDate"
+        :selected-range-end="routeState.dateEnd"
         :selected-session-id="selectedSessionId"
         :time-boxes="rawProjectTimeBoxes"
         @change-session="persistSessionChange"
         @open-day="openDayPanel"
         @open-session="openSessionPanel"
+        @select-day-range="openDayRangePanel"
       />
 
       <template #aside>
@@ -388,9 +416,10 @@ onUnmounted(() => {
           :mode="panelMode === 'session' ? 'session' : 'day'"
           :overlay="shouldOverlayProjectCalendarPanel"
           :project="project"
+          :range-end-day="routeState.dateEnd"
           :selected-session-id="selectedSessionId"
           :session-id="panelSessionId"
-          :time-boxes="selectedDayTimeBoxes"
+          :time-boxes="calendarSidebarTimeBoxes"
           @back-to-day="openSelectedDayPanel"
           @close="closePanel"
           @open-session="openSessionFromDayPanel"

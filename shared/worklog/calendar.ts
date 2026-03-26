@@ -511,6 +511,32 @@ export const getTimeBoxesForDay = (timeBoxes: TimeBox[], day: Date) => {
   )
 }
 
+/** Sessions that overlap any calendar day from `startDay` through `endDay` (inclusive), ordered by start time. */
+export const getTimeBoxesForInclusiveDayRange = (
+  timeBoxes: TimeBox[],
+  startDay: Date,
+  endDay: Date,
+) => {
+  const firstStart = getStartOfDay(startDay)
+  const secondStart = getStartOfDay(endDay)
+  const rangeStart = firstStart.valueOf() <= secondStart.valueOf() ? firstStart : secondStart
+  const lastDayStart = firstStart.valueOf() <= secondStart.valueOf() ? secondStart : firstStart
+  const rangeEndExclusive = getEndOfDay(lastDayStart)
+
+  return sortTimeBoxesByStartAscending(
+    timeBoxes.filter((timeBox) => {
+      if (!timeBox.startTime || !timeBox.endTime) {
+        return false
+      }
+
+      return (
+        timeBox.startTime.valueOf() < rangeEndExclusive.valueOf() &&
+        timeBox.endTime.valueOf() > rangeStart.valueOf()
+      )
+    }),
+  )
+}
+
 const createShiftedTimeBoxInput = (timeBox: TimeBox, nextStartTime: Date): TimeBoxInput => {
   const durationMinutes = Math.max(
     10,

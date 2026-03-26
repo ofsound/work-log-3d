@@ -28,22 +28,26 @@ const toggleEditor = () => {
 </script>
 
 <template>
-  <TimeBoxViewer
-    v-if="!showEditor"
-    :id
-    :compact="props.compact"
-    :flush-top="props.flushTop"
-    :highlight-tokens="highlightTokens"
-    :opaque-surface="opaqueSurface"
-    :variant
-    :is-minimized
-    @deleted="emit('deleted')"
-    @toggle-editor="toggleEditor"
-  />
-  <TimeBoxEditor
-    v-if="showEditor"
-    :id
-    :embedded-in-panel="embeddedInPanel"
-    @toggle-editor="toggleEditor"
-  />
+  <div :class="embeddedInPanel ? 'flex min-h-0 min-w-0 flex-1 flex-col' : 'contents'">
+    <TimeBoxViewer
+      v-if="!showEditor"
+      :id
+      :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1 overflow-y-auto' : undefined"
+      :compact="props.compact"
+      :flush-top="props.flushTop"
+      :highlight-tokens="highlightTokens"
+      :opaque-surface="opaqueSurface"
+      :variant
+      :is-minimized
+      @deleted="emit('deleted')"
+      @toggle-editor="toggleEditor"
+    />
+    <TimeBoxEditor
+      v-if="showEditor"
+      :id
+      :embedded-in-panel="embeddedInPanel"
+      class="min-h-0 min-w-0 flex-1"
+      @toggle-editor="toggleEditor"
+    />
+  </div>
 </template>

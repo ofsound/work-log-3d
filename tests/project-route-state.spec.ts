@@ -11,6 +11,7 @@ describe('project route state', () => {
 
     expect(state.mode).toBe('list')
     expect(state.date).toEqual(fallbackDate)
+    expect(state.dateEnd).toBeNull()
   })
 
   it('parses calendar mode and a valid date', () => {
@@ -24,6 +25,7 @@ describe('project route state', () => {
     expect(state.date!.getFullYear()).toBe(2026)
     expect(state.date!.getMonth()).toBe(2)
     expect(state.date!.getDate()).toBe(21)
+    expect(state.dateEnd).toBeNull()
   })
 
   it('parses calendar mode with no date as null (no day selected)', () => {
@@ -33,6 +35,19 @@ describe('project route state', () => {
 
     expect(state.mode).toBe('calendar')
     expect(state.date).toBeNull()
+    expect(state.dateEnd).toBeNull()
+  })
+
+  it('parses calendar range with dateEnd and normalizes order', () => {
+    const state = parseProjectRouteState({
+      mode: 'calendar',
+      date: '2026-03-25',
+      dateEnd: '2026-03-20',
+    })
+
+    expect(state.mode).toBe('calendar')
+    expect(state.date!.getDate()).toBe(20)
+    expect(state.dateEnd!.getDate()).toBe(25)
   })
 
   it('falls back safely when mode or date are invalid', () => {
@@ -54,6 +69,7 @@ describe('project route state', () => {
       {
         mode: 'calendar',
         date: new Date(2026, 2, 21, 12, 0, 0, 0),
+        dateEnd: null,
       },
       { preserved: 'yes' },
     )
@@ -65,11 +81,29 @@ describe('project route state', () => {
     })
   })
 
+  it('serializes calendar dateEnd for multi-day selection', () => {
+    const query = buildProjectRouteQuery(
+      {
+        mode: 'calendar',
+        date: new Date(2026, 2, 20, 12, 0, 0, 0),
+        dateEnd: new Date(2026, 2, 25, 12, 0, 0, 0),
+      },
+      {},
+    )
+
+    expect(query).toEqual({
+      mode: 'calendar',
+      date: '2026-03-20',
+      dateEnd: '2026-03-25',
+    })
+  })
+
   it('omits date when calendar has no day selected', () => {
     const query = buildProjectRouteQuery(
       {
         mode: 'calendar',
         date: null,
+        dateEnd: null,
       },
       { preserved: 'yes' },
     )
@@ -85,6 +119,7 @@ describe('project route state', () => {
       {
         mode: 'list',
         date: new Date(2026, 2, 21, 12, 0, 0, 0),
+        dateEnd: null,
       },
       { mode: 'calendar' },
     )
@@ -101,6 +136,7 @@ describe('project route state', () => {
       {
         mode: 'calendar',
         date: new Date(2026, 2, 21, 12, 0, 0, 0),
+        dateEnd: null,
       },
       { preserved: 'yes' },
     )
@@ -122,6 +158,7 @@ describe('project route state', () => {
       {
         mode: 'calendar',
         date: new Date(2026, 2, 21, 12, 0, 0, 0),
+        dateEnd: null,
       },
       { preserved: 'yes' },
     )

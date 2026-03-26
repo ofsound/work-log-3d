@@ -18,6 +18,10 @@ const props = defineProps({
   emptyMessage: { type: String, default: 'No sessions on the selected day.' },
   /** When false, hides the day title and aggregate stats (e.g. parent already shows them). */
   showDaySummary: { type: Boolean, default: true },
+  /** Summary label above the title; default is a single day. */
+  summaryEyebrow: { type: String, default: 'Day' },
+  /** When set, replaces the formatted single-day title. */
+  summaryTitleOverride: { type: String, default: '' },
 })
 
 const emit = defineEmits<{
@@ -31,6 +35,10 @@ const dayTitle = computed(() =>
     day: 'numeric',
     year: 'numeric',
   }),
+)
+
+const summaryTitle = computed(() =>
+  props.summaryTitleOverride.length > 0 ? props.summaryTitleOverride : dayTitle.value,
 )
 
 const daySummary = computed(() => ({
@@ -74,8 +82,8 @@ const getCardStyle = (timeBox: TimeBox) => {
 <template>
   <div class="flex flex-col gap-4 pb-4">
     <div v-if="showDaySummary" data-testid="day-summary">
-      <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Day</div>
-      <div class="mt-1 text-lg font-bold tracking-tight">{{ dayTitle }}</div>
+      <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">{{ summaryEyebrow }}</div>
+      <div class="mt-1 text-lg font-bold tracking-tight">{{ summaryTitle }}</div>
       <div class="mt-3 flex flex-wrap gap-2">
         <div
           class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums shadow-sm"

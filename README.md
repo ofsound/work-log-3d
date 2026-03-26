@@ -301,6 +301,7 @@ Server-managed published report snapshots for anonymous client access. The top-l
 - `List` is the default `/project/:segment` experience and keeps the existing grouped-by-day project session history
 - `Calendar` is a long-scroll month stack from the current month back to the first logged month for that project only, with no prev/next navigation
 - Project calendar state is shareable via route queries such as `/project/my-project-slug?mode=calendar&date=2026-03-21`
+- Multi-day calendar selection adds `dateEnd=YYYY-MM-DD` (inclusive end day); drag across days in the grid to open the sidebar with combined sessions and total time for that range
 - The project calendar sidebar can open either the selected day’s sessions or an individual session editor without leaving the page
 
 ## Reports

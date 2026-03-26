@@ -4,13 +4,14 @@ import type { PropType } from 'vue'
 
 import CloseIcon from '@/icons/CloseIcon.vue'
 
-import type { Project, TimeBox } from '~~/shared/worklog'
+import { formatDateKey, type Project, type TimeBox } from '~~/shared/worklog'
 
 const props = defineProps({
   day: { type: Date, required: true },
   mode: { type: String as PropType<'day' | 'session'>, required: true },
   overlay: { type: Boolean, default: false },
   project: { type: Object as PropType<Project | null>, default: null },
+  rangeEndDay: { type: Object as PropType<Date | null>, default: null },
   selectedSessionId: { type: String, default: '' },
   sessionId: { type: String, default: '' },
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
@@ -29,6 +30,39 @@ const dayTitle = computed(() =>
     day: 'numeric',
     year: 'numeric',
   }),
+)
+
+const isRangeSummary = computed(
+  () => props.rangeEndDay != null && formatDateKey(props.rangeEndDay) !== formatDateKey(props.day),
+)
+
+const rangeSummaryTitle = computed(() => {
+  if (!isRangeSummary.value || !props.rangeEndDay) {
+    return ''
+  }
+
+  const from = props.day
+  const to = props.rangeEndDay
+
+  if (from.getFullYear() === to.getFullYear()) {
+    const left = from.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    const right = to.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+    return `${left} – ${right}`
+  }
+
+  const left = from.toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  const right = to.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+  return `${left} – ${right}`
+})
+
+const rangeEmptyMessage = computed(() =>
+  isRangeSummary.value
+    ? 'This project has no sessions in the selected date range.'
+    : 'This project has no sessions on the selected day.',
 )
 
 const projectById = computed(() =>
@@ -81,27 +115,31 @@ const projectById = computed(() =>
     <div class="min-h-0 min-w-0 flex-1 px-4 pt-4 pb-4">
       <div
         v-if="mode === 'session' && sessionId"
-        class="h-full min-w-0 overflow-y-auto overscroll-contain pr-1"
+        class="flex h-full min-h-0 min-w-0 flex-col overscroll-contain"
       >
-        <div class="pb-3">
+        <div class="shrink-0 pr-1 pb-3">
           <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Session</div>
           <div class="mt-1 text-lg font-bold tracking-tight">{{ dayTitle }}</div>
         </div>
-        <TimeBox
-          :id="sessionId"
-          embedded-in-panel
-          :opaque-surface="overlay"
-          flush-top
-          @deleted="emit('close')"
-        />
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+          <TimeBox
+            :id="sessionId"
+            embedded-in-panel
+            :opaque-surface="overlay"
+            flush-top
+            @deleted="emit('close')"
+          />
+        </div>
       </div>
 
       <div v-else class="h-full min-w-0 overflow-y-auto overscroll-contain pr-1">
         <DaySessionsOverviewPanel
           :day="day"
-          empty-message="This project has no sessions on the selected day."
+          :empty-message="rangeEmptyMessage"
           :project-by-id="projectById"
           :selected-session-id="selectedSessionId"
+          :summary-eyebrow="isRangeSummary ? 'Date range' : 'Day'"
+          :summary-title-override="isRangeSummary ? rangeSummaryTitle : ''"
           :time-boxes="timeBoxes"
           :use-project-card-styles="Boolean(project)"
           @open-session="emit('openSession', $event)"

@@ -6,6 +6,7 @@ import {
   duplicateTimeBoxToDay,
   formatDateKey,
   getBufferedCalendarRange,
+  getTimeBoxesForInclusiveDayRange,
   getDayRange,
   getIsoWeekNumber,
   getMonthGridRange,
@@ -229,5 +230,34 @@ describe('calendar utilities', () => {
     expect(months).toHaveLength(1)
     expect(months[0]!.year).toBe(2026)
     expect(months[0]!.monthIndex).toBe(2)
+  })
+
+  it('includes every session overlapping an inclusive calendar day range', () => {
+    const inRange = {
+      ...baseTimeBox,
+      id: 'in',
+      startTime: new Date(2026, 2, 22, 9, 0, 0, 0),
+      endTime: new Date(2026, 2, 22, 10, 0, 0, 0),
+    }
+    const before = {
+      ...baseTimeBox,
+      id: 'before',
+      startTime: new Date(2026, 2, 19, 9, 0, 0, 0),
+      endTime: new Date(2026, 2, 19, 10, 0, 0, 0),
+    }
+
+    const forward = getTimeBoxesForInclusiveDayRange(
+      [before, inRange],
+      new Date(2026, 2, 21),
+      new Date(2026, 2, 23),
+    )
+    const reversed = getTimeBoxesForInclusiveDayRange(
+      [before, inRange],
+      new Date(2026, 2, 23),
+      new Date(2026, 2, 21),
+    )
+
+    expect(forward.map((t) => t.id)).toEqual(['in'])
+    expect(reversed.map((t) => t.id)).toEqual(['in'])
   })
 })

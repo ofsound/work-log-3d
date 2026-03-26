@@ -14,6 +14,7 @@ import {
   getDurationMinutesLabel,
   isSameDay,
   moveTimeBoxToDay,
+  parseDateKey,
 } from '~~/shared/worklog'
 
 interface SessionChangePayload {
@@ -26,6 +27,8 @@ const props = defineProps({
   months: { type: Array as PropType<YearHeatmapMonth[]>, default: () => [] },
   project: { type: Object as PropType<Project | null>, default: null },
   selectedDate: { type: Object as PropType<Date | null>, default: null },
+  /** Inclusive end day when the sidebar shows a multi-day aggregate (`dateEnd` query). */
+  selectedRangeEnd: { type: Object as PropType<Date | null>, default: null },
   selectedSessionId: { type: String, default: '' },
   timeBoxes: { type: Array as PropType<TimeBox[]>, default: () => [] },
 })
@@ -34,9 +37,116 @@ const emit = defineEmits<{
   changeSession: [payload: SessionChangePayload]
   openDay: [day: Date]
   openSession: [payload: { day: Date; sessionId: string }]
+  selectDayRange: [payload: { start: Date; end: Date }]
 }>()
 
 const dragState = ref<{ timeBox: TimeBox; duplicate: boolean } | null>(null)
+
+const RANGE_DRAG_THRESHOLD_PX = 6
+
+const rangePointerState = ref<{
+  anchor: Date
+  current: Date
+  didMoveCells: boolean
+  startClientX: number
+  startClientY: number
+  didExceedPixelThreshold: boolean
+} | null>(null)
+
+const detachRangePointerListeners = () => {
+  window.removeEventListener('pointermove', handleRangePointerMove)
+  window.removeEventListener('pointerup', handleRangePointerUp)
+}
+
+const handleRangePointerMove = (event: PointerEvent) => {
+  const state = rangePointerState.value
+  if (!state) {
+    return
+  }
+
+  const dx = event.clientX - state.startClientX
+  const dy = event.clientY - state.startClientY
+  if (dx * dx + dy * dy > RANGE_DRAG_THRESHOLD_PX * RANGE_DRAG_THRESHOLD_PX) {
+    state.didExceedPixelThreshold = true
+  }
+
+  const hit = document.elementFromPoint(event.clientX, event.clientY)
+  const cell = hit?.closest('[data-project-calendar-day]')
+  if (!(cell instanceof HTMLElement)) {
+    return
+  }
+
+  const key = cell.dataset.projectCalendarDay
+  const parsed = key ? parseDateKey(key) : null
+  if (!parsed) {
+    return
+  }
+
+  if (formatDateKey(parsed) !== formatDateKey(state.current)) {
+    state.didMoveCells = true
+  }
+
+  state.current = parsed
+}
+
+const handleRangePointerUp = () => {
+  const state = rangePointerState.value
+  rangePointerState.value = null
+  detachRangePointerListeners()
+
+  if (!state) {
+    return
+  }
+
+  const sameDay = formatDateKey(state.anchor) === formatDateKey(state.current)
+  const shouldCommitRange = state.didMoveCells || !sameDay
+  const shouldSuppressClick = state.didMoveCells || state.didExceedPixelThreshold || !sameDay
+
+  if (shouldCommitRange) {
+    const startKey = formatDateKey(state.anchor)
+    const endKey = formatDateKey(state.current)
+    const start = startKey <= endKey ? state.anchor : state.current
+    const end = startKey <= endKey ? state.current : state.anchor
+    emit('selectDayRange', { start, end })
+  }
+
+  if (shouldSuppressClick) {
+    const stopClick = (clickEvent: MouseEvent) => {
+      clickEvent.preventDefault()
+      clickEvent.stopImmediatePropagation()
+      window.removeEventListener('click', stopClick, true)
+    }
+
+    window.addEventListener('click', stopClick, true)
+  }
+}
+
+const handleDayPointerDown = (day: Date, event: PointerEvent) => {
+  if (event.button !== 0) {
+    return
+  }
+
+  const target = event.target
+  if (target instanceof HTMLElement && target.closest('button[draggable="true"]')) {
+    return
+  }
+
+  rangePointerState.value = {
+    anchor: day,
+    current: day,
+    didMoveCells: false,
+    startClientX: event.clientX,
+    startClientY: event.clientY,
+    didExceedPixelThreshold: false,
+  }
+
+  window.addEventListener('pointermove', handleRangePointerMove)
+  window.addEventListener('pointerup', handleRangePointerUp)
+}
+
+onUnmounted(() => {
+  detachRangePointerListeners()
+})
 
 const monthEntries = computed(() =>
   props.months.map((month) => {
@@ -82,6 +192,62 @@ const getHiddenCount = (segmentsByKey: Map<string, MonthGridSegmentEntry[]>, day
 
 const isOutsideAnchorMonth = (day: Date, anchorDate: Date) =>
   day.getMonth() !== anchorDate.getMonth()
+
+const isDayInPreviewRange = (day: Date) => {
+  const state = rangePointerState.value
+  if (!state) {
+    return false
+  }
+
+  const d = formatDateKey(day)
+  const a = formatDateKey(state.anchor)
+  const b = formatDateKey(state.current)
+  const lo = a <= b ? a : b
+  const hi = a <= b ? b : a
+
+  return d >= lo && d <= hi
+}
+
+const isDayInRouteRange = (day: Date) => {
+  if (props.selectedDate == null || props.selectedRangeEnd == null) {
+    return false
+  }
+
+  if (formatDateKey(props.selectedRangeEnd) === formatDateKey(props.selectedDate)) {
+    return false
+  }
+
+  const d = formatDateKey(day)
+  const a = formatDateKey(props.selectedDate)
+  const b = formatDateKey(props.selectedRangeEnd)
+  const lo = a <= b ? a : b
+  const hi = a <= b ? b : a
+
+  return d >= lo && d <= hi
+}
+
+const showCalendarSelectionRing = (
+  segmentsByKey: Map<string, MonthGridSegmentEntry[]>,
+  day: Date,
+) => {
+  if (isDayInPreviewRange(day) || isDayInRouteRange(day)) {
+    return true
+  }
+
+  if (props.selectedDate == null) {
+    return false
+  }
+
+  const isMultiDayRoute =
+    props.selectedRangeEnd != null &&
+    formatDateKey(props.selectedRangeEnd) !== formatDateKey(props.selectedDate)
+
+  if (isMultiDayRoute) {
+    return false
+  }
+
+  return dayHasSessions(segmentsByKey, day) && isSameDay(day, props.selectedDate)
+}
 
 const formatSegmentTime = (date: Date) =>
   date.toLocaleTimeString([], {
@@ -158,6 +324,7 @@ const handleSegmentDragEnd = () => {
                 :is="dayHasSessions(month.segmentsByKey, day) ? 'button' : 'div'"
                 :type="dayHasSessions(month.segmentsByKey, day) ? 'button' : undefined"
                 class="flex min-h-40 flex-col gap-2 border-r border-b border-border px-3 py-3 text-left align-top transition last:border-r-0"
+                :data-project-calendar-day="formatDateKey(day)"
                 :class="{
                   'cursor-pointer hover:bg-surface-muted': dayHasSessions(month.segmentsByKey, day),
                   'bg-surface-muted/50 text-text-subtle': isOutsideAnchorMonth(
@@ -165,12 +332,14 @@ const handleSegmentDragEnd = () => {
                     month.anchorDate,
                   ),
                   'ring-1 ring-danger ring-inset': isSameDay(day, new Date()),
-                  'ring-2 ring-link/35 ring-inset':
-                    dayHasSessions(month.segmentsByKey, day) &&
-                    selectedDate != null &&
-                    isSameDay(day, selectedDate),
+                  'ring-2 ring-link/35 ring-inset': showCalendarSelectionRing(
+                    month.segmentsByKey,
+                    day,
+                  ),
+                  'select-none': rangePointerState != null,
                 }"
                 @click="handleDayCellClick(month.segmentsByKey, day)"
+                @pointerdown="handleDayPointerDown(day, $event)"
                 @dragover.prevent
                 @drop="handleSegmentDrop(day, $event)"
               >

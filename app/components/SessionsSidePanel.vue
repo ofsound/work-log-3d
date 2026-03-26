@@ -128,7 +128,7 @@ defineExpose({
         />
       </div>
 
-      <div v-if="mode === 'session' && sessionId" class="h-full min-w-0 overflow-y-auto pr-1">
+      <div v-if="mode === 'session' && sessionId" class="flex h-full min-h-0 min-w-0 flex-col">
         <TimeBox
           :id="sessionId"
           embedded-in-panel
@@ -138,9 +138,10 @@ defineExpose({
         />
       </div>
 
-      <div v-else-if="mode === 'create'" class="h-full min-w-0 overflow-y-auto pr-1 pb-4">
+      <div v-else-if="mode === 'create'" class="flex h-full min-h-0 min-w-0 flex-col pb-4">
         <TimeBoxEditor
           embedded-in-panel
+          class="min-h-0 flex-1"
           :initial-start-time="initialStartTime"
           :initial-end-time="initialEndTime"
           :reset-after-create="false"
