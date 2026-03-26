@@ -165,7 +165,7 @@
     );
   --shadow-workspace-subheader: 0 2px 4px
     light-dark(
-      color-mix(in srgb, var(--color-gray-700) 40%, transparent),
+      color-mix(in srgb, var(--color-gray-400) 40%, transparent),
       color-mix(in srgb, var(--color-black) 70%, transparent)
     );
   --shadow-hero:
