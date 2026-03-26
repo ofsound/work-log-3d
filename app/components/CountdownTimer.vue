@@ -122,16 +122,93 @@ const timerIsRunning = computed(
 const timerIsPaused = computed(
   () => snapshot.value.mode === 'countdown' && snapshot.value.status === 'paused',
 )
+const timerIsCompleted = computed(
+  () => snapshot.value.mode === 'countdown' && snapshot.value.status === 'completed',
+)
+/** Match tray: +5/+10 stay available while countdown is running, paused, or completed. */
+const timerShowsAddTimeButtons = computed(
+  () =>
+    snapshot.value.mode === 'countdown' &&
+    (timerIsRunning.value || timerIsPaused.value || timerIsCompleted.value),
+)
+const timerShowsReadOnlyProgress = computed(
+  () => timerIsRunning.value || timerIsPaused.value || timerIsCompleted.value,
+)
+const minuteColumnInteractive = computed(() => !timerIsCompleted.value)
+
+const countdownOriginalDurationDisplay = computed(() => {
+  if (snapshot.value.mode !== 'countdown' || snapshot.value.originalDurationSeconds === null) {
+    return null
+  }
+
+  return formatSecondsToMinutesSeconds(snapshot.value.originalDurationSeconds)
+})
+
+const countdownAddedSeconds = computed(() => {
+  if (
+    snapshot.value.mode !== 'countdown' ||
+    snapshot.value.durationSeconds === null ||
+    snapshot.value.originalDurationSeconds === null
+  ) {
+    return 0
+  }
+
+  return Math.max(0, snapshot.value.durationSeconds - snapshot.value.originalDurationSeconds)
+})
+
+const countdownAddedDurationDisplay = computed(() =>
+  countdownAddedSeconds.value > 0
+    ? formatSecondsToMinutesSeconds(countdownAddedSeconds.value)
+    : null,
+)
+
+const countdownTotalDurationDisplay = computed(() => {
+  if (snapshot.value.mode !== 'countdown' || snapshot.value.durationSeconds === null) {
+    return null
+  }
+
+  return formatSecondsToMinutesSeconds(snapshot.value.durationSeconds)
+})
+
+const countdownAddedSummaryDisplay = computed(() => {
+  if (!countdownAddedDurationDisplay.value || !countdownTotalDurationDisplay.value) {
+    return null
+  }
+
+  return `Added +${countdownAddedDurationDisplay.value} total (${countdownTotalDurationDisplay.value} total)`
+})
+
+const countdownCompletionGapDisplay = computed(() =>
+  snapshot.value.completionGapSeconds !== null && snapshot.value.completionGapSeconds > 0
+    ? formatSecondsToMinutesSeconds(snapshot.value.completionGapSeconds)
+    : null,
+)
+
+const countdownConsumedExtensionDisplay = computed(() =>
+  snapshot.value.lastExtensionConsumedSeconds > 0
+    ? formatSecondsToMinutesSeconds(snapshot.value.lastExtensionConsumedSeconds)
+    : null,
+)
+
+const showCountdownSummary = computed(
+  () =>
+    snapshot.value.mode === 'countdown' &&
+    (timerIsCompleted.value || countdownAddedSeconds.value > 0),
+)
 
 /** Idle UI: hide minutes + ":ss" until preferences finish loading (no flash of ":00"). */
 const hideIdleTimeUntilPrefsLoaded = computed(
-  () => preferencesDocumentPending.value && !timerIsRunning.value && !timerIsPaused.value,
+  () =>
+    preferencesDocumentPending.value &&
+    !timerIsRunning.value &&
+    !timerIsPaused.value &&
+    !timerIsCompleted.value,
 )
 
 const {
   pointerSessionActive: minutePointerSession,
   dragActive: minuteDragActive,
-  onPointerDown: handleMinuteColumnPointerDown,
+  onPointerDown: handleMinuteColumnPointerDownBase,
 } = useMinuteVerticalDrag({
   blurSelector: '#dynamicMinutes',
   onSessionStart() {
@@ -183,6 +260,14 @@ const startTimer = () => {
   void startCountdown(minutes)
 }
 
+const extendCountdownByFiveMinutes = () => {
+  void addCountdownMinutes(5)
+}
+
+const extendCountdownByTenMinutes = () => {
+  void addCountdownMinutes(10)
+}
+
 const handleCancel = async () => {
   await cancel()
   clearIdleMinutesLocalOverride()
@@ -221,6 +306,14 @@ const countdownMinutesDisplay = computed(() => {
   return snapshot.value.display.split(':')[0] ?? '00'
 })
 
+const handleMinuteColumnPointerDown = (event: PointerEvent) => {
+  if (!minuteColumnInteractive.value) {
+    return
+  }
+
+  handleMinuteColumnPointerDownBase(event)
+}
+
 const secondsProgress = computed(() => {
   if (snapshot.value.mode !== 'countdown') {
     return '00'
@@ -245,16 +338,10 @@ watch(
     if (nextSnapshot.mode === 'countdown') {
       if (nextSnapshot.status === 'completed') {
         clearIdleMinutesLocalOverride()
-        setDynamicMinutesProgrammatically(
-          String(savedSettings.value.workflow.countdownDefaultMinutes),
-        )
-        idleMinutesHydrated.value = true
-      } else {
-        setDynamicMinutesProgrammatically(
-          nextSnapshot.display.split(':')[0] ?? dynamicMinutes.value,
-        )
-        idleMinutesHydrated.value = true
       }
+
+      setDynamicMinutesProgrammatically(nextSnapshot.display.split(':')[0] ?? dynamicMinutes.value)
+      idleMinutesHydrated.value = true
     }
   },
   { deep: true },
@@ -359,7 +446,7 @@ watch(
 
 <template>
   <ContainerCard
-    class="relative flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm pt-7 pb-4"
+    class="relative flex w-full items-center justify-between gap-7 rounded-sm pt-7 pb-4"
     padding="comfortable"
     variant="timer"
   >
@@ -369,13 +456,19 @@ watch(
       <TimerCancelButton @click="handleCancel" />
       <div
         class="flex touch-none flex-nowrap items-center self-stretch"
-        :class="minuteDragActive ? 'cursor-grabbing select-none' : 'cursor-ns-resize'"
+        :class="
+          minuteDragActive
+            ? 'cursor-grabbing select-none'
+            : minuteColumnInteractive
+              ? 'cursor-ns-resize'
+              : 'cursor-default'
+        "
         @pointerdown="handleMinuteColumnPointerDown"
       >
         <template v-if="!hideIdleTimeUntilPrefsLoaded">
           <div>
             <input
-              v-if="!timerIsRunning && !timerIsPaused"
+              v-if="!timerShowsReadOnlyProgress"
               id="dynamicMinutes"
               v-model="dynamicMinutes"
               type="text"
@@ -393,13 +486,62 @@ watch(
         </template>
       </div>
     </div>
-    <TimerButton v-if="!timerIsRunning && !timerIsPaused" class="shrink-0" @click="startTimer"
-      >Start Timer</TimerButton
-    >
-    <TimerButton v-if="timerIsRunning && !timerIsPaused" class="shrink-0" @click="pause"
-      >Pause Timer</TimerButton
-    >
-    <TimerButton v-if="timerIsPaused" class="shrink-0" @click="resume">Resume Timer </TimerButton>
+    <div class="flex min-w-0 flex-1 flex-col items-end gap-2">
+      <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+        <template v-if="timerShowsAddTimeButtons">
+          <AppButton
+            data-testid="countdown-add-5"
+            size="sm"
+            variant="secondary"
+            @click="extendCountdownByFiveMinutes"
+          >
+            +5 min
+          </AppButton>
+          <AppButton
+            data-testid="countdown-add-10"
+            size="sm"
+            variant="secondary"
+            @click="extendCountdownByTenMinutes"
+          >
+            +10 min
+          </AppButton>
+        </template>
+        <TimerButton
+          v-if="!timerIsRunning && !timerIsPaused && !timerIsCompleted"
+          @click="startTimer"
+        >
+          Start Timer
+        </TimerButton>
+        <TimerButton v-if="timerIsRunning && !timerIsPaused" @click="pause"
+          >Pause Timer</TimerButton
+        >
+        <TimerButton v-if="timerIsPaused" @click="resume">Resume Timer </TimerButton>
+      </div>
+      <div
+        v-if="showCountdownSummary"
+        class="flex max-w-full flex-col items-end gap-0.5 text-right text-xs leading-tight text-text-muted"
+      >
+        <span v-if="countdownOriginalDurationDisplay">
+          Originally {{ countdownOriginalDurationDisplay }}
+        </span>
+        <span v-if="countdownAddedSummaryDisplay">
+          {{ countdownAddedSummaryDisplay }}
+        </span>
+        <span v-if="timerIsCompleted && countdownCompletionGapDisplay">
+          {{ countdownCompletionGapDisplay }} elapsed since completion
+        </span>
+        <span v-if="countdownConsumedExtensionDisplay && !timerIsCompleted">
+          {{ countdownConsumedExtensionDisplay }} had already elapsed when you extended it
+        </span>
+        <span
+          v-else-if="
+            countdownConsumedExtensionDisplay && timerIsCompleted && !countdownCompletionGapDisplay
+          "
+        >
+          {{ countdownConsumedExtensionDisplay }} of the added time had already elapsed
+        </span>
+      </div>
+    </div>
     <span
       class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-xs leading-none font-medium text-text-muted opacity-80"
       aria-hidden="true"

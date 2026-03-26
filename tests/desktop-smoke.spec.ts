@@ -18,6 +18,7 @@ describe('desktop timer host behavior', () => {
       display: '05:00',
       elapsedSeconds: 0,
       remainingSeconds: 300,
+      completionGapSeconds: null,
       isActive: true,
     })
 

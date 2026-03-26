@@ -21,6 +21,7 @@ export type DesktopTrayActionId =
   | 'pause'
   | 'resume'
   | 'stop'
+  | 'stop_and_log'
   | 'reset'
   | 'show_window'
   | 'open_window_to_log_session'
@@ -269,6 +270,10 @@ export const getDesktopTrayState = (
   if (snapshot.status === 'running') {
     const statusLabel = `Running • ${modeLabel}`
     const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
+    const timerActions =
+      snapshot.mode === 'countup'
+        ? [createActionItem('pause', 'Pause'), createActionItem('stop_and_log', 'Stop and Log')]
+        : [createActionItem('pause', 'Pause'), createActionItem('stop', 'Stop')]
 
     return {
       mode: 'running',
@@ -282,8 +287,7 @@ export const getDesktopTrayState = (
         createStatusItem(statusLabel),
         separatorItem,
         ...countdownActions,
-        createActionItem('pause', 'Pause'),
-        createActionItem('stop', 'Stop'),
+        ...timerActions,
         createActionItem('reset', 'Reset'),
         separatorItem,
         createActionItem('show_window', 'Show Window'),
@@ -293,8 +297,32 @@ export const getDesktopTrayState = (
   }
 
   if (snapshot.status === 'paused') {
-    const statusLabel = `Paused • ${modeLabel}`
+    const statusLabel =
+      snapshot.mode === 'countup' ? `Stopped • ${modeLabel}` : `Paused • ${modeLabel}`
     const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
+    const menuItems =
+      snapshot.mode === 'countup'
+        ? [
+            createStatusItem(statusLabel),
+            separatorItem,
+            createActionItem('resume', 'Resume'),
+            createActionItem('open_window_to_log_session', 'Log'),
+            createActionItem('reset', 'Reset'),
+            separatorItem,
+            createActionItem('show_window', 'Show Window'),
+            createActionItem('quit', 'Quit'),
+          ]
+        : [
+            createStatusItem(statusLabel),
+            separatorItem,
+            createActionItem('resume', 'Resume'),
+            ...countdownActions,
+            createActionItem('stop', 'Stop'),
+            createActionItem('reset', 'Reset'),
+            separatorItem,
+            createActionItem('show_window', 'Show Window'),
+            createActionItem('quit', 'Quit'),
+          ]
 
     return {
       mode: 'paused',
@@ -304,21 +332,12 @@ export const getDesktopTrayState = (
       visualMode: 'badge',
       badgeText,
       badgeVariant: 'paused',
-      menuItems: [
-        createStatusItem(statusLabel),
-        separatorItem,
-        createActionItem('resume', 'Resume'),
-        ...countdownActions,
-        createActionItem('stop', 'Stop'),
-        createActionItem('reset', 'Reset'),
-        separatorItem,
-        createActionItem('show_window', 'Show Window'),
-        createActionItem('quit', 'Quit'),
-      ],
+      menuItems,
     }
   }
 
   const statusLabel = `Completed • ${modeLabel}`
+  const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
 
   return {
     mode: 'completed',
@@ -331,6 +350,7 @@ export const getDesktopTrayState = (
     menuItems: [
       createStatusItem(statusLabel),
       separatorItem,
+      ...countdownActions,
       createActionItem('start_focus', pomodoroLabel),
       createActionItem('start_countup', 'Start Timer'),
       ...trayShortcutItems,

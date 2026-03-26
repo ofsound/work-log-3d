@@ -13,19 +13,38 @@ import {
 } from '~/shared/worklog'
 
 describe('timer state', () => {
-  it('handles countup start, pause, resume, and stop', () => {
+  it('treats stopping a countup as a resumable freeze', () => {
     const started = startCountupTimer(1_000)
     expect(getTimerSnapshot(started, 6_000).elapsedSeconds).toBe(5)
 
-    const paused = pauseTimer(started, 6_000)
-    expect(getTimerSnapshot(paused, 12_000).elapsedSeconds).toBe(5)
+    const stopped = stopTimer(started, 6_000)
+    expect(stopped.status).toBe('paused')
+    expect(stopped.pausedAtMs).toBe(6_000)
+    expect(getTimerSnapshot(stopped, 12_000).elapsedSeconds).toBe(5)
 
-    const resumed = resumeTimer(paused, 12_000)
+    const resumed = resumeTimer(stopped, 12_000)
     expect(getTimerSnapshot(resumed, 15_000).elapsedSeconds).toBe(8)
+  })
 
-    const stopped = stopTimer(resumed, 15_000)
+  it('handles countdown start, pause, resume: remaining excludes paused wall time', () => {
+    const started = startCountdownTimer(300, 0)
+    expect(getTimerSnapshot(started, 60_000).remainingSeconds).toBe(240)
+
+    const paused = pauseTimer(started, 60_000)
+    expect(getTimerSnapshot(paused, 120_000).remainingSeconds).toBe(240)
+
+    const resumed = resumeTimer(paused, 120_000)
+    expect(getTimerSnapshot(resumed, 150_000).remainingSeconds).toBe(210)
+    expect(getTimerSnapshot(resumed, 150_000).display).toBe('03:30')
+  })
+
+  it('still completes countdown timers when stopped explicitly', () => {
+    const started = startCountdownTimer(300, 0)
+    const stopped = stopTimer(started, 60_000)
+
     expect(stopped.status).toBe('completed')
-    expect(getTimerSnapshot(stopped, 20_000).elapsedSeconds).toBe(8)
+    expect(stopped.endedAtMs).toBe(60_000)
+    expect(getTimerSnapshot(stopped, 120_000).remainingSeconds).toBe(240)
   })
 
   it('completes countdown timers automatically when synced', () => {
@@ -62,6 +81,37 @@ describe('timer state', () => {
     expect(snapshot.elapsedSeconds).toBe(60)
     expect(snapshot.remainingSeconds).toBe(840)
     expect(snapshot.display).toBe('14:00')
+  })
+
+  it('revives a completed countdown with only the unused extension time remaining', () => {
+    const completed = syncTimerState(startCountdownTimer(300, 0), 300_000)
+    const updated = addCountdownSeconds(completed, 10 * 60, 660_000)
+    const snapshot = getTimerSnapshot(updated, 660_000)
+
+    expect(updated.status).toBe('running')
+    expect(updated.durationSeconds).toBe(900)
+    expect(updated.originalDurationSeconds).toBe(300)
+    expect(updated.lastExtensionConsumedSeconds).toBe(360)
+    expect(updated.endedAtMs).toBeNull()
+    expect(snapshot.remainingSeconds).toBe(240)
+    expect(snapshot.display).toBe('04:00')
+    expect(snapshot.completionGapSeconds).toBeNull()
+  })
+
+  it('keeps a completed countdown at zero when the added increment was already fully consumed', () => {
+    const completed = syncTimerState(startCountdownTimer(300, 0), 300_000)
+    const updated = addCountdownSeconds(completed, 5 * 60, 660_000)
+    const snapshot = getTimerSnapshot(updated, 660_000)
+
+    expect(updated.status).toBe('completed')
+    expect(updated.durationSeconds).toBe(600)
+    expect(updated.originalDurationSeconds).toBe(300)
+    expect(updated.endedAtMs).toBe(600_000)
+    expect(updated.lastExtensionConsumedSeconds).toBe(300)
+    expect(snapshot.elapsedSeconds).toBe(600)
+    expect(snapshot.remainingSeconds).toBe(0)
+    expect(snapshot.display).toBe('00:00')
+    expect(snapshot.completionGapSeconds).toBe(60)
   })
 
   it('subtracts time from a running countdown without going below elapsed time', () => {

@@ -457,6 +457,10 @@ app.whenReady().then(async () => {
         case 'stop':
           setTimerState(stopTimer(timerState, Date.now()))
           break
+        case 'stop_and_log':
+          setTimerState(pauseTimer(timerState, Date.now()))
+          openMainWindow(buildNewTimeBoxPath())
+          break
         case 'reset':
           setTimerState(cancelTimer())
           break

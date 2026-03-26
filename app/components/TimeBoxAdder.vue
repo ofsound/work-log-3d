@@ -6,7 +6,7 @@ import { sortNamedEntities } from '~~/shared/worklog'
 import type { FirebaseProjectDocument, FirebaseTagDocument } from '~/utils/worklog-firebase'
 
 const route = useRoute()
-const { snapshot } = useTimerService()
+const { snapshot, cancel } = useTimerService()
 const { projectsCollection, tagsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
@@ -43,11 +43,16 @@ const startTimeFromTimer = computed(() => {
 })
 
 const endTimeFromTimer = computed(() => {
-  if (snapshot.value.endedAtMs === null) {
+  const endAtMs =
+    snapshot.value.mode === 'countup' && snapshot.value.pausedAtMs !== null
+      ? snapshot.value.pausedAtMs
+      : snapshot.value.endedAtMs
+
+  if (endAtMs === null) {
     return ''
   }
 
-  return formatToDatetimeLocal(new Date(snapshot.value.endedAtMs))
+  return formatToDatetimeLocal(new Date(endAtMs))
 })
 
 const adderRootRef = ref<HTMLElement | null>(null)
@@ -56,6 +61,14 @@ const scrollAdderToTopAfterSave = () => {
   nextTick(() => {
     adderRootRef.value?.scrollIntoView({ behavior: 'auto', block: 'start' })
   })
+}
+
+const handleSave = async () => {
+  if (snapshot.value.mode === 'countup' && snapshot.value.status === 'paused') {
+    await cancel()
+  }
+
+  scrollAdderToTopAfterSave()
 }
 </script>
 
@@ -77,7 +90,7 @@ const scrollAdderToTopAfterSave = () => {
       :end-time-from-timer="endTimeFromTimer"
       :initial-project="routePrefill.project"
       :initial-tags="routePrefill.tags"
-      @saved="scrollAdderToTopAfterSave"
+      @saved="handleSave"
     />
   </div>
 </template>

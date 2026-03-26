@@ -119,7 +119,7 @@ describe('desktop tray state', () => {
       { kind: 'status', label: 'Running • Count Up', enabled: false },
       { kind: 'separator' },
       { kind: 'action', id: 'pause', label: 'Pause', enabled: true },
-      { kind: 'action', id: 'stop', label: 'Stop', enabled: true },
+      { kind: 'action', id: 'stop_and_log', label: 'Stop and Log', enabled: true },
       { kind: 'action', id: 'reset', label: 'Reset', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
@@ -180,7 +180,7 @@ describe('desktop tray state', () => {
     })
   })
 
-  it('exposes paused badge metadata without changing the tray menu structure', () => {
+  it('exposes stopped countup tray actions for resume, log, and reset', () => {
     const pausedCountup = getTimerSnapshot(pauseTimer(startCountupTimer(0), 65_000), 125_000)
     const trayState = getDesktopTrayState(pausedCountup, 'darwin')
 
@@ -189,7 +189,17 @@ describe('desktop tray state', () => {
     expect(trayState.visualMode).toBe('badge')
     expect(trayState.badgeText).toBe(' 01:05')
     expect(trayState.badgeVariant).toBe('paused')
-    expect(trayState.statusLabel).toBe('Paused • Count Up')
+    expect(trayState.statusLabel).toBe('Stopped • Count Up')
+    expect(trayState.menuItems).toEqual([
+      { kind: 'status', label: 'Stopped • Count Up', enabled: false },
+      { kind: 'separator' },
+      { kind: 'action', id: 'resume', label: 'Resume', enabled: true },
+      { kind: 'action', id: 'open_window_to_log_session', label: 'Log', enabled: true },
+      { kind: 'action', id: 'reset', label: 'Reset', enabled: true },
+      { kind: 'separator' },
+      { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
+      { kind: 'action', id: 'quit', label: 'Quit', enabled: true },
+    ])
     expect(trayState.menuItems).not.toContainEqual({
       kind: 'action',
       id: 'add_countdown_5_minutes',
@@ -223,6 +233,8 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Completed • Count Down', enabled: false },
       { kind: 'separator' },
+      { kind: 'action', id: 'add_countdown_5_minutes', label: '+5 min', enabled: true },
+      { kind: 'action', id: 'add_countdown_10_minutes', label: '+10 min', enabled: true },
       { kind: 'action', id: 'start_focus', label: 'Pomodoro (30m)', enabled: true },
       { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
       { kind: 'separator' },
