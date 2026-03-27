@@ -261,7 +261,7 @@ const openLinkPrompt = () => {
 
 const toolbarButtonClass = (isActive: boolean) =>
   [
-    'rounded-md border px-2.5 py-1 text-xs font-semibold transition',
+    'cursor-pointer rounded-md border px-2.5 py-1 text-xs font-semibold transition',
     isActive
       ? 'border-link bg-link/10 text-link'
       : 'border-border-subtle bg-surface text-text-muted hover:bg-surface-muted hover:text-text',

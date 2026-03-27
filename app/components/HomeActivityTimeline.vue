@@ -76,7 +76,7 @@ const getBarFrameClass = (week: HomeActivityWeek) => [
 
       <div
         v-if="hasWeeks"
-        class="border-home-activity-stage-border from-home-activity-stage-top via-home-activity-stage-mid to-home-activity-stage-bottom relative overflow-hidden rounded-[1.35rem] border bg-linear-to-b px-3 pt-3 pb-4"
+        class="from-home-activity-stage-top via-home-activity-stage-mid to-home-activity-stage-bottom relative overflow-hidden rounded-[1.35rem] bg-linear-to-b px-3 pt-3 pb-4"
       >
         <div
           class="pointer-events-none absolute inset-0 opacity-35"
