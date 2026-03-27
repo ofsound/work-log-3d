@@ -260,11 +260,7 @@ const visibleInsights = computed(
         >
           <div class="flex flex-wrap items-center gap-3">
             <div class="text-lg font-semibold text-text">{{ group.label }}</div>
-            <div
-              class="rounded-full bg-badge-duration px-2.5 py-1 text-xs font-bold tracking-wide text-badge-duration-text"
-            >
-              {{ formatReportHours(group.totalMinutes) }}
-            </div>
+            <DurationPill :minutes="group.totalMinutes" variant="compact" />
             <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">
               {{ group.sessionCount }} sessions
             </div>

@@ -6,7 +6,7 @@ import EditIcon from '@/icons/EditIcon.vue'
 
 import { APP_CHIP_ROW_STATIC_CLASS_NAME } from '~/utils/app-field'
 import { toTimeBoxes, type FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
-import { getTotalDurationRoundedHoursLabel, getWorklogErrorMessage } from '~~/shared/worklog'
+import { getTotalDurationMinutes, getWorklogErrorMessage } from '~~/shared/worklog'
 
 const repositories = useWorklogRepository()
 const { confirm } = useConfirmDialog()
@@ -74,12 +74,12 @@ const resetNameToSaved = () => {
   mutationErrorMessage.value = ''
 }
 
-const tagTimeBoxesTotalDuration = computed(() => {
+const tagTimeBoxesTotalMinutes = computed(() => {
   const tagTimeBoxes = toTimeBoxes(timeBoxes.value as FirebaseTimeBoxDocument[]).filter((timeBox) =>
     timeBox.tags.some((tagId: string) => tagId === props.id),
   )
 
-  return getTotalDurationRoundedHoursLabel(tagTimeBoxes)
+  return getTotalDurationMinutes(tagTimeBoxes)
 })
 
 watch(
@@ -107,19 +107,21 @@ watch(
           @keyup.esc="cancelRenameAndLoseFocus"
           @blur="resetNameToSaved"
         />
-        <span
-          class="shrink-0 rounded-full border border-border px-1.5 py-px text-[10px] leading-none font-semibold text-text tabular-nums"
-        >
-          {{ tagTimeBoxesTotalDuration }} hrs
-        </span>
+        <DurationPill
+          format="hours-rounded"
+          :minutes="tagTimeBoxesTotalMinutes"
+          tone="neutral"
+          variant="compact"
+        />
       </div>
       <div v-else class="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left text-text">
         <span class="min-w-0 truncate font-bold">{{ dynamicName }}</span>
-        <span
-          class="shrink-0 rounded-full border border-border px-1.5 py-px text-[10px] leading-none font-semibold text-text tabular-nums"
-        >
-          {{ tagTimeBoxesTotalDuration }} hrs
-        </span>
+        <DurationPill
+          format="hours-rounded"
+          :minutes="tagTimeBoxesTotalMinutes"
+          tone="neutral"
+          variant="compact"
+        />
       </div>
       <div class="flex shrink-0 items-center gap-0.5">
         <button

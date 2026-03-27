@@ -11,7 +11,7 @@ import {
 import type { Project, TimeBox, TimeBoxInput } from '~~/shared/worklog'
 import {
   formatDateKey,
-  getDurationMinutesLabel,
+  getTimeBoxDurationMinutes,
   isSameDay,
   moveTimeBoxToDay,
 } from '~~/shared/worklog'
@@ -189,12 +189,14 @@ const handleSegmentDragEnd = () => {
                       }}</span>
                       <span class="ml-1">{{ getProjectName(segment.timeBox.project) }}</span>
                     </div>
-                    <div
-                      class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                    <DurationPill
+                      class="shrink-0"
+                      format="minutes"
+                      :minutes="getTimeBoxDurationMinutes(segment.timeBox)"
                       :style="getDurationBadgeStyle(segment.timeBox.project)"
-                    >
-                      {{ getDurationMinutesLabel(segment.timeBox) }}
-                    </div>
+                      tone="project"
+                      variant="compact"
+                    />
                   </div>
                 </button>
 

@@ -21,7 +21,7 @@ import {
 import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
 import type { ProjectColors, ProjectInput } from '~~/shared/worklog'
-import { getTotalDurationLabel, normalizeHexColor, getWorklogErrorMessage } from '~~/shared/worklog'
+import { getTotalDurationLabel, getWorklogErrorMessage, normalizeHexColor } from '~~/shared/worklog'
 
 const props = defineProps<{
   id: string

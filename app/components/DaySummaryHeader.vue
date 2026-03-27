@@ -2,7 +2,7 @@
 import type { PropType } from 'vue'
 
 import type { TimeBox } from '~~/shared/worklog'
-import { getTotalDurationLabel } from '~~/shared/worklog'
+import { getTotalDurationMinutes } from '~~/shared/worklog'
 
 const props = defineProps({
   summaryEyebrow: { type: String, default: '' },
@@ -14,7 +14,7 @@ const props = defineProps({
 
 const daySummary = computed(() => ({
   count: props.timeBoxes.length,
-  durationLabel: getTotalDurationLabel(props.timeBoxes),
+  durationMinutes: getTotalDurationMinutes(props.timeBoxes),
   projectCount: new Set(props.timeBoxes.map((timeBox) => timeBox.project)).size,
 }))
 </script>
@@ -39,11 +39,7 @@ const daySummary = computed(() => ({
         (summaryEyebrow ? 'mt-3 flex flex-wrap gap-2' : 'mt-4 flex flex-wrap gap-2')
       "
     >
-      <div
-        class="rounded-lg bg-badge-duration px-2.5 py-1 text-xs font-bold tracking-tight text-badge-duration-text tabular-nums shadow-sm"
-      >
-        {{ daySummary.durationLabel }} hrs
-      </div>
+      <DurationPill :minutes="daySummary.durationMinutes" />
       <div
         class="rounded-lg border border-border bg-surface-muted px-2.5 py-1 text-xs font-semibold text-text shadow-sm"
       >

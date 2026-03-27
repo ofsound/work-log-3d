@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getProjectEditPathFromProject, getProjectPathFromProject } from '~/utils/worklog-routes'
-import { getTotalDurationRoundedHoursLabel } from '~~/shared/worklog'
+import { getTotalDurationMinutes } from '~~/shared/worklog'
 
 import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { DEFAULT_PROJECTS_PAGE_LAYOUT, type ProjectsPageLayout } from '~/utils/projects-page-layout'
@@ -32,9 +32,7 @@ const projectTimeBoxes = computed<TimeBox[]>(() =>
   ),
 )
 
-const projectTimeBoxesTotalDuration = computed(() =>
-  getTotalDurationRoundedHoursLabel(projectTimeBoxes.value),
-)
+const projectTimeBoxesTotalMinutes = computed(() => getTotalDurationMinutes(projectTimeBoxes.value))
 
 const projectSessionDateRangeLabel = computed(() => {
   const boxes = projectTimeBoxes.value
@@ -115,12 +113,14 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
           >
             Edit
           </button>
-          <div
-            class="w-max rounded-md border px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
+          <DurationPill
+            class="w-max rounded-md px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
+            format="hours-rounded"
+            :minutes="projectTimeBoxesTotalMinutes"
             :style="durationBadgeStyle"
-          >
-            {{ projectTimeBoxesTotalDuration }} hrs
-          </div>
+            tone="project"
+            variant="compact"
+          />
         </div>
       </div>
     </template>
@@ -145,12 +145,14 @@ const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.col
           </span>
         </div>
         <div class="flex flex-wrap items-center justify-center gap-2">
-          <div
-            class="rounded-md border px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
+          <DurationPill
+            class="rounded-md px-1.5 py-0.5 pt-px font-data text-xs tracking-wide"
+            format="hours-rounded"
+            :minutes="projectTimeBoxesTotalMinutes"
             :style="durationBadgeStyle"
-          >
-            {{ projectTimeBoxesTotalDuration }} hrs
-          </div>
+            tone="project"
+            variant="compact"
+          />
         </div>
       </div>
     </template>

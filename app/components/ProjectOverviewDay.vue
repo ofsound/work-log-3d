@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { getProjectBadgeStyle } from '~/utils/project-color-styles'
 import type { ProjectColors, TimeBox } from '~~/shared/worklog'
-import { getTotalDurationLabel } from '~~/shared/worklog'
+import { getTotalDurationMinutes } from '~~/shared/worklog'
 
 const props = defineProps<{
   projectOverviewDayData: TimeBox[]
   projectColors?: ProjectColors | null
 }>()
 
-const dayDuration = computed(() => getTotalDurationLabel(props.projectOverviewDayData))
+const dayDurationMinutes = computed(() => getTotalDurationMinutes(props.projectOverviewDayData))
 const dayBadgeStyle = computed(() =>
   props.projectColors ? getProjectBadgeStyle(props.projectColors) : {},
 )
@@ -35,12 +35,13 @@ const dayHeading = computed(() => {
       <div class="text-2xl font-bold tracking-tight">
         {{ dayHeading }}
       </div>
-      <div
-        class="w-max rounded-full border px-2.5 py-1 font-data text-xs tracking-wide"
+      <DurationPill
+        class="w-max px-2.5 py-1 font-data text-xs tracking-wide"
+        :minutes="dayDurationMinutes"
         :style="dayBadgeStyle"
-      >
-        {{ dayDuration }} hrs
-      </div>
+        tone="project"
+        variant="compact"
+      />
     </div>
     <ContainerCard
       class="relative my-4 rounded-sm px-6 pt-6 pb-3.5"

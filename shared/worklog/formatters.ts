@@ -80,6 +80,10 @@ export const formatSecondsToMinutesSecondsParts = (totalSeconds: number) => {
   }
 }
 
+export const DURATION_DISPLAY_FORMATS = ['hours-decimal', 'hours-rounded', 'minutes'] as const
+
+export type DurationDisplayFormat = (typeof DURATION_DISPLAY_FORMATS)[number]
+
 export const formatMinutesToHoursAndMinutes = (totalMinutes: number) => {
   const hours = Math.floor(totalMinutes / 60)
   const minutes = ((totalMinutes % 60) / 60).toString().slice(1).substring(0, 3)
@@ -87,7 +91,18 @@ export const formatMinutesToHoursAndMinutes = (totalMinutes: number) => {
   return { hours, minutes }
 }
 
-export const formatDurationMinutesLabel = (totalMinutes: number) => {
+export const formatDurationValue = (
+  totalMinutes: number,
+  format: DurationDisplayFormat = 'hours-decimal',
+) => {
+  if (format === 'minutes') {
+    return `${totalMinutes}m`
+  }
+
+  if (format === 'hours-rounded') {
+    return String(Math.round(totalMinutes / 60))
+  }
+
   if (totalMinutes === 0) {
     return '0'
   }
@@ -95,6 +110,19 @@ export const formatDurationMinutesLabel = (totalMinutes: number) => {
   const { hours, minutes } = formatMinutesToHoursAndMinutes(totalMinutes)
 
   return hours > 0 ? `${hours}${minutes}` : minutes
+}
+
+export const formatDurationLabel = (
+  totalMinutes: number,
+  format: DurationDisplayFormat = 'hours-decimal',
+) => {
+  const value = formatDurationValue(totalMinutes, format)
+
+  return format === 'minutes' ? value : `${value} hrs`
+}
+
+export const formatDurationMinutesLabel = (totalMinutes: number) => {
+  return formatDurationValue(totalMinutes, 'hours-decimal')
 }
 
 export const formatMinutesAsDecimalHours = (totalMinutes: number) => {

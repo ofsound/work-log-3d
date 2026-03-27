@@ -2,7 +2,7 @@ import {
   addDays,
   createDefaultReportInput,
   formatDateKey,
-  formatMinutesAsDecimalHours,
+  formatDurationLabel,
   getStartOfWeek,
   getTimeZoneDateKey,
   parseDateKey,
@@ -80,7 +80,7 @@ export const buildReportDatePresets = (today = new Date(), timezone = getBrowser
   ] satisfies ReportDatePreset[]
 }
 
-export const formatReportHours = (minutes: number) => `${formatMinutesAsDecimalHours(minutes)} hrs`
+export const formatReportHours = (minutes: number) => formatDurationLabel(minutes, 'hours-decimal')
 
 export const formatReportDateTime = (iso: string, timezone: string) =>
   new Date(iso).toLocaleString('en-US', {

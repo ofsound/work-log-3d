@@ -22,7 +22,7 @@ import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
 import {
   findProject,
   findProjectName,
-  getDurationMinutesLabel,
+  getTimeBoxDurationMinutes,
   getWorklogErrorMessage,
 } from '~~/shared/worklog'
 
@@ -95,7 +95,7 @@ const tagEntries = computed(() => {
 })
 
 const timeBoxDuration = computed(() =>
-  timeBox.value ? getDurationMinutesLabel(timeBox.value) : '0m',
+  timeBox.value ? getTimeBoxDurationMinutes(timeBox.value) : 0,
 )
 
 const sessionStartMetaLabel = computed(() => {
@@ -224,13 +224,14 @@ const isOverviewVariant = computed(() => props.variant === 'overview')
             >
               <HighlightedText :text="projectName" :tokens="highlightTokens" />
             </div>
-            <div
+            <DurationPill
               v-if="variant !== 'project'"
-              class="inline-flex rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+              format="minutes"
+              :minutes="timeBoxDuration"
               :style="projectBadgeStyle"
-            >
-              {{ timeBoxDuration }}
-            </div>
+              tone="project"
+              variant="compact"
+            />
           </div>
           <div
             v-if="variant !== 'sessions-day' && !isOverviewVariant && sessionStartMetaLabel"
@@ -287,11 +288,14 @@ const isOverviewVariant = computed(() => props.variant === 'overview')
     </div>
     <div class="pb-2 font-data">
       <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
-      <span
-        class="ml-2 inline-flex shrink-0 items-center rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+      <DurationPill
+        class="ml-2 shrink-0"
+        format="minutes"
+        :minutes="timeBoxDuration"
         :style="projectBadgeStyle"
-        >{{ timeBoxDuration }}</span
-      >
+        tone="project"
+        variant="compact"
+      />
     </div>
   </ContainerCard>
 </template>

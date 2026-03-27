@@ -15,7 +15,7 @@ import {
   addMinutes,
   buildDaySegmentLayouts,
   formatDateKey,
-  getDurationMinutesLabel,
+  getTimeBoxDurationMinutes,
   getMinutesSinceStartOfDay,
   getStartOfDay,
   isSameDay,
@@ -534,7 +534,7 @@ const getDurationBadgeStyle = (projectId: string) => {
 }
 
 /** During top/bottom resize, show the preview duration; otherwise the saved session duration. */
-const getSessionDurationLabel = (layout: TimeBoxDaySegmentLayout) => {
+const getSessionDurationMinutes = (layout: TimeBoxDaySegmentLayout) => {
   const state = interactionState.value
   const preview = previewEvent.value
 
@@ -542,11 +542,11 @@ const getSessionDurationLabel = (layout: TimeBoxDaySegmentLayout) => {
     const { startTime, endTime } = preview.input
 
     if (startTime && endTime) {
-      return getDurationMinutesLabel({ ...state.timeBox, startTime, endTime })
+      return getTimeBoxDurationMinutes({ ...state.timeBox, startTime, endTime })
     }
   }
 
-  return getDurationMinutesLabel(layout.timeBox)
+  return getTimeBoxDurationMinutes(layout.timeBox)
 }
 
 const formatHourLabel = (hour: number) =>
@@ -810,12 +810,13 @@ onBeforeUnmount(() => {
                 <div class="min-w-0 flex-1 truncate text-sm leading-none font-bold">
                   {{ getProjectName(layout.timeBox.project) }}
                 </div>
-                <div
-                  class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                <DurationPill
+                  format="minutes"
+                  :minutes="getSessionDurationMinutes(layout)"
                   :style="getDurationBadgeStyle(layout.timeBox.project)"
-                >
-                  {{ getSessionDurationLabel(layout) }}
-                </div>
+                  tone="project"
+                  variant="compact"
+                />
               </div>
 
               <button
@@ -957,12 +958,13 @@ onBeforeUnmount(() => {
                       <div class="min-w-0 flex-1 truncate text-sm leading-none font-bold">
                         {{ getProjectName(layout.timeBox.project) }}
                       </div>
-                      <div
-                        class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                      <DurationPill
+                        format="minutes"
+                        :minutes="getSessionDurationMinutes(layout)"
                         :style="getDurationBadgeStyle(layout.timeBox.project)"
-                      >
-                        {{ getSessionDurationLabel(layout) }}
-                      </div>
+                        tone="project"
+                        variant="compact"
+                      />
                     </div>
 
                     <button

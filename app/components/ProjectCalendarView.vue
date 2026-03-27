@@ -11,7 +11,7 @@ import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/projec
 import type { Project, TimeBox, TimeBoxInput, YearHeatmapMonth } from '~~/shared/worklog'
 import {
   formatDateKey,
-  getDurationMinutesLabel,
+  getTimeBoxDurationMinutes,
   isSameDay,
   moveTimeBoxToDay,
   parseDateKey,
@@ -255,8 +255,6 @@ const formatSegmentTime = (date: Date) =>
     minute: '2-digit',
   })
 
-const getSegmentDuration = (timeBox: TimeBox) => getDurationMinutesLabel(timeBox)
-
 const handleSegmentDragStart = (timeBox: TimeBox, event: DragEvent) => {
   if (!event.dataTransfer) {
     return
@@ -372,12 +370,14 @@ const handleSegmentDragEnd = () => {
                       <span class="min-w-0 truncate font-semibold">{{
                         formatSegmentTime(segment.segmentStart)
                       }}</span>
-                      <span
-                        class="shrink-0 rounded-full border px-1.5 py-px text-[10px] leading-none font-semibold"
+                      <DurationPill
+                        class="shrink-0"
+                        format="minutes"
+                        :minutes="getTimeBoxDurationMinutes(segment.timeBox)"
                         :style="durationBadgeStyle"
-                      >
-                        {{ getSegmentDuration(segment.timeBox) }}
-                      </span>
+                        tone="project"
+                        variant="compact"
+                      />
                     </div>
                   </button>
 
