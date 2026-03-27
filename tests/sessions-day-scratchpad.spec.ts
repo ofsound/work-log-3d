@@ -156,12 +156,27 @@ const SessionsSidePanelStub = defineComponent({
   },
 })
 
+const SessionsWorkspaceHeaderStub = defineComponent({
+  emits: ['navigatePeriod'],
+  setup(_props, { emit }) {
+    return () =>
+      h('div', [
+        h('button', {
+          'aria-label': 'Next period',
+          onClick: () => emit('navigatePeriod', 1),
+        }),
+      ])
+  },
+})
+
 const pageStubs = {
   AppSegmentedControl: true,
+  ContainerCard: true,
   SessionListFilterPanel: true,
   SessionsDayView: SessionsDayViewStub,
   SessionsMonthView: true,
   SessionsSidePanel: SessionsSidePanelStub,
+  SessionsWorkspaceHeader: SessionsWorkspaceHeaderStub,
   WorkspaceSidebarLayout: true,
   SessionsWeekView: true,
   SessionsWorkspaceShell: SessionsWorkspaceShellStub,

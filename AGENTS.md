@@ -14,6 +14,7 @@
 - Prefer the smallest change that fully solves the task.
 - Keep edits surgical. Do not refactor unrelated code.
 - Verify the result with the repo's scripts before finishing.
+- Keep `app/pages/**` thin: page files should primarily declare page metadata and render a workspace component. Route orchestration, Firestore loading, keyboard/global listeners, and mutation flows belong in focused composables used by the workspace component.
 
 ## Project Stack
 

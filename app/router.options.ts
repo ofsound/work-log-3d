@@ -1,8 +1,7 @@
 import { createMemoryHistory, createWebHashHistory, createWebHistory } from 'vue-router'
+import type { RouterConfig } from 'nuxt/schema'
 
 import { getRouterHistoryMode } from '~/utils/router-history'
-
-import type { RouterConfig } from '@nuxt/schema'
 
 export default <RouterConfig>{
   history: (base) => {

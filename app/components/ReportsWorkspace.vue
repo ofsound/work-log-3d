@@ -1,310 +1,49 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { useReportsDraft } from '~/composables/useReportsDraft'
+import { useReportsPreviewData } from '~/composables/useReportsPreviewData'
+import { useReportsPublishing } from '~/composables/useReportsPublishing'
 
-import { useCurrentUser, useFirebaseAuth } from '#imports'
-import { Timestamp, orderBy, query, where } from 'firebase/firestore'
-import { useCollection } from 'vuefire'
-
-import {
-  buildReportDatePresets,
-  cloneReportInput,
-  createDefaultBrowserReportInput,
-} from '~/utils/report-ui'
-import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
-import { useUserSettings } from '~/composables/useUserSettings'
-import { useWorklogRepository } from '~/composables/useWorklogRepository'
-import { getPublicReportPath } from '~/utils/worklog-routes'
-import type {
-  FirebaseProjectDocument,
-  FirebaseReportDocument,
-  FirebaseTagDocument,
-  FirebaseTimeBoxDocument,
-} from '~/utils/worklog-firebase'
-import { toProjects, toReports, toTags, toTimeBoxes } from '~/utils/worklog-firebase'
-import {
-  buildReportSnapshot,
-  getReportRange,
-  getWorklogErrorMessage,
-  sortNamedEntities,
-  validateReportInput,
-} from '~~/shared/worklog'
-
-const auth = useFirebaseAuth()
-const user = useCurrentUser()
-const repositories = useWorklogRepository()
-const { hideTags } = useUserSettings()
-const { reportsCollection, projectsCollection, tagsCollection, timeBoxesCollection } =
-  useFirestoreCollections()
-
-const selectedReportId = ref('')
-const lastLoadedReportId = ref('')
-const draft = ref(createDefaultBrowserReportInput())
-const mutationErrorMessage = ref('')
-const isSaving = ref(false)
-const isPublishing = ref(false)
-const isUnpublishing = ref(false)
-const isCopyingLink = ref(false)
-
-const reportsQuery = computed(() =>
-  reportsCollection.value ? query(reportsCollection.value, orderBy('updatedAt', 'desc')) : null,
-)
-const rawReports = useCollection(reportsQuery, {
-  ssrKey: 'reports-workspace-reports',
+const draftState = useReportsDraft()
+const previewData = useReportsPreviewData({
+  draft: draftState.draft,
+  selectedReport: draftState.selectedReport,
+  sortedProjects: draftState.sortedProjects,
+  sortedTags: draftState.sortedTags,
 })
-const rawProjects = useCollection(projectsCollection)
-const rawTags = useCollection(tagsCollection)
-
-const reports = computed(() =>
-  toReports(rawReports.value as FirebaseReportDocument[]).sort(
-    (left, right) =>
-      (right.updatedAt?.valueOf() ?? 0) - (left.updatedAt?.valueOf() ?? 0) ||
-      left.title.localeCompare(right.title),
-  ),
-)
-const sortedProjects = computed(() =>
-  sortNamedEntities(toProjects(rawProjects.value as FirebaseProjectDocument[])),
-)
-const sortedTags = computed(() => sortNamedEntities(toTags(rawTags.value as FirebaseTagDocument[])))
-const selectedReport = computed(
-  () => reports.value.find((report) => report.id === selectedReportId.value) ?? null,
-)
-const previewRange = computed(() => {
-  try {
-    return getReportRange(draft.value.filters, draft.value.timezone)
-  } catch {
-    return null
-  }
+const publishing = useReportsPublishing({
+  canPublish: previewData.canPublish,
+  draft: draftState.draft,
+  selectedReport: draftState.selectedReport,
+  selectedReportId: draftState.selectedReportId,
+  shareLink: previewData.shareLink,
 })
-const previewQuery = computed(() => {
-  const range = previewRange.value
 
-  if (!timeBoxesCollection.value) {
-    return null
-  }
-
-  if (!range) {
-    return query(timeBoxesCollection.value, orderBy('startTime', 'asc'))
-  }
-
-  return query(
-    timeBoxesCollection.value,
-    where('startTime', '<', Timestamp.fromDate(range.end)),
-    where('endTime', '>', Timestamp.fromDate(range.start)),
-    orderBy('startTime', 'asc'),
-    orderBy('endTime', 'asc'),
-  )
-})
-const previewTimeBoxes = useCollection(previewQuery, {
-  ssrKey: 'reports-workspace-preview-time-boxes',
-})
-const previewSnapshot = computed(() => {
-  try {
-    return buildReportSnapshot({
-      filters: draft.value.filters,
-      timezone: draft.value.timezone,
-      projects: sortedProjects.value,
-      tags: sortedTags.value,
-      timeBoxes: toTimeBoxes(previewTimeBoxes.value as FirebaseTimeBoxDocument[]),
-    })
-  } catch {
-    return null
-  }
-})
-const datePresets = computed(() => buildReportDatePresets(new Date(), draft.value.timezone))
-const shareLink = computed(() => {
-  const token = selectedReport.value?.shareToken
-
-  if (!token || typeof window === 'undefined') {
-    return ''
-  }
-
-  return new URL(getPublicReportPath(token), window.location.origin).toString()
-})
-const canPublish = computed(() => previewSnapshot.value !== null)
-const hasHiddenLegacyTagFilters = computed(
-  () => hideTags.value && draft.value.filters.tagIds.length > 0,
-)
-
-const loadDraftFromSelectedReport = () => {
-  if (selectedReport.value) {
-    draft.value = cloneReportInput(selectedReport.value)
-    lastLoadedReportId.value = selectedReport.value.id
-    return
-  }
-}
-
-watch(
+const {
+  applyDatePreset,
+  datePresets,
+  draft,
+  hasHiddenLegacyTagFilters,
+  hideTags,
   reports,
-  (nextReports) => {
-    if (nextReports.length === 0) {
-      selectedReportId.value = ''
-      lastLoadedReportId.value = ''
-      draft.value = createDefaultBrowserReportInput()
-      return
-    }
-
-    if (
-      !selectedReportId.value ||
-      !nextReports.some((report) => report.id === selectedReportId.value)
-    ) {
-      selectedReportId.value = nextReports[0]!.id
-    }
-  },
-  { immediate: true },
-)
-
-watch(selectedReport, (report) => {
-  mutationErrorMessage.value = ''
-
-  if (!report) {
-    return
-  }
-
-  if (report.id !== lastLoadedReportId.value) {
-    loadDraftFromSelectedReport()
-  }
-})
-
-const setDraftSelection = (type: 'projectIds' | 'tagIds', id: string, checked: boolean) => {
-  const nextValues = new Set(draft.value.filters[type])
-
-  if (checked) {
-    nextValues.add(id)
-  } else {
-    nextValues.delete(id)
-  }
-
-  draft.value = {
-    ...draft.value,
-    filters: {
-      ...draft.value.filters,
-      [type]: [...nextValues],
-    },
-  }
-}
-
-const applyDatePreset = (dateStart: string, dateEnd: string) => {
-  draft.value = {
-    ...draft.value,
-    filters: {
-      ...draft.value.filters,
-      dateStart,
-      dateEnd,
-    },
-  }
-}
-
-const buildReportPayload = () => validateReportInput(cloneReportInput(draft.value))
-
-const ensureSavedReport = async () => {
-  const payload = buildReportPayload()
-  isSaving.value = true
-
-  try {
-    mutationErrorMessage.value = ''
-
-    if (selectedReport.value) {
-      await repositories.reports.update(selectedReport.value.id, payload)
-      return selectedReport.value.id
-    }
-
-    const createdId = await repositories.reports.create(payload)
-    selectedReportId.value = createdId
-    return createdId
-  } catch (error) {
-    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save the report.')
-    throw error
-  } finally {
-    isSaving.value = false
-  }
-}
-
-const createSavedReport = async () => {
-  isSaving.value = true
-
-  try {
-    mutationErrorMessage.value = ''
-    const createdId = await repositories.reports.create(createDefaultBrowserReportInput())
-    selectedReportId.value = createdId
-  } catch (error) {
-    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to create the report.')
-  } finally {
-    isSaving.value = false
-  }
-}
-
-const getAuthHeader = async () => {
-  const currentUser = user.value
-
-  if (!auth || !currentUser) {
-    throw new Error('Authentication required.')
-  }
-
-  return {
-    authorization: `Bearer ${await currentUser.getIdToken()}`,
-  }
-}
-
-const publishReport = async () => {
-  if (!canPublish.value) {
-    mutationErrorMessage.value = 'Resolve the report filters before publishing.'
-    return
-  }
-
-  isPublishing.value = true
-
-  try {
-    const reportId = await ensureSavedReport()
-
-    await $fetch(`/api/reports/${encodeURIComponent(reportId)}/publish`, {
-      method: 'POST',
-      headers: await getAuthHeader(),
-    })
-    mutationErrorMessage.value = ''
-  } catch (error) {
-    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to publish the report.')
-  } finally {
-    isPublishing.value = false
-  }
-}
-
-const unpublishReport = async () => {
-  if (!selectedReport.value) {
-    return
-  }
-
-  isUnpublishing.value = true
-
-  try {
-    await $fetch(`/api/reports/${encodeURIComponent(selectedReport.value.id)}/unpublish`, {
-      method: 'POST',
-      headers: await getAuthHeader(),
-    })
-    mutationErrorMessage.value = ''
-  } catch (error) {
-    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to unpublish the report.')
-  } finally {
-    isUnpublishing.value = false
-  }
-}
-
-const copyShareLink = async () => {
-  if (!shareLink.value || !navigator.clipboard) {
-    mutationErrorMessage.value = 'Copying links is not available in this browser.'
-    return
-  }
-
-  isCopyingLink.value = true
-
-  try {
-    await navigator.clipboard.writeText(shareLink.value)
-    mutationErrorMessage.value = ''
-  } catch {
-    mutationErrorMessage.value = 'Unable to copy the public link.'
-  } finally {
-    isCopyingLink.value = false
-  }
-}
+  selectedReport,
+  selectedReportId,
+  setDraftSelection,
+  sortedProjects,
+  sortedTags,
+} = draftState
+const { canPublish, previewSnapshot, shareLink } = previewData
+const {
+  copyShareLink,
+  createSavedReport,
+  ensureSavedReport,
+  isCopyingLink,
+  isPublishing,
+  isSaving,
+  isUnpublishing,
+  mutationErrorMessage,
+  publishReport,
+  unpublishReport,
+} = publishing
 </script>
 
 <template>

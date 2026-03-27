@@ -3,9 +3,9 @@ import { createNamedEntityPayload, validateTimeBoxInput } from '../shared/worklo
 import type { EntityId, TimeBoxInput } from '../shared/worklog/types'
 
 export const LEGACY_IMPORT_EMAIL = 'ben@modernthings.net'
-export const LEGACY_SOURCE_PROJECT_ID = 'work-log-3806c'
-export const LEGACY_SOURCE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${LEGACY_SOURCE_PROJECT_ID}/databases/(default)`
-export const LEGACY_IMPORT_ID_PREFIX = `legacy-${LEGACY_SOURCE_PROJECT_ID}`
+const LEGACY_SOURCE_PROJECT_ID = 'work-log-3806c'
+const LEGACY_SOURCE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${LEGACY_SOURCE_PROJECT_ID}/databases/(default)`
+const LEGACY_IMPORT_ID_PREFIX = `legacy-${LEGACY_SOURCE_PROJECT_ID}`
 
 type LegacyCollectionName = 'projects' | 'tags' | 'timeBoxes'
 type NamedEntityLabel = 'Project' | 'Tag'
@@ -27,13 +27,13 @@ interface FirestoreRestQueryResult {
   document?: FirestoreRestDocument
 }
 
-export interface LegacyNamedEntity {
+interface LegacyNamedEntity {
   id: string
   name: string
   slug: string
 }
 
-export interface LegacyTimeBox {
+interface LegacyTimeBox {
   id: string
   startTime: Date
   endTime: Date
@@ -42,19 +42,19 @@ export interface LegacyTimeBox {
   tagLegacyIds: string[]
 }
 
-export interface LegacyImportDataset {
+interface LegacyImportDataset {
   projects: LegacyNamedEntity[]
   tags: LegacyNamedEntity[]
   timeBoxes: LegacyTimeBox[]
 }
 
-export interface ExistingNamedEntity {
+interface ExistingNamedEntity {
   id: EntityId
   name: string
   slug: string
 }
 
-export interface ResolvedLegacyEntities {
+interface ResolvedLegacyEntities {
   idByLegacyId: Record<string, EntityId>
   entitiesToCreate: Array<{
     id: EntityId
@@ -65,7 +65,7 @@ export interface ResolvedLegacyEntities {
   createdCount: number
 }
 
-export interface ImportedTimeBoxRecord {
+interface ImportedTimeBoxRecord {
   id: EntityId
   input: TimeBoxInput
 }

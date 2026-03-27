@@ -5,11 +5,11 @@ import { dirname, extname, join, normalize, sep } from 'node:path'
 const DEFAULT_DOCUMENT = 'index.html'
 
 /** Stable default so Firebase Auth IndexedDB (origin-scoped) survives app restarts. */
-export const DEFAULT_RENDERER_LISTEN_PORT = 47_821
+const DEFAULT_RENDERER_LISTEN_PORT = 47_821
 
 const MAX_PORT_BIND_ATTEMPTS = 48
 
-export type DesktopRendererServerOptions = {
+type DesktopRendererServerOptions = {
   /**
    * When set, the successfully bound port is written here so the next launch retries the same
    * port first (keeps `http://127.0.0.1:<port>` stable if the default port was previously skipped).

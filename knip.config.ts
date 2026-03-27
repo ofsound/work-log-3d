@@ -13,17 +13,27 @@ const config: KnipConfig = {
     'electron.vite.config.ts',
     'eslint.config.mjs',
     'scripts/**/*.mjs',
+    'tests/mocks/*.ts',
+    'vitest.rules.config.ts',
   ],
   paths: {
-    '~': ['.'],
+    '~/app/*': ['app/*'],
+    '~/electron/*': ['electron/*'],
+    '~/server/*': ['server/*'],
+    '~/shared/*': ['shared/*'],
+    '~/tests/*': ['tests/*'],
+    '~/utils/*': ['app/utils/*'],
+    '~/composables/*': ['app/composables/*'],
+    '~/components/*': ['app/components/*'],
+    '~/icons/*': ['app/icons/*'],
+    '~/stores/*': ['app/stores/*'],
+    '~/assets/*': ['app/assets/*'],
   },
   ignoreBinaries: ['eslint'],
   ignoreDependencies: [
     // Resolved by Nuxt modules; imported in app code but not direct package.json deps
-    'vue-router',
     'vuefire',
     // Used only from npm scripts (no direct import for knip to see)
-    '@vue/test-utils',
     'vue-tsc',
   ],
   ignoreIssues: {

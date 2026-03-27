@@ -1,27 +1,12 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
-import { doc } from 'firebase/firestore'
-
 import ContainerCard from '~/components/ContainerCard.vue'
 
+import { useTimeBoxEditorModel, type TimeBoxEditorProps } from '~/composables/useTimeBoxEditorModel'
+import { useTimeBoxEditorMutations } from '~/composables/useTimeBoxEditorMutations'
 import { getProjectPickerOptionStyle } from '~/utils/project-color-styles'
-import { addMinutesToDatetimeLocal } from '~/utils/minute-vertical-drag'
-import type {
-  FirebaseProjectDocument,
-  FirebaseTagDocument,
-  FirebaseTimeBoxDocument,
-} from '~/utils/worklog-firebase'
-import { toProjects, toTags, toTimeBox } from '~/utils/worklog-firebase'
-import type { TimeBoxInput } from '~~/shared/worklog'
-import {
-  formatLocaleTime,
-  formatSessionTimeHero,
-  formatToDatetimeLocal,
-  getWorklogErrorMessage,
-  projectsForSessionPicker,
-  sortNamedEntities,
-} from '~~/shared/worklog'
+import { formatLocaleTime } from '~~/shared/worklog'
 
 const props = defineProps({
   id: { type: String, default: undefined },
@@ -37,312 +22,42 @@ const props = defineProps({
   createButtonLabel: { type: String, default: 'Log Session' },
   /** Sidebar / calendar side panel: no outer card border, shadow, or extra padding (aside already frames content). */
   embeddedInPanel: { type: Boolean, default: false },
-})
+}) as TimeBoxEditorProps
 
 const emit = defineEmits(['toggleEditor', 'saved'])
 
-const repositories = useWorklogRepository()
-const { confirm } = useConfirmDialog()
-const { show: showOverlayToast } = useOverlayToast()
-const { hideTags } = useUserSettings()
-const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
-
 const timeBoxEditorRef = ref<HTMLElement | null>(null)
-const mutationErrorMessage = ref('')
-
-const dynamicDurationTypingTimer = ref<ReturnType<typeof setTimeout>>()
-
-const allProjects = useCollection(projectsCollection)
-const allTags = useCollection(tagsCollection)
-
-const sortedPickerProjects = computed(() =>
-  sortNamedEntities(
-    projectsForSessionPicker(
-      toProjects(allProjects.value as FirebaseProjectDocument[]),
-      dynamicProject.value,
-    ),
-  ),
-)
-
-const sortedAllTags = computed(() => {
-  return sortNamedEntities(toTags(allTags.value as FirebaseTagDocument[]))
+const mutationState = useTimeBoxEditorMutations({
+  emit,
+  getTimeBoxInput: () => model.getTimeBoxInput(),
+  props,
+  resetTimeBoxEditor: () => model.resetTimeBoxEditor(),
+})
+const model = useTimeBoxEditorModel({
+  clearMutationError: mutationState.clearMutationError,
+  props,
 })
 
-const dynamicStartTime = ref('')
-const dynamicEndTime = ref('')
-const dynamicNotes = ref('')
-const dynamicProject = ref('')
-const dynamicTags = ref<string[]>([])
-
-const dynamicDuration = ref<string | number>('')
-const showLegacyTagNotice = computed(() => hideTags.value && dynamicTags.value.length > 0)
-
-const projectRadiosTwoColumns = computed(() => sortedPickerProjects.value.length > 4)
-const isEditingExistingTimeBox = computed(() => Boolean(props.id))
-
-const sessionTimeHero = computed(() => {
-  if (!dynamicStartTime.value || !dynamicEndTime.value) {
-    return null
-  }
-  return formatSessionTimeHero(new Date(dynamicStartTime.value), new Date(dynamicEndTime.value))
-})
-
-/** Normalize to `datetime-local` shape so inputs stay visually in sync when times change from duration/timer. */
-const datetimeLocalStartModel = computed({
-  get() {
-    const raw = dynamicStartTime.value
-    if (!raw) return ''
-    const parsed = new Date(raw)
-    return Number.isNaN(parsed.getTime()) ? raw : formatToDatetimeLocal(parsed)
-  },
-  set(value: string) {
-    dynamicStartTime.value = value
-  },
-})
-
-const datetimeLocalEndModel = computed({
-  get() {
-    const raw = dynamicEndTime.value
-    if (!raw) return ''
-    const parsed = new Date(raw)
-    return Number.isNaN(parsed.getTime()) ? raw : formatToDatetimeLocal(parsed)
-  },
-  set(value: string) {
-    dynamicEndTime.value = value
-  },
-})
-
-function timeBoxDuration() {
-  const date1 = new Date(dynamicStartTime.value)
-  const date2 = new Date(dynamicEndTime.value)
-
-  const differenceInMilliseconds = date2.getTime() - date1.getTime()
-  const differenceInMinutes = differenceInMilliseconds / (1000 * 60)
-
-  return differenceInMinutes
-}
-
-function syncDynamicDurationFromTimes() {
-  if (!dynamicStartTime.value || !dynamicEndTime.value) {
-    dynamicDuration.value = ''
-    return
-  }
-
-  const durationMinutes = timeBoxDuration()
-  if (!Number.isFinite(durationMinutes)) {
-    dynamicDuration.value = ''
-    return
-  }
-  // Empty string when 0 so the field stays blank after reset / same start+end.
-  dynamicDuration.value = durationMinutes === 0 ? '' : durationMinutes
-}
-
-const applyCreateDefaults = (options?: { preserveNotes?: boolean }) => {
-  dynamicStartTime.value = props.initialStartTime || props.startTimeFromTimer || ''
-  dynamicEndTime.value = props.initialEndTime || props.endTimeFromTimer || ''
-  if (!options?.preserveNotes) {
-    dynamicNotes.value = props.initialNotes
-  }
-  dynamicProject.value = props.initialProject
-  dynamicTags.value = [...props.initialTags]
-  syncDynamicDurationFromTimes()
-}
-
-if (props.id) {
-  const timeBoxDocumentSource = computed(() =>
-    timeBoxesCollection.value ? doc(timeBoxesCollection.value, props.id) : null,
-  )
-  const docBinding = useDocument(timeBoxDocumentSource, {
-    ssrKey: `time-box-editor-${props.id}`,
-  })
-
-  watch(
-    () => docBinding.data.value,
-    (value) => {
-      if (!value) {
-        return
-      }
-
-      const timeBox = toTimeBox(value as FirebaseTimeBoxDocument)
-      dynamicNotes.value = timeBox.notes
-      dynamicStartTime.value = timeBox.startTime ? formatToDatetimeLocal(timeBox.startTime) : ''
-      dynamicEndTime.value = timeBox.endTime ? formatToDatetimeLocal(timeBox.endTime) : ''
-      dynamicProject.value = timeBox.project
-      dynamicTags.value = timeBox.tags
-      syncDynamicDurationFromTimes()
-      mutationErrorMessage.value = ''
-    },
-    { immediate: true },
-  )
-} else {
-  applyCreateDefaults()
-}
-
-const updateTimeBoxDocument = async () => {
-  if (!props.id) return
-
-  const confirmed = await confirm({
-    title: 'Update this session?',
-    message: 'Save your changes to this time box.',
-    confirmLabel: 'Update',
-    variant: 'primary',
-  })
-
-  if (confirmed) {
-    try {
-      mutationErrorMessage.value = ''
-      await repositories.timeBoxes.update(props.id, getTimeBoxInput())
-      emit('saved', props.id)
-      emit('toggleEditor')
-    } catch (error) {
-      mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to update the session.')
-    }
-  } else {
-    mutationErrorMessage.value = ''
-    emit('toggleEditor')
-  }
-}
-
-const createTimeBoxDocument = async () => {
-  try {
-    mutationErrorMessage.value = ''
-    const createdId = await repositories.timeBoxes.create(getTimeBoxInput())
-
-    if (props.resetAfterCreate) {
-      void showOverlayToast({
-        title: 'Session logged successfully',
-        message: 'Your session was saved to the calendar.',
-      })
-      resetTimeBoxEditor()
-    }
-    emit('saved', createdId)
-  } catch (error) {
-    mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save the session.')
-  }
-}
-
-const getTimeBoxInput = (): TimeBoxInput => ({
-  startTime: new Date(dynamicStartTime.value),
-  endTime: new Date(dynamicEndTime.value),
-  notes: dynamicNotes.value,
-  project: dynamicProject.value,
-  tags: dynamicTags.value,
-})
-
-const resetTimeBoxEditor = () => {
-  dynamicStartTime.value = ''
-  dynamicEndTime.value = ''
-  dynamicDuration.value = ''
-  dynamicProject.value = ''
-  dynamicNotes.value = ''
-  dynamicTags.value = []
-  mutationErrorMessage.value = ''
-}
-
-watch(
-  () => props.startTimeFromTimer,
-  (newValue) => {
-    if (props.id) return
-
-    if (newValue) {
-      dynamicStartTime.value = newValue
-    } else {
-      dynamicStartTime.value = props.initialStartTime || ''
-    }
-    mutationErrorMessage.value = ''
-  },
-)
-
-watch(
-  () => props.endTimeFromTimer,
-  (newValue) => {
-    if (props.id) return
-
-    if (newValue) {
-      dynamicEndTime.value = newValue
-    } else {
-      dynamicEndTime.value = props.initialEndTime || ''
-    }
-    mutationErrorMessage.value = ''
-  },
-)
-
-watch(
-  () => [props.initialStartTime, props.initialEndTime, props.initialProject, props.initialTags],
-  () => {
-    if (!props.id) {
-      applyCreateDefaults({ preserveNotes: true })
-    }
-  },
-)
-
-watch(
-  () => props.initialNotes,
-  (nextNotes) => {
-    if (!props.id) {
-      dynamicNotes.value = nextNotes
-    }
-  },
-)
-
-watch(
-  () => [dynamicStartTime.value, dynamicEndTime.value],
-  () => {
-    syncDynamicDurationFromTimes()
-  },
-)
-
-function isDurationFieldEmpty(value: string | number): boolean {
-  return value === '' || value === null || value === undefined
-}
-
-/** Keeps start ≤ end when dragging hero times (minute steps). */
-function clampHeroDragTime(proposed: string, partner: string, role: 'start' | 'end'): string {
-  const proposedMs = new Date(proposed).getTime()
-  const partnerMs = new Date(partner).getTime()
-
-  if (Number.isNaN(proposedMs) || !partner || Number.isNaN(partnerMs)) {
-    return proposed
-  }
-
-  if (role === 'start' && proposedMs > partnerMs) {
-    return formatToDatetimeLocal(new Date(partnerMs))
-  }
-
-  if (role === 'end' && proposedMs < partnerMs) {
-    return formatToDatetimeLocal(new Date(partnerMs))
-  }
-
-  return proposed
-}
-
-watch(
-  () => dynamicDuration.value,
-  () => {
-    if (dynamicStartTime.value) {
-      const tempDate = new Date(dynamicStartTime.value)
-      tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value || 0))
-      dynamicEndTime.value = formatToDatetimeLocal(tempDate)
-    } else {
-      const raw = dynamicDuration.value
-      if (isDurationFieldEmpty(raw)) {
-        clearTimeout(dynamicDurationTypingTimer.value)
-        dynamicDurationTypingTimer.value = undefined
-        return
-      }
-      clearTimeout(dynamicDurationTypingTimer.value)
-      dynamicDurationTypingTimer.value = setTimeout(() => {
-        const now = new Date()
-        const tempDate = new Date(
-          now.setMinutes(now.getMinutes() - parseInt(String(dynamicDuration.value || 0))),
-        )
-        dynamicStartTime.value = formatToDatetimeLocal(tempDate)
-        tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value || 0))
-        dynamicEndTime.value = formatToDatetimeLocal(tempDate)
-      }, 400)
-    }
-  },
-)
+const {
+  clampHeroDragTime,
+  datetimeLocalEndModel,
+  datetimeLocalStartModel,
+  dynamicDuration,
+  dynamicDurationTypingTimer,
+  dynamicEndTime,
+  dynamicNotes,
+  dynamicProject,
+  dynamicStartTime,
+  dynamicTags,
+  hideTags,
+  isEditingExistingTimeBox,
+  projectRadiosTwoColumns,
+  sessionTimeHero,
+  showLegacyTagNotice,
+  sortedAllTags,
+  sortedPickerProjects,
+} = model
+const { createTimeBoxDocument, mutationErrorMessage, updateTimeBoxDocument } = mutationState
 
 let durationDragBaselineMinutes = 0
 
@@ -357,11 +72,11 @@ const { dragActive: durationMinuteDragActive, onPointerDown: onDurationMinutePoi
     onDrag(deltaMinutes) {
       const next = Math.max(0, durationDragBaselineMinutes + deltaMinutes)
       dynamicDuration.value = next === 0 ? '' : next
-      mutationErrorMessage.value = ''
+      mutationState.clearMutationError()
     },
     onSessionEnd({ didDragBeyondThreshold }) {
       if (didDragBeyondThreshold) {
-        mutationErrorMessage.value = ''
+        mutationState.clearMutationError()
       }
     },
   })
@@ -388,11 +103,11 @@ const { dragActive: startTimeMinuteDragActive, onPointerDown: onStartTimeMinuteP
       dynamicStartTime.value = dynamicEndTime.value
         ? clampHeroDragTime(proposed, dynamicEndTime.value, 'start')
         : proposed
-      mutationErrorMessage.value = ''
+      mutationState.clearMutationError()
     },
     onSessionEnd({ didDragBeyondThreshold }) {
       if (didDragBeyondThreshold) {
-        mutationErrorMessage.value = ''
+        mutationState.clearMutationError()
       }
     },
   })
@@ -419,11 +134,11 @@ const { dragActive: endTimeMinuteDragActive, onPointerDown: onEndTimeMinutePoint
       dynamicEndTime.value = dynamicStartTime.value
         ? clampHeroDragTime(proposed, dynamicStartTime.value, 'end')
         : proposed
-      mutationErrorMessage.value = ''
+      mutationState.clearMutationError()
     },
     onSessionEnd({ didDragBeyondThreshold }) {
       if (didDragBeyondThreshold) {
-        mutationErrorMessage.value = ''
+        mutationState.clearMutationError()
       }
     },
   })

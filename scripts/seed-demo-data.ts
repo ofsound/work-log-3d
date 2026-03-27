@@ -33,13 +33,13 @@ type TagBlueprint = {
   phrase: string
 }
 
-export interface DemoSeedEntity {
+interface DemoSeedEntity {
   key: string
   name: string
   slug: string
 }
 
-export interface DemoSeedSession {
+interface DemoSeedSession {
   startTime: Date
   endTime: Date
   notes: string
@@ -47,18 +47,18 @@ export interface DemoSeedSession {
   tagKeys: string[]
 }
 
-export interface DemoSeedDataset {
+interface DemoSeedDataset {
   projects: DemoSeedEntity[]
   tags: DemoSeedEntity[]
   sessions: DemoSeedSession[]
 }
 
-export interface BuildDemoSeedDatasetOptions {
+interface BuildDemoSeedDatasetOptions {
   endDate?: Date
   seed?: number
 }
 
-export interface DemoSeedTimeBoxContext {
+interface DemoSeedTimeBoxContext {
   projectIdByKey: Record<string, string>
   tagIdByKey: Record<string, string>
 }
