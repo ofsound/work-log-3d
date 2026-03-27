@@ -27,7 +27,7 @@ export default defineNuxtConfig({
         buildAssetsDir: 'assets/',
       }
     : undefined,
-  modules: ['@nuxt/eslint', '@pinia/nuxt', '@nuxtjs/color-mode', 'nuxt-vuefire'],
+  modules: ['@nuxt/eslint', '@nuxtjs/color-mode', 'nuxt-vuefire'],
   colorMode: {
     classSuffix: '',
     fallback: 'light',

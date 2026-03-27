@@ -24,8 +24,9 @@ alwaysApply: false
 
 ## State
 
-- Prefer Pinia stores for global state
+- Prefer local component state and composables by default
 - Use `useState` for SSR-friendly, request-scoped state when appropriate
+- Add a store only when a clearly shared app-wide state domain justifies it
 
 ## Data fetching
 

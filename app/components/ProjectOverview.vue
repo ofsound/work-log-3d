@@ -48,7 +48,7 @@ const projectPathSegment = computed(() => {
   return raw ?? ''
 })
 const repositories = useWorklogRepository()
-const store = useStore()
+const projectOverviewSortDirection = 'desc'
 
 const rawProjectSource = computed(() =>
   projectsCollection.value ? doc(projectsCollection.value, props.id) : null,
@@ -85,7 +85,7 @@ const rawProjectTimeBoxes = computed(() =>
   toTimeBoxes(timeBoxes.value as FirebaseTimeBoxDocument[]),
 )
 const projectTimeBoxes = computed(() =>
-  sortTimeBoxesByStart(rawProjectTimeBoxes.value, store.sortOrderReversed ? 'desc' : 'asc'),
+  sortTimeBoxesByStart(rawProjectTimeBoxes.value, projectOverviewSortDirection),
 )
 const project = computed(() =>
   rawProject.value ? toProject(rawProject.value as FirebaseProjectDocument) : null,

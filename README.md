@@ -8,7 +8,6 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Vue 3
 - TypeScript
 - Tailwind CSS v4
-- Pinia
 - @nuxtjs/color-mode
 - Firebase Authentication
 - Firestore via `nuxt-vuefire`
@@ -29,6 +28,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Projects and tags cannot be deleted while sessions still reference them
 - Projects can be marked **archived** on `/project/:segment/edit`; archived projects are grouped under “Archived” on `/projects`, omitted from session project pickers and from the project dropdown on desktop tray shortcuts in `/settings`, and still appear elsewhere (sessions history, reports, filters, etc.) for now
 - Shared validation lives in `shared/worklog/validation.ts`
+- Favor local component state, composables, and Nuxt `useState` for shared UI state; add a store only when a true app-wide domain emerges
 - Firestore rules in `firestore.rules` must match the current document shape
 - Theme preference is stored in `localStorage` per Firebase user, with a guest fallback before auth resolves
 - `/projects` defaults to **grid**; add **`?view=list`** for list. Grid leaves `view` out of the URL; toggling uses `router.replace`. **`ProjectsManagerProject` uses a `viewMode` prop** because Nuxt exposes the route layout name as `layout` in templates, which would shadow a prop named `layout`

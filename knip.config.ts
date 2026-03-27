@@ -20,7 +20,6 @@ const config: KnipConfig = {
   ignoreBinaries: ['eslint'],
   ignoreDependencies: [
     // Resolved by Nuxt modules; imported in app code but not direct package.json deps
-    'pinia',
     'vue-router',
     'vuefire',
     // Used only from npm scripts (no direct import for knip to see)

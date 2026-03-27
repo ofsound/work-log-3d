@@ -19,7 +19,7 @@
 
 - Framework: Nuxt 4, Vue 3, TypeScript
 - Styling: Tailwind CSS with theme tokens in `app/assets/css/main.css`
-- State: Pinia for global UI state; `useState` for SSR-safe request-scoped state
+- State: prefer local state, composables, and SSR-safe `useState`; add a store only for clearly app-wide domains
 - Database: Firebase Firestore via `nuxt-vuefire`
 - Desktop: Electron shell with shared timer logic in `shared/worklog`
 
