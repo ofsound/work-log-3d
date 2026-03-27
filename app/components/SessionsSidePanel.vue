@@ -125,7 +125,7 @@ defineExpose({
         <button
           v-if="showOverlaySessionHeader"
           type="button"
-          class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition"
+          class="inline-flex cursor-pointer items-center gap-1 rounded-md py-2 pr-3 pl-0 text-sm font-semibold transition"
           :class="
             props.overlay
               ? 'text-text-muted hover:bg-overlay-inverse hover:text-text'

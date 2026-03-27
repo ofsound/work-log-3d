@@ -41,6 +41,7 @@ const props = defineProps({
   compact: { type: Boolean, default: false },
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   hideProjectChip: { type: Boolean, default: false },
+  embeddedInPanel: { type: Boolean, default: false },
   flushTop: { type: Boolean, default: false },
   opaqueSurface: { type: Boolean, default: false },
   hideActions: { type: Boolean, default: false },
@@ -234,7 +235,12 @@ const isOverviewVariant = computed(() => props.variant === 'overview')
             />
           </div>
           <div
-            v-if="variant !== 'sessions-day' && !isOverviewVariant && sessionStartMetaLabel"
+            v-if="
+              variant !== 'sessions-day' &&
+              !isOverviewVariant &&
+              !embeddedInPanel &&
+              sessionStartMetaLabel
+            "
             class="w-full font-medium text-text"
           >
             {{ sessionStartMetaLabel }}

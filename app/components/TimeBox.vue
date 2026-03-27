@@ -39,6 +39,7 @@ const toggleEditor = () => {
         :id
         :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1' : undefined"
         :compact="props.compact"
+        :embedded-in-panel="embeddedInPanel"
         :flush-top="props.flushTop"
         :highlight-tokens="highlightTokens"
         :hide-actions="hideActions"
