@@ -91,7 +91,7 @@
   --color-badge-duration: light-dark(var(--color-emerald-800), var(--color-emerald-300));
   --color-badge-duration-text: light-dark(var(--color-white), var(--color-emerald-950));
   --color-badge-neutral: light-dark(var(--color-zinc-100), var(--color-zinc-800));
-  --color-chip: light-dark(var(--color-gray-300), var(--color-zinc-700));
+  --color-chip: light-dark(var(--color-gray-100), var(--color-zinc-800));
   --color-chip-text: light-dark(var(--color-zinc-900), var(--color-zinc-100));
   --color-overview-start: light-dark(var(--color-slate-800), var(--color-slate-900));
   --color-overview-end: light-dark(var(--color-zinc-900), var(--color-zinc-950));

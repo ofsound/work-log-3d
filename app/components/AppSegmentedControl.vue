@@ -34,7 +34,8 @@ const SEGMENTED_CONTROL_SIZE_CLASS_NAMES = {
   },
 } as const
 
-const ACTIVE_BUTTON_CLASS_NAME = 'cursor-pointer bg-header text-header-text'
+const ACTIVE_BUTTON_CLASS_NAME =
+  'cursor-pointer bg-[light-dark(color-mix(in_srgb,var(--color-surface)_74%,var(--color-header)_26%),color-mix(in_srgb,var(--color-header)_92%,var(--color-black)_8%))] text-[light-dark(var(--color-zinc-900),var(--color-zinc-100))]'
 const INACTIVE_BUTTON_CLASS_NAME =
   'cursor-pointer text-text-muted hover:text-text hover:bg-[linear-gradient(135deg,_color-mix(in_srgb,var(--color-surface-strong)_96%,var(--color-header)_4%),_color-mix(in_srgb,var(--color-surface-strong)_92%,var(--color-header)_8%))]'
 

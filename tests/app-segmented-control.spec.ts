@@ -48,8 +48,12 @@ describe('AppSegmentedControl', () => {
     expect(activeButton.classes()).toContain('px-4')
     expect(activeButton.classes()).toContain('py-2')
     expect(activeButton.classes()).toContain('text-sm')
-    expect(activeButton.classes()).toContain('bg-header')
-    expect(activeButton.classes()).toContain('text-header-text')
+    expect(activeButton.classes()).toContain(
+      'bg-[light-dark(color-mix(in_srgb,var(--color-surface)_74%,var(--color-header)_26%),color-mix(in_srgb,var(--color-header)_92%,var(--color-black)_8%))]',
+    )
+    expect(activeButton.classes()).toContain(
+      'text-[light-dark(var(--color-zinc-900),var(--color-zinc-100))]',
+    )
     expect(activeButton.attributes('aria-pressed')).toBe('true')
     expect(inactiveButton.classes()).toContain('text-text-muted')
     expect(inactiveButton.classes()).toContain(
