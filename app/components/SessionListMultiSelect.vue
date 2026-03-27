@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
             />
             <span
               v-if="option.swatchStyle"
-              class="size-3.5 shrink-0 rounded-full border border-white/25"
+              class="size-3.5 shrink-0 rounded-full border border-overlay-border-strong"
               :style="option.swatchStyle"
             ></span>
             <span class="min-w-0 truncate">{{ option.label }}</span>

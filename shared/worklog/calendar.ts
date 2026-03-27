@@ -46,6 +46,15 @@ export interface YearHeatmapMonth {
   weeks: Array<Array<YearHeatmapCell | null>>
 }
 
+export interface HomeActivityWeek {
+  weekStart: Date
+  weekEnd: Date
+  totalMinutes: number
+  sessionCount: number
+  hasActivity: boolean
+  isCurrentWeek: boolean
+}
+
 export const YEAR_HEATMAP_INTENSITY_THRESHOLDS = [120, 240, 360, 480] as const
 
 const getStartOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1)
@@ -483,6 +492,76 @@ export const buildYearHeatmapMonths = (
   }
 
   return months
+}
+
+/** Continuous Monday-start weekly totals from the first logged week through the week containing `today`. */
+export const buildHomeActivityWeeks = (
+  timeBoxes: TimeBox[],
+  today = new Date(),
+): HomeActivityWeek[] => {
+  const normalizedToday = getStartOfDay(today)
+  const { firstLoggedDay } = buildTimeBoxDaySummaryMap(timeBoxes)
+
+  if (!firstLoggedDay) {
+    return []
+  }
+
+  const startWeek = getStartOfWeek(firstLoggedDay)
+  const currentWeek = getStartOfWeek(normalizedToday)
+  const summaryByWeekKey = new Map<
+    string,
+    {
+      weekStart: Date
+      totalMinutes: number
+      sessionIds: Set<string>
+    }
+  >()
+
+  timeBoxes.forEach((timeBox) => {
+    if (!timeBox.startTime || !timeBox.endTime) {
+      return
+    }
+
+    splitTimeBoxIntoDaySegments(timeBox, {
+      start: timeBox.startTime,
+      end: timeBox.endTime,
+    }).forEach((segment) => {
+      const weekStart = getStartOfWeek(segment.dayStart)
+      const key = formatDateKey(weekStart)
+      const current = summaryByWeekKey.get(key) ?? {
+        weekStart,
+        totalMinutes: 0,
+        sessionIds: new Set<string>(),
+      }
+
+      current.totalMinutes +=
+        (segment.segmentEnd.valueOf() - segment.segmentStart.valueOf()) / 60_000
+      current.sessionIds.add(timeBox.id)
+      summaryByWeekKey.set(key, current)
+    })
+  })
+
+  const weeks: HomeActivityWeek[] = []
+  let cursor = startWeek
+
+  while (cursor.valueOf() <= currentWeek.valueOf()) {
+    const key = formatDateKey(cursor)
+    const summary = summaryByWeekKey.get(key)
+    const totalMinutes = summary?.totalMinutes ?? 0
+
+    weeks.push({
+      weekStart: cursor,
+      weekEnd: addDays(cursor, WEEK_DAY_COUNT - 1),
+      totalMinutes,
+      sessionCount: summary?.sessionIds.size ?? 0,
+      hasActivity: totalMinutes > 0,
+      isCurrentWeek: isSameDay(cursor, currentWeek),
+    })
+
+    cursor = addDays(cursor, WEEK_DAY_COUNT)
+  }
+
+  return weeks
 }
 
 export const sortTimeBoxesByStartAscending = (timeBoxes: TimeBox[]) =>

@@ -57,7 +57,7 @@ const MODE_TOGGLE_INACTIVE_PROJECT_CLASS =
 
 const outlineBadgeClassName = computed(() =>
   props.headerStyle.backgroundImage
-    ? 'rounded-full border border-white/20 px-3 py-1.5 text-sm font-semibold'
+    ? 'rounded-full border border-overlay-border px-3 py-1.5 text-sm font-semibold'
     : 'rounded-full border border-border px-3 py-1.5 text-sm font-semibold text-text-muted',
 )
 

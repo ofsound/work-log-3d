@@ -22,7 +22,7 @@ export const APP_BUTTON_VARIANT_CLASS_NAMES = {
     'border border-transparent bg-button-primary text-button-primary-text hover:bg-button-primary-hover',
   secondary:
     'border border-button-secondary-border bg-button-secondary text-button-secondary-text hover:border-border-strong hover:bg-button-secondary-hover',
-  danger: 'border border-transparent bg-danger text-white hover:opacity-90',
+  danger: 'border border-transparent bg-danger text-text-inverse hover:opacity-90',
 } satisfies Record<AppButtonVariant, string>
 
 /** Layout and typography per size (radius applied separately from shape). */

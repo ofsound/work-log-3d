@@ -1,11 +1,28 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { definePageMeta } from '#imports'
+import { useCollection } from 'vuefire'
+
+import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
+import { toTimeBoxes } from '~/utils/worklog-firebase'
+import type { FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
+import { buildHomeActivityWeeks } from '~~/shared/worklog'
 
 definePageMeta({ layout: 'main-bleed' })
+
+const { timeBoxesCollection } = useFirestoreCollections()
+const allTimeBoxes = useCollection(timeBoxesCollection)
+
+const resolvedTimeBoxes = computed(() =>
+  toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
+)
+const homeActivityWeeks = computed(() =>
+  buildHomeActivityWeeks(resolvedTimeBoxes.value, new Date()),
+)
 </script>
 
 <template>
-  <div class="flex h-3/4 flex-col items-center justify-center gap-8">
+  <div class="flex h-full min-h-0 flex-col items-center justify-center gap-8 px-4 py-8 md:gap-10">
     <img
       src="/icon-white-not-so-thin.svg"
       alt=""
@@ -14,5 +31,7 @@ definePageMeta({ layout: 'main-bleed' })
       class="h-[400px] w-[400px] max-w-[min(400px,calc(100vw-2rem))] shrink-0 object-contain"
       decoding="async"
     />
+
+    <HomeActivityTimeline :weeks="homeActivityWeeks" />
   </div>
 </template>

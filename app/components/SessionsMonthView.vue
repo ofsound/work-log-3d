@@ -161,7 +161,7 @@ const handleSegmentDragEnd = () => {
                 <div class="text-lg font-semibold">{{ day.getDate() }}</div>
                 <div
                   v-if="isSameDay(day, new Date())"
-                  class="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white"
+                  class="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-text-inverse"
                 >
                   Today
                 </div>

@@ -172,7 +172,7 @@ const toggleArchived = () => {
                   v-for="(palette, index) in PROJECT_COLOR_PALETTE"
                   :key="`${palette.primary}-${palette.secondary}`"
                   type="button"
-                  class="size-9 shrink-0 cursor-pointer rounded-full border border-white/25 shadow-control transition-[box-shadow,filter] duration-150 ease-out hover:shadow-[var(--shadow-panel)] hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+                  class="size-9 shrink-0 cursor-pointer rounded-full border border-overlay-border-strong shadow-control transition-[box-shadow,filter] duration-150 ease-out hover:shadow-[var(--shadow-panel)] hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
                   :style="getProjectSwatchStyle(palette)"
                   :aria-label="`Apply color preset ${index + 1}`"
                   :title="`${palette.primary} / ${palette.secondary}`"
@@ -185,7 +185,7 @@ const toggleArchived = () => {
           <section class="flex min-w-0 flex-col gap-4">
             <div class="min-w-0 px-5 py-5">
               <ContainerCard
-                class="overflow-hidden rounded-3xl border-white/20 bg-surface p-0"
+                class="overflow-hidden rounded-3xl border-overlay-border bg-surface p-0"
                 padding="compact"
                 variant="overlay"
               >

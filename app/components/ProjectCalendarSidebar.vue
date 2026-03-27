@@ -89,7 +89,7 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
           class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition"
           :class="
             overlay
-              ? 'text-text-muted hover:bg-white/16 hover:text-text'
+              ? 'text-text-muted hover:bg-overlay-inverse hover:text-text'
               : 'text-text-subtle hover:bg-surface hover:text-text'
           "
           @click="emit('backToDay')"
@@ -102,7 +102,7 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
         <button
           type="button"
           class="cursor-pointer rounded-md p-2 text-text-subtle hover:text-text"
-          :class="overlay ? 'hover:bg-white/16' : 'hover:bg-surface'"
+          :class="overlay ? 'hover:bg-overlay-inverse' : 'hover:bg-surface'"
           aria-label="Close"
           @click="emit('close')"
         >

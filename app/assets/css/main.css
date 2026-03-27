@@ -26,6 +26,22 @@
   --color-text-muted: light-dark(var(--color-gray-600), var(--color-zinc-300));
   --color-text-subtle: light-dark(var(--color-gray-500), var(--color-zinc-400));
   --color-text-inverse: light-dark(var(--color-white), var(--color-zinc-950));
+  --color-overlay-scrim: light-dark(
+    color-mix(in srgb, var(--color-black) 40%, transparent),
+    color-mix(in srgb, var(--color-black) 40%, transparent)
+  );
+  --color-overlay-inverse: light-dark(
+    color-mix(in srgb, var(--color-white) 16%, transparent),
+    color-mix(in srgb, var(--color-white) 16%, transparent)
+  );
+  --color-overlay-border: light-dark(
+    color-mix(in srgb, var(--color-white) 20%, transparent),
+    color-mix(in srgb, var(--color-white) 20%, transparent)
+  );
+  --color-overlay-border-strong: light-dark(
+    color-mix(in srgb, var(--color-white) 25%, transparent),
+    color-mix(in srgb, var(--color-white) 25%, transparent)
+  );
   --color-header: light-dark(var(--color-gray-900), var(--color-zinc-950));
   --color-header-text: light-dark(var(--color-white), var(--color-zinc-100));
   --color-header-muted: light-dark(var(--color-gray-300), var(--color-zinc-400));
@@ -110,6 +126,54 @@
   --color-calendar-today-ring: light-dark(
     color-mix(in srgb, var(--color-zinc-600) 78%, var(--color-zinc-800) 22%),
     color-mix(in srgb, var(--color-zinc-300) 72%, var(--color-zinc-100) 28%)
+  );
+
+  --color-home-activity-rail: light-dark(
+    color-mix(in srgb, var(--color-slate-500) 28%, transparent),
+    color-mix(in srgb, var(--color-zinc-500) 42%, transparent)
+  );
+  --color-home-activity-bar-top: light-dark(
+    color-mix(in srgb, var(--color-sky-200) 88%, var(--color-white)),
+    color-mix(in srgb, var(--color-cyan-300) 72%, var(--color-sky-100))
+  );
+  --color-home-activity-bar-mid: light-dark(var(--color-sky-400), var(--color-cyan-500));
+  --color-home-activity-bar-base: light-dark(var(--color-slate-600), var(--color-sky-700));
+  --color-home-activity-bar-edge: light-dark(var(--color-sky-700), var(--color-cyan-300));
+  --color-home-activity-bar-side: light-dark(
+    color-mix(in srgb, var(--color-slate-700) 84%, var(--color-slate-950)),
+    color-mix(in srgb, var(--color-sky-900) 80%, var(--color-black))
+  );
+  --color-home-activity-bar-cap: light-dark(
+    color-mix(in srgb, var(--color-white) 82%, var(--color-sky-200)),
+    color-mix(in srgb, var(--color-cyan-100) 72%, var(--color-white))
+  );
+  --color-home-activity-bar-shadow: light-dark(
+    color-mix(in srgb, var(--color-slate-700) 28%, transparent),
+    color-mix(in srgb, var(--color-black) 55%, transparent)
+  );
+  --color-home-activity-bar-current-ring: light-dark(
+    color-mix(in srgb, var(--color-cyan-500) 48%, var(--color-white)),
+    color-mix(in srgb, var(--color-cyan-200) 72%, var(--color-white))
+  );
+  --color-home-activity-bar-current-glow: light-dark(
+    color-mix(in srgb, var(--color-sky-500) 28%, transparent),
+    color-mix(in srgb, var(--color-cyan-200) 24%, transparent)
+  );
+  --color-home-activity-current-highlight: light-dark(
+    color-mix(in srgb, var(--color-white) 80%, transparent),
+    color-mix(in srgb, var(--color-white) 80%, transparent)
+  );
+  --color-home-activity-bar-ghost-top: light-dark(
+    color-mix(in srgb, var(--color-slate-100) 88%, var(--color-white)),
+    color-mix(in srgb, var(--color-zinc-500) 62%, var(--color-zinc-300))
+  );
+  --color-home-activity-bar-ghost-base: light-dark(
+    color-mix(in srgb, var(--color-slate-300) 85%, var(--color-slate-100)),
+    color-mix(in srgb, var(--color-zinc-700) 86%, var(--color-zinc-900))
+  );
+  --color-home-activity-bar-ghost-edge: light-dark(
+    color-mix(in srgb, var(--color-slate-400) 76%, var(--color-slate-500)),
+    color-mix(in srgb, var(--color-zinc-500) 80%, var(--color-zinc-400))
   );
 
   --color-callout-warning-border: light-dark(var(--color-amber-300), var(--color-amber-700));

@@ -1,5 +1,6 @@
 import {
   buildDaySegmentLayouts,
+  buildHomeActivityWeeks,
   buildMonthGridDays,
   buildWeekDays,
   buildYearHeatmapMonths,
@@ -230,6 +231,57 @@ describe('calendar utilities', () => {
     expect(months).toHaveLength(1)
     expect(months[0]!.year).toBe(2026)
     expect(months[0]!.monthIndex).toBe(2)
+  })
+
+  it('builds continuous homepage activity weeks through the current week and preserves empty weeks', () => {
+    const weeks = buildHomeActivityWeeks(
+      [
+        {
+          ...baseTimeBox,
+          startTime: new Date(2026, 2, 3, 9, 0, 0, 0),
+          endTime: new Date(2026, 2, 3, 11, 0, 0, 0),
+        },
+        {
+          ...baseTimeBox,
+          id: 'tb-late',
+          startTime: new Date(2026, 2, 17, 13, 0, 0, 0),
+          endTime: new Date(2026, 2, 17, 14, 30, 0, 0),
+        },
+      ],
+      new Date(2026, 2, 21, 12, 0, 0, 0),
+    )
+
+    expect(weeks.map((week) => formatDateKey(week.weekStart))).toEqual([
+      '2026-03-02',
+      '2026-03-09',
+      '2026-03-16',
+    ])
+    expect(weeks.map((week) => week.totalMinutes)).toEqual([120, 0, 90])
+    expect(weeks[1]!.hasActivity).toBe(false)
+    expect(weeks[2]!.isCurrentWeek).toBe(true)
+    expect(formatDateKey(weeks[2]!.weekEnd)).toBe('2026-03-22')
+  })
+
+  it('splits overnight sessions across homepage activity weeks and deduplicates weekly session counts', () => {
+    const weeks = buildHomeActivityWeeks(
+      [
+        {
+          ...baseTimeBox,
+          id: 'tb-cross-week',
+          startTime: new Date(2026, 2, 8, 23, 0, 0, 0),
+          endTime: new Date(2026, 2, 9, 2, 0, 0, 0),
+        },
+      ],
+      new Date(2026, 2, 10, 12, 0, 0, 0),
+    )
+
+    expect(weeks.map((week) => formatDateKey(week.weekStart))).toEqual(['2026-03-02', '2026-03-09'])
+    expect(weeks.map((week) => week.totalMinutes)).toEqual([60, 120])
+    expect(weeks.map((week) => week.sessionCount)).toEqual([1, 1])
+  })
+
+  it('returns no homepage activity weeks when there are no timeboxes', () => {
+    expect(buildHomeActivityWeeks([], new Date(2026, 2, 21, 12, 0, 0, 0))).toEqual([])
   })
 
   it('includes every session overlapping an inclusive calendar day range', () => {

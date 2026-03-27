@@ -774,7 +774,7 @@ onBeforeUnmount(() => {
               :style="{ top: `${nowMarker.top}px` }"
             >
               <div
-                class="absolute -top-2 left-0 rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold text-white"
+                class="absolute -top-2 left-0 rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold text-text-inverse"
               >
                 {{ now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }}
               </div>
@@ -921,7 +921,7 @@ onBeforeUnmount(() => {
                     :style="{ top: `${nowMarker.top}px` }"
                   >
                     <div
-                      class="absolute -top-2 left-0 rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold text-white"
+                      class="absolute -top-2 left-0 rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold text-text-inverse"
                     >
                       {{ now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }}
                     </div>
