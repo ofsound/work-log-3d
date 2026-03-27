@@ -636,7 +636,7 @@ const editorRootBind = computed(() =>
                     class="shrink-0"
                     @change="mutationErrorMessage = ''"
                   />
-                  <span class="min-w-0 text-base font-semibold">{{ thisProject.name }}</span>
+                  <span class="min-w-0 text-base font-medium">{{ thisProject.name }}</span>
                 </label>
               </div>
 

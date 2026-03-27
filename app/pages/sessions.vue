@@ -849,13 +849,13 @@ onBeforeUnmount(() => {
       :overlay-aside="shouldOverlaySidePanel"
       @dismiss-aside="applyCalendarEscapeDismiss"
     >
-      <div
+      <WorkspaceSidebarLayout
         v-if="currentMode === 'search'"
-        class="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row"
+        :content-body-class="
+          ['flex flex-col gap-6 py-6 pb-2', WORKSPACE_BODY_X_CLASS_NAME].join(' ')
+        "
       >
-        <aside
-          class="flex w-full shrink-0 flex-col overflow-hidden border-b border-border-subtle bg-surface/96 backdrop-blur max-lg:max-h-[min(50vh,26rem)] lg:h-full lg:max-h-none lg:w-[400px] lg:border-r lg:border-b-0"
-        >
+        <template #sidebar>
           <SessionListFilterPanel
             :filters="listFilters"
             :hide-tags="hideTags"
@@ -863,14 +863,9 @@ onBeforeUnmount(() => {
             :tags="sortedTags"
             @update-filters="updateListFilters"
           />
-        </aside>
+        </template>
 
-        <div
-          :class="[
-            'flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-auto overscroll-contain py-6 pb-2',
-            WORKSPACE_BODY_X_CLASS_NAME,
-          ]"
-        >
+        <template #default>
           <ContainerCard
             v-if="filteredSessionListTimeBoxes.length === 0"
             class="border-dashed px-6 py-10 text-center shadow-none"
@@ -898,8 +893,8 @@ onBeforeUnmount(() => {
               :opaque-surface="true"
             />
           </div>
-        </div>
-      </div>
+        </template>
+      </WorkspaceSidebarLayout>
 
       <template v-else>
         <SessionsDayView

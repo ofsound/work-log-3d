@@ -16,6 +16,18 @@ export const PROJECT_COLOR_PALETTE = [
   { primary: '#15803d', secondary: '#075985' },
   { primary: '#b91c1c', secondary: '#7c2d12' },
   { primary: '#4338ca', secondary: '#5b21b6' },
+  { primary: '#1d3557', secondary: '#9d174d' },
+  { primary: '#7f1d1d', secondary: '#0f766e' },
+  { primary: '#365314', secondary: '#1d4ed8' },
+  { primary: '#312e81', secondary: '#b45309' },
+  { primary: '#155e75', secondary: '#be123c' },
+  { primary: '#92400e', secondary: '#1e3a8a' },
+  { primary: '#166534', secondary: '#9f1239' },
+  { primary: '#0c4a6e', secondary: '#a21caf' },
+  { primary: '#1f2937', secondary: '#7c3aed' },
+  { primary: '#713f12', secondary: '#7e22ce' },
+  { primary: '#854d0e', secondary: '#1d4ed8' },
+  { primary: '#4a044e', secondary: '#0f766e' },
 ] as const satisfies readonly ProjectColors[]
 
 export const normalizeHexColor = (value: string) => {

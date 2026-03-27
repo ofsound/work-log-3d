@@ -11,6 +11,7 @@ import AppTextInput from '~/app/components/AppTextInput.vue'
 import AppTextarea from '~/app/components/AppTextarea.vue'
 import AppToggleChip from '~/app/components/AppToggleChip.vue'
 import ContainerCard from '~/app/components/ContainerCard.vue'
+import WorkspaceSidebarLayout from '~/app/components/WorkspaceSidebarLayout.vue'
 import { DEFAULT_USER_SETTINGS, cloneUserSettings } from '~~/shared/worklog'
 
 const routerPush = vi.fn()
@@ -96,6 +97,7 @@ describe('settings page', () => {
           AppTextarea,
           AppToggleChip,
           ContainerCard,
+          WorkspaceSidebarLayout,
         },
       },
     })

@@ -162,6 +162,7 @@ const pageStubs = {
   SessionsDayView: SessionsDayViewStub,
   SessionsMonthView: true,
   SessionsSidePanel: SessionsSidePanelStub,
+  WorkspaceSidebarLayout: true,
   SessionsWeekView: true,
   SessionsWorkspaceShell: SessionsWorkspaceShellStub,
   SessionsYearView: true,

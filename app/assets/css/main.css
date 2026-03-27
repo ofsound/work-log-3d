@@ -88,6 +88,8 @@
   --spacing-workspace-subheader-y: 1.25rem;
   --spacing-workspace-content-x: 2.75rem;
   --width-workspace-content-max: 72rem;
+  --width-workspace-sidebar-rail: 25rem;
+  --height-workspace-sidebar-mobile-max: min(50vh, 26rem);
   --color-badge-duration: light-dark(var(--color-emerald-800), var(--color-emerald-300));
   --color-badge-duration-text: light-dark(var(--color-white), var(--color-emerald-950));
   --color-badge-neutral: light-dark(var(--color-zinc-100), var(--color-zinc-800));

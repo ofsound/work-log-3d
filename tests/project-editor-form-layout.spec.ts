@@ -30,16 +30,9 @@ describe('ProjectEditorFormLayout', () => {
         heading: 'Edit Project',
         name: 'Client Portal',
         notes: 'Private working notes',
-        previewBadgeStyle: {
-          backgroundColor: '#123456',
-          color: '#ffffff',
-        },
-        previewHeaderStyle: {
-          backgroundColor: '#234567',
-          color: '#ffffff',
-        },
-        previewSurfaceStyle: {
-          backgroundColor: '#f8fafc',
+        previewColors: {
+          primary: '#2563eb',
+          secondary: '#0e7490',
         },
         primaryColor: '#2563eb',
         secondaryColor: '#0e7490',
@@ -52,6 +45,10 @@ describe('ProjectEditorFormLayout', () => {
     expect(wrapper.text()).toContain('Color rules block saving')
     expect(wrapper.text()).toContain('Badges always use white text')
     expect(wrapper.text()).toContain('shared text readable across project gradients')
+    expect(wrapper.text()).toContain('Live project color preview')
+    expect(wrapper.text()).toContain('Workspace header')
+    expect(wrapper.text()).toContain('Selection states')
+    expect(wrapper.text()).toContain('Sources: ProjectWorkspaceHeader, ProjectOverview')
     expect(wrapper.text()).not.toContain('This color pairing may reduce contrast')
 
     const cancelButton = wrapper

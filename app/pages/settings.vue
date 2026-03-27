@@ -306,12 +306,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row">
-    <aside
-      class="flex w-full shrink-0 flex-col overflow-hidden border-b border-border-subtle bg-surface/96 backdrop-blur max-lg:max-h-[min(50vh,26rem)] lg:h-full lg:max-h-none lg:w-[400px] lg:border-r lg:border-b-0"
-    >
-      <div class="flex min-h-0 flex-1 flex-col">
-        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-12 pb-6">
+  <WorkspaceSidebarLayout
+    content-body-class="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pt-12 pb-6"
+    sidebar-body-class="px-6 pt-12 pb-6"
+    sidebar-footer-class="px-6 pb-6"
+  >
+    <template #sidebar>
+      <div class="flex min-h-full flex-col">
+        <div class="min-h-0 flex-1">
           <h1 class="text-3xl font-bold text-text">User Settings</h1>
           <ContainerCard class="mt-4" padding="compact" variant="muted" aria-live="polite">
             <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Account</div>
@@ -410,15 +412,16 @@ onBeforeUnmount(() => {
             </p>
           </ContainerCard>
         </div>
-        <p class="shrink-0 px-6 pb-6 text-center text-xs text-text-subtle">
-          Work Log {{ runtimeConfig.public.appVersion }}
-        </p>
       </div>
-    </aside>
+    </template>
 
-    <div
-      class="mx-auto flex min-h-0 w-full max-w-6xl min-w-0 flex-1 flex-col gap-6 overflow-auto overscroll-contain px-6 pt-12 pb-6"
-    >
+    <template #sidebarFooter>
+      <p class="text-center text-xs text-text-subtle">
+        Work Log {{ runtimeConfig.public.appVersion }}
+      </p>
+    </template>
+
+    <template #default>
       <ContainerCard as="section">
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div class="flex flex-col gap-4">
@@ -724,6 +727,6 @@ onBeforeUnmount(() => {
           </section>
         </div>
       </ContainerCard>
-    </div>
-  </div>
+    </template>
+  </WorkspaceSidebarLayout>
 </template>

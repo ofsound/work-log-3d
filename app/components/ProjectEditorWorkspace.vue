@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { doc, query, where } from 'firebase/firestore'
 
-import {
-  getProjectBadgeStyle,
-  getProjectDuotoneSoftSurfaceStyle,
-  getProjectHeaderStyle,
-  getProjectModeToggleStyles,
-  getProjectSecondaryAccentTextStyle,
-  getProjectSecondarySoftSurfaceStyle,
-} from '~/utils/project-color-styles'
+import { getProjectBadgeStyle, getProjectModeToggleStyles } from '~/utils/project-color-styles'
 import {
   buildProjectWorkspaceLocation,
   parseProjectRouteState,
@@ -23,12 +16,10 @@ import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/w
 import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
 import type { ProjectColors, ProjectInput } from '~~/shared/worklog'
 import {
-  analyzeProjectColors,
+  getProjectColorValidationMessages,
   getTotalDurationLabel,
   getWorklogErrorMessage,
   normalizeHexColor,
-  PRIMARY_COLOR_BADGE_TEXT_ERROR,
-  SECONDARY_COLOR_GRADIENT_TEXT_ERROR,
 } from '~~/shared/worklog'
 
 const props = defineProps<{
@@ -98,15 +89,6 @@ const previewColors = computed<ProjectColors>(() => ({
   secondary:
     normalizeHexColor(dynamicSecondaryColor.value) ?? project.value?.colors.secondary ?? '#0e7490',
 }))
-/** In-form preview card only; workspace sub-header uses neutral bar + `modeToggleStyles`. */
-const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
-const previewSurfaceStyle = computed(() => getProjectDuotoneSoftSurfaceStyle(previewColors.value))
-const previewSecondarySurfaceStyle = computed(() =>
-  getProjectSecondarySoftSurfaceStyle(previewColors.value),
-)
-const previewSecondaryTextStyle = computed(() =>
-  getProjectSecondaryAccentTextStyle(previewColors.value),
-)
 const modeToggleStyles = computed(() => {
   const styles = getProjectModeToggleStyles(previewColors.value)
 
@@ -131,15 +113,7 @@ const colorValidationMessages = computed(() => {
   }
 
   if (primary && secondary) {
-    const analysis = analyzeProjectColors({ primary, secondary })
-
-    if (!analysis.primarySupportsBadgeText) {
-      messages.push(PRIMARY_COLOR_BADGE_TEXT_ERROR)
-    }
-
-    if (!analysis.hasAccessibleGradientText) {
-      messages.push(SECONDARY_COLOR_GRADIENT_TEXT_ERROR)
-    }
+    messages.push(...getProjectColorValidationMessages({ primary, secondary }))
   }
 
   return messages
@@ -382,11 +356,7 @@ onBeforeRouteLeave(async () => {
           :is-saving="isSaving"
           :name="dynamicName"
           :notes="dynamicNotes"
-          :preview-badge-style="previewBadgeStyle as Record<string, string>"
-          :preview-header-style="previewHeaderStyle as Record<string, string>"
-          :preview-secondary-surface-style="previewSecondarySurfaceStyle as Record<string, string>"
-          :preview-secondary-text-style="previewSecondaryTextStyle as Record<string, string>"
-          :preview-surface-style="previewSurfaceStyle as Record<string, string>"
+          :preview-colors="previewColors"
           :primary-color="dynamicPrimaryColor"
           :secondary-color="dynamicSecondaryColor"
           show-archive-toggle

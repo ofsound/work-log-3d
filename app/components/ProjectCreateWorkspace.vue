@@ -6,23 +6,14 @@ import { onBeforeRouteLeave, useRouter } from '#imports'
 import { useConfirmDialog } from '~/composables/useConfirmDialog'
 import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
 import { useWorklogRepository } from '~/composables/useWorklogRepository'
-import {
-  getProjectBadgeStyle,
-  getProjectDuotoneSoftSurfaceStyle,
-  getProjectHeaderStyle,
-  getProjectSecondaryAccentTextStyle,
-  getProjectSecondarySoftSurfaceStyle,
-} from '~/utils/project-color-styles'
 import { getProjectNewPath, getProjectPathFromProject } from '~/utils/worklog-routes'
 import type { ProjectColors, ProjectInput } from '~~/shared/worklog'
 import {
-  analyzeProjectColors,
   createProjectPayload,
   getProjectDefaultMetadata,
+  getProjectColorValidationMessages,
   getWorklogErrorMessage,
   normalizeHexColor,
-  PRIMARY_COLOR_BADGE_TEXT_ERROR,
-  SECONDARY_COLOR_GRADIENT_TEXT_ERROR,
 } from '~~/shared/worklog'
 
 const router = useRouter()
@@ -43,15 +34,6 @@ const previewColors = computed<ProjectColors>(() => ({
   primary: normalizeHexColor(dynamicPrimaryColor.value) ?? '#2563eb',
   secondary: normalizeHexColor(dynamicSecondaryColor.value) ?? '#0e7490',
 }))
-const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
-const previewSurfaceStyle = computed(() => getProjectDuotoneSoftSurfaceStyle(previewColors.value))
-const previewSecondarySurfaceStyle = computed(() =>
-  getProjectSecondarySoftSurfaceStyle(previewColors.value),
-)
-const previewSecondaryTextStyle = computed(() =>
-  getProjectSecondaryAccentTextStyle(previewColors.value),
-)
-const previewBadgeStyle = computed(() => getProjectBadgeStyle(previewColors.value))
 const colorValidationMessages = computed(() => {
   const primary = normalizeHexColor(dynamicPrimaryColor.value)
   const secondary = normalizeHexColor(dynamicSecondaryColor.value)
@@ -66,15 +48,7 @@ const colorValidationMessages = computed(() => {
   }
 
   if (primary && secondary) {
-    const analysis = analyzeProjectColors({ primary, secondary })
-
-    if (!analysis.primarySupportsBadgeText) {
-      messages.push(PRIMARY_COLOR_BADGE_TEXT_ERROR)
-    }
-
-    if (!analysis.hasAccessibleGradientText) {
-      messages.push(SECONDARY_COLOR_GRADIENT_TEXT_ERROR)
-    }
+    messages.push(...getProjectColorValidationMessages({ primary, secondary }))
   }
 
   return messages
@@ -227,12 +201,8 @@ onBeforeRouteLeave(async (to) => {
       :is-saving="isSaving"
       :name="dynamicName"
       :notes="dynamicNotes"
-      :preview-badge-style="previewBadgeStyle as Record<string, string>"
-      :preview-header-style="previewHeaderStyle as Record<string, string>"
-      :preview-secondary-surface-style="previewSecondarySurfaceStyle as Record<string, string>"
-      :preview-secondary-text-style="previewSecondaryTextStyle as Record<string, string>"
+      :preview-colors="previewColors"
       preview-notes-fallback="Notes can help you frame the project before the first session."
-      :preview-surface-style="previewSurfaceStyle as Record<string, string>"
       :primary-color="dynamicPrimaryColor"
       :secondary-color="dynamicSecondaryColor"
       submit-label="Create project"
