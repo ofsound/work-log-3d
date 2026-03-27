@@ -6,7 +6,6 @@ import {
   getProjectHeaderStyle,
   getProjectSoftSurfaceStyle,
   getProjectWorkspaceModeToggleStyles,
-  hasLowProjectContrast,
 } from '~/utils/project-color-styles'
 import {
   buildProjectWorkspaceLocation,
@@ -21,7 +20,14 @@ import {
 import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
 import type { ProjectColors, ProjectInput } from '~~/shared/worklog'
-import { getTotalDurationLabel, getWorklogErrorMessage, normalizeHexColor } from '~~/shared/worklog'
+import {
+  analyzeProjectColors,
+  getTotalDurationLabel,
+  getWorklogErrorMessage,
+  normalizeHexColor,
+  PRIMARY_COLOR_BADGE_TEXT_ERROR,
+  SECONDARY_COLOR_GRADIENT_TEXT_ERROR,
+} from '~~/shared/worklog'
 
 const props = defineProps<{
   id: string
@@ -57,7 +63,7 @@ const projectTimeBoxes = useCollection(projectTimeBoxesQuery, {
 const dynamicName = ref('')
 const dynamicNotes = ref('')
 const dynamicPrimaryColor = ref('#2563eb')
-const dynamicSecondaryColor = ref('#06b6d4')
+const dynamicSecondaryColor = ref('#0e7490')
 const dynamicArchived = ref(false)
 const mutationErrorMessage = ref('')
 const isSaving = ref(false)
@@ -88,7 +94,7 @@ const previewColors = computed<ProjectColors>(() => ({
   primary:
     normalizeHexColor(dynamicPrimaryColor.value) ?? project.value?.colors.primary ?? '#2563eb',
   secondary:
-    normalizeHexColor(dynamicSecondaryColor.value) ?? project.value?.colors.secondary ?? '#06b6d4',
+    normalizeHexColor(dynamicSecondaryColor.value) ?? project.value?.colors.secondary ?? '#0e7490',
 }))
 /** In-form preview card only; workspace sub-header uses neutral bar + `modeToggleStyles`. */
 const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
@@ -103,7 +109,33 @@ const modeToggleStyles = computed(() => {
   }
 })
 const previewBadgeStyle = computed(() => getProjectBadgeStyle(previewColors.value))
-const lowContrastWarning = computed(() => hasLowProjectContrast(previewColors.value))
+const colorValidationMessages = computed(() => {
+  const primary = normalizeHexColor(dynamicPrimaryColor.value)
+  const secondary = normalizeHexColor(dynamicSecondaryColor.value)
+  const messages: string[] = []
+
+  if (!primary) {
+    messages.push('Primary color must be a valid hex color.')
+  }
+
+  if (!secondary) {
+    messages.push('Secondary color must be a valid hex color.')
+  }
+
+  if (primary && secondary) {
+    const analysis = analyzeProjectColors({ primary, secondary })
+
+    if (!analysis.primarySupportsBadgeText) {
+      messages.push(PRIMARY_COLOR_BADGE_TEXT_ERROR)
+    }
+
+    if (!analysis.hasAccessibleGradientText) {
+      messages.push(SECONDARY_COLOR_GRADIENT_TEXT_ERROR)
+    }
+  }
+
+  return messages
+})
 const lastActivityLabel = computed(() => {
   const last = projectSummary.value.lastSession
   return last
@@ -337,9 +369,9 @@ onBeforeRouteLeave(async () => {
       <div :class="[WORKSPACE_BODY_CONTENT_CLASS_NAME, 'flex flex-col gap-6']">
         <ProjectEditorFormLayout
           :archived="dynamicArchived"
+          :color-validation-messages="colorValidationMessages"
           heading="Edit Project"
           :is-saving="isSaving"
-          :low-contrast-warning="lowContrastWarning"
           :name="dynamicName"
           :notes="dynamicNotes"
           :preview-badge-style="previewBadgeStyle as Record<string, string>"

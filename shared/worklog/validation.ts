@@ -7,6 +7,11 @@ import {
   type DailyNoteInput,
 } from './daily-notes'
 import { slugifyName } from './formatters'
+import {
+  getProjectColorValidationMessages,
+  PRIMARY_COLOR_BADGE_TEXT_ERROR,
+  SECONDARY_COLOR_GRADIENT_TEXT_ERROR,
+} from './project-colors'
 import { normalizeHexColor } from './projects'
 import {
   REPORT_GROUP_OPERATORS,
@@ -119,10 +124,23 @@ export const createNamedEntityPayload = (name: string, label: string) => {
 export const validateProjectInput = (input: ProjectInput): ProjectInput => ({
   name: requireNonEmptyString(input.name, 'Project'),
   notes: normalizeOptionalString(input.notes),
-  colors: {
-    primary: requireHexColor(input.colors.primary, 'Primary color'),
-    secondary: requireHexColor(input.colors.secondary, 'Secondary color'),
-  },
+  colors: (() => {
+    const normalized = {
+      primary: requireHexColor(input.colors.primary, 'Primary color'),
+      secondary: requireHexColor(input.colors.secondary, 'Secondary color'),
+    }
+    const messages = getProjectColorValidationMessages(normalized)
+
+    if (messages.includes(PRIMARY_COLOR_BADGE_TEXT_ERROR)) {
+      throw new WorklogError('validation', PRIMARY_COLOR_BADGE_TEXT_ERROR)
+    }
+
+    if (messages.includes(SECONDARY_COLOR_GRADIENT_TEXT_ERROR)) {
+      throw new WorklogError('validation', SECONDARY_COLOR_GRADIENT_TEXT_ERROR)
+    }
+
+    return normalized
+  })(),
   archived: input.archived === true,
 })
 

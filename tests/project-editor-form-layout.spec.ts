@@ -11,7 +11,7 @@ import ContainerCard from '~/app/components/ContainerCard.vue'
 import ProjectEditorFormLayout from '~/app/components/ProjectEditorFormLayout.vue'
 
 describe('ProjectEditorFormLayout', () => {
-  it('renders preview, context, and warning cards for the project editor workspace', async () => {
+  it('renders preview content and explicit color-rule messaging for the project editor workspace', async () => {
     const wrapper = mount(ProjectEditorFormLayout, {
       global: {
         components: {
@@ -24,13 +24,10 @@ describe('ProjectEditorFormLayout', () => {
         },
       },
       props: {
-        contextSummary: {
-          lastSession: new Date('2026-03-23T12:00:00.000Z'),
-          sessionCount: 7,
-          totalDurationLabel: '12.5',
-        },
+        colorValidationMessages: [
+          'Secondary color must keep shared text readable across project gradients.',
+        ],
         heading: 'Edit Project',
-        lowContrastWarning: true,
         name: 'Client Portal',
         notes: 'Private working notes',
         previewBadgeStyle: {
@@ -45,14 +42,17 @@ describe('ProjectEditorFormLayout', () => {
           backgroundColor: '#f8fafc',
         },
         primaryColor: '#2563eb',
-        secondaryColor: '#06b6d4',
+        secondaryColor: '#0e7490',
         submitLabel: 'Save project',
       },
     })
 
     expect(wrapper.text()).toContain('Edit Project')
     expect(wrapper.text()).toContain('Internal notes')
-    expect(wrapper.text()).toContain('This color pairing may reduce contrast')
+    expect(wrapper.text()).toContain('Color rules block saving')
+    expect(wrapper.text()).toContain('Badges always use white text')
+    expect(wrapper.text()).toContain('shared text readable across project gradients')
+    expect(wrapper.text()).not.toContain('This color pairing may reduce contrast')
 
     const cancelButton = wrapper
       .findAll('button')

@@ -174,7 +174,7 @@ describe('firestore worklog repositories', () => {
             slug: 'saved-project',
             notes: 'Existing notes',
             archived: false,
-            colors: { primary: '#224466', secondary: '#88aacc' },
+            colors: { primary: '#224466', secondary: '#0c4a6e' },
           }) as Record<string, unknown>
         )[field],
     })
@@ -192,7 +192,7 @@ describe('firestore worklog repositories', () => {
       notes: '  Initial setup notes  ',
       colors: {
         primary: '#123456',
-        secondary: 'abcdef',
+        secondary: '0c4a6e',
       },
       archived: false,
     })
@@ -201,7 +201,7 @@ describe('firestore worklog repositories', () => {
       name: '  Deep Work  ',
       notes: '  Notes for the edit page  ',
       colors: {
-        primary: '#ABCDEF',
+        primary: '#1d4ed8',
         secondary: '#112233',
       },
       archived: false,
@@ -245,7 +245,7 @@ describe('firestore worklog repositories', () => {
         notes: 'Initial setup notes',
         colors: {
           primary: '#123456',
-          secondary: '#abcdef',
+          secondary: '#0c4a6e',
         },
         archived: false,
       }),
@@ -258,7 +258,7 @@ describe('firestore worklog repositories', () => {
         notes: 'Existing notes',
         colors: {
           primary: '#224466',
-          secondary: '#88aacc',
+          secondary: '#0c4a6e',
         },
         archived: false,
       }),
@@ -270,7 +270,7 @@ describe('firestore worklog repositories', () => {
         slug: 'deep-work',
         notes: 'Notes for the edit page',
         colors: {
-          primary: '#abcdef',
+          primary: '#1d4ed8',
           secondary: '#112233',
         },
         archived: false,
@@ -358,7 +358,7 @@ describe('firestore worklog repositories', () => {
         notes: '',
         colors: {
           primary: '#2563eb',
-          secondary: '#06b6d4',
+          secondary: '#0e7490',
         },
         archived: false,
       }),
@@ -381,7 +381,7 @@ describe('firestore worklog repositories', () => {
         notes: '',
         colors: {
           primary: '#2563eb',
-          secondary: '#06b6d4',
+          secondary: '#0e7490',
         },
         archived: false,
       }),

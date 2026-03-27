@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  analyzeProjectColors,
   createDuplicateSlugError,
   createProjectPayload,
   getProjectDefaultMetadata,
   getWorklogErrorMessage,
+  PRIMARY_COLOR_BADGE_TEXT_ERROR,
   PROJECT_COLOR_PALETTE,
   projectsForSessionPicker,
   resolveProjectColors,
+  SECONDARY_COLOR_GRADIENT_TEXT_ERROR,
   validateProjectInput,
 } from '../shared/worklog'
 
@@ -18,8 +21,8 @@ describe('project metadata helpers', () => {
         name: '  Client Portal  ',
         notes: '  Needs billing polish  ',
         colors: {
-          primary: '#ABCDEF',
-          secondary: '123456',
+          primary: '#1D4ED8',
+          secondary: '4338ca',
         },
         archived: false,
       }),
@@ -28,8 +31,8 @@ describe('project metadata helpers', () => {
       slug: 'client-portal',
       notes: 'Needs billing polish',
       colors: {
-        primary: '#abcdef',
-        secondary: '#123456',
+        primary: '#1d4ed8',
+        secondary: '#4338ca',
       },
       archived: false,
     })
@@ -42,7 +45,7 @@ describe('project metadata helpers', () => {
         notes: '',
         colors: {
           primary: 'blue',
-          secondary: '#06b6d4',
+          secondary: '#0e7490',
         },
         archived: false,
       }),
@@ -70,11 +73,39 @@ describe('project metadata helpers', () => {
         notes: '',
         colors: {
           primary: '#2563eb',
-          secondary: '#06b6d4',
+          secondary: '#0e7490',
         },
         archived: false,
       }),
     ).toThrow('Project name would conflict with a reserved project route.')
+  })
+
+  it('rejects primaries that cannot keep white badge text readable', () => {
+    expect(() =>
+      validateProjectInput({
+        name: 'Project Atlas',
+        notes: '',
+        colors: {
+          primary: '#059669',
+          secondary: '#4d7c0f',
+        },
+        archived: false,
+      }),
+    ).toThrow(PRIMARY_COLOR_BADGE_TEXT_ERROR)
+  })
+
+  it('rejects secondaries that break shared gradient text contrast', () => {
+    expect(() =>
+      validateProjectInput({
+        name: 'Project Atlas',
+        notes: '',
+        colors: {
+          primary: '#2563eb',
+          secondary: '#06b6d4',
+        },
+        archived: false,
+      }),
+    ).toThrow(SECONDARY_COLOR_GRADIENT_TEXT_ERROR)
   })
 
   it('returns deterministic fallback colors for legacy projects', () => {
@@ -91,6 +122,16 @@ describe('project metadata helpers', () => {
 
     expect(partial.primary).toBe(fullFallback.primary)
     expect(partial.secondary).toBe(fullFallback.secondary)
+  })
+
+  it('falls back to a compliant palette pair when stored colors fail the new rules', () => {
+    const fallback = resolveProjectColors('seed-b', undefined)
+    const resolved = resolveProjectColors('seed-b', {
+      primary: '#2563eb',
+      secondary: '#06b6d4',
+    })
+
+    expect(resolved).toEqual(fallback)
   })
 
   it('exposes duplicate slug errors for repository and UI messaging', () => {
@@ -110,7 +151,7 @@ describe('project metadata helpers', () => {
       createProjectPayload({
         name: 'Alpha',
         notes: '',
-        colors: { primary: '#2563eb', secondary: '#06b6d4' },
+        colors: { primary: '#2563eb', secondary: '#0e7490' },
         archived: true,
       }).archived,
     ).toBe(true)
@@ -118,7 +159,7 @@ describe('project metadata helpers', () => {
       validateProjectInput({
         name: 'Beta',
         notes: '',
-        colors: { primary: '#2563eb', secondary: '#06b6d4' },
+        colors: { primary: '#2563eb', secondary: '#0e7490' },
         archived: false,
       }).archived,
     ).toBe(false)
@@ -158,5 +199,11 @@ describe('project metadata helpers', () => {
       colors: PROJECT_COLOR_PALETTE[0],
       archived: false,
     })
+  })
+
+  it('keeps every preset palette entry compliant with the shared project color rules', () => {
+    expect(PROJECT_COLOR_PALETTE.every((colors) => analyzeProjectColors(colors).isAccessible)).toBe(
+      true,
+    )
   })
 })

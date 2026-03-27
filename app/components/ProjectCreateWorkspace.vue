@@ -10,15 +10,17 @@ import {
   getProjectBadgeStyle,
   getProjectHeaderStyle,
   getProjectSoftSurfaceStyle,
-  hasLowProjectContrast,
 } from '~/utils/project-color-styles'
 import { getProjectNewPath, getProjectPathFromProject } from '~/utils/worklog-routes'
 import type { ProjectColors, ProjectInput } from '~~/shared/worklog'
 import {
+  analyzeProjectColors,
   createProjectPayload,
   getProjectDefaultMetadata,
   getWorklogErrorMessage,
   normalizeHexColor,
+  PRIMARY_COLOR_BADGE_TEXT_ERROR,
+  SECONDARY_COLOR_GRADIENT_TEXT_ERROR,
 } from '~~/shared/worklog'
 
 const router = useRouter()
@@ -29,7 +31,7 @@ const { projectsCollection } = useFirestoreCollections()
 const dynamicName = ref('')
 const dynamicNotes = ref('')
 const dynamicPrimaryColor = ref('#2563eb')
-const dynamicSecondaryColor = ref('#06b6d4')
+const dynamicSecondaryColor = ref('#0e7490')
 const mutationErrorMessage = ref('')
 const isSaving = ref(false)
 const initialFormSnapshot = ref<string | null>(null)
@@ -37,12 +39,38 @@ const allowNextNavigation = ref(false)
 
 const previewColors = computed<ProjectColors>(() => ({
   primary: normalizeHexColor(dynamicPrimaryColor.value) ?? '#2563eb',
-  secondary: normalizeHexColor(dynamicSecondaryColor.value) ?? '#06b6d4',
+  secondary: normalizeHexColor(dynamicSecondaryColor.value) ?? '#0e7490',
 }))
 const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
 const previewSurfaceStyle = computed(() => getProjectSoftSurfaceStyle(previewColors.value))
 const previewBadgeStyle = computed(() => getProjectBadgeStyle(previewColors.value))
-const lowContrastWarning = computed(() => hasLowProjectContrast(previewColors.value))
+const colorValidationMessages = computed(() => {
+  const primary = normalizeHexColor(dynamicPrimaryColor.value)
+  const secondary = normalizeHexColor(dynamicSecondaryColor.value)
+  const messages: string[] = []
+
+  if (!primary) {
+    messages.push('Primary color must be a valid hex color.')
+  }
+
+  if (!secondary) {
+    messages.push('Secondary color must be a valid hex color.')
+  }
+
+  if (primary && secondary) {
+    const analysis = analyzeProjectColors({ primary, secondary })
+
+    if (!analysis.primarySupportsBadgeText) {
+      messages.push(PRIMARY_COLOR_BADGE_TEXT_ERROR)
+    }
+
+    if (!analysis.hasAccessibleGradientText) {
+      messages.push(SECONDARY_COLOR_GRADIENT_TEXT_ERROR)
+    }
+  }
+
+  return messages
+})
 
 const createProjectInputSnapshot = (input: ProjectInput) => JSON.stringify(input)
 
@@ -186,9 +214,9 @@ onBeforeRouteLeave(async (to) => {
       {{ mutationErrorMessage }}
     </p>
     <ProjectEditorFormLayout
+      :color-validation-messages="colorValidationMessages"
       heading="Create project"
       :is-saving="isSaving"
-      :low-contrast-warning="lowContrastWarning"
       :name="dynamicName"
       :notes="dynamicNotes"
       :preview-badge-style="previewBadgeStyle as Record<string, string>"

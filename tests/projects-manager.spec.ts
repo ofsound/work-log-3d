@@ -20,7 +20,7 @@ const projectDocuments = ref([
     notes: '',
     colors: {
       primary: '#2563eb',
-      secondary: '#06b6d4',
+      secondary: '#0e7490',
     },
   },
 ])

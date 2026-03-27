@@ -60,7 +60,7 @@ describe('firestore rules', () => {
         archived: false,
         colors: {
           primary: '#2563eb',
-          secondary: '#06b6d4',
+          secondary: '#0e7490',
         },
       }),
     )
@@ -89,7 +89,7 @@ describe('firestore rules', () => {
         notes: '',
         colors: {
           primary: '#2563eb',
-          secondary: '#06b6d4',
+          secondary: '#0e7490',
         },
       }),
     )
@@ -292,7 +292,7 @@ describe('firestore rules', () => {
         archived: false,
         colors: {
           primary: '#2563eb',
-          secondary: '#06b6d4',
+          secondary: '#0e7490',
         },
       }),
     )

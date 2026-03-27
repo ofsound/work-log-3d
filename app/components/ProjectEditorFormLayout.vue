@@ -6,9 +6,12 @@ import type { ProjectColors } from '~~/shared/worklog'
 import { PROJECT_COLOR_PALETTE } from '~~/shared/worklog'
 
 const props = defineProps({
+  colorValidationMessages: {
+    type: Array as PropType<string[]>,
+    default: () => [],
+  },
   heading: { type: String, required: true },
   isSaving: { type: Boolean, default: false },
-  lowContrastWarning: { type: Boolean, default: false },
   name: { type: String, required: true },
   notes: { type: String, required: true },
   previewBadgeStyle: {
@@ -124,6 +127,12 @@ const toggleArchived = () => {
           <div class="flex min-w-0 flex-col gap-4">
             <div class="grid w-full min-w-0 grid-cols-1 items-start gap-4 md:grid-cols-2 md:gap-6">
               <AppField label="Primary color" class="min-w-0">
+                <template #hint>
+                  <p class="text-sm text-text-muted">
+                    Badges always use white text, so the primary color has to stay dark enough for
+                    that to read cleanly.
+                  </p>
+                </template>
                 <div
                   class="flex items-center gap-3 rounded-2xl border border-input-border bg-input px-3 py-3"
                 >
@@ -144,6 +153,12 @@ const toggleArchived = () => {
               </AppField>
 
               <AppField label="Secondary color" class="min-w-0">
+                <template #hint>
+                  <p class="text-sm text-text-muted">
+                    Project gradients use one shared text color. Pick a secondary that keeps that
+                    text readable across the full gradient.
+                  </p>
+                </template>
                 <div
                   class="flex items-center gap-3 rounded-2xl border border-input-border bg-input px-3 py-3"
                 >
@@ -157,12 +172,28 @@ const toggleArchived = () => {
                     :value="secondaryColor"
                     type="text"
                     class="min-w-0 flex-1 rounded-xl border border-input-border bg-surface px-3 py-2 font-data text-text"
-                    placeholder="#06b6d4"
+                    placeholder="#0e7490"
                     @input="updateSecondaryColor"
                   />
                 </div>
               </AppField>
             </div>
+
+            <ContainerCard
+              v-if="colorValidationMessages.length > 0"
+              class="rounded-2xl py-3 text-sm"
+              padding="default"
+              variant="danger"
+            >
+              <div class="flex flex-col gap-1">
+                <div class="font-semibold text-danger">Color rules block saving</div>
+                <ul class="list-disc pl-5 text-text">
+                  <li v-for="message in colorValidationMessages" :key="message" class="leading-6">
+                    {{ message }}
+                  </li>
+                </ul>
+              </div>
+            </ContainerCard>
 
             <div class="flex flex-col gap-2">
               <AppFieldLabel>Palette presets</AppFieldLabel>
@@ -190,8 +221,7 @@ const toggleArchived = () => {
                 variant="overlay"
               >
                 <div class="px-5 py-5" :style="previewHeaderStyle">
-                  <div class="text-xs tracking-[0.18em] uppercase opacity-80">Project header</div>
-                  <div class="mt-2 text-2xl font-bold">
+                  <div class="text-2xl font-bold">
                     {{ name.trim() || 'Project preview' }}
                   </div>
                 </div>
@@ -218,16 +248,6 @@ const toggleArchived = () => {
             </div>
           </section>
         </div>
-
-        <ContainerCard
-          v-if="lowContrastWarning"
-          class="rounded-3xl py-4 text-sm"
-          padding="default"
-          variant="warning"
-        >
-          This color pairing may reduce contrast in some project surfaces. The preview keeps the
-          current choice, but you may want more separation between the two colors.
-        </ContainerCard>
 
         <div class="flex justify-end gap-3 pt-2">
           <AppButton variant="secondary" @click="emit('cancel')">Cancel</AppButton>

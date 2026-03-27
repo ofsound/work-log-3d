@@ -1,6 +1,10 @@
 import type { CSSProperties } from 'vue'
 
-import type { ProjectColors } from '~~/shared/worklog'
+import {
+  analyzeProjectColors,
+  PROJECT_COLOR_LIGHT_TEXT,
+  type ProjectColors,
+} from '~~/shared/worklog'
 
 interface RgbColor {
   red: number
@@ -24,46 +28,13 @@ const toRgba = (value: string, alpha: number) => {
   return `rgba(${rgb.red}, ${rgb.green}, ${rgb.blue}, ${alpha})`
 }
 
-const getRelativeLuminance = (value: string) => {
-  const rgb = hexToRgb(value)
-  const channels = [rgb.red, rgb.green, rgb.blue].map((channel) => {
-    const normalized = channel / 255
-
-    return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
-  })
-
-  return 0.2126 * channels[0]! + 0.7152 * channels[1]! + 0.0722 * channels[2]!
-}
-
-const getContrastRatio = (left: string, right: string) => {
-  const leftLuminance = getRelativeLuminance(left)
-  const rightLuminance = getRelativeLuminance(right)
-  const lighter = Math.max(leftLuminance, rightLuminance)
-  const darker = Math.min(leftLuminance, rightLuminance)
-
-  return (lighter + 0.05) / (darker + 0.05)
-}
-
-const getAutoTextColor = (backgrounds: string[]) => {
-  const dark = '#111827'
-  const light = '#f8fafc'
-  const darkScore = Math.min(...backgrounds.map((background) => getContrastRatio(background, dark)))
-  const lightScore = Math.min(
-    ...backgrounds.map((background) => getContrastRatio(background, light)),
-  )
-
-  return lightScore >= darkScore ? light : dark
-}
-
 const getGradientEndColor = (colors: ProjectColors) => colors.secondary
 
 export const getProjectBadgeStyle = (colors: ProjectColors): CSSProperties => {
-  const textColor = getAutoTextColor([colors.primary])
-
   return {
     backgroundColor: colors.primary,
     borderColor: toRgba(colors.primary, 0.5),
-    color: textColor,
+    color: PROJECT_COLOR_LIGHT_TEXT,
   }
 }
 
@@ -79,10 +50,11 @@ export const getProjectOpaqueSoftSurfaceStyle = (colors: ProjectColors): CSSProp
 
 export const getProjectHeaderStyle = (colors: ProjectColors): CSSProperties => {
   const endColor = getGradientEndColor(colors)
+  const analysis = analyzeProjectColors(colors)
 
   return {
     backgroundImage: `linear-gradient(135deg, ${colors.primary}, ${endColor})`,
-    color: getAutoTextColor([colors.primary, endColor]),
+    color: analysis.gradientTextColor,
   }
 }
 
@@ -144,14 +116,3 @@ export const getProjectSwatchStyle = (colors: ProjectColors): CSSProperties => {
 export const getProjectAccentTextStyle = (colors: ProjectColors): CSSProperties => ({
   color: colors.primary,
 })
-
-export const hasLowProjectContrast = (colors: ProjectColors) => {
-  const endColor = getGradientEndColor(colors)
-  const textColor = getAutoTextColor([colors.primary, endColor])
-
-  return (
-    getContrastRatio(colors.primary, endColor) < 1.18 ||
-    getContrastRatio(colors.primary, textColor) < 4.5 ||
-    getContrastRatio(endColor, textColor) < 4.5
-  )
-}
