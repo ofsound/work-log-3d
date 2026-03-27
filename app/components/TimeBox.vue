@@ -34,31 +34,33 @@ const toggleEditor = () => {
 
 <template>
   <div :class="embeddedInPanel ? 'flex min-h-0 min-w-0 flex-1 flex-col' : 'contents'">
-    <TimeBoxViewer
-      v-if="!showEditor"
-      :id
-      :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1' : undefined"
-      :compact="props.compact"
-      :flush-top="props.flushTop"
-      :highlight-tokens="highlightTokens"
-      :hide-actions="hideActions"
-      :hide-project-chip="hideProjectChip"
-      :interactive="props.interactive"
-      :opaque-surface="opaqueSurface"
-      :selected="props.selected"
-      :use-project-card-styles="props.useProjectCardStyles"
-      :variant
-      :is-minimized
-      @deleted="emit('deleted')"
-      @open="emit('open')"
-      @toggle-editor="toggleEditor"
-    />
-    <TimeBoxEditor
-      v-if="showEditor"
-      :id
-      :embedded-in-panel="embeddedInPanel"
-      class="min-h-0 min-w-0 flex-1"
-      @toggle-editor="toggleEditor"
-    />
+    <div v-if="!showEditor" :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1 px-4' : 'contents'">
+      <TimeBoxViewer
+        :id
+        :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1' : undefined"
+        :compact="props.compact"
+        :flush-top="props.flushTop"
+        :highlight-tokens="highlightTokens"
+        :hide-actions="hideActions"
+        :hide-project-chip="hideProjectChip"
+        :interactive="props.interactive"
+        :opaque-surface="opaqueSurface"
+        :selected="props.selected"
+        :use-project-card-styles="props.useProjectCardStyles"
+        :variant
+        :is-minimized
+        @deleted="emit('deleted')"
+        @open="emit('open')"
+        @toggle-editor="toggleEditor"
+      />
+    </div>
+    <div v-if="showEditor" :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1' : 'contents'">
+      <TimeBoxEditor
+        :id
+        :embedded-in-panel="embeddedInPanel"
+        class="min-h-0 min-w-0 flex-1"
+        @toggle-editor="toggleEditor"
+      />
+    </div>
   </div>
 </template>

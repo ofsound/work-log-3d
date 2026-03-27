@@ -75,13 +75,13 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
 
 <template>
   <WorkspaceSidePanelFrame
-    :body-padding-class="mode === 'session' && sessionId ? 'px-4 pb-4' : 'px-4 pt-4 pb-4'"
+    :body-padding-class="mode === 'session' && sessionId ? 'pb-4' : 'pt-4 pb-4'"
     :overlay="overlay"
   >
     <template #header>
       <div
         class="flex shrink-0 items-center justify-between gap-3 px-3 pb-2"
-        :class="overlay ? 'border-b border-white/12 pt-2' : 'border-b border-border pt-3'"
+        :class="overlay ? 'pt-2' : 'pt-3'"
       >
         <button
           v-if="mode === 'session'"
@@ -118,7 +118,7 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
     </template>
 
     <template v-else-if="showOverlayDaySummary" #subheader>
-      <div class="-mt-1 border-b border-white/12 px-4 pt-0 pb-3">
+      <div class="-mt-1 px-4 pt-0 pb-3">
         <DaySummaryHeader
           metadata-top-spacing-class="mt-2 flex flex-wrap gap-2"
           :summary-eyebrow="isRangeSummary ? 'Date range' : ''"
@@ -128,7 +128,10 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
       </div>
     </template>
 
-    <div v-if="mode === 'session' && sessionId" class="flex min-h-0 min-w-0 flex-1 flex-col">
+    <div
+      v-if="mode === 'session' && sessionId"
+      class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+    >
       <TimeBox
         :id="sessionId"
         embedded-in-panel
@@ -141,6 +144,7 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
 
     <DaySessionsOverviewPanel
       v-else
+      class="px-4"
       :day="day"
       :empty-message="rangeEmptyMessage"
       :project-by-id="projectById"

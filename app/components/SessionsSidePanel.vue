@@ -84,9 +84,16 @@ const showOverlayHeader = computed(() => props.overlay && !props.persistent)
 const showOverlaySessionHeader = computed(
   () => showOverlayHeader.value && props.mode === 'session' && Boolean(props.sessionId),
 )
-const panelBodyPaddingClass = computed(() =>
-  showOverlaySessionHeader.value ? 'px-4 pb-4' : 'px-4 pt-4 pb-4',
+const panelUsesEdgeAlignedEditorScroll = computed(
+  () => props.mode === 'session' || props.mode === 'create',
 )
+const panelBodyPaddingClass = computed(() => {
+  if (panelUsesEdgeAlignedEditorScroll.value) {
+    return showOverlaySessionHeader.value ? 'pb-4' : 'pt-4 pb-4'
+  }
+
+  return 'pt-4 pb-4'
+})
 
 const overlayOverviewSummaryTitle = computed(
   () =>
@@ -113,7 +120,7 @@ defineExpose({
       <div
         v-if="showOverlayHeader"
         class="flex shrink-0 items-center justify-between gap-3 px-3 pb-2"
-        :class="props.overlay ? 'border-b border-white/12 pt-2' : 'border-b border-border pt-3'"
+        :class="props.overlay ? 'pt-2' : 'pt-3'"
       >
         <button
           v-if="showOverlaySessionHeader"
@@ -173,10 +180,7 @@ defineExpose({
       <div v-if="showOverlaySessionHeader" class="-mt-1 px-4 pt-0 pb-3">
         <div class="text-lg font-bold tracking-tight">{{ overlaySessionDayTitle }}</div>
       </div>
-      <div
-        v-else-if="showOverlayOverviewSummary"
-        class="-mt-1 border-b border-white/12 px-4 pt-0 pb-3"
-      >
+      <div v-else-if="showOverlayOverviewSummary" class="-mt-1 px-4 pt-0 pb-3">
         <DaySummaryHeader
           metadata-top-spacing-class="mt-2 flex flex-wrap gap-2"
           :show-project-count="showProjectCountInDaySummary"
@@ -190,7 +194,7 @@ defineExpose({
     <div
       v-if="props.persistent"
       v-show="props.mode === 'scratchpad'"
-      class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4"
     >
       <DailyScratchpadPanel
         ref="scratchpadPanelRef"
@@ -202,6 +206,7 @@ defineExpose({
 
     <DaySessionsOverviewPanel
       v-if="props.mode === 'overview' && props.day"
+      class="px-4"
       :day="props.day"
       empty-message="No sessions on the selected day."
       :project-by-id="props.projectById"
@@ -218,7 +223,7 @@ defineExpose({
 
     <div
       v-if="props.mode === 'session' && props.sessionId"
-      class="flex min-h-0 min-w-0 flex-1 flex-col"
+      class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
     >
       <TimeBox
         :id="props.sessionId"
@@ -230,7 +235,10 @@ defineExpose({
       />
     </div>
 
-    <div v-else-if="props.mode === 'create'" class="flex min-h-0 min-w-0 flex-1 flex-col pb-4">
+    <div
+      v-else-if="props.mode === 'create'"
+      class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4"
+    >
       <TimeBoxEditor
         embedded-in-panel
         class="min-h-0 flex-1"

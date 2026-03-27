@@ -29,9 +29,10 @@ describe('WorkspaceSidePanelFrame', () => {
     expect(scrollViewport.exists()).toBe(true)
     expect(scrollViewport.classes()).not.toContain('px-4')
 
-    const paddedBody = scrollViewport.find('.px-4.pt-4.pb-4')
-    expect(paddedBody.exists()).toBe(true)
-    expect(paddedBody.find('[data-test="body"]').exists()).toBe(true)
+    const bodyWrapper = scrollViewport.find('.pt-4.pb-4')
+    expect(bodyWrapper.exists()).toBe(true)
+    expect(bodyWrapper.classes()).not.toContain('px-4')
+    expect(bodyWrapper.find('[data-test="body"]').exists()).toBe(true)
   })
 
   it('omits the subheader slot and accepts custom body padding classes', () => {
