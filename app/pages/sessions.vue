@@ -478,6 +478,14 @@ const openOverviewPanel = async () => {
   resetPanelState('overview')
 }
 
+const backToOverlayOverviewPanel = async () => {
+  await flushScratchpadIfNeeded()
+  selectedSessionId.value = ''
+  resetPanelState('overview', {
+    rememberDayTab: false,
+  })
+}
+
 const openSuggestedCreatePanel = async () => {
   const selectedTimeBox = getSelectedDayTimeBox()
   const defaultStart = isSameDay(anchorDate.value, new Date())
@@ -964,6 +972,7 @@ onBeforeUnmount(() => {
           :time-boxes="visibleDayTimeBoxes"
           @close="closePanel"
           @created="handlePanelCreated"
+          @back-to-overview="backToOverlayOverviewPanel"
           @open-session="openSessionPanel"
           @show-overview="openOverviewPanel"
           @show-scratchpad="openScratchpadPanel"

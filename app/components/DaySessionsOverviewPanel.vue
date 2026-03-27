@@ -16,10 +16,11 @@ const props = defineProps({
   emptyMessage: { type: String, default: 'No sessions on the selected day.' },
   /** When false, hides the day title and aggregate stats (e.g. parent already shows them). */
   showDaySummary: { type: Boolean, default: true },
-  /** Summary label above the title; default is a single day. */
-  summaryEyebrow: { type: String, default: 'Day' },
+  /** Optional summary label above the title (used for date-range summaries). */
+  summaryEyebrow: { type: String, default: '' },
   /** When set, replaces the formatted single-day title. */
   summaryTitleOverride: { type: String, default: '' },
+  showProjectCount: { type: Boolean, default: false },
 })
 
 const emit = defineEmits<{
@@ -46,6 +47,7 @@ const showProjectChip = computed(() => props.showProjectName)
   <div class="flex flex-col gap-4 pb-4">
     <div v-if="showDaySummary" data-testid="day-summary">
       <DaySummaryHeader
+        :show-project-count="showProjectCount"
         :summary-eyebrow="summaryEyebrow"
         :summary-title="summaryTitle"
         :time-boxes="timeBoxes"

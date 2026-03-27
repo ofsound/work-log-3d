@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { PropType } from 'vue'
 
+import ChevronLeftIcon from '@/icons/ChevronLeftIcon.vue'
 import CloseIcon from '@/icons/CloseIcon.vue'
 
 import { formatDateKey, type Project, type TimeBox } from '~~/shared/worklog'
@@ -79,13 +80,13 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
   >
     <template #header>
       <div
-        class="flex shrink-0 items-center justify-between gap-3 px-3 py-3"
-        :class="overlay ? 'border-b border-white/12' : 'border-b border-border'"
+        class="flex shrink-0 items-center justify-between gap-3 px-3 pb-2"
+        :class="overlay ? 'border-b border-white/12 pt-2' : 'border-b border-border pt-3'"
       >
         <button
           v-if="mode === 'session'"
           type="button"
-          class="cursor-pointer rounded-md px-3 py-2 text-sm font-semibold transition"
+          class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition"
           :class="
             overlay
               ? 'text-text-muted hover:bg-white/16 hover:text-text'
@@ -93,6 +94,7 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
           "
           @click="emit('backToDay')"
         >
+          <ChevronLeftIcon />
           Back
         </button>
         <div v-else />
@@ -110,16 +112,16 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
     </template>
 
     <template v-if="mode === 'session' && sessionId" #subheader>
-      <div class="px-4 pt-4 pb-3">
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Session</div>
-        <div class="mt-1 text-lg font-bold tracking-tight">{{ dayTitle }}</div>
+      <div :class="overlay ? '-mt-1 px-4 pt-0 pb-3' : 'px-4 pt-4 pb-3'">
+        <div class="text-lg font-bold tracking-tight">{{ dayTitle }}</div>
       </div>
     </template>
 
     <template v-else-if="showOverlayDaySummary" #subheader>
-      <div class="border-b border-white/12 px-4 pt-4 pb-3">
+      <div class="-mt-1 border-b border-white/12 px-4 pt-0 pb-3">
         <DaySummaryHeader
-          :summary-eyebrow="isRangeSummary ? 'Date range' : 'Day'"
+          metadata-top-spacing-class="mt-2 flex flex-wrap gap-2"
+          :summary-eyebrow="isRangeSummary ? 'Date range' : ''"
           :summary-title="isRangeSummary ? rangeSummaryTitle : dayTitle"
           :time-boxes="timeBoxes"
         />
@@ -144,7 +146,7 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
       :project-by-id="projectById"
       :selected-session-id="selectedSessionId"
       :show-day-summary="!showOverlayDaySummary"
-      :summary-eyebrow="isRangeSummary ? 'Date range' : 'Day'"
+      :summary-eyebrow="isRangeSummary ? 'Date range' : ''"
       :summary-title-override="isRangeSummary ? rangeSummaryTitle : ''"
       :time-boxes="timeBoxes"
       :use-project-card-styles="Boolean(project)"

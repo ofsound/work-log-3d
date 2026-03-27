@@ -32,6 +32,9 @@ const mountSidebar = (props: Record<string, unknown>) =>
         WorkspaceSidePanelFrame,
       },
       stubs: {
+        DaySummaryHeader: {
+          template: '<div data-test="day-summary-header">Day summary</div>',
+        },
         DaySessionsOverviewPanel: DaySessionsOverviewPanelStub,
         TimeBox: {
           template: '<div data-test="time-box">TimeBox</div>',
@@ -67,7 +70,6 @@ describe('ProjectCalendarSidebar', () => {
       sessionId: 'session-1',
     })
 
-    expect(wrapper.text()).toContain('Session')
     expect(wrapper.text()).toContain(expectedTitle)
     expect(wrapper.find('[data-test="time-box"]').exists()).toBe(true)
 

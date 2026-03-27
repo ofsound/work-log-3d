@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import type { PropType } from 'vue'
 
+import ChevronLeftIcon from '@/icons/ChevronLeftIcon.vue'
 import CloseIcon from '@/icons/CloseIcon.vue'
 
 import type { Project, TimeBox } from '~~/shared/worklog'
@@ -28,7 +29,14 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['close', 'created', 'openSession', 'showOverview', 'showScratchpad'])
+const emit = defineEmits<{
+  backToOverview: []
+  close: []
+  created: [sessionId: string]
+  openSession: [sessionId: string]
+  showOverview: []
+  showScratchpad: []
+}>()
 
 const scratchpadPanelRef = ref<{ flushPendingChanges: () => Promise<void> } | null>(null)
 
@@ -72,6 +80,13 @@ const flushScratchpad = async () => {
 const showOverlayOverviewSummary = computed(
   () => props.overlay && !props.persistent && props.mode === 'overview' && props.day != null,
 )
+const showOverlayHeader = computed(() => props.overlay && !props.persistent)
+const showOverlaySessionHeader = computed(
+  () => showOverlayHeader.value && props.mode === 'session' && Boolean(props.sessionId),
+)
+const panelBodyPaddingClass = computed(() =>
+  showOverlaySessionHeader.value ? 'px-4 pb-4' : 'px-4 pt-4 pb-4',
+)
 
 const overlayOverviewSummaryTitle = computed(
   () =>
@@ -82,6 +97,10 @@ const overlayOverviewSummaryTitle = computed(
       year: 'numeric',
     }) ?? '',
 )
+const overlaySessionDayTitle = computed(() => overlayOverviewSummaryTitle.value)
+const showProjectCountInDaySummary = computed(
+  () => props.sessionsViewMode === 'week' || props.sessionsViewMode === 'month',
+)
 
 defineExpose({
   flushScratchpad,
@@ -89,9 +108,41 @@ defineExpose({
 </script>
 
 <template>
-  <WorkspaceSidePanelFrame :overlay="props.overlay">
+  <WorkspaceSidePanelFrame :body-padding-class="panelBodyPaddingClass" :overlay="props.overlay">
     <template #header>
       <div
+        v-if="showOverlayHeader"
+        class="flex shrink-0 items-center justify-between gap-3 px-3 pb-2"
+        :class="props.overlay ? 'border-b border-white/12 pt-2' : 'border-b border-border pt-3'"
+      >
+        <button
+          v-if="showOverlaySessionHeader"
+          type="button"
+          class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition"
+          :class="
+            props.overlay
+              ? 'text-text-muted hover:bg-white/16 hover:text-text'
+              : 'text-text-subtle hover:bg-surface hover:text-text'
+          "
+          @click="emit('backToOverview')"
+        >
+          <ChevronLeftIcon />
+          Back
+        </button>
+        <div v-else />
+
+        <button
+          type="button"
+          class="cursor-pointer rounded-md p-2 text-text-subtle hover:text-text"
+          :class="props.overlay ? 'hover:bg-white/16' : 'hover:bg-surface'"
+          aria-label="Close"
+          @click="emit('close')"
+        >
+          <CloseIcon />
+        </button>
+      </div>
+      <div
+        v-else
         class="flex shrink-0 items-center gap-3 px-3 py-3"
         :class="props.persistent ? 'justify-center' : 'justify-between'"
       >
@@ -118,9 +169,17 @@ defineExpose({
       </div>
     </template>
 
-    <template v-if="showOverlayOverviewSummary" #subheader>
-      <div class="border-b border-white/12 px-4 pt-4 pb-3">
+    <template #subheader>
+      <div v-if="showOverlaySessionHeader" class="-mt-1 px-4 pt-0 pb-3">
+        <div class="text-lg font-bold tracking-tight">{{ overlaySessionDayTitle }}</div>
+      </div>
+      <div
+        v-else-if="showOverlayOverviewSummary"
+        class="-mt-1 border-b border-white/12 px-4 pt-0 pb-3"
+      >
         <DaySummaryHeader
+          metadata-top-spacing-class="mt-2 flex flex-wrap gap-2"
+          :show-project-count="showProjectCountInDaySummary"
           summary-eyebrow=""
           :summary-title="overlayOverviewSummaryTitle"
           :time-boxes="props.timeBoxes"
@@ -147,6 +206,7 @@ defineExpose({
       empty-message="No sessions on the selected day."
       :project-by-id="props.projectById"
       :project-name-by-id="props.projectNameById"
+      :show-project-count="showProjectCountInDaySummary"
       :selected-session-id="props.selectedSessionId"
       :show-day-summary="!props.persistent && !showOverlayOverviewSummary"
       summary-eyebrow=""
