@@ -7,7 +7,10 @@ import {
   TIMED_WEEK_HEADER_HEIGHT_PX,
 } from '~/utils/calendar-header'
 import { getTimedGridMinWidthPx, TIMED_GRID_TIME_GUTTER_WIDTH_PX } from '~/utils/calendar-grid'
-import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import {
+  getProjectBadgeStyle,
+  getProjectDuotoneSoftSurfaceStyle,
+} from '~/utils/project-color-styles'
 import type {
   Project,
   TimeBox,
@@ -592,7 +595,7 @@ const getEventStyle = (layout: TimeBoxDaySegmentLayout) => {
     height: `${height}px`,
     left,
     width,
-    ...(project ? getProjectSoftSurfaceStyle(project.colors) : {}),
+    ...(project ? getProjectDuotoneSoftSurfaceStyle(project.colors) : {}),
   }
 }
 

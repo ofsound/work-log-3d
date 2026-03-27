@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { doc, query, where } from 'firebase/firestore'
 
-import {
-  getProjectBadgeStyle,
-  getProjectWorkspaceModeToggleStyles,
-} from '~/utils/project-color-styles'
+import { getProjectBadgeStyle, getProjectModeToggleStyles } from '~/utils/project-color-styles'
 import {
   buildProjectWorkspaceLocation,
   buildProjectRouteQuery,
@@ -115,7 +112,7 @@ const modeToggleStyles = computed(() => {
     return undefined
   }
 
-  const styles = getProjectWorkspaceModeToggleStyles(project.value.colors)
+  const styles = getProjectModeToggleStyles(project.value.colors)
 
   return {
     container: styles.container as Record<string, string>,

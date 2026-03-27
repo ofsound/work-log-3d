@@ -11,7 +11,10 @@ import {
   type MonthGridSegmentEntry,
   MONTH_GRID_VISIBLE_ROWS,
 } from '~/utils/month-grid'
-import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import {
+  getProjectBadgeStyle,
+  getProjectDuotoneSoftSurfaceStyle,
+} from '~/utils/project-color-styles'
 import type { Project, TimeBox, TimeBoxInput, YearHeatmapMonth } from '~~/shared/worklog'
 import {
   formatDateKey,
@@ -168,7 +171,7 @@ const monthEntries = computed(() =>
 )
 
 const projectStyle = computed(() =>
-  props.project ? getProjectSoftSurfaceStyle(props.project.colors) : {},
+  props.project ? getProjectDuotoneSoftSurfaceStyle(props.project.colors) : {},
 )
 const durationBadgeStyle = computed(() =>
   props.project ? getProjectBadgeStyle(props.project.colors) : {},

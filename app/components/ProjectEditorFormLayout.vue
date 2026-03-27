@@ -23,6 +23,14 @@ const props = defineProps({
     default: () => ({}),
   },
   previewNotesFallback: { type: String, default: 'Notes remain private to the edit page for now.' },
+  previewSecondarySurfaceStyle: {
+    type: Object as PropType<Record<string, string>>,
+    default: () => ({}),
+  },
+  previewSecondaryTextStyle: {
+    type: Object as PropType<Record<string, string>>,
+    default: () => ({}),
+  },
   previewSurfaceStyle: {
     type: Object as PropType<Record<string, string>>,
     default: () => ({}),
@@ -226,6 +234,12 @@ const toggleArchived = () => {
                   </div>
                 </div>
                 <div class="flex flex-col gap-4 px-5 py-5">
+                  <div
+                    class="text-xs font-semibold tracking-[0.18em] uppercase"
+                    :style="previewSecondaryTextStyle"
+                  >
+                    Secondary accent
+                  </div>
                   <div class="flex flex-wrap items-center gap-2">
                     <div
                       class="rounded-full px-3 py-1 text-xs font-semibold"
@@ -238,6 +252,12 @@ const toggleArchived = () => {
                       :style="previewSurfaceStyle"
                     >
                       Subtle project surface
+                    </div>
+                    <div
+                      class="rounded-full border px-3 py-1 text-xs font-semibold text-text"
+                      :style="previewSecondarySurfaceStyle"
+                    >
+                      Secondary support surface
                     </div>
                   </div>
                   <p class="text-sm text-text-muted">

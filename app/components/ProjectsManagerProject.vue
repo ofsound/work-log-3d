@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import {
+  getProjectBadgeStyle,
+  getProjectDuotoneSoftSurfaceStyle,
+} from '~/utils/project-color-styles'
 import { toTimeBoxes } from '~/utils/worklog-firebase'
 import { getProjectEditPathFromProject, getProjectPathFromProject } from '~/utils/worklog-routes'
 import { getTotalDurationMinutes } from '~~/shared/worklog'
@@ -76,8 +79,8 @@ const projectSessionDateRangeLabel = computed(() => {
 })
 
 const rowStyle = computed(() => ({
-  ...getProjectSoftSurfaceStyle(props.project.colors),
-  '--project-edit-border-hover': props.project.colors.primary,
+  ...getProjectDuotoneSoftSurfaceStyle(props.project.colors),
+  '--project-edit-border-hover': props.project.colors.secondary,
 }))
 const durationBadgeStyle = computed(() => getProjectBadgeStyle(props.project.colors))
 </script>

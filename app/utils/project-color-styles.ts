@@ -30,6 +30,12 @@ const toRgba = (value: string, alpha: number) => {
 
 const getGradientEndColor = (colors: ProjectColors) => colors.secondary
 
+const mixWithSurface = (value: string, amount: number) =>
+  `color-mix(in srgb, ${value} ${amount}%, var(--color-surface))`
+
+const mixColors = (left: string, leftAmount: number, right: string) =>
+  `color-mix(in srgb, ${left} ${leftAmount}%, ${right})`
+
 export const getProjectBadgeStyle = (colors: ProjectColors): CSSProperties => {
   return {
     backgroundColor: colors.primary,
@@ -43,9 +49,21 @@ export const getProjectSoftSurfaceStyle = (colors: ProjectColors): CSSProperties
   borderColor: toRgba(colors.primary, 0.42),
 })
 
+export const getProjectSecondarySoftSurfaceStyle = (colors: ProjectColors): CSSProperties => ({
+  backgroundColor: mixWithSurface(colors.secondary, 12),
+  borderColor: toRgba(colors.secondary, 0.38),
+})
+
+export const getProjectDuotoneSoftSurfaceStyle = (colors: ProjectColors): CSSProperties => ({
+  backgroundColor: mixWithSurface(colors.primary, 8),
+  backgroundImage: `linear-gradient(135deg, ${mixWithSurface(colors.primary, 14)}, ${mixWithSurface(colors.secondary, 14)})`,
+  borderColor: mixColors(colors.secondary, 58, colors.primary),
+})
+
 export const getProjectOpaqueSoftSurfaceStyle = (colors: ProjectColors): CSSProperties => ({
-  backgroundColor: `color-mix(in srgb, ${colors.primary} 10%, var(--color-surface))`,
-  borderColor: toRgba(colors.primary, 0.42),
+  backgroundColor: mixWithSurface(colors.primary, 10),
+  backgroundImage: `linear-gradient(135deg, ${mixWithSurface(colors.primary, 12)}, ${mixWithSurface(colors.secondary, 10)})`,
+  borderColor: mixColors(colors.secondary, 56, colors.primary),
 })
 
 export const getProjectHeaderStyle = (colors: ProjectColors): CSSProperties => {
@@ -60,22 +78,23 @@ export const getProjectHeaderStyle = (colors: ProjectColors): CSSProperties => {
 
 /**
  * Neutral project sub-header bar: no full-width gradient. Applies project colors to the
- * List / Calendar / Edit toggle (soft tinted rail; inactive labels use primary tint; active
- * segment uses solid primary like the duration badge).
+ * List / Calendar / Edit toggle (duotone rail; inactive labels lean on secondary; active
+ * segment stays solid primary like the duration badge).
  */
-export const getProjectWorkspaceModeToggleStyles = (
+export const getProjectModeToggleStyles = (
   colors: ProjectColors,
 ): {
   container: CSSProperties
   activeButton: CSSProperties
   inactiveButton: CSSProperties
 } => ({
-  container: getProjectSoftSurfaceStyle(colors),
+  container: getProjectDuotoneSoftSurfaceStyle(colors),
   activeButton: getProjectBadgeStyle(colors),
   inactiveButton: {
-    color: toRgba(colors.primary, 0.82),
+    color: mixColors(colors.secondary, 74, 'var(--color-text)'),
     /** Hover gradient in `ProjectWorkspaceHeader` (mix rail → solid active). */
-    '--project-mode-toggle-rail': toRgba(colors.primary, 0.14),
+    '--project-mode-toggle-rail-start': mixWithSurface(colors.primary, 12),
+    '--project-mode-toggle-rail-end': mixWithSurface(colors.secondary, 16),
     '--project-mode-toggle-active': colors.primary,
   } as CSSProperties,
 })
@@ -97,10 +116,10 @@ export const getProjectPickerOptionStyle = (
   return {
     '--project-picker-from': toRgba(colors.primary, 0.1),
     '--project-picker-to': toRgba(endColor, 0.1),
-    '--project-picker-border': toRgba(colors.primary, 0.26),
+    '--project-picker-border': toRgba(colors.secondary, 0.34),
     '--project-picker-from-hover': toRgba(colors.primary, 0.24),
     '--project-picker-to-hover': toRgba(endColor, 0.24),
-    '--project-picker-border-hover': toRgba(colors.primary, 0.44),
+    '--project-picker-border-hover': toRgba(colors.secondary, 0.48),
     color: 'var(--color-text)',
   } as CSSProperties
 }
@@ -115,4 +134,8 @@ export const getProjectSwatchStyle = (colors: ProjectColors): CSSProperties => {
 
 export const getProjectAccentTextStyle = (colors: ProjectColors): CSSProperties => ({
   color: colors.primary,
+})
+
+export const getProjectSecondaryAccentTextStyle = (colors: ProjectColors): CSSProperties => ({
+  color: mixColors(colors.secondary, 74, 'var(--color-text)'),
 })

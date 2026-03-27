@@ -3,9 +3,11 @@ import { doc, query, where } from 'firebase/firestore'
 
 import {
   getProjectBadgeStyle,
+  getProjectDuotoneSoftSurfaceStyle,
   getProjectHeaderStyle,
-  getProjectSoftSurfaceStyle,
-  getProjectWorkspaceModeToggleStyles,
+  getProjectModeToggleStyles,
+  getProjectSecondaryAccentTextStyle,
+  getProjectSecondarySoftSurfaceStyle,
 } from '~/utils/project-color-styles'
 import {
   buildProjectWorkspaceLocation,
@@ -98,9 +100,15 @@ const previewColors = computed<ProjectColors>(() => ({
 }))
 /** In-form preview card only; workspace sub-header uses neutral bar + `modeToggleStyles`. */
 const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
-const previewSurfaceStyle = computed(() => getProjectSoftSurfaceStyle(previewColors.value))
+const previewSurfaceStyle = computed(() => getProjectDuotoneSoftSurfaceStyle(previewColors.value))
+const previewSecondarySurfaceStyle = computed(() =>
+  getProjectSecondarySoftSurfaceStyle(previewColors.value),
+)
+const previewSecondaryTextStyle = computed(() =>
+  getProjectSecondaryAccentTextStyle(previewColors.value),
+)
 const modeToggleStyles = computed(() => {
-  const styles = getProjectWorkspaceModeToggleStyles(previewColors.value)
+  const styles = getProjectModeToggleStyles(previewColors.value)
 
   return {
     container: styles.container as Record<string, string>,
@@ -376,6 +384,8 @@ onBeforeRouteLeave(async () => {
           :notes="dynamicNotes"
           :preview-badge-style="previewBadgeStyle as Record<string, string>"
           :preview-header-style="previewHeaderStyle as Record<string, string>"
+          :preview-secondary-surface-style="previewSecondarySurfaceStyle as Record<string, string>"
+          :preview-secondary-text-style="previewSecondaryTextStyle as Record<string, string>"
           :preview-surface-style="previewSurfaceStyle as Record<string, string>"
           :primary-color="dynamicPrimaryColor"
           :secondary-color="dynamicSecondaryColor"

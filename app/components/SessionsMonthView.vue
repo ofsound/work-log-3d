@@ -6,7 +6,10 @@ import {
   CALENDAR_WEEKDAY_HEADER_ROW_CLASS_NAME,
 } from '~/utils/calendar-header'
 import { CALENDAR_SEVEN_DAY_MIN_WIDTH_PX } from '~/utils/calendar-grid'
-import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
+import {
+  getProjectBadgeStyle,
+  getProjectDuotoneSoftSurfaceStyle,
+} from '~/utils/project-color-styles'
 import {
   buildMonthGridDaySegments,
   getMonthGridWeekdays,
@@ -55,7 +58,7 @@ const getProject = (projectId: string) => props.projectById[projectId]
 const getProjectStyle = (projectId: string) => {
   const project = getProject(projectId)
 
-  return project ? getProjectSoftSurfaceStyle(project.colors) : {}
+  return project ? getProjectDuotoneSoftSurfaceStyle(project.colors) : {}
 }
 
 const getDurationBadgeStyle = (projectId: string) => {

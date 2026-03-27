@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { getProjectSoftSurfaceStyle, getProjectSwatchStyle } from '~/utils/project-color-styles'
+import {
+  getProjectSecondarySoftSurfaceStyle,
+  getProjectSwatchStyle,
+} from '~/utils/project-color-styles'
 import {
   addDays,
   formatDateKey,
@@ -117,7 +120,7 @@ const activeFilterChips = computed<ActiveFilterChip[]>(() => {
         projectIds: props.filters.projectIds.filter((id) => id !== projectId),
       },
       style: project
-        ? (getProjectSoftSurfaceStyle(project.colors) as Record<string, string>)
+        ? (getProjectSecondarySoftSurfaceStyle(project.colors) as Record<string, string>)
         : undefined,
     })
   })

@@ -8,8 +8,10 @@ import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
 import { useWorklogRepository } from '~/composables/useWorklogRepository'
 import {
   getProjectBadgeStyle,
+  getProjectDuotoneSoftSurfaceStyle,
   getProjectHeaderStyle,
-  getProjectSoftSurfaceStyle,
+  getProjectSecondaryAccentTextStyle,
+  getProjectSecondarySoftSurfaceStyle,
 } from '~/utils/project-color-styles'
 import { getProjectNewPath, getProjectPathFromProject } from '~/utils/worklog-routes'
 import type { ProjectColors, ProjectInput } from '~~/shared/worklog'
@@ -42,7 +44,13 @@ const previewColors = computed<ProjectColors>(() => ({
   secondary: normalizeHexColor(dynamicSecondaryColor.value) ?? '#0e7490',
 }))
 const previewHeaderStyle = computed(() => getProjectHeaderStyle(previewColors.value))
-const previewSurfaceStyle = computed(() => getProjectSoftSurfaceStyle(previewColors.value))
+const previewSurfaceStyle = computed(() => getProjectDuotoneSoftSurfaceStyle(previewColors.value))
+const previewSecondarySurfaceStyle = computed(() =>
+  getProjectSecondarySoftSurfaceStyle(previewColors.value),
+)
+const previewSecondaryTextStyle = computed(() =>
+  getProjectSecondaryAccentTextStyle(previewColors.value),
+)
 const previewBadgeStyle = computed(() => getProjectBadgeStyle(previewColors.value))
 const colorValidationMessages = computed(() => {
   const primary = normalizeHexColor(dynamicPrimaryColor.value)
@@ -221,6 +229,8 @@ onBeforeRouteLeave(async (to) => {
       :notes="dynamicNotes"
       :preview-badge-style="previewBadgeStyle as Record<string, string>"
       :preview-header-style="previewHeaderStyle as Record<string, string>"
+      :preview-secondary-surface-style="previewSecondarySurfaceStyle as Record<string, string>"
+      :preview-secondary-text-style="previewSecondaryTextStyle as Record<string, string>"
       preview-notes-fallback="Notes can help you frame the project before the first session."
       :preview-surface-style="previewSurfaceStyle as Record<string, string>"
       :primary-color="dynamicPrimaryColor"

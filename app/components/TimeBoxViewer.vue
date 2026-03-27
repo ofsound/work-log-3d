@@ -8,8 +8,9 @@ import type { PropType } from 'vue'
 import {
   getProjectAccentTextStyle,
   getProjectBadgeStyle,
+  getProjectDuotoneSoftSurfaceStyle,
   getProjectOpaqueSoftSurfaceStyle,
-  getProjectSoftSurfaceStyle,
+  getProjectSecondaryAccentTextStyle,
 } from '~/utils/project-color-styles'
 import { getSessionsSearchRouteForTag } from '~/utils/sessions-route-state'
 import { getProjectPath, getProjectPathFromProject } from '~/utils/worklog-routes'
@@ -162,13 +163,16 @@ const sessionCardStyle = computed(() => {
 
   return props.opaqueSurface
     ? getProjectOpaqueSoftSurfaceStyle(project.value.colors)
-    : getProjectSoftSurfaceStyle(project.value.colors)
+    : getProjectDuotoneSoftSurfaceStyle(project.value.colors)
 })
 const projectBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},
 )
 const projectTextStyle = computed(() =>
   project.value ? getProjectAccentTextStyle(project.value.colors) : {},
+)
+const projectMetaTextStyle = computed(() =>
+  project.value ? getProjectSecondaryAccentTextStyle(project.value.colors) : {},
 )
 const isOverviewVariant = computed(() => props.variant === 'overview')
 </script>
@@ -242,10 +246,11 @@ const isOverviewVariant = computed(() => props.variant === 'overview')
               sessionStartMetaLabel
             "
             class="w-full font-medium text-text"
+            :style="projectMetaTextStyle"
           >
             {{ sessionStartMetaLabel }}
           </div>
-          <div class="text-sm text-text tabular-nums">
+          <div class="text-sm text-text tabular-nums" :style="projectMetaTextStyle">
             {{ startTimeFormatted }} &mdash; {{ endTimeFormatted }}
           </div>
         </div>
