@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
+import {
+  CALENDAR_WEEKDAY_HEADER_LABEL_CLASS_NAME,
+  TIMED_WEEK_HEADER_CELL_CLASS_NAME,
+  TIMED_WEEK_HEADER_HEIGHT_PX,
+} from '~/utils/calendar-header'
 import { getTimedGridMinWidthPx, TIMED_GRID_TIME_GUTTER_WIDTH_PX } from '~/utils/calendar-grid'
 import { getProjectBadgeStyle, getProjectSoftSurfaceStyle } from '~/utils/project-color-styles'
 import type {
@@ -557,15 +562,19 @@ const formatHourLabel = (hour: number) =>
 const formatDayHeader = (date: Date) =>
   visibleDays.value.length === 1
     ? date.toLocaleDateString([], { weekday: 'long' })
-    : date.toLocaleDateString([], { weekday: 'short', day: 'numeric' })
+    : `${date.toLocaleDateString([], { weekday: 'short' })} ${date.getDate()}`
+
+const weekHeaderStyle = computed(() => ({
+  height: `${TIMED_WEEK_HEADER_HEIGHT_PX}px`,
+}))
 
 /** Week header: only “today” is visually distinct (stripes). No selected-day background. */
 const getDayHeaderCellClass = (day: Date) => {
   if (isSameDay(day, now.value)) {
-    return 'bg-surface bg-[image:var(--background-image-calendar-day-today)]'
+    return 'bg-surface-muted bg-[image:var(--background-image-calendar-day-today)]'
   }
 
-  return 'bg-surface'
+  return 'bg-surface-muted'
 }
 
 const getEventStyle = (layout: TimeBoxDaySegmentLayout) => {
@@ -842,25 +851,28 @@ onBeforeUnmount(() => {
           <div class="min-h-full" :style="{ minWidth: weekGridStyle.minWidth }">
             <div
               ref="weekHeaderRef"
-              class="sticky top-0 z-20 grid border-b border-border bg-surface"
+              class="sticky top-0 z-20 grid border-b border-border bg-surface-muted"
               :style="weekGridStyle"
             >
-              <div class="border-r border-border bg-surface"></div>
+              <div class="border-r border-border bg-surface-muted"></div>
               <component
                 :is="headerClickEnabled ? 'button' : 'div'"
                 v-for="day in visibleDays"
                 :key="formatDateKey(day)"
                 :type="headerClickEnabled ? 'button' : undefined"
-                class="flex h-18 flex-col items-start justify-center border-l border-border px-4 text-left"
+                :style="weekHeaderStyle"
                 :class="[
+                  TIMED_WEEK_HEADER_CELL_CLASS_NAME,
                   getDayHeaderCellClass(day),
                   headerClickEnabled && 'cursor-pointer',
                   headerClickEnabled && isSameDay(day, now) && 'hover:bg-link/15',
-                  headerClickEnabled && !isSameDay(day, now) && 'hover:bg-surface-muted',
+                  headerClickEnabled && !isSameDay(day, now) && 'hover:bg-surface',
                 ]"
                 @click="handleDayHeaderClick(day)"
               >
-                <div class="text-lg font-semibold">{{ formatDayHeader(day) }}</div>
+                <div :class="CALENDAR_WEEKDAY_HEADER_LABEL_CLASS_NAME">
+                  {{ formatDayHeader(day) }}
+                </div>
               </component>
             </div>
 

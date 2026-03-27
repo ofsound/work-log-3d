@@ -2,6 +2,10 @@
 import type { PropType } from 'vue'
 
 import {
+  CALENDAR_WEEKDAY_HEADER_CELL_CLASS_NAME,
+  CALENDAR_WEEKDAY_HEADER_ROW_CLASS_NAME,
+} from '~/utils/calendar-header'
+import {
   buildMonthGridDaySegments,
   getMonthGridWeekdays,
   type MonthGridSegmentEntry,
@@ -306,11 +310,11 @@ const handleSegmentDragEnd = () => {
             <div class="mt-1 text-2xl font-bold tracking-tight">{{ month.label }}</div>
           </div>
 
-          <div class="grid grid-cols-7 border-b border-border bg-surface-muted">
+          <div :class="CALENDAR_WEEKDAY_HEADER_ROW_CLASS_NAME">
             <div
               v-for="weekday in month.weekdays"
               :key="`${month.year}-${month.monthIndex}-${weekday}`"
-              class="border-r border-border px-4 py-3 text-sm font-semibold tracking-[0.18em] text-text-subtle uppercase last:border-r-0"
+              :class="CALENDAR_WEEKDAY_HEADER_CELL_CLASS_NAME"
             >
               {{ weekday }}
             </div>
