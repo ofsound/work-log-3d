@@ -3,6 +3,10 @@ import type { Ref } from 'vue'
 import { doc, getFirestore, setDoc } from 'firebase/firestore'
 
 import type { FirebaseUserSettingsDocument } from '~/utils/worklog-firebase'
+import {
+  readCachedShellBackgroundPreset,
+  writeCachedShellBackgroundPreset,
+} from '~/utils/shell-background-preset-cache'
 import { toUserSettings, toUserSettingsPayload } from '~/utils/worklog-firebase'
 import { DEFAULT_USER_SETTINGS, cloneUserSettings, type UserSettings } from '~~/shared/worklog'
 
@@ -39,6 +43,42 @@ export function useUserSettings() {
   const hideTags = computed(() => activeSettings.value.workflow.hideTags)
   const isReady = computed(() => currentUser.value !== undefined)
 
+  /** Avoids a grid flash while Firestore prefs load; uses last cached preset per user. */
+  const effectiveShellBackgroundPreset = computed(() => {
+    if (previewSettings.value) {
+      return activeSettings.value.appearance.backgroundPreset
+    }
+
+    const uid = currentUser.value?.uid
+    if (import.meta.client && uid && preferencesDocumentPending.value) {
+      const cached = readCachedShellBackgroundPreset(window.localStorage, uid)
+      if (cached) {
+        return cached
+      }
+    }
+
+    return savedSettings.value.appearance.backgroundPreset
+  })
+
+  if (import.meta.client) {
+    watch(
+      [preferencesDocumentPending, savedSettings, currentUser],
+      () => {
+        const uid = currentUser.value?.uid
+        if (!uid || preferencesDocumentPending.value) {
+          return
+        }
+
+        writeCachedShellBackgroundPreset(
+          window.localStorage,
+          uid,
+          savedSettings.value.appearance.backgroundPreset,
+        )
+      },
+      { immediate: true },
+    )
+  }
+
   const applyPreview = (nextSettings: UserSettings | null) => {
     previewSettings.value = nextSettings ? cloneUserSettings(nextSettings) : null
   }
@@ -48,7 +88,8 @@ export function useUserSettings() {
   }
 
   const saveSettings = async (nextSettings: UserSettings) => {
-    if (!settingsDocument.value) {
+    const uid = currentUser.value?.uid
+    if (!settingsDocument.value || !uid) {
       throw new Error('User settings require an authenticated user.')
     }
 
@@ -56,10 +97,16 @@ export function useUserSettings() {
 
     await setDoc(settingsDocument.value, payload)
     previewSettings.value = null
+    writeCachedShellBackgroundPreset(
+      window.localStorage,
+      uid,
+      nextSettings.appearance.backgroundPreset,
+    )
   }
 
   return {
     activeSettings,
+    effectiveShellBackgroundPreset,
     applyPreview,
     clearPreview,
     defaultSettings: DEFAULT_USER_SETTINGS,

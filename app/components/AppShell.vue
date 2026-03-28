@@ -4,7 +4,7 @@ import { getShellBackgroundStyle } from '~/utils/user-settings'
 
 const route = useRoute()
 const user = useCurrentUser()
-const { activeSettings } = useUserSettings()
+const { effectiveShellBackgroundPreset } = useUserSettings()
 const hasMounted = ref(false)
 
 onMounted(() => {
@@ -19,7 +19,7 @@ const shouldShowLoadingOverlay = computed(
   () => !isPublicRoute.value && !shouldRenderProtectedContent.value,
 )
 const shellBackgroundStyle = computed(() =>
-  getShellBackgroundStyle(activeSettings.value.appearance.backgroundPreset),
+  getShellBackgroundStyle(effectiveShellBackgroundPreset.value),
 )
 </script>
 
