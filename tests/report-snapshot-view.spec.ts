@@ -151,7 +151,7 @@ describe('ReportSnapshotView', () => {
     expect(wrapper.text()).toContain('March Client Report')
     expect(wrapper.text()).toContain('Highlights')
     expect(wrapper.text()).toContain('Hours by project')
-    expect(wrapper.text()).toContain('Session detail')
+    expect(wrapper.text()).toContain('Sessions')
     expect(wrapper.text()).toContain('Planning and review')
   })
 

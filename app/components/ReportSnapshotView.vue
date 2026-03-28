@@ -250,7 +250,7 @@ const visibleInsights = computed(
     </section>
 
     <ContainerCard as="section">
-      <div class="text-lg font-bold text-text">Session detail</div>
+      <div class="text-2xl font-bold text-text">Sessions</div>
       <div class="mt-5 flex flex-col gap-6">
         <div
           v-for="group in snapshot.sessionGroups"
@@ -258,7 +258,7 @@ const visibleInsights = computed(
           class="flex flex-col gap-4"
         >
           <div class="flex flex-wrap items-center gap-3">
-            <div class="text-lg font-semibold text-text">{{ group.label }}</div>
+            <div class="text-xl font-semibold text-text">{{ group.label }}</div>
             <DurationPill :minutes="group.totalMinutes" variant="compact" />
             <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">
               {{ group.sessionCount }} sessions
