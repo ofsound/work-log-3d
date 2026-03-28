@@ -36,7 +36,7 @@ const navItems = computed<HeaderNavItem[]>(() => {
       isActive: (path) => isRouteActive(path, ['/']),
     },
     {
-      label: 'New Timebox',
+      label: 'New Session',
       to: '/new',
       isActive: (path) => isRouteActive(path, ['/new']),
     },
