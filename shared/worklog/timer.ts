@@ -23,6 +23,18 @@ export interface TimerSnapshot extends TimerState {
   isActive: boolean
 }
 
+const cloneTimerStateFields = (state: TimerState): TimerState => ({
+  mode: state.mode,
+  status: state.status,
+  startedAtMs: state.startedAtMs,
+  durationSeconds: state.durationSeconds,
+  originalDurationSeconds: state.originalDurationSeconds,
+  pausedAtMs: state.pausedAtMs,
+  accumulatedPauseMs: state.accumulatedPauseMs,
+  endedAtMs: state.endedAtMs,
+  lastExtensionConsumedSeconds: state.lastExtensionConsumedSeconds,
+})
+
 export const createIdleTimerState = (): TimerState => ({
   mode: null,
   status: 'idle',
@@ -95,12 +107,21 @@ const getCompletionGapSeconds = (state: TimerState, nowMs: number) => {
 }
 
 export const getTimerSnapshot = (state: TimerState, nowMs: number): TimerSnapshot => ({
-  ...state,
+  ...cloneTimerStateFields(state),
   display: getTimerDisplay(state, nowMs),
   elapsedSeconds: getElapsedSeconds(state, nowMs),
   remainingSeconds: getRemainingSeconds(state, nowMs),
   completionGapSeconds: getCompletionGapSeconds(state, nowMs),
   isActive: state.status === 'running' || state.status === 'paused',
+})
+
+export const serializeTimerSnapshot = (snapshot: TimerSnapshot): TimerSnapshot => ({
+  ...serializeTimerState(snapshot),
+  display: snapshot.display,
+  elapsedSeconds: snapshot.elapsedSeconds,
+  remainingSeconds: snapshot.remainingSeconds,
+  completionGapSeconds: snapshot.completionGapSeconds,
+  isActive: snapshot.isActive,
 })
 
 export const startCountupTimer = (nowMs: number): TimerState => ({
@@ -272,7 +293,7 @@ export const syncTimerState = (state: TimerState, nowMs: number) => {
   return state
 }
 
-export const serializeTimerState = (state: TimerState) => state
+export const serializeTimerState = (state: TimerState): TimerState => cloneTimerStateFields(state)
 
 export const reviveTimerState = (value: unknown): TimerState => {
   if (!value || typeof value !== 'object') {

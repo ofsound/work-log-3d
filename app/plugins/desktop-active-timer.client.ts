@@ -1,46 +1,90 @@
 import { useHostRuntime } from '~/composables/useHostRuntime'
 import { useTimerService } from '~/composables/useTimerService'
 
-import type { DesktopTimerAction } from '~~/shared/worklog'
+import {
+  serializeActiveTimerState,
+  serializeTimerSnapshot,
+  type DesktopTimerAction,
+} from '~~/shared/worklog'
 
 export default defineNuxtPlugin(() => {
   const { desktopApi, isDesktop } = useHostRuntime()
   const timerService = useTimerService()
-  const pendingActions: DesktopTimerAction[] = []
+  let drainingQueuedActions = false
+  let drainRequestedWhileBusy = false
+  let queuedActionPollInterval: number | null = null
 
   if (!isDesktop || !desktopApi) {
     return
   }
 
-  const applyTimerAction = (action: DesktopTimerAction) => {
+  const applyTimerAction = async (action: DesktopTimerAction) => {
     switch (action.type) {
       case 'start_countup':
-        void timerService.startCountup({
+        await timerService.startCountup({
           project: action.project,
           tags: action.tags,
         })
         break
       case 'start_countdown':
-        void timerService.startCountdownSeconds(action.durationSeconds, {
+        await timerService.startCountdownSeconds(action.durationSeconds, {
           project: action.project,
           tags: action.tags,
         })
         break
       case 'add_countdown_time':
-        void timerService.addCountdownMinutes(action.durationSeconds / 60)
+        await timerService.addCountdownMinutes(action.durationSeconds / 60)
         break
       case 'pause':
-        void timerService.pause()
+        await timerService.pause()
         break
       case 'resume':
-        void timerService.resume()
+        await timerService.resume()
         break
       case 'stop':
-        void timerService.stop()
+        await timerService.stop()
         break
       case 'cancel':
-        void timerService.cancel()
+        await timerService.cancel()
         break
+    }
+  }
+
+  const consumeQueuedAction = async (id: number, action: DesktopTimerAction) => {
+    await applyTimerAction(action)
+
+    try {
+      await desktopApi.ackTimerAction(id)
+    } catch (error) {
+      console.warn('[worklog] unable to acknowledge timer action to desktop shell', error)
+    }
+  }
+
+  const drainQueuedActions = async () => {
+    if (!timerService.isPersistentReady.value) {
+      return
+    }
+
+    if (drainingQueuedActions) {
+      drainRequestedWhileBusy = true
+      return
+    }
+
+    drainingQueuedActions = true
+
+    try {
+      do {
+        drainRequestedWhileBusy = false
+        const queuedActions = await desktopApi.consumePendingTimerActions()
+
+        for (const queuedAction of queuedActions) {
+          await consumeQueuedAction(queuedAction.id, queuedAction.action)
+        }
+      } while (drainRequestedWhileBusy)
+    } catch (error) {
+      console.warn('[worklog] unable to consume timer actions from desktop shell', error)
+    } finally {
+      drainingQueuedActions = false
     }
   }
 
@@ -51,32 +95,35 @@ export default defineNuxtPlugin(() => {
         console.warn('[worklog] unable to publish timer bridge readiness to desktop shell', error)
       })
 
-      if (!isReady || pendingActions.length === 0) {
+      if (!isReady) {
         return
       }
 
-      for (const action of pendingActions.splice(0, pendingActions.length)) {
-        applyTimerAction(action)
-      }
+      void drainQueuedActions()
     },
     { immediate: true },
   )
 
-  desktopApi.subscribeToTimerAction((action) => {
-    if (!timerService.isPersistentReady.value) {
-      pendingActions.push(action)
-      return
-    }
-
-    applyTimerAction(action)
+  desktopApi.subscribeToTimerAction(() => {
+    void drainQueuedActions()
   })
+
+  if (typeof window !== 'undefined') {
+    queuedActionPollInterval = window.setInterval(() => {
+      if (!timerService.isPersistentReady.value) {
+        return
+      }
+
+      void drainQueuedActions()
+    }, 500)
+  }
 
   let lastPublishedKey = ''
 
   watch(
     () => {
-      const snapshot = timerService.snapshot.value
-      const state = timerService.timerState.value
+      const snapshot = serializeTimerSnapshot(timerService.snapshot.value)
+      const state = serializeActiveTimerState(timerService.timerState.value)
 
       return JSON.stringify([
         snapshot.display,
@@ -102,16 +149,19 @@ export default defineNuxtPlugin(() => {
         return
       }
 
+      const serializedSnapshot = serializeTimerSnapshot(timerService.snapshot.value)
+      const serializedState = serializeActiveTimerState(timerService.timerState.value)
+
       const nextKey = JSON.stringify([
-        timerService.snapshot.value.display,
-        timerService.snapshot.value.status,
-        timerService.snapshot.value.mode,
-        timerService.timerState.value.project,
-        timerService.timerState.value.tags,
-        timerService.timerState.value.draftNotes,
-        timerService.timerState.value.updatedAtMs,
-        timerService.timerState.value.updatedByDeviceId,
-        timerService.timerState.value.mutationId,
+        serializedSnapshot.display,
+        serializedSnapshot.status,
+        serializedSnapshot.mode,
+        serializedState.project,
+        serializedState.tags,
+        serializedState.draftNotes,
+        serializedState.updatedAtMs,
+        serializedState.updatedByDeviceId,
+        serializedState.mutationId,
       ])
 
       if (nextKey === lastPublishedKey) {
@@ -120,12 +170,18 @@ export default defineNuxtPlugin(() => {
 
       lastPublishedKey = nextKey
 
-      void desktopApi
-        .publishTimerState(timerService.timerState.value, timerService.snapshot.value)
-        .catch((error) => {
-          console.warn('[worklog] unable to publish timer state to desktop shell', error)
-        })
+      void desktopApi.publishTimerState(serializedState, serializedSnapshot).catch((error) => {
+        console.warn('[worklog] unable to publish timer state to desktop shell', error)
+      })
     },
     { immediate: true },
   )
+
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      if (queuedActionPollInterval !== null && typeof window !== 'undefined') {
+        window.clearInterval(queuedActionPollInterval)
+      }
+    })
+  }
 })

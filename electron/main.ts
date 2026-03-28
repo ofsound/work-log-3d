@@ -7,6 +7,7 @@ import type { Rectangle } from 'electron'
 import type {
   ActiveTimerState,
   DesktopPublishedTimerState,
+  DesktopQueuedTimerAction,
   DesktopTimerAction,
   TimerSnapshot,
   UserSettingsTrayShortcut,
@@ -43,12 +44,14 @@ let isQuitting = false
 let trayController: TrayController | null = null
 let desktopTrayShortcuts: UserSettingsTrayShortcut[] = []
 let pendingRouteRequest: string | null = null
-let pendingTimerActions: DesktopTimerAction[] = []
+let pendingTimerActions: DesktopQueuedTimerAction[] = []
 let rendererTimerActionsReady = false
 let rendererTimerBridgeReady = false
 let desktopRendererServer: Awaited<ReturnType<typeof createDesktopRendererServer>> | null = null
 let countdownDefaultMinutes = DEFAULT_COUNTDOWN_DEFAULT_MINUTES
 let restoredWindowState: PersistedWindowState | null = null
+let nextTimerActionId = 0
+let inFlightTimerActionIds = new Set<number>()
 
 /** Retain until `close` so macOS notification delivery is reliable (avoid premature GC). */
 const activeTimerNotifications: Notification[] = []
@@ -192,26 +195,28 @@ const flushPendingTimerActions = () => {
     return
   }
 
-  for (const action of pendingTimerActions) {
-    mainWindow.webContents.send('desktop:timerAction', action)
-  }
-
-  pendingTimerActions = []
+  mainWindow.webContents.send('desktop:timerAction')
 }
 
 const dispatchTimerAction = (action: DesktopTimerAction) => {
+  const queuedAction: DesktopQueuedTimerAction = {
+    id: ++nextTimerActionId,
+    action,
+  }
+
+  pendingTimerActions.push(queuedAction)
+
   if (
     !mainWindow ||
     mainWindow.webContents.isLoadingMainFrame() ||
     !rendererTimerActionsReady ||
     !rendererTimerBridgeReady
   ) {
-    pendingTimerActions.push(action)
     focusOrCreateMainWindow()
     return
   }
 
-  mainWindow.webContents.send('desktop:timerAction', action)
+  mainWindow.webContents.send('desktop:timerAction')
 }
 
 const showTimerCompletionNotification = (payload: { title: string; body: string }) => {
@@ -298,6 +303,7 @@ const createMainWindow = () => {
     mainWindow = null
     rendererTimerActionsReady = false
     rendererTimerBridgeReady = false
+    inFlightTimerActionIds = new Set()
   })
 
   window.on('resize', () => {
@@ -325,6 +331,7 @@ const createMainWindow = () => {
   window.webContents.on('did-start-loading', () => {
     rendererTimerActionsReady = false
     rendererTimerBridgeReady = false
+    inFlightTimerActionIds = new Set()
   })
 
   window.webContents.on('did-finish-load', () => {
@@ -445,6 +452,21 @@ const registerIpc = () => {
       setPublishedTimerState(payload.state, payload.snapshot)
     },
   )
+  ipcMain.handle('desktop:consumePendingTimerActions', async () => {
+    const actionsToDeliver = pendingTimerActions.filter(
+      (queuedAction) => !inFlightTimerActionIds.has(queuedAction.id),
+    )
+
+    for (const queuedAction of actionsToDeliver) {
+      inFlightTimerActionIds.add(queuedAction.id)
+    }
+
+    return actionsToDeliver
+  })
+  ipcMain.handle('desktop:ackTimerAction', async (_event, actionId: number) => {
+    pendingTimerActions = pendingTimerActions.filter((queuedAction) => queuedAction.id !== actionId)
+    inFlightTimerActionIds.delete(actionId)
+  })
   ipcMain.on('desktop:timerActionReady', () => {
     rendererTimerActionsReady = true
     flushPendingTimerActions()

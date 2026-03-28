@@ -36,6 +36,11 @@ export type DesktopTimerAction =
       type: 'cancel'
     }
 
+export interface DesktopQueuedTimerAction {
+  id: number
+  action: DesktopTimerAction
+}
+
 export interface DesktopWindowState {
   timerDisplay: string
   isRunning: boolean
@@ -116,9 +121,11 @@ export interface DesktopApi {
   getAlertSound(): Promise<DesktopAlertSoundState>
   setTrayShortcuts(shortcuts: UserSettingsTrayShortcut[]): Promise<void>
   setTimerBridgeReady(isReady: boolean): Promise<void>
+  ackTimerAction(id: number): Promise<void>
+  consumePendingTimerActions(): Promise<DesktopQueuedTimerAction[]>
   publishTimerState(state: ActiveTimerState, snapshot: TimerSnapshot): Promise<void>
   subscribeToRouteRequest(listener: (path: string) => void): () => void
-  subscribeToTimerAction(listener: (action: DesktopTimerAction) => void): () => void
+  subscribeToTimerAction(listener: () => void): () => void
   chooseAlertSound(): Promise<DesktopAlertSoundState>
   clearAlertSound(): Promise<DesktopAlertSoundState>
   testAlertSound(): Promise<void>

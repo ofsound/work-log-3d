@@ -1,12 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 import type { IpcRendererEvent } from 'electron'
-import type {
-  ActiveTimerState,
-  DesktopApi,
-  DesktopPublishedTimerState,
-  DesktopTimerAction,
-} from '~/shared/worklog'
+import type { ActiveTimerState, DesktopApi, DesktopPublishedTimerState } from '~/shared/worklog'
 import { DEFAULT_DESKTOP_CAPABILITIES } from '~/shared/worklog'
 
 const api: DesktopApi = {
@@ -28,6 +23,14 @@ const api: DesktopApi = {
   async setTimerBridgeReady(isReady) {
     await ipcRenderer.invoke('desktop:setTimerBridgeReady', isReady)
   },
+  async ackTimerAction(id) {
+    await ipcRenderer.invoke('desktop:ackTimerAction', id)
+  },
+  async consumePendingTimerActions() {
+    return (await ipcRenderer.invoke('desktop:consumePendingTimerActions')) as Awaited<
+      ReturnType<DesktopApi['consumePendingTimerActions']>
+    >
+  },
   async publishTimerState(state: ActiveTimerState, snapshot) {
     await ipcRenderer.invoke('desktop:publishTimerState', {
       state,
@@ -38,13 +41,12 @@ const api: DesktopApi = {
     await ipcRenderer.invoke('desktop:setCountdownDefaultMinutes', minutes)
   },
   subscribeToTimerAction(listener) {
-    ipcRenderer.send('desktop:timerActionReady')
-
-    const handler = (_event: IpcRendererEvent, payload: DesktopTimerAction) => {
-      listener(payload)
+    const handler = (_event: IpcRendererEvent) => {
+      listener()
     }
 
     ipcRenderer.on('desktop:timerAction', handler)
+    ipcRenderer.send('desktop:timerActionReady')
 
     return () => {
       ipcRenderer.removeListener('desktop:timerAction', handler)

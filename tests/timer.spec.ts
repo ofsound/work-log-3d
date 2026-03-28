@@ -175,6 +175,23 @@ describe('timer state', () => {
     expect(synced.draftNotes).toBe('Deep work')
   })
 
+  it('produces a structured-clone-safe timer snapshot without active timer draft metadata', () => {
+    const running = applyActiveTimerDraft(
+      replaceActiveTimerState(createIdleActiveTimerState(), startCountupTimer(1_000)),
+      {
+        project: 'project-1',
+        tags: ['tag-1'],
+        draftNotes: 'Deep work',
+      },
+    )
+
+    const snapshot = getTimerSnapshot(running, 2_000)
+
+    expect('project' in snapshot).toBe(false)
+    expect('tags' in snapshot).toBe(false)
+    expect(structuredClone(snapshot)).toEqual(snapshot)
+  })
+
   it('revives active timer state with sanitized draft metadata', () => {
     const revived = reviveActiveTimerState({
       mode: 'countup',
