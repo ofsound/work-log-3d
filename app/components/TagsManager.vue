@@ -50,9 +50,6 @@ const cancelCreateAndLoseFocus = (event?: KeyboardEvent) => {
         <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Tags</div>
         <div class="mt-1 text-2xl font-bold text-text">Manage tags</div>
       </div>
-      <div class="text-sm text-text-muted">
-        Open a tag to jump straight into Sessions search for that tag.
-      </div>
     </div>
     <div class="flex flex-col gap-2">
       <TagsManagerTag
