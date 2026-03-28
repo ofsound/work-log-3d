@@ -41,6 +41,12 @@ const clearIdleMinutesLocalOverride = () => {
   suppressingIdleMinutesRemoteSync.value = false
 }
 
+const resetIdleMinutesToSavedDefault = () => {
+  clearIdleMinutesLocalOverride()
+  setDynamicMinutesProgrammatically(String(savedSettings.value.workflow.countdownDefaultMinutes))
+  idleMinutesHydrated.value = true
+}
+
 const markIdleMinutesAsLocallyEdited = (minutes: number | null = normalizeParsedIdleMinutes()) => {
   idleMinutesLocalOverride.value = minutes
   suppressingIdleMinutesRemoteSync.value = true
@@ -270,9 +276,7 @@ const extendCountdownByTenMinutes = () => {
 
 const handleCancel = async () => {
   await cancel()
-  clearIdleMinutesLocalOverride()
-  setDynamicMinutesProgrammatically(String(savedSettings.value.workflow.countdownDefaultMinutes))
-  idleMinutesHydrated.value = true
+  resetIdleMinutesToSavedDefault()
 }
 
 const onMinutesBlur = () => {
@@ -286,9 +290,7 @@ const onMinutesBlur = () => {
   const n = Number(dynamicMinutes.value || '0')
 
   if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
-    clearIdleMinutesLocalOverride()
-    setDynamicMinutesProgrammatically(String(savedSettings.value.workflow.countdownDefaultMinutes))
-    idleMinutesHydrated.value = true
+    resetIdleMinutesToSavedDefault()
 
     return
   }
@@ -330,8 +332,18 @@ const secondsProgress = computed(() => {
 
 watch(
   () => snapshot.value,
-  (nextSnapshot) => {
+  (nextSnapshot, previousSnapshot) => {
     if (minutePointerSession.value) {
+      return
+    }
+
+    const leftCompletedCountdown =
+      previousSnapshot?.mode === 'countdown' &&
+      previousSnapshot.status === 'completed' &&
+      nextSnapshot.mode !== 'countdown'
+
+    if (leftCompletedCountdown) {
+      resetIdleMinutesToSavedDefault()
       return
     }
 

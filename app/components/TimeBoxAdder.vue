@@ -64,7 +64,11 @@ const scrollAdderToTopAfterSave = () => {
 }
 
 const handleSave = async () => {
-  if (snapshot.value.mode === 'countup' && snapshot.value.status === 'paused') {
+  const shouldResetTimer =
+    (snapshot.value.mode === 'countup' && snapshot.value.status === 'paused') ||
+    (snapshot.value.mode === 'countdown' && snapshot.value.status === 'completed')
+
+  if (shouldResetTimer) {
     await cancel()
   }
 

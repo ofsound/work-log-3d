@@ -16,14 +16,13 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 
 ## Key Conventions
 
-- Authenticated pages use Nuxt layouts built on `AppShell` (fixed header; main content uses the shared `header-bar` spacing token for top clearance): **`main-simple`** (`px-6` padded scroll) for `/new`, `/projects`, `/tags`, and **`/project/new`**; **`main-workspace`** (full-height; page content handles padding and scroll regions) for `/sessions`, `/settings`, `/reports`, **`/project/:segment`**, **`/project/:segment/edit`**, and the thin `/tag/:segment` redirect route; **`main-bleed`** for `/` (hero only). **`default`** matches **`main-simple`** if a page omits `definePageMeta({ layout: ... })`.
-- Project creation lives at `/project/new`; project pages live at `/project/:segment` and `/project/:segment/edit`. **`/tag/:segment` is not a destination:** it resolves a slug or document id and **replaces** the URL with `/sessions` in search mode and that tag as the only filter (or sends users to `/tags` when tags are hidden or the tag does not exist). In-app tag navigation uses **`getSessionsSearchRouteForTag`** from `app/utils/sessions-route-state.ts`. Sessions still store **project** and **tags** by document id.
+- Authenticated pages use Nuxt layouts built on `AppShell` (fixed header; main content uses the shared `header-bar` spacing token for top clearance): **`main-simple`** (`px-6` padded scroll) for `/new`, `/projects`, `/tags`, and **`/project/new`**; **`main-workspace`** (full-height; page content handles padding and scroll regions) for `/sessions`, `/settings`, `/reports`, **`/project/:segment`**, and **`/project/:segment/edit`**; **`main-bleed`** for `/` (hero only). **`default`** matches **`main-simple`** if a page omits `definePageMeta({ layout: ... })`.
+- Project creation lives at `/project/new`; project pages live at `/project/:segment` and `/project/:segment/edit`. In-app tag navigation uses **`getSessionsSearchRouteForTag`** from `app/utils/sessions-route-state.ts`. Sessions still store **project** and **tags** by document id.
 - `/project/:segment` is query-driven like `/sessions`: the default `List` mode omits `mode`, `Calendar` persists `mode=calendar`, and both modes preserve `date=YYYY-MM-DD` for the selected project day context
 - `/sessions` is a single route with query-driven state: `mode=day|week|month|year|search` and `date=YYYY-MM-DD`; `mode=search` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort` (legacy `mode=list` is accepted and normalized to `search`)
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences, synced desktop tray shortcuts, and desktop-only local alert sound controls
 - `/new` can accept desktop-prefill query params: `project=<documentId>` and `tags=id1,id2`
-- `/pomodoro` is a legacy path that **301 redirects** to `/new`
 - Each project and tag has a `slug` derived from its name; URLs prefer it for readability while Firestore keeps using document ids
 - Project slug `new` is reserved so `/project/new` always points to the create workspace
 - Projects and tags cannot be deleted while sessions still reference them

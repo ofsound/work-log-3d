@@ -290,6 +290,54 @@ describe('CountdownTimer', () => {
     expect(wrapper.text()).toContain('Originally 00:10')
   })
 
+  it('restores the saved default minutes after a completed countdown returns to idle', async () => {
+    rawSettingsRef.value = buildRawDoc(30)
+
+    const wrapper = mountCountdownTimer()
+
+    await nextTick()
+
+    snapshot.value = {
+      mode: 'countdown',
+      status: 'completed',
+      startedAtMs: 0,
+      durationSeconds: 3_000,
+      originalDurationSeconds: 1_800,
+      pausedAtMs: null,
+      accumulatedPauseMs: 0,
+      endedAtMs: 3_000_000,
+      lastExtensionConsumedSeconds: 900,
+      display: '00:00',
+      elapsedSeconds: 3_000,
+      remainingSeconds: 0,
+      completionGapSeconds: 120,
+      isActive: false,
+    }
+    await nextTick()
+
+    expect(wrapper.find('#dynamicMinutes').exists()).toBe(false)
+
+    snapshot.value = {
+      mode: null,
+      status: 'idle',
+      startedAtMs: null,
+      durationSeconds: null,
+      originalDurationSeconds: null,
+      pausedAtMs: null,
+      accumulatedPauseMs: 0,
+      endedAtMs: null,
+      lastExtensionConsumedSeconds: 0,
+      display: '00:00',
+      elapsedSeconds: 0,
+      remainingSeconds: null,
+      completionGapSeconds: null,
+      isActive: false,
+    }
+    await nextTick()
+
+    expect((wrapper.get('#dynamicMinutes').element as HTMLInputElement).value).toBe('30')
+  })
+
   it('shows completed countdown extension controls and summary text', async () => {
     const wrapper = mountCountdownTimer()
 
