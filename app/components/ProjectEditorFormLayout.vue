@@ -22,6 +22,7 @@ const props = defineProps({
   previewNotesFallback: { type: String, default: 'Notes remain private to the edit page for now.' },
   primaryColor: { type: String, required: true },
   secondaryColor: { type: String, required: true },
+  showInlineActions: { type: Boolean, default: true },
   showArchiveToggle: { type: Boolean, default: false },
   archived: { type: Boolean, default: false },
   submitLabel: { type: String, required: true },
@@ -215,7 +216,11 @@ const toggleArchived = () => {
           </div>
         </div>
 
-        <div class="flex justify-end gap-3 pt-2">
+        <div
+          v-if="showInlineActions"
+          data-test="project-editor-inline-actions"
+          class="flex justify-end gap-3 pt-2"
+        >
           <AppButton variant="secondary" @click="emit('cancel')">Cancel</AppButton>
           <AppButton variant="primary" :disabled="isSaving" @click="emit('save')">
             {{ isSaving ? 'Saving...' : submitLabel }}

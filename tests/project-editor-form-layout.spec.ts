@@ -47,6 +47,7 @@ describe('ProjectEditorFormLayout', () => {
     expect(wrapper.get('[data-test="project-editor-notes"]').text()).toContain('Internal notes')
     expect(wrapper.get('[data-test="project-editor-color-rules"]').text()).toContain(colorMessage)
     expect(wrapper.get('[data-test="project-editor-preview"]').text()).toContain(name)
+    expect(wrapper.get('[data-test="project-editor-inline-actions"]').exists()).toBe(true)
     expect(
       wrapper
         .get('[data-test="project-editor-preview"]')
@@ -63,5 +64,36 @@ describe('ProjectEditorFormLayout', () => {
     await cancelButton!.trigger('click')
 
     expect(wrapper.emitted('cancel')).toEqual([[]])
+  })
+
+  it('can hide the inline action row when a workspace renders persistent footer actions', () => {
+    const wrapper = mount(ProjectEditorFormLayout, {
+      global: {
+        components: {
+          AppButton,
+          AppField,
+          AppFieldLabel,
+          AppTextInput,
+          AppTextarea,
+          ContainerCard,
+        },
+      },
+      props: {
+        heading: 'Edit Project',
+        name: 'Client Portal',
+        notes: 'Private working notes',
+        previewColors: {
+          primary: '#2563eb',
+          secondary: '#0e7490',
+        },
+        primaryColor: '#2563eb',
+        secondaryColor: '#0e7490',
+        showInlineActions: false,
+        submitLabel: 'Save project',
+      },
+    })
+
+    expect(wrapper.find('[data-test="project-editor-inline-actions"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Cancel')
   })
 })

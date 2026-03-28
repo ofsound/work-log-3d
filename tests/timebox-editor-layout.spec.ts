@@ -36,22 +36,22 @@ const datetimeLocalStartModel = ref('2026-03-23T09:00')
 const datetimeLocalEndModel = ref('2026-03-23T10:00')
 const mutationErrorMessage = ref('')
 
-  ; (globalThis as typeof globalThis & { computed?: typeof computed }).computed = computed
-  ; (globalThis as typeof globalThis & { onBeforeUnmount?: typeof onBeforeUnmount }).onBeforeUnmount =
-    onBeforeUnmount
-  ; (globalThis as typeof globalThis & { onMounted?: typeof onMounted }).onMounted = onMounted
-  ; (globalThis as typeof globalThis & { ref?: typeof ref }).ref = ref
-  ; (
-    globalThis as typeof globalThis & {
-      useMinuteVerticalDrag?: () => {
-        dragActive: ReturnType<typeof ref<boolean>>
-        onPointerDown: ReturnType<typeof vi.fn>
-      }
+;(globalThis as typeof globalThis & { computed?: typeof computed }).computed = computed
+;(globalThis as typeof globalThis & { onBeforeUnmount?: typeof onBeforeUnmount }).onBeforeUnmount =
+  onBeforeUnmount
+;(globalThis as typeof globalThis & { onMounted?: typeof onMounted }).onMounted = onMounted
+;(globalThis as typeof globalThis & { ref?: typeof ref }).ref = ref
+;(
+  globalThis as typeof globalThis & {
+    useMinuteVerticalDrag?: () => {
+      dragActive: ReturnType<typeof ref<boolean>>
+      onPointerDown: ReturnType<typeof vi.fn>
     }
-  ).useMinuteVerticalDrag = () => ({
-    dragActive: ref(false),
-    onPointerDown: vi.fn(),
-  })
+  }
+).useMinuteVerticalDrag = () => ({
+  dragActive: ref(false),
+  onPointerDown: vi.fn(),
+})
 
 const resetModelState = () => {
   sortedPickerProjects.value = createProjects(5)

@@ -347,43 +347,66 @@ onBeforeRouteLeave(async () => {
       @select-mode="handleWorkspaceModeSelect"
     />
 
-    <div :class="['flex-1 overflow-auto py-6', WORKSPACE_BODY_X_CLASS_NAME]">
-      <div :class="[WORKSPACE_BODY_CONTENT_CLASS_NAME, 'flex flex-col gap-6']">
-        <ProjectEditorFormLayout
-          :archived="dynamicArchived"
-          :color-validation-messages="colorValidationMessages"
-          heading="Edit Project"
-          :is-saving="isSaving"
-          :name="dynamicName"
-          :notes="dynamicNotes"
-          :preview-colors="previewColors"
-          :primary-color="dynamicPrimaryColor"
-          :secondary-color="dynamicSecondaryColor"
-          show-archive-toggle
-          submit-label="Save project"
-          @apply-palette="applyPalette"
-          @cancel="cancelEditing"
-          @clear-error="mutationErrorMessage = ''"
-          @save="saveProject"
-          @update:archived="dynamicArchived = $event"
-          @update:name="dynamicName = $event"
-          @update:notes="dynamicNotes = $event"
-          @update:primary-color="dynamicPrimaryColor = $event"
-          @update:secondary-color="dynamicSecondaryColor = $event"
-        />
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div
+        data-test="project-editor-scroll-region"
+        :class="['flex-1 overflow-auto py-6', WORKSPACE_BODY_X_CLASS_NAME]"
+      >
+        <div :class="[WORKSPACE_BODY_CONTENT_CLASS_NAME, 'flex flex-col gap-6 pb-8']">
+          <ProjectEditorFormLayout
+            :archived="dynamicArchived"
+            :color-validation-messages="colorValidationMessages"
+            heading="Edit Project"
+            :is-saving="isSaving"
+            :name="dynamicName"
+            :notes="dynamicNotes"
+            :preview-colors="previewColors"
+            :primary-color="dynamicPrimaryColor"
+            :secondary-color="dynamicSecondaryColor"
+            :show-inline-actions="false"
+            show-archive-toggle
+            submit-label="Save project"
+            @apply-palette="applyPalette"
+            @cancel="cancelEditing"
+            @clear-error="mutationErrorMessage = ''"
+            @save="saveProject"
+            @update:archived="dynamicArchived = $event"
+            @update:name="dynamicName = $event"
+            @update:notes="dynamicNotes = $event"
+            @update:primary-color="dynamicPrimaryColor = $event"
+            @update:secondary-color="dynamicSecondaryColor = $event"
+          />
 
-        <ContainerCard as="section" padding="default" variant="danger">
-          <h2 class="text-sm font-bold tracking-wide text-danger uppercase">Danger zone</h2>
-          <p class="mt-2 max-w-xl text-sm text-text">
-            Permanently delete this project. Sessions that use this project must be removed or
-            reassigned first, or deletion will fail.
-          </p>
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <AppButton size="sm" variant="danger" :disabled="isDeleting" @click="deleteProject">
-              {{ isDeleting ? 'Deleting…' : 'Delete project' }}
-            </AppButton>
-          </div>
-        </ContainerCard>
+          <ContainerCard as="section" padding="default" variant="danger">
+            <h2 class="text-sm font-bold tracking-wide text-danger uppercase">Danger zone</h2>
+            <p class="mt-2 max-w-xl text-sm text-text">
+              Permanently delete this project. Sessions that use this project must be removed or
+              reassigned first, or deletion will fail.
+            </p>
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <AppButton size="sm" variant="danger" :disabled="isDeleting" @click="deleteProject">
+                {{ isDeleting ? 'Deleting…' : 'Delete project' }}
+              </AppButton>
+            </div>
+          </ContainerCard>
+        </div>
+      </div>
+
+      <div
+        data-test="project-editor-footer"
+        class="shrink-0 border-t border-border-subtle bg-surface-strong px-[var(--spacing-workspace-content-x)] py-4"
+      >
+        <div
+          :class="[
+            WORKSPACE_BODY_CONTENT_CLASS_NAME,
+            'flex flex-wrap items-center justify-end gap-3',
+          ]"
+        >
+          <AppButton variant="secondary" @click="cancelEditing">Cancel</AppButton>
+          <AppButton variant="primary" :disabled="isSaving" @click="saveProject">
+            {{ isSaving ? 'Saving...' : 'Save project' }}
+          </AppButton>
+        </div>
       </div>
     </div>
   </div>
