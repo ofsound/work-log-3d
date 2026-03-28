@@ -27,6 +27,8 @@
 ## Repo-Specific Invariants
 
 - Project **URLs** prefer human-readable **slugs** when linking (`getProjectPathFromProject`, etc.). **Tag navigation** goes to **`/sessions` search** with that tag as the filter via `getSessionsSearchRouteForTag` in `app/utils/sessions-route-state.ts`. **`/tag/:segment`** only **redirects** (slug or legacy id in the path); **Firestore** and `timeBoxes` still reference projects and tags by **document id**.
+- Phone mode is capability-based, not user-agent-based: it only activates on narrow, touch-first devices. Keep the shared policy in `app/utils/phone-mode.ts` and route gating in `app/middleware/phone-mode.global.ts`; do not reintroduce ad-hoc per-page mobile detection.
+- In phone mode, `/sessions` only supports `day` and `search`, `/project/:segment` only supports `list`, `/reports` is unavailable, and `/tags` stays available. Unsupported phone routes should redirect rather than rendering degraded desktop workspaces.
 - Do not delete a project or tag while any `timeBoxes` still reference it.
 - Keep validation centralized in shared code so UI, repositories, and tests use the same rules.
 - Firestore rules must stay aligned with the current document shape for `projects`, `tags`, and `timeBoxes`.

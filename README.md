@@ -21,6 +21,8 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - `/project/:segment` is query-driven like `/sessions`: the default `List` mode omits `mode`, `Calendar` persists `mode=calendar`, and both modes preserve `date=YYYY-MM-DD` for the selected project day context
 - `/sessions` is a single route with query-driven state: `mode=day|week|month|year|search` and `date=YYYY-MM-DD`; `mode=search` can also persist personal filters with `q`, `projects`, `tags`, `tagMode`, `from`, `to`, `min`, `max`, `untagged`, `notes`, and `sort` (legacy `mode=list` is accepted and normalized to `search`)
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
+- Phone mode is a deliberate subset of the app, not just CSS reflow. It activates only when the device is both narrow (`max-width: 767px`) and touch-first (`hover: none` with a coarse pointer), so a resized desktop browser stays on the desktop UI.
+- In phone mode, `/sessions` supports only `day` and `search`; `week`, `month`, and `year` redirect to `day`. `/project/:segment` supports only `List`; `Calendar` and `/project/:segment/edit` redirect to the project overview. `/reports` redirects to `/sessions`. `/tags` stays available on phone.
 - `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences, synced desktop tray shortcuts, and desktop-only local alert sound controls
 - `/new` can accept desktop-prefill query params: `project=<documentId>` and `tags=id1,id2`
 - Each project and tag has a `slug` derived from its name; URLs prefer it for readability while Firestore keeps using document ids
@@ -35,6 +37,13 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Appearance, workflow (including the default countdown minutes for `/new`), and tray shortcut settings are stored in Firestore at `users/{uid}/settings/preferences`, while desktop alert sounds stay local to each Electron install
 - The Electron tray idle menu includes a built-in `Start Countdown (XXm)` action that uses the synced workflow default countdown minutes from `users/{uid}/settings/preferences`
 - The active timer is synced in Firestore at `users/{uid}/runtime/activeTimer`; open web/Electron clients subscribe in real time, and the synced timer carries draft project, tags, and notes for `/new`
+
+## Phone Mode
+
+- The shared phone capability and redirect policy live in `app/utils/phone-mode.ts` and `app/middleware/phone-mode.global.ts`.
+- Unsupported phone routes intentionally render a neutral loading shell first so SSR does not briefly paint a desktop-only workspace before the client-side redirect resolves.
+- Phone-specific workspace variants currently exist for `/sessions` and `/project/:segment`; they reuse the existing session detail/edit flows but replace calendar-heavy surfaces with list-oriented ones.
+- Tags management remains available in phone mode, and tag links still route into `/sessions` search via `getSessionsSearchRouteForTag`.
 
 ## Setup
 
