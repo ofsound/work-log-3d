@@ -43,6 +43,12 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Timer idle', enabled: false },
       { kind: 'separator' },
+      {
+        kind: 'action',
+        id: 'start_default_countdown',
+        label: 'Start Countdown (30m)',
+        enabled: true,
+      },
       { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
@@ -60,6 +66,12 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Timer idle', enabled: false },
       { kind: 'separator' },
+      {
+        kind: 'action',
+        id: 'start_default_countdown',
+        label: 'Start Countdown (30m)',
+        enabled: true,
+      },
       { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
       {
         kind: 'action',
@@ -88,8 +100,8 @@ describe('desktop tray state', () => {
     expect(getDesktopTrayStructuralKey(runningA)).toBe('running:countup')
     expect(getDesktopTrayStructuralKey(runningB)).toBe('running:countup')
     expect(getDesktopTrayStructuralKey(runningCountdown)).toBe('running:countdown')
-    expect(getDesktopTrayStructuralKey(idleSnapshot)).toBe('idle')
-    expect(getDesktopTrayStructuralKey(idleSnapshot, customShortcuts)).not.toBe('idle')
+    expect(getDesktopTrayStructuralKey(idleSnapshot)).toBe('idle:30')
+    expect(getDesktopTrayStructuralKey(idleSnapshot, customShortcuts)).not.toBe('idle:30')
     expect(
       getDesktopTrayStructuralKey(idleSnapshot, [
         {
@@ -98,6 +110,7 @@ describe('desktop tray state', () => {
         },
       ]),
     ).not.toBe(getDesktopTrayStructuralKey(idleSnapshot, [customShortcuts[0]]))
+    expect(getDesktopTrayStructuralKey(idleSnapshot, [], 45)).toBe('idle:45')
   })
 
   it('uses live text in the macOS tray while a timer is active', () => {
@@ -230,6 +243,12 @@ describe('desktop tray state', () => {
       { kind: 'separator' },
       { kind: 'action', id: 'add_countdown_5_minutes', label: '+5 min', enabled: true },
       { kind: 'action', id: 'add_countdown_10_minutes', label: '+10 min', enabled: true },
+      {
+        kind: 'action',
+        id: 'start_default_countdown',
+        label: 'Start Countdown (30m)',
+        enabled: true,
+      },
       { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
       { kind: 'separator' },
       {
@@ -243,6 +262,22 @@ describe('desktop tray state', () => {
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
       { kind: 'action', id: 'quit', label: 'Quit', enabled: true },
     ])
+  })
+
+  it('uses the synced countdown default minutes in tray labels', () => {
+    const trayState = getDesktopTrayState(
+      getTimerSnapshot(createIdleTimerState(), 0),
+      'darwin',
+      [],
+      45,
+    )
+
+    expect(trayState.menuItems).toContainEqual({
+      kind: 'action',
+      id: 'start_default_countdown',
+      label: 'Start Countdown (45m)',
+      enabled: true,
+    })
   })
 
   it('hides the window on close unless the app is explicitly quitting', () => {

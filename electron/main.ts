@@ -161,10 +161,11 @@ const persistCountdownDefaultMinutes = async () => {
 const setCountdownDefaultMinutesState = async (nextMinutes: number) => {
   countdownDefaultMinutes = normalizeCountdownDefaultMinutes(nextMinutes)
   await persistCountdownDefaultMinutes()
+  syncTrayController()
 }
 
 const syncTrayController = (snapshot = timerSnapshot) => {
-  trayController?.sync(snapshot, desktopTrayShortcuts)
+  trayController?.sync(snapshot, desktopTrayShortcuts, countdownDefaultMinutes)
 }
 
 const setTrayShortcuts = async (nextShortcuts: readonly UserSettingsTrayShortcut[]) => {
@@ -524,6 +525,15 @@ app.whenReady().then(async () => {
       }
 
       switch (action) {
+        case 'start_default_countdown':
+          dispatchTimerAction({
+            type: 'start_countdown',
+            durationSeconds: countdownDefaultMinutes * 60,
+            project: '',
+            tags: [],
+          })
+          openMainWindow(buildNewTimeBoxPath())
+          break
         case 'start_countup':
           dispatchTimerAction({
             type: 'start_countup',

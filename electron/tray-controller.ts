@@ -18,7 +18,11 @@ import { newTimeboxIconSvg } from '~/shared/icons/newTimeboxIcon'
 
 export interface TrayController {
   popUpMenu(): void
-  sync(snapshot: TimerSnapshot, shortcuts?: readonly UserSettingsTrayShortcut[]): void
+  sync(
+    snapshot: TimerSnapshot,
+    shortcuts?: readonly UserSettingsTrayShortcut[],
+    countdownDefaultMinutes?: number,
+  ): void
   destroy(): void
 }
 
@@ -145,8 +149,12 @@ export const createTrayController = ({
 
   return {
     popUpMenu,
-    sync(snapshot, shortcuts = []) {
-      const structuralKey = getDesktopTrayStructuralKey(snapshot, shortcuts)
+    sync(snapshot, shortcuts = [], countdownDefaultMinutes = 30) {
+      const structuralKey = getDesktopTrayStructuralKey(
+        snapshot,
+        shortcuts,
+        countdownDefaultMinutes,
+      )
       const cosmeticKey = `${snapshot.status}:${snapshot.mode ?? 'timer'}:${snapshot.display}`
 
       if (
@@ -157,7 +165,7 @@ export const createTrayController = ({
         return
       }
 
-      const trayState = getDesktopTrayState(snapshot, platform, shortcuts)
+      const trayState = getDesktopTrayState(snapshot, platform, shortcuts, countdownDefaultMinutes)
 
       if (lastStructuralKey !== '' && structuralKey === lastStructuralKey) {
         applyTrayCosmeticUpdates(tray, currentMenu, trayState, platform)

@@ -33,6 +33,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Theme preference is stored in `localStorage` per Firebase user, with a guest fallback before auth resolves
 - `/projects` defaults to **grid**; add **`?view=list`** for list. Grid leaves `view` out of the URL; toggling uses `router.replace`. **`ProjectsManagerProject` uses a `viewMode` prop** because Nuxt exposes the route layout name as `layout` in templates, which would shadow a prop named `layout`
 - Appearance, workflow (including the default countdown minutes for `/new`), and tray shortcut settings are stored in Firestore at `users/{uid}/settings/preferences`, while desktop alert sounds stay local to each Electron install
+- The Electron tray idle menu includes a built-in `Start Countdown (XXm)` action that uses the synced workflow default countdown minutes from `users/{uid}/settings/preferences`
 - The active timer is synced in Firestore at `users/{uid}/runtime/activeTimer`; open web/Electron clients subscribe in real time, and the synced timer carries draft project, tags, and notes for `/new`
 
 ## Setup

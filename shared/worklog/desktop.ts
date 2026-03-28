@@ -48,6 +48,7 @@ export interface DesktopWindowState {
 }
 
 export type DesktopTrayActionId =
+  | 'start_default_countdown'
   | 'start_countup'
   | 'add_countdown_5_minutes'
   | 'add_countdown_10_minutes'
@@ -202,6 +203,12 @@ const createCountdownAdjustmentItems = (): DesktopTrayMenuItem[] => [
   createActionItem('add_countdown_10_minutes', '+10 min'),
 ]
 
+const createDefaultCountdownItem = (countdownDefaultMinutes: number): DesktopTrayMenuItem =>
+  createActionItem(
+    'start_default_countdown',
+    `Start Countdown (${Math.max(1, Math.trunc(countdownDefaultMinutes))}m)`,
+  )
+
 const createTrayShortcutItems = (
   shortcuts: readonly UserSettingsTrayShortcut[],
 ): DesktopTrayMenuItem[] =>
@@ -231,18 +238,20 @@ const getTrayShortcutStructuralKey = (shortcuts: readonly UserSettingsTrayShortc
 export const getDesktopTrayStructuralKey = (
   snapshot: TimerSnapshot,
   shortcuts: readonly UserSettingsTrayShortcut[] = [],
+  countdownDefaultMinutes = 30,
 ): string => {
   if (snapshot.status === 'running' || snapshot.status === 'paused') {
     return `${snapshot.status}:${snapshot.mode ?? 'timer'}`
   }
 
   const shortcutKey = getTrayShortcutStructuralKey(shortcuts)
+  const countdownKey = Math.max(1, Math.trunc(countdownDefaultMinutes))
 
   if (!shortcutKey) {
-    return snapshot.status
+    return `${snapshot.status}:${countdownKey}`
   }
 
-  return `${snapshot.status}:${shortcutKey}`
+  return `${snapshot.status}:${countdownKey}:${shortcutKey}`
 }
 
 export const formatDesktopTrayBadgeText = (display: string) => {
@@ -259,8 +268,10 @@ export const getDesktopTrayState = (
   snapshot: TimerSnapshot,
   platform: NodeJS.Platform = process.platform,
   shortcuts: readonly UserSettingsTrayShortcut[] = [],
+  countdownDefaultMinutes = 30,
 ): DesktopTrayState => {
   const trayShortcutItems = createTrayShortcutItems(shortcuts)
+  const defaultCountdownItem = createDefaultCountdownItem(countdownDefaultMinutes)
 
   if (snapshot.status === 'idle') {
     const statusLabel = 'Timer idle'
@@ -276,6 +287,7 @@ export const getDesktopTrayState = (
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
+        defaultCountdownItem,
         createActionItem('start_countup', 'Start Timer'),
         ...trayShortcutItems,
         separatorItem,
@@ -372,6 +384,7 @@ export const getDesktopTrayState = (
       createStatusItem(statusLabel),
       separatorItem,
       ...countdownActions,
+      defaultCountdownItem,
       createActionItem('start_countup', 'Start Timer'),
       ...trayShortcutItems,
       separatorItem,
