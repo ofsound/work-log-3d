@@ -24,14 +24,14 @@ const shellBackgroundStyle = computed(() =>
 </script>
 
 <template>
-  <div :style="shellBackgroundStyle" class="mx-auto h-dvh bg-shell text-text shadow-shell">
+  <div :style="shellBackgroundStyle" class="relative mx-auto h-dvh bg-shell text-text shadow-shell">
     <HeaderBar v-if="shouldRenderProtectedContent" />
-    <div :class="isPublicRoute ? 'h-full' : 'h-full pt-header-bar'">
+    <div :class="isPublicRoute ? 'h-full' : 'h-full md:pt-header-bar'">
       <slot />
     </div>
     <div
       v-if="shouldShowLoadingOverlay"
-      class="absolute inset-0 z-10 flex items-center justify-center bg-shell/92 pt-header-bar"
+      class="absolute inset-0 z-10 flex items-center justify-center bg-shell/92 md:pt-header-bar"
     >
       <div class="text-text-subtle">Loading…</div>
     </div>
