@@ -186,11 +186,22 @@ const editorRootBind = computed(() =>
         },
 )
 
-const primarySectionClass = computed(() =>
-  isThinLayout.value
-    ? 'grid min-w-0 gap-4 grid-cols-[minmax(0,8rem)_minmax(0,1fr)]'
-    : 'flex min-w-0 flex-col gap-5',
-)
+const primarySectionClass = computed(() => {
+  if (isThinLayout.value) {
+    return 'grid min-w-0 gap-4 grid-cols-[minmax(0,8rem)_minmax(0,1fr)]'
+  }
+
+  const alignWithProjectTagsColumns = !hideTags.value
+
+  return [
+    'flex min-w-0 flex-col gap-5',
+    alignWithProjectTagsColumns
+      ? '[@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-6'
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+})
 
 const heroColumnClass = computed(() =>
   isThinLayout.value
@@ -199,15 +210,29 @@ const heroColumnClass = computed(() =>
 )
 
 const heroValueBlockClass = computed(() => {
+  const widePrimaryRow = !hideTags.value && !isThinLayout.value
+
   if (!sessionTimeHero.value) {
-    return isThinLayout.value ? 'mt-[calc(1rem+0.75rem+0.75rem+4px)]' : 'mt-[calc(0.75rem+4px)]'
+    if (isThinLayout.value) {
+      return 'mt-[calc(1rem+0.75rem+0.75rem+4px)]'
+    }
+
+    return widePrimaryRow
+      ? 'mt-[calc(0.75rem+4px)] [@container(min-width:38rem)]:mt-0'
+      : 'mt-[calc(0.75rem+4px)]'
   }
 
   if (isPanelSurface.value) {
     return 'mt-0 mb-4'
   }
 
-  return isThinLayout.value ? 'mt-0' : 'mt-[calc(0.75rem+4px)]'
+  if (isThinLayout.value) {
+    return 'mt-0'
+  }
+
+  return widePrimaryRow
+    ? 'mt-[calc(0.75rem+4px)] [@container(min-width:38rem)]:mt-0'
+    : 'mt-[calc(0.75rem+4px)]'
 })
 
 const heroValueTextClass = computed(() =>
@@ -384,7 +409,7 @@ const tagsListClass = computed(() =>
           <div
             data-testid="timebox-editor-project-tags-section"
             class="min-w-0 border-t border-border-subtle"
-            :class="projectTagsSectionClass"
+            :class="[projectTagsSectionClass, isPanelSurface ? 'mt-5' : 'md:mt-5']"
           >
             <section class="flex min-w-0 flex-col" :class="isThinLayout ? 'gap-2.5' : 'gap-3'">
               <AppFieldLabel as="div">Project</AppFieldLabel>

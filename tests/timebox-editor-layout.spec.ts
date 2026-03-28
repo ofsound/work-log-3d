@@ -3,6 +3,14 @@
 import { mount } from '@vue/test-utils'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
+const hideTagsModel = vi.hoisted(() => {
+  // Hoisted factories run before the module graph is ready; sync CJS is the reliable `ref` source here.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Vitest hoisted + vue ref bootstrap
+  const { ref: vueRef } = require('vue') as typeof import('vue')
+
+  return vueRef(false)
+})
+
 const createProjects = (count: number) =>
   Array.from({ length: count }, (_, index) => ({
     id: `project-${index + 1}`,
@@ -28,22 +36,22 @@ const datetimeLocalStartModel = ref('2026-03-23T09:00')
 const datetimeLocalEndModel = ref('2026-03-23T10:00')
 const mutationErrorMessage = ref('')
 
-;(globalThis as typeof globalThis & { computed?: typeof computed }).computed = computed
-;(globalThis as typeof globalThis & { onBeforeUnmount?: typeof onBeforeUnmount }).onBeforeUnmount =
-  onBeforeUnmount
-;(globalThis as typeof globalThis & { onMounted?: typeof onMounted }).onMounted = onMounted
-;(globalThis as typeof globalThis & { ref?: typeof ref }).ref = ref
-;(
-  globalThis as typeof globalThis & {
-    useMinuteVerticalDrag?: () => {
-      dragActive: ReturnType<typeof ref<boolean>>
-      onPointerDown: ReturnType<typeof vi.fn>
+  ; (globalThis as typeof globalThis & { computed?: typeof computed }).computed = computed
+  ; (globalThis as typeof globalThis & { onBeforeUnmount?: typeof onBeforeUnmount }).onBeforeUnmount =
+    onBeforeUnmount
+  ; (globalThis as typeof globalThis & { onMounted?: typeof onMounted }).onMounted = onMounted
+  ; (globalThis as typeof globalThis & { ref?: typeof ref }).ref = ref
+  ; (
+    globalThis as typeof globalThis & {
+      useMinuteVerticalDrag?: () => {
+        dragActive: ReturnType<typeof ref<boolean>>
+        onPointerDown: ReturnType<typeof vi.fn>
+      }
     }
-  }
-).useMinuteVerticalDrag = () => ({
-  dragActive: ref(false),
-  onPointerDown: vi.fn(),
-})
+  ).useMinuteVerticalDrag = () => ({
+    dragActive: ref(false),
+    onPointerDown: vi.fn(),
+  })
 
 const resetModelState = () => {
   sortedPickerProjects.value = createProjects(5)
@@ -60,6 +68,7 @@ const resetModelState = () => {
   datetimeLocalStartModel.value = '2026-03-23T09:00'
   datetimeLocalEndModel.value = '2026-03-23T10:00'
   mutationErrorMessage.value = ''
+  hideTagsModel.value = false
 }
 
 vi.mock('~/composables/useTimeBoxEditorModel', () => ({
@@ -74,7 +83,7 @@ vi.mock('~/composables/useTimeBoxEditorModel', () => ({
     dynamicProject,
     dynamicStartTime,
     dynamicTags,
-    hideTags: ref(false),
+    hideTags: hideTagsModel,
     isEditingExistingTimeBox: computed(() => false),
     projectRadiosTwoColumns: computed(() => sortedPickerProjects.value.length > 4),
     resetTimeBoxEditor: vi.fn(),
@@ -152,7 +161,7 @@ describe('TimeBoxEditor layout classes', () => {
     ).toContain('flex')
     expect(
       regularWrapper.get('[data-testid="timebox-editor-primary-section"]').attributes('class'),
-    ).not.toContain('@container')
+    ).toContain('[@container(min-width:38rem)]:grid')
     expect(
       thinWrapper.get('[data-testid="timebox-editor-primary-section"]').attributes('class'),
     ).toContain('grid-cols-[minmax(0,8rem)_minmax(0,1fr)]')
@@ -161,6 +170,15 @@ describe('TimeBoxEditor layout classes', () => {
     ).not.toContain('@container')
     expect(regularWrapper.html()).not.toContain('min-width:44rem')
     expect(thinWrapper.html()).not.toContain('min-width:44rem')
+  })
+
+  it('does not use a two-column primary row when tags are hidden (project-only mode)', () => {
+    hideTagsModel.value = true
+    const wrapper = mountTimeBoxEditor({ layout: 'regular', surface: 'card' })
+
+    expect(
+      wrapper.get('[data-testid="timebox-editor-primary-section"]').attributes('class'),
+    ).not.toContain('[@container(min-width:38rem)]:grid')
   })
 
   it('keeps the project and tags split as the surviving 38rem width refinement', () => {
