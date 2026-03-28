@@ -240,8 +240,9 @@ defineExpose({
       class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4"
     >
       <TimeBoxEditor
-        embedded-in-panel
         class="min-h-0 flex-1"
+        layout="thin"
+        surface="panel"
         :initial-start-time="props.initialStartTime"
         :initial-end-time="props.initialEndTime"
         :reset-after-create="false"

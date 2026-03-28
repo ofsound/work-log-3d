@@ -123,7 +123,9 @@ const mountTimeBoxAdder = () =>
         CountdownTimer: { template: '<div>Countdown</div>' },
         CountupTimer: { template: '<div>Countup</div>' },
         TimeBoxEditor: {
-          template: '<button data-testid="save" @click="$emit(\'saved\')">Save</button>',
+          props: ['layout', 'surface'],
+          template:
+            '<button data-testid="save" :data-layout="layout" :data-surface="surface" @click="$emit(\'saved\')">Save</button>',
         },
       },
     },
@@ -178,6 +180,14 @@ describe('TimeBoxAdder', () => {
     await triggerSaved(wrapper)
 
     expect(cancel).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes the regular card editor context to TimeBoxEditor', () => {
+    const wrapper = mountTimeBoxAdder()
+    const saveButton = wrapper.get('[data-testid="save"]')
+
+    expect(saveButton.attributes('data-surface')).toBe('card')
+    expect(saveButton.attributes('data-layout')).toBe('regular')
   })
 
   it('cancels a completed countdown timer after a successful save', async () => {

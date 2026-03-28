@@ -21,6 +21,9 @@ import {
   sortNamedEntities,
 } from '~~/shared/worklog'
 
+export type TimeBoxEditorSurface = 'card' | 'panel'
+export type TimeBoxEditorLayout = 'regular' | 'thin'
+
 export interface TimeBoxEditorProps {
   id?: string
   startTimeFromTimer?: string
@@ -33,7 +36,8 @@ export interface TimeBoxEditorProps {
   resetAfterCreate: boolean
   showCreateCancel: boolean
   createButtonLabel: string
-  embeddedInPanel: boolean
+  surface: TimeBoxEditorSurface
+  layout: TimeBoxEditorLayout
 }
 
 export interface UseTimeBoxEditorModelOptions {

@@ -3,7 +3,12 @@ import type { PropType } from 'vue'
 
 import ContainerCard from '~/components/ContainerCard.vue'
 
-import { useTimeBoxEditorModel, type TimeBoxEditorProps } from '~/composables/useTimeBoxEditorModel'
+import {
+  useTimeBoxEditorModel,
+  type TimeBoxEditorLayout,
+  type TimeBoxEditorProps,
+  type TimeBoxEditorSurface,
+} from '~/composables/useTimeBoxEditorModel'
 import { useTimeBoxEditorMutations } from '~/composables/useTimeBoxEditorMutations'
 import { getProjectPickerOptionStyle } from '~/utils/project-color-styles'
 import { formatLocaleTime } from '~~/shared/worklog'
@@ -20,8 +25,8 @@ const props = defineProps({
   resetAfterCreate: { type: Boolean, default: true },
   showCreateCancel: { type: Boolean, default: false },
   createButtonLabel: { type: String, default: 'Log Session' },
-  /** Sidebar / calendar side panel: no outer card border, shadow, or extra padding (aside already frames content). */
-  embeddedInPanel: { type: Boolean, default: false },
+  surface: { type: String as PropType<TimeBoxEditorSurface>, default: 'card' },
+  layout: { type: String as PropType<TimeBoxEditorLayout>, default: 'regular' },
 }) as TimeBoxEditorProps
 
 const emit = defineEmits(['toggleEditor', 'saved'])
@@ -160,17 +165,103 @@ onBeforeUnmount(() => {
   }
 })
 
-const editorRootIs = computed(() => (props.embeddedInPanel ? 'div' : ContainerCard))
+const isPanelSurface = computed(() => props.surface === 'panel')
+const isThinLayout = computed(() => props.layout === 'thin')
+
+const editorRootIs = computed(() => (isPanelSurface.value ? 'div' : ContainerCard))
 
 const editorRootBind = computed(() =>
-  props.embeddedInPanel
+  isPanelSurface.value
     ? { class: 'flex min-h-0 min-w-0 flex-1 flex-col gap-0 grayscale-10' }
-    : {
-        padding: 'compact' as const,
-        variant: 'gradient' as const,
-        class:
-          'flex min-w-0 flex-col gap-5 grayscale-10 [@container(min-width:44rem)]:rounded-md [@container(min-width:44rem)]:px-6 [@container(min-width:44rem)]:py-5',
-      },
+    : isThinLayout.value
+      ? {
+          padding: 'compact' as const,
+          variant: 'gradient' as const,
+          class: 'flex min-w-0 flex-col gap-4 grayscale-10',
+        }
+      : {
+          padding: 'default' as const,
+          variant: 'gradient' as const,
+          class: 'flex min-w-0 flex-col gap-5 grayscale-10',
+        },
+)
+
+const primarySectionClass = computed(() =>
+  isThinLayout.value
+    ? 'grid min-w-0 gap-4 grid-cols-[minmax(0,8rem)_minmax(0,1fr)]'
+    : 'flex min-w-0 flex-col gap-5',
+)
+
+const heroColumnClass = computed(() =>
+  isThinLayout.value
+    ? 'col-span-1 ml-6 flex min-w-0 flex-col gap-4'
+    : 'flex min-w-0 flex-col gap-4',
+)
+
+const heroValueBlockClass = computed(() => {
+  if (!sessionTimeHero.value) {
+    return isThinLayout.value ? 'mt-[calc(1rem+0.75rem+0.75rem+4px)]' : 'mt-[calc(0.75rem+4px)]'
+  }
+
+  if (isPanelSurface.value) {
+    return 'mt-0 mb-4'
+  }
+
+  return isThinLayout.value ? 'mt-0' : 'mt-[calc(0.75rem+4px)]'
+})
+
+const heroValueTextClass = computed(() =>
+  isThinLayout.value
+    ? 'min-w-0 text-3xl leading-tight font-bold tracking-tight tabular-nums'
+    : 'min-w-0 text-4xl leading-none font-bold tracking-tight tabular-nums',
+)
+
+const heroPlaceholderTextClass = computed(() =>
+  isThinLayout.value
+    ? 'min-w-0 text-3xl leading-tight font-bold tracking-tight text-text-muted tabular-nums'
+    : 'min-w-0 text-4xl leading-none font-bold tracking-tight text-text-muted tabular-nums',
+)
+
+const projectTagsSectionClass = computed(() => {
+  if (hideTags.value) {
+    return isThinLayout.value ? 'pt-4' : 'pt-5'
+  }
+
+  return [
+    'flex flex-col [@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[minmax(0,1fr)_minmax(0,25%)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-y-0',
+    isThinLayout.value
+      ? 'gap-4 pt-4 [@container(min-width:38rem)]:gap-x-5'
+      : 'gap-6 pt-5 [@container(min-width:38rem)]:gap-x-6',
+  ].join(' ')
+})
+
+const projectRadioGroupClass = computed(() =>
+  [
+    'project-radio-group grid',
+    isThinLayout.value ? 'gap-2' : 'gap-2.5',
+    projectRadiosTwoColumns.value ? '[@container(min-width:52rem)]:grid-cols-2' : '',
+    !hideTags.value
+      ? isThinLayout.value
+        ? '[@container(min-width:38rem)]:border-r [@container(min-width:38rem)]:border-border-subtle [@container(min-width:38rem)]:pr-5'
+        : '[@container(min-width:38rem)]:border-r [@container(min-width:38rem)]:border-border-subtle [@container(min-width:38rem)]:pr-6'
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' '),
+)
+
+const tagsSectionClass = computed(() =>
+  [
+    'flex min-w-0 flex-col border-t border-border-subtle [@container(min-width:38rem)]:border-t-0 [@container(min-width:38rem)]:pt-0',
+    isThinLayout.value ? 'gap-2.5 pt-4' : 'gap-3 pt-5',
+  ].join(' '),
+)
+
+const tagsListClass = computed(() =>
+  [
+    'flex flex-wrap [@container(min-width:38rem)]:flex-col [@container(min-width:38rem)]:flex-nowrap [@container(min-width:38rem)]:gap-2',
+    isThinLayout.value ? 'gap-2' : 'gap-2.5',
+  ].join(' '),
 )
 </script>
 
@@ -178,18 +269,18 @@ const editorRootBind = computed(() =>
   <div
     ref="timeBoxEditorRef"
     class="[container-type:inline-size] w-full max-w-full min-w-0 font-data text-text"
-    :class="embeddedInPanel ? 'flex h-full min-h-0 flex-col' : ''"
+    :class="isPanelSurface ? 'flex h-full min-h-0 flex-col' : ''"
   >
     <component :is="editorRootIs" v-bind="editorRootBind">
       <div
-        class="flex min-w-0 flex-col gap-5"
-        :class="embeddedInPanel ? 'min-h-0 flex-1 overflow-x-hidden' : ''"
+        class="flex min-w-0 flex-col"
+        :class="[
+          isThinLayout ? 'gap-4' : 'gap-5',
+          isPanelSurface ? 'min-h-0 flex-1 overflow-x-hidden' : '',
+        ]"
       >
-        <div :class="embeddedInPanel ? 'px-5 pb-5' : ''">
-          <section
-            class="grid min-w-0 gap-4 [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)]"
-            :class="embeddedInPanel ? 'grid-cols-[minmax(0,8rem)_minmax(0,1fr)]' : ''"
-          >
+        <div :class="isPanelSurface ? 'px-5 pb-5' : ''">
+          <section data-testid="timebox-editor-primary-section" :class="primarySectionClass">
             <AppField as="div" class="min-w-0 self-start" density="comfortable" label="Duration">
               <!-- Block wrapper: avoids a single flex row inheriting stretched height from the grid row. -->
               <div class="rounded-md border border-input-border bg-input px-3 py-3">
@@ -217,27 +308,11 @@ const editorRootBind = computed(() =>
               </div>
             </AppField>
 
-            <div
-              class="col-span-2 ml-0 flex min-w-0 flex-col gap-4 [@container(min-width:38rem)]:col-span-1 [@container(min-width:38rem)]:ml-8"
-            >
+            <div :class="heroColumnClass">
               <div aria-live="polite" class="flex min-w-0 flex-col gap-3">
-                <AppFieldLabel v-if="sessionTimeHero && !embeddedInPanel"
-                  >Start & End</AppFieldLabel
-                >
-                <div
-                  class="flex min-w-0 flex-col gap-1"
-                  :class="
-                    !sessionTimeHero
-                      ? 'mt-[calc(1.25rem+0.75rem+0.75rem+4px)]'
-                      : embeddedInPanel
-                        ? 'mt-0 mb-4'
-                        : 'mt-[calc(0.75rem+4px)]'
-                  "
-                >
-                  <p
-                    v-if="sessionTimeHero"
-                    class="min-w-0 text-3xl leading-tight font-bold tracking-tight tabular-nums [@container(min-width:44rem)]:text-4xl [@container(min-width:44rem)]:leading-none"
-                  >
+                <AppFieldLabel v-if="sessionTimeHero && !isPanelSurface">Start & End</AppFieldLabel>
+                <div class="flex min-w-0 flex-col gap-1" :class="heroValueBlockClass">
+                  <p v-if="sessionTimeHero" :class="heroValueTextClass">
                     <span
                       class="inline touch-none"
                       :class="
@@ -263,9 +338,7 @@ const editorRootBind = computed(() =>
                     (v-if above) — if only one of start/end is set, a visible dash looked like a
                     broken hero. Keep `invisible` whenever we are not on the real hero branch.
                   -->
-                    <p
-                      class="min-w-0 text-3xl leading-tight font-bold tracking-tight text-text-muted tabular-nums [@container(min-width:44rem)]:text-4xl [@container(min-width:44rem)]:leading-none"
-                    >
+                    <p :class="heroPlaceholderTextClass">
                       <span class="invisible" aria-hidden="true">—</span>
                     </p>
                   </template>
@@ -307,26 +380,17 @@ const editorRootBind = computed(() =>
             </div>
           </section>
 
+          <!-- Width refinement only: at ~38rem, project and tag controls can split into side-by-side columns. -->
           <div
-            class="min-w-0 border-t border-border-subtle pt-5"
-            :class="
-              hideTags
-                ? ''
-                : 'flex flex-col gap-6 [@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[minmax(0,1fr)_minmax(0,25%)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-6 [@container(min-width:38rem)]:gap-y-0'
-            "
+            data-testid="timebox-editor-project-tags-section"
+            class="min-w-0 border-t border-border-subtle"
+            :class="projectTagsSectionClass"
           >
-            <section class="flex min-w-0 flex-col gap-3">
+            <section class="flex min-w-0 flex-col" :class="isThinLayout ? 'gap-2.5' : 'gap-3'">
               <AppFieldLabel as="div">Project</AppFieldLabel>
 
-              <div
-                class="project-radio-group grid gap-2.5"
-                :class="[
-                  projectRadiosTwoColumns ? '[@container(min-width:52rem)]:grid-cols-2' : '',
-                  !hideTags
-                    ? '[@container(min-width:38rem)]:border-r [@container(min-width:38rem)]:border-border-subtle [@container(min-width:38rem)]:pr-6'
-                    : '',
-                ]"
-              >
+              <!-- Width refinement only: at ~52rem, large project lists can use a second radio column. -->
+              <div data-testid="timebox-editor-project-radio-group" :class="projectRadioGroupClass">
                 <label
                   v-for="thisProject in sortedPickerProjects"
                   :key="thisProject.id"
@@ -373,13 +437,12 @@ const editorRootBind = computed(() =>
 
             <section
               v-if="!hideTags"
-              class="flex min-w-0 flex-col gap-3 border-t border-border-subtle pt-5 [@container(min-width:38rem)]:border-t-0 [@container(min-width:38rem)]:pt-0"
+              data-testid="timebox-editor-tags-section"
+              :class="tagsSectionClass"
             >
               <AppFieldLabel as="div">Tags</AppFieldLabel>
 
-              <div
-                class="flex flex-wrap gap-2.5 [@container(min-width:38rem)]:flex-col [@container(min-width:38rem)]:flex-nowrap [@container(min-width:38rem)]:gap-2"
-              >
+              <div :class="tagsListClass">
                 <AppToggleChip
                   v-for="thisTag in sortedAllTags"
                   :key="thisTag.id"
@@ -399,7 +462,10 @@ const editorRootBind = computed(() =>
             </section>
           </div>
 
-          <div class="border-t border-border-subtle pt-5" :class="embeddedInPanel ? 'mt-5' : ''">
+          <div
+            class="border-t border-border-subtle"
+            :class="[isThinLayout ? 'pt-4' : 'pt-5', isPanelSurface ? 'mt-5' : '']"
+          >
             <AppField class="min-w-0" density="comfortable" label="Notes">
               <AppTextarea
                 v-model="dynamicNotes"
@@ -420,14 +486,16 @@ const editorRootBind = computed(() =>
 
       <div
         :class="
-          embeddedInPanel
+          isPanelSurface
             ? 'shrink-0 border-t border-border-subtle bg-surface-strong pt-4'
-            : 'mt-1 pt-4'
+            : isThinLayout
+              ? 'pt-3'
+              : 'mt-1 pt-4'
         "
       >
         <div
           class="flex w-full min-w-0 flex-row items-stretch gap-3"
-          :class="embeddedInPanel ? 'px-4' : ''"
+          :class="isPanelSurface ? 'px-4' : ''"
         >
           <AppButton
             v-if="isEditingExistingTimeBox || props.showCreateCancel"

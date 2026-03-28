@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 
+import type { TimeBoxEditorLayout, TimeBoxEditorSurface } from '~/composables/useTimeBoxEditorModel'
+
 const props = defineProps({
   id: { type: String, required: true },
   variant: { type: String, default: undefined },
@@ -32,6 +34,15 @@ if (props.variant === 'project') {
 const toggleEditor = () => {
   showEditor.value = !showEditor.value
 }
+
+const editorSurface = computed<TimeBoxEditorSurface>(() =>
+  props.embeddedInPanel ? 'panel' : 'card',
+)
+const editorLayout = computed<TimeBoxEditorLayout>(() =>
+  props.embeddedInPanel || props.variant === 'project' || props.compactRowOpensEditor
+    ? 'thin'
+    : 'regular',
+)
 </script>
 
 <template>
@@ -62,7 +73,8 @@ const toggleEditor = () => {
     <div v-if="showEditor" :class="embeddedInPanel ? 'min-h-0 min-w-0 flex-1' : 'contents'">
       <TimeBoxEditor
         :id
-        :embedded-in-panel="embeddedInPanel"
+        :layout="editorLayout"
+        :surface="editorSurface"
         class="min-h-0 min-w-0 flex-1"
         @toggle-editor="toggleEditor"
       />

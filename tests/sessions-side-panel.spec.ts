@@ -28,7 +28,11 @@ const mountSidePanel = (mode: SessionsSidePanelMode) =>
         DailyScratchpadPanel: true,
         DaySessionsOverviewPanel: true,
         TimeBox: true,
-        TimeBoxEditor: true,
+        TimeBoxEditor: {
+          props: ['layout', 'surface'],
+          template:
+            '<div data-testid="timebox-editor" :data-layout="layout" :data-surface="surface">Editor</div>',
+        },
       },
     },
   })
@@ -73,5 +77,13 @@ describe('SessionsSidePanel', () => {
     const labels = wrapper.findAll('button').map((button) => button.text())
 
     expect(labels).toEqual(['Scratchpad', 'Overview', 'New Session'])
+  })
+
+  it('passes the panel thin editor context in create mode', () => {
+    const wrapper = mountSidePanel('create')
+    const editor = wrapper.get('[data-testid="timebox-editor"]')
+
+    expect(editor.attributes('data-surface')).toBe('panel')
+    expect(editor.attributes('data-layout')).toBe('thin')
   })
 })

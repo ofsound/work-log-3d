@@ -96,6 +96,8 @@ const handleSave = async () => {
     </div>
 
     <TimeBoxEditor
+      layout="regular"
+      surface="card"
       :start-time-from-timer="startTimeFromTimer"
       :end-time-from-timer="endTimeFromTimer"
       :initial-notes="initialNotes"

@@ -120,15 +120,17 @@ vi.mock('~/utils/worklog-firebase', () => ({
 
 const { default: TimeBox } = await import('~/app/components/TimeBox.vue')
 
-const mountCompactTimeBox = () =>
+const mountTimeBox = (
+  props: Record<string, unknown> = {
+    compact: true,
+    compactRowOpensEditor: true,
+    id: 'session-1',
+    showCompactActions: true,
+    variant: 'project',
+  },
+) =>
   mount(TimeBox, {
-    props: {
-      compact: true,
-      compactRowOpensEditor: true,
-      id: 'session-1',
-      showCompactActions: true,
-      variant: 'project',
-    },
+    props,
     global: {
       components: {
         ContainerCard,
@@ -147,7 +149,9 @@ const mountCompactTimeBox = () =>
           template: '<a><slot /></a>',
         },
         TimeBoxEditor: {
-          template: '<div data-testid="timebox-editor">Editor</div>',
+          props: ['id', 'layout', 'surface'],
+          template:
+            '<div data-testid="timebox-editor" :data-id="id" :data-layout="layout" :data-surface="surface">Editor</div>',
         },
       },
     },
@@ -162,23 +166,25 @@ describe('TimeBox compact project actions', () => {
   })
 
   it('renders compact edit and delete actions', () => {
-    const wrapper = mountCompactTimeBox()
+    const wrapper = mountTimeBox()
 
     expect(wrapper.get('button[aria-label="Edit session"]').exists()).toBe(true)
     expect(wrapper.get('button[aria-label="Delete session"]').exists()).toBe(true)
   })
 
   it('opens the inline editor from row click', async () => {
-    const wrapper = mountCompactTimeBox()
+    const wrapper = mountTimeBox()
     const row = wrapper.get('[role="button"]')
 
     await row.trigger('click')
 
     expect(wrapper.find('[data-testid="timebox-editor"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="timebox-editor"]').attributes('data-surface')).toBe('card')
+    expect(wrapper.get('[data-testid="timebox-editor"]').attributes('data-layout')).toBe('thin')
   })
 
   it('opens the inline editor from keyboard activation', async () => {
-    const wrapper = mountCompactTimeBox()
+    const wrapper = mountTimeBox()
     const row = wrapper.get('[role="button"]')
 
     await row.trigger('keydown', { key: ' ' })
@@ -186,8 +192,20 @@ describe('TimeBox compact project actions', () => {
     expect(wrapper.find('[data-testid="timebox-editor"]').exists()).toBe(true)
   })
 
+  it('passes the panel thin editor context when editing inside a panel', async () => {
+    const wrapper = mountTimeBox({
+      embeddedInPanel: true,
+      id: 'session-1',
+    })
+
+    await wrapper.get('button[aria-label="Edit session"]').trigger('click')
+
+    expect(wrapper.get('[data-testid="timebox-editor"]').attributes('data-surface')).toBe('panel')
+    expect(wrapper.get('[data-testid="timebox-editor"]').attributes('data-layout')).toBe('thin')
+  })
+
   it('deletes without opening the inline editor', async () => {
-    const wrapper = mountCompactTimeBox()
+    const wrapper = mountTimeBox()
 
     await wrapper.get('button[aria-label="Delete session"]').trigger('click')
 

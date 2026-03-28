@@ -97,7 +97,6 @@ const { useTimeBoxEditorModel } = await import('~/app/composables/useTimeBoxEdit
 
 const createBaseProps = () => ({
   createButtonLabel: 'Log Session',
-  embeddedInPanel: false,
   endTimeFromTimer: undefined,
   id: undefined,
   initialEndTime: undefined,
@@ -105,9 +104,11 @@ const createBaseProps = () => ({
   initialProject: '',
   initialStartTime: undefined,
   initialTags: [] as string[],
+  layout: 'regular' as const,
   resetAfterCreate: true,
   showCreateCancel: false,
   startTimeFromTimer: undefined,
+  surface: 'card' as const,
 })
 
 const mountHarness = (propsOverrides: Partial<ReturnType<typeof createBaseProps>> = {}) => {
