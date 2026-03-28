@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { doc, query, where } from 'firebase/firestore'
 
+import PhoneRouteLoading from '~/components/PhoneRouteLoading.vue'
+import ProjectPhoneWorkspace from '~/components/ProjectPhoneWorkspace.vue'
+import { usePhoneMode } from '~/composables/usePhoneMode'
 import { getProjectBadgeStyle, getProjectModeToggleStyles } from '~/utils/project-color-styles'
 import {
+  PROJECT_WORKSPACE_TABS,
   buildProjectWorkspaceLocation,
   buildProjectRouteQuery,
   parseProjectRouteState,
   type ProjectViewMode,
   type ProjectWorkspaceMode,
 } from '~/utils/project-route-state'
+import { routeRequiresPhoneResolution } from '~/utils/phone-mode'
 import {
   WORKSPACE_BODY_CONTENT_CLASS_NAME,
   WORKSPACE_BODY_X_CLASS_NAME,
@@ -41,6 +46,7 @@ const props = defineProps({
 
 const route = useRoute()
 const router = useRouter()
+const { hasResolvedViewport, isPhoneMode } = usePhoneMode()
 
 const projectPathSegment = computed(() => {
   const p = route.params.id
@@ -67,6 +73,7 @@ const timeBoxes = useCollection(projectTimeBoxesQuery, {
 
 const panelMode = ref<'closed' | 'day' | 'session'>('closed')
 const panelSessionId = ref('')
+const phonePanelDay = ref<Date | null>(null)
 const selectedSessionId = ref('')
 const mutationErrorMessage = ref('')
 
@@ -151,6 +158,19 @@ const headerBadges = computed(() => {
   }
   return badges
 })
+const projectHeaderTabs = computed(() => (isPhoneMode.value ? [] : PROJECT_WORKSPACE_TABS))
+const shouldHoldForPhoneResolution = computed(() => {
+  if (
+    !routeRequiresPhoneResolution({
+      path: route.path,
+      query: route.query as Record<string, string | string[] | undefined>,
+    })
+  ) {
+    return false
+  }
+
+  return import.meta.server || !hasResolvedViewport.value
+})
 
 const hasSameQueryState = (
   left: Record<string, string | string[] | undefined>,
@@ -210,6 +230,7 @@ const updateRouteState = async (
 const closePanel = () => {
   panelMode.value = 'closed'
   panelSessionId.value = ''
+  phonePanelDay.value = null
   selectedSessionId.value = ''
 }
 
@@ -288,6 +309,21 @@ const openSessionFromDayPanel = (sessionId: string) => {
   panelSessionId.value = sessionId
   panelMode.value = 'session'
 }
+
+const openPhoneSessionPanel = ({ day, sessionId }: { day: Date; sessionId: string }) => {
+  phonePanelDay.value = day
+  selectedSessionId.value = sessionId
+  panelSessionId.value = sessionId
+  panelMode.value = 'session'
+}
+
+const phonePanelTimeBoxes = computed(() => {
+  if (!phonePanelDay.value) {
+    return []
+  }
+
+  return getTimeBoxesForDay(rawProjectTimeBoxes.value, phonePanelDay.value)
+})
 
 const persistSessionChange = async ({ id, input, duplicate }: SessionChangePayload) => {
   try {
@@ -394,17 +430,33 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-hidden">
+  <PhoneRouteLoading v-if="shouldHoldForPhoneResolution" />
+
+  <div v-else class="flex h-full min-h-0 flex-col overflow-hidden">
     <ProjectWorkspaceHeader
       :active-mode="currentMode"
       :badges="headerBadges"
       :error-message="mutationErrorMessage"
       :mode-toggle-styles="modeToggleStyles"
+      :tabs="projectHeaderTabs"
       :title="project?.name ?? 'Loading project'"
       @select-mode="handleWorkspaceModeSelect"
     />
 
+    <ProjectPhoneWorkspace
+      v-if="isPhoneMode"
+      :grouped-time-boxes="projectOverviewDayObjects"
+      :panel-day="phonePanelDay"
+      :panel-session-id="panelSessionId"
+      :panel-time-boxes="phonePanelTimeBoxes"
+      :project="project"
+      :selected-session-id="selectedSessionId"
+      :on-close-panel="closePanel"
+      :on-open-session="openPhoneSessionPanel"
+    />
+
     <SessionsWorkspaceShell
+      v-else
       :overlay-aside="shouldOverlayProjectCalendarPanel"
       @dismiss-aside="closePanel"
     >

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { newTimeboxIconSvg } from '~~/shared/icons/newTimeboxIcon'
 
+import { usePhoneMode } from '~/composables/usePhoneMode'
+
 interface HeaderNavItem {
   isActive: (path: string) => boolean
   label: string
@@ -9,6 +11,7 @@ interface HeaderNavItem {
 
 const route = useRoute()
 const isDesktopViewport = useMediaQuery('(min-width: 768px)', false)
+const { isPhoneMode } = usePhoneMode()
 const { hideTags } = useUserSettings()
 const mobileMenuOpen = ref(false)
 const mobileNavPanelId = 'mobile-navigation-panel'
@@ -57,11 +60,13 @@ const navItems = computed<HeaderNavItem[]>(() => {
     })
   }
 
-  items.push({
-    label: 'Reports',
-    to: '/reports',
-    isActive: (path) => isRouteActive(path, ['/reports']),
-  })
+  if (!isPhoneMode.value) {
+    items.push({
+      label: 'Reports',
+      to: '/reports',
+      isActive: (path) => isRouteActive(path, ['/reports']),
+    })
+  }
 
   return items
 })

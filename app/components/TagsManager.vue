@@ -45,10 +45,14 @@ const cancelCreateAndLoseFocus = (event?: KeyboardEvent) => {
     style="width: 100%; min-width: 100%"
     variant="gradient"
   >
-    <div class="mb-8 flex min-h-9 items-center gap-3">
-      <div class="flex min-w-0 flex-1 justify-start" aria-hidden="true" />
-      <div class="shrink-0 text-center text-2xl font-bold">Tags</div>
-      <div class="flex min-w-0 flex-1 justify-end" aria-hidden="true" />
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Tags</div>
+        <div class="mt-1 text-2xl font-bold text-text">Manage tags</div>
+      </div>
+      <div class="text-sm text-text-muted">
+        Open a tag to jump straight into Sessions search for that tag.
+      </div>
     </div>
     <div class="flex flex-col gap-2">
       <TagsManagerTag
@@ -59,8 +63,8 @@ const cancelCreateAndLoseFocus = (event?: KeyboardEvent) => {
         :slug="item.slug"
       />
     </div>
-    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
-      <div :class="[APP_CHIP_ROW_STATIC_CLASS_NAME, 'w-full max-w-[160px] min-w-0 py-1.5']">
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div :class="[APP_CHIP_ROW_STATIC_CLASS_NAME, 'w-full min-w-0 py-1.5 sm:max-w-[200px]']">
         <input
           v-model="newTagName"
           type="text"

@@ -5,6 +5,7 @@ import DeleteIcon from '@/icons/DeleteIcon.vue'
 import EditIcon from '@/icons/EditIcon.vue'
 
 import { APP_CHIP_ROW_STATIC_CLASS_NAME } from '~/utils/app-field'
+import { getSessionsSearchRouteForTag } from '~/utils/sessions-route-state'
 import { toTimeBoxes, type FirebaseTimeBoxDocument } from '~/utils/worklog-firebase'
 import { getTotalDurationMinutes, getWorklogErrorMessage } from '~~/shared/worklog'
 
@@ -27,7 +28,7 @@ const isNameEditMode = ref(false)
 
 const chipRowClass = computed(() => [
   APP_CHIP_ROW_STATIC_CLASS_NAME,
-  'w-full min-w-0 justify-between',
+  'w-full min-w-0 justify-between gap-3',
 ])
 
 const deleteTagDocument = async () => {
@@ -115,18 +116,23 @@ watch(
         />
       </div>
       <div v-else class="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left text-text">
-        <span class="min-w-0 truncate font-bold">{{ dynamicName }}</span>
-        <DurationPill
-          format="hours-rounded"
-          :minutes="tagTimeBoxesTotalMinutes"
-          tone="neutral"
-          variant="compact"
-        />
+        <NuxtLink
+          :to="getSessionsSearchRouteForTag(id)"
+          class="flex min-w-0 flex-1 items-center gap-3 rounded-md px-1 py-2 transition hover:bg-surface-strong focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+        >
+          <span class="min-w-0 flex-1 truncate font-bold">{{ dynamicName }}</span>
+          <DurationPill
+            format="hours-rounded"
+            :minutes="tagTimeBoxesTotalMinutes"
+            tone="neutral"
+            variant="compact"
+          />
+        </NuxtLink>
       </div>
-      <div class="flex shrink-0 items-center gap-0.5">
+      <div class="flex shrink-0 items-center gap-1">
         <button
           type="button"
-          class="cursor-pointer px-1 text-text-subtle hover:text-text"
+          class="cursor-pointer rounded-md p-2 text-text-subtle hover:bg-surface hover:text-text"
           :aria-label="`Rename tag ${dynamicName}`"
           @click="isNameEditMode = !isNameEditMode"
         >
@@ -134,7 +140,7 @@ watch(
         </button>
         <button
           type="button"
-          class="cursor-pointer px-1 text-text-subtle hover:text-text"
+          class="cursor-pointer rounded-md p-2 text-text-subtle hover:bg-surface hover:text-text"
           :aria-label="`Delete tag ${dynamicName}`"
           @click="deleteTagDocument"
         >

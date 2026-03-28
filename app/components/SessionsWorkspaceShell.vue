@@ -6,9 +6,11 @@ defineEmits<{
 withDefaults(
   defineProps<{
     overlayAside?: boolean
+    asidePanelClass?: string
   }>(),
   {
     overlayAside: false,
+    asidePanelClass: 'w-full max-w-108 min-w-0',
   },
 )
 </script>
@@ -35,7 +37,7 @@ withDefaults(
       v-if="$slots.aside && overlayAside"
       class="pointer-events-none absolute inset-y-0 right-0 z-30 flex w-full justify-end pt-4 pr-0 pb-4 pl-4"
     >
-      <div class="pointer-events-auto flex h-full w-full max-w-108 min-w-0">
+      <div class="pointer-events-auto flex h-full" :class="asidePanelClass">
         <slot name="aside" />
       </div>
     </div>

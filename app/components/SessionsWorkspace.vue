@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { addDays } from '~~/shared/worklog'
 
+import PhoneRouteLoading from '~/components/PhoneRouteLoading.vue'
+import SessionsPhoneWorkspace from '~/components/SessionsPhoneWorkspace.vue'
+import { usePhoneMode } from '~/composables/usePhoneMode'
 import { useSessionsKeyboard } from '~/composables/useSessionsKeyboard'
 import { useSessionsPanelState } from '~/composables/useSessionsPanelState'
 import { useSessionsRouteState } from '~/composables/useSessionsRouteState'
 import { useSessionsMutations } from '~/composables/useSessionsMutations'
 import { useSessionsWorkspaceData } from '~/composables/useSessionsWorkspaceData'
+import {
+  PHONE_MODE_SUPPORTED_SESSIONS_VIEW_MODES,
+  routeRequiresPhoneResolution,
+} from '~/utils/phone-mode'
 import { WORKSPACE_BODY_X_CLASS_NAME } from '~/utils/workspace-subheader'
 import type { SessionsViewMode } from '~/utils/sessions-route-state'
 
@@ -42,6 +50,8 @@ const mutations = useSessionsMutations({
   openSessionPanel: panel.openSessionPanel,
 })
 clearMutationError = mutations.clearMutationError
+const route = useRoute()
+const { hasResolvedViewport, isPhoneMode } = usePhoneMode()
 
 const { anchorDate, clearListFilters, currentMode, listFilters, updateListFilters } = routedState
 const {
@@ -93,6 +103,25 @@ const pageTitle = computed(() => {
   }
 
   return `${earliestYear}-${latestYear}`
+})
+
+const phoneSessionViewItems = computed(() =>
+  SESSION_VIEW_ITEMS.filter((item) =>
+    PHONE_MODE_SUPPORTED_SESSIONS_VIEW_MODES.includes(item.id as 'day' | 'search'),
+  ),
+)
+
+const shouldHoldForPhoneResolution = computed(() => {
+  if (
+    !routeRequiresPhoneResolution({
+      path: route.path,
+      query: route.query as Record<string, string | string[] | undefined>,
+    })
+  ) {
+    return false
+  }
+
+  return import.meta.server || !hasResolvedViewport.value
 })
 
 useSessionsKeyboard({
@@ -153,7 +182,45 @@ const handleOpenSessionFromMonth = async (payload: { day: Date; sessionId: strin
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-hidden">
+  <PhoneRouteLoading v-if="shouldHoldForPhoneResolution" />
+
+  <SessionsPhoneWorkspace
+    v-else-if="isPhoneMode"
+    :anchor-date="anchorDate"
+    :calendar-header-summary="calendarHeaderSummary"
+    :current-mode="currentMode"
+    :filtered-session-list-time-boxes="filteredSessionListTimeBoxes"
+    :hide-tags="hideTags"
+    :initial-end-time="createInitialEndTime"
+    :initial-start-time="createInitialStartTime"
+    :list-filters="listFilters"
+    :list-search-tokens="listSearchTokens"
+    :list-summary="listSummary"
+    :mutation-error-message="mutationErrorMessage"
+    :page-title="pageTitle"
+    :panel-mode="panelMode"
+    :panel-session-id="panelSessionId"
+    :project-by-id="projectById"
+    :project-name-by-id="projectNameById"
+    :scratchpad-date-key="scratchpadDateKey"
+    :selected-session-id="selectedSessionId"
+    :session-view-items="phoneSessionViewItems"
+    :sorted-tags="sortedTags"
+    :visible-day-time-boxes="visibleDayTimeBoxes"
+    :on-back-to-overview="backToOverlayOverviewPanel"
+    :on-clear-filters="clearListFilters"
+    :on-close-panel="closePanel"
+    :on-created="handlePanelCreated"
+    :on-go-today="handleGoToday"
+    :on-navigate-period="handleNavigate"
+    :on-open-session="({ day, sessionId }) => openSessionPanel(sessionId, { day })"
+    :on-select-mode="handleModeChange"
+    :on-show-overview="openOverviewPanel"
+    :on-show-scratchpad="openScratchpadPanel"
+    :on-update-filters="updateListFilters"
+  />
+
+  <div v-else class="flex h-full min-h-0 flex-col overflow-hidden">
     <div ref="sessionsHeaderRef" class="shrink-0">
       <SessionsWorkspaceHeader
         :calendar-header-summary="calendarHeaderSummary"
