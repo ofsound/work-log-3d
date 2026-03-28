@@ -464,7 +464,7 @@ const tagsListClass = computed(() =>
 
           <div
             class="border-t border-border-subtle"
-            :class="[isThinLayout ? 'pt-4' : 'pt-5', isPanelSurface ? 'mt-5' : '']"
+            :class="[isThinLayout ? 'pt-4' : 'pt-5', isPanelSurface ? 'mt-5' : 'md:mt-5']"
           >
             <AppField class="min-w-0" density="comfortable" label="Notes">
               <AppTextarea
