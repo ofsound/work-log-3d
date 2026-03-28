@@ -196,7 +196,7 @@ const primarySectionClass = computed(() => {
   return [
     'flex min-w-0 flex-col gap-5',
     alignWithProjectTagsColumns
-      ? '[@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-6'
+      ? '[@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-12'
       : '',
   ]
     .filter(Boolean)
@@ -334,7 +334,7 @@ const tagsListClass = computed(() =>
             </AppField>
 
             <div :class="heroColumnClass">
-              <div aria-live="polite" class="flex min-w-0 flex-col gap-3">
+              <div aria-live="polite" class="flex min-w-0 flex-col gap-[1.85rem]">
                 <AppFieldLabel v-if="sessionTimeHero && !isPanelSurface">Start & End</AppFieldLabel>
                 <div class="flex min-w-0 flex-col gap-1" :class="heroValueBlockClass">
                   <p v-if="sessionTimeHero" :class="heroValueTextClass">
