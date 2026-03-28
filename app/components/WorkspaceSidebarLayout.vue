@@ -1,15 +1,38 @@
 <script setup lang="ts">
-withDefaults(
+import { nextTick, ref, watch } from 'vue'
+
+const props = withDefaults(
   defineProps<{
     contentBodyClass?: string
     sidebarBodyClass?: string
     sidebarFooterClass?: string
+    /** When this value changes, the main content column scrolls to the top. */
+    contentScrollResetKey?: string | number | null
   }>(),
   {
     contentBodyClass: '',
     sidebarBodyClass: '',
     sidebarFooterClass: '',
+    contentScrollResetKey: undefined,
   },
+)
+
+const contentBodyEl = ref<HTMLElement | null>(null)
+
+watch(
+  () => props.contentScrollResetKey,
+  async () => {
+    if (props.contentScrollResetKey === undefined) {
+      return
+    }
+
+    await nextTick()
+    const el = contentBodyEl.value
+    if (el) {
+      el.scrollTop = 0
+    }
+  },
+  { flush: 'post' },
 )
 </script>
 
@@ -29,7 +52,11 @@ withDefaults(
       </div>
     </aside>
 
-    <div class="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain" :class="contentBodyClass">
+    <div
+      ref="contentBodyEl"
+      class="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain"
+      :class="contentBodyClass"
+    >
       <slot />
     </div>
   </div>

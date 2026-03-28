@@ -1,6 +1,11 @@
 import { randomBytes } from 'node:crypto'
 
-import { buildReportSnapshot, getReportRange, groupReportSessionRows } from '~~/shared/worklog'
+import {
+  buildReportSnapshot,
+  getReportRange,
+  groupReportSessionRows,
+  reportFiltersWithAllTagsInScope,
+} from '~~/shared/worklog'
 
 import type {
   NamedEntity,
@@ -76,7 +81,7 @@ export const publishReportDraft = async (
     dependencies.getTimeBoxes(uid, range),
   ])
   const snapshot = buildReportSnapshot({
-    filters: report.filters,
+    filters: reportFiltersWithAllTagsInScope(report.filters),
     projects,
     tags,
     timeBoxes,

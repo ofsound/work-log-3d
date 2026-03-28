@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 
 import WorkspaceSidebarLayout from '~/app/components/WorkspaceSidebarLayout.vue'
@@ -48,5 +49,27 @@ describe('WorkspaceSidebarLayout', () => {
     expect(footer.text()).toBe('Footer')
     expect(footer.element.parentElement?.className).toContain('px-5')
     expect(wrapper.findAll('.overscroll-contain')).toHaveLength(2)
+  })
+
+  it('scrolls the content column to the top when contentScrollResetKey changes', async () => {
+    const wrapper = mount(WorkspaceSidebarLayout, {
+      props: {
+        contentScrollResetKey: 'report-a',
+      },
+      slots: {
+        default: '<div style="height: 800px" data-test="tall">Content</div>',
+        sidebar: '<div>Sidebar</div>',
+      },
+    })
+
+    const [, contentViewport] = wrapper.findAll('.overscroll-contain')
+    const el = contentViewport!.element as HTMLElement
+    el.scrollTop = 200
+
+    await wrapper.setProps({ contentScrollResetKey: 'report-b' })
+    await nextTick()
+    await nextTick()
+
+    expect(el.scrollTop).toBe(0)
   })
 })

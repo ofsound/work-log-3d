@@ -5,17 +5,15 @@ import { orderBy, query } from 'firebase/firestore'
 
 import { cloneReportInput, createDefaultBrowserReportInput } from '~/utils/report-ui'
 import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
-import { useUserSettings } from '~/composables/useUserSettings'
 import type {
   FirebaseProjectDocument,
   FirebaseReportDocument,
   FirebaseTagDocument,
 } from '~/utils/worklog-firebase'
 import { toProjects, toReports, toTags } from '~/utils/worklog-firebase'
-import { sortNamedEntities } from '~~/shared/worklog'
+import { reportFiltersWithAllTagsInScope, sortNamedEntities } from '~~/shared/worklog'
 
 export function useReportsDraft() {
-  const { hideTags } = useUserSettings()
   const { reportsCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
 
   const selectedReportId = ref('')
@@ -47,21 +45,22 @@ export function useReportsDraft() {
   const selectedReport = computed(
     () => reports.value.find((report) => report.id === selectedReportId.value) ?? null,
   )
-  const hasHiddenLegacyTagFilters = computed(
-    () => hideTags.value && draft.value.filters.tagIds.length > 0,
-  )
 
   const loadDraftFromSelectedReport = () => {
     if (!selectedReport.value) {
       return
     }
 
-    draft.value = cloneReportInput(selectedReport.value)
+    const loaded = cloneReportInput(selectedReport.value)
+    draft.value = {
+      ...loaded,
+      filters: reportFiltersWithAllTagsInScope(loaded.filters),
+    }
     lastLoadedReportId.value = selectedReport.value.id
   }
 
-  const setDraftSelection = (type: 'projectIds' | 'tagIds', id: string, checked: boolean) => {
-    const nextValues = new Set(draft.value.filters[type])
+  const setDraftSelection = (type: 'projectIds', id: string, checked: boolean) => {
+    const nextValues = new Set(draft.value.filters.projectIds)
 
     if (checked) {
       nextValues.add(id)
@@ -73,7 +72,7 @@ export function useReportsDraft() {
       ...draft.value,
       filters: {
         ...draft.value.filters,
-        [type]: [...nextValues],
+        projectIds: [...nextValues],
       },
     }
   }
@@ -114,8 +113,6 @@ export function useReportsDraft() {
 
   return {
     draft,
-    hasHiddenLegacyTagFilters,
-    hideTags,
     reports,
     selectedReport,
     selectedReportId,

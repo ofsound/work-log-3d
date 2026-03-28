@@ -7,7 +7,11 @@ import { useCurrentUser, useFirebaseAuth } from '#imports'
 import { useWorklogRepository } from '~/composables/useWorklogRepository'
 import { cloneReportInput, createDefaultBrowserReportInput } from '~/utils/report-ui'
 import type { ReportInput } from '~~/shared/worklog'
-import { getWorklogErrorMessage, validateReportInput } from '~~/shared/worklog'
+import {
+  getWorklogErrorMessage,
+  reportFiltersWithAllTagsInScope,
+  validateReportInput,
+} from '~~/shared/worklog'
 
 export interface UseReportsPublishingOptions {
   canPublish: ComputedRef<boolean>
@@ -28,7 +32,14 @@ export function useReportsPublishing(options: UseReportsPublishingOptions) {
   const isUnpublishing = ref(false)
   const isCopyingLink = ref(false)
 
-  const buildReportPayload = () => validateReportInput(cloneReportInput(options.draft.value))
+  const buildReportPayload = () => {
+    const cloned = cloneReportInput(options.draft.value)
+
+    return validateReportInput({
+      ...cloned,
+      filters: reportFiltersWithAllTagsInScope(cloned.filters),
+    })
+  }
 
   watch(options.selectedReport, () => {
     mutationErrorMessage.value = ''

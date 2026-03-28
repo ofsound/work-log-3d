@@ -52,7 +52,7 @@ const visibleInsights = computed(
             {{ summary }}
           </div>
         </div>
-        <div class="rounded-xl bg-header-toggle px-4 py-3 text-right">
+        <div class="rounded-md bg-header-toggle px-4 py-3 text-right">
           <div class="text-xs tracking-[0.18em] text-header-muted uppercase">Total hours</div>
           <div class="mt-1 text-4xl font-bold">
             {{
@@ -72,7 +72,7 @@ const visibleInsights = computed(
         v-for="metric in snapshot.overview.metrics"
         :key="metric.label"
         as="article"
-        class="rounded-xl"
+        class="rounded-md"
         padding="compact"
       >
         <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">{{ metric.label }}</div>
@@ -87,7 +87,7 @@ const visibleInsights = computed(
           v-for="insight in visibleInsights"
           :key="insight.id"
           as="article"
-          class="rounded-xl shadow-none"
+          class="rounded-md shadow-none"
           padding="compact"
           variant="muted"
         >
@@ -252,11 +252,10 @@ const visibleInsights = computed(
     <ContainerCard as="section">
       <div class="text-lg font-bold text-text">Session detail</div>
       <div class="mt-5 flex flex-col gap-6">
-        <ContainerCard
+        <div
           v-for="group in snapshot.sessionGroups"
           :key="group.dateKey"
-          padding="compact"
-          variant="muted"
+          class="flex flex-col gap-4"
         >
           <div class="flex flex-wrap items-center gap-3">
             <div class="text-lg font-semibold text-text">{{ group.label }}</div>
@@ -265,12 +264,13 @@ const visibleInsights = computed(
               {{ group.sessionCount }} sessions
             </div>
           </div>
-          <div class="mt-4 flex flex-col gap-3">
+          <div class="flex flex-col gap-3">
             <ContainerCard
               v-for="session in group.sessions"
               :key="session.sessionId"
               as="article"
-              class="rounded-xl"
+              class="rounded-md"
+              flat-surface
               padding="compact"
             >
               <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -295,13 +295,15 @@ const visibleInsights = computed(
                     </div>
                   </div>
                 </div>
-                <div class="rounded-xl bg-surface-subtle px-3 py-2 text-sm text-text">
+                <div
+                  class="shrink-0 rounded-md bg-surface-subtle px-3 py-2 text-sm whitespace-nowrap text-text"
+                >
                   <div class="font-semibold">{{ formatReportHours(session.durationMinutes) }}</div>
                 </div>
               </div>
             </ContainerCard>
           </div>
-        </ContainerCard>
+        </div>
       </div>
     </ContainerCard>
   </div>

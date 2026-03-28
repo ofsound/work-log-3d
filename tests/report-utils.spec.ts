@@ -2,6 +2,7 @@ import {
   buildReportSnapshot,
   createDefaultReportInput,
   matchesReportFilter,
+  reportFiltersWithAllTagsInScope,
   validateReportInput,
 } from '~~/shared/worklog'
 
@@ -97,6 +98,19 @@ describe('report utilities', () => {
         tagOperator: 'all',
       }),
     ).toBe(true)
+  })
+
+  it('reportFiltersWithAllTagsInScope clears tag ids so matching ignores tag filters', () => {
+    const restrictive: ReportFilter = {
+      ...baseFilters,
+      tagIds: ['tag-review'],
+      tagOperator: 'any',
+    }
+
+    expect(matchesReportFilter(sampleTimeBox, restrictive)).toBe(false)
+    expect(matchesReportFilter(sampleTimeBox, reportFiltersWithAllTagsInScope(restrictive))).toBe(
+      true,
+    )
   })
 
   it('clamps report totals to the UTC date range and splits sessions across UTC midnights', () => {

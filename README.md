@@ -342,10 +342,9 @@ Server-managed published report snapshots for anonymous client access. The top-l
 
 ## Reports
 
-- `/reports` lets authenticated users save named report drafts with a date range, project filters, tag filters, and a plain-text summary
-- Project filtering is union-based because each session stores one project; tag filtering supports `any` or `all`
-- When both project and tag filters are selected, the report can combine them with `intersection` or `union`
-- When project-only mode hides tags, existing tag-based report data is preserved but tag editing controls are removed from the authenticated workspace
+- `/reports` lets authenticated users save named report drafts with a date range, optional project filters, and a plain-text summary; sessions with any tags are always in scope (tag breakdowns still appear in the preview and public snapshot)
+- Leave all projects unchecked to include every project; checking projects limits the report to those projects only
+- Legacy `tagIds` on stored drafts are ignored for filtering when loading, saving, or publishing; snapshots still attribute time by tag from session data
 - Reports clamp session totals to the selected date range using UTC calendar boundaries, so overnight sessions are split accurately across UTC days
 - Publishing creates or refreshes a frozen public snapshot at `/r/:token`; unpublishing removes the public snapshot without deleting the private draft
 - Public reports include the summary, total hours, project/tag breakdowns, daily and weekly rollups, and individual session notes

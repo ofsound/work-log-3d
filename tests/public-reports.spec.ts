@@ -80,6 +80,56 @@ describe('public report publishing', () => {
     })
   })
 
+  it('ignores stored tag filters when building the published snapshot', async () => {
+    const dependencies = createDependencies()
+
+    vi.mocked(dependencies.getReport).mockResolvedValue({
+      id: 'report-1',
+      title: 'March Report',
+      summary: 'Summary',
+      filters: {
+        dateStart: '2026-03-01',
+        dateEnd: '2026-03-21',
+        projectIds: [],
+        tagIds: ['tag-missing'],
+        groupOperator: 'intersection',
+        tagOperator: 'any',
+      },
+      shareToken: '',
+      createdAt: null,
+      updatedAt: null,
+      publishedAt: null,
+    })
+    vi.mocked(dependencies.getProjects).mockResolvedValue([{ id: 'project-1', name: 'Project 1' }])
+    vi.mocked(dependencies.getTags).mockResolvedValue([{ id: 'tag-1', name: 'Tag 1' }])
+    vi.mocked(dependencies.getTimeBoxes).mockResolvedValue([
+      {
+        id: 'tb-1',
+        startTime: new Date('2026-03-10T16:00:00.000Z'),
+        endTime: new Date('2026-03-10T18:00:00.000Z'),
+        notes: 'Client work',
+        project: 'project-1',
+        tags: ['tag-1'],
+      },
+    ])
+
+    const published = await publishReportDraft(dependencies, {
+      uid: 'user-1',
+      reportId: 'report-1',
+    })
+
+    expect(published.snapshot.overview.totalMinutes).toBe(120)
+    expect(dependencies.savePublishedReport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionRows: expect.arrayContaining([
+          expect.objectContaining({
+            sessionId: 'tb-1',
+          }),
+        ]),
+      }),
+    )
+  })
+
   it('reuses the existing share token when republishing', async () => {
     const dependencies = createDependencies()
 

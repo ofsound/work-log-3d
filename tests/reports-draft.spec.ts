@@ -101,6 +101,7 @@ describe('useReportsDraft', () => {
     expect(state.selectedReportId.value).toBe('report-2')
     expect(state.draft.value.title).toBe('Newest draft')
     expect(state.draft.value.filters.projectIds).toEqual(['project-1'])
+    expect(state.draft.value.filters.tagIds).toEqual([])
 
     state.selectedReportId.value = 'report-1'
     await Promise.resolve()

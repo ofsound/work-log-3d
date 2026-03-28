@@ -366,6 +366,12 @@ export const matchesReportFilter = (timeBox: TimeBox, filters: ReportFilter) => 
   return hasProjectFilter ? projectMatch : tagMatch
 }
 
+/** Clears tag filter ids so snapshots include sessions with any tags (date/project filters only). */
+export const reportFiltersWithAllTagsInScope = (filters: ReportFilter): ReportFilter => ({
+  ...filters,
+  tagIds: [],
+})
+
 const clampDate = (date: Date, minDate: Date, maxDate: Date) =>
   new Date(Math.min(Math.max(date.valueOf(), minDate.valueOf()), maxDate.valueOf()))
 

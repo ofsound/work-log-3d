@@ -2,7 +2,9 @@
 import { useReportsDraft } from '~/composables/useReportsDraft'
 import { useReportsPreviewData } from '~/composables/useReportsPreviewData'
 import { useReportsPublishing } from '~/composables/useReportsPublishing'
+import { useUserSettings } from '~/composables/useUserSettings'
 
+const { hideTags } = useUserSettings()
 const draftState = useReportsDraft()
 const previewData = useReportsPreviewData({
   draft: draftState.draft,
@@ -18,17 +20,8 @@ const publishing = useReportsPublishing({
   shareLink: previewData.shareLink,
 })
 
-const {
-  draft,
-  hasHiddenLegacyTagFilters,
-  hideTags,
-  reports,
-  selectedReport,
-  selectedReportId,
-  setDraftSelection,
-  sortedProjects,
-  sortedTags,
-} = draftState
+const { draft, reports, selectedReport, selectedReportId, setDraftSelection, sortedProjects } =
+  draftState
 const { canPublish, previewSnapshot, shareLink } = previewData
 const {
   copyShareLink,
@@ -45,7 +38,11 @@ const {
 </script>
 
 <template>
-  <WorkspaceSidebarLayout content-body-class="px-6 pt-12 pb-6" sidebar-body-class="px-6 pt-12 pb-6">
+  <WorkspaceSidebarLayout
+    content-body-class="px-6 pt-12 pb-6"
+    sidebar-body-class="px-6 pt-12 pb-6"
+    :content-scroll-reset-key="selectedReportId"
+  >
     <template #sidebar>
       <div class="flex min-h-full flex-col">
         <div class="flex items-center justify-between gap-3">
@@ -68,7 +65,7 @@ const {
             v-for="report in reports"
             :key="report.id"
             as="button"
-            class="flex w-full flex-col rounded-xl px-3 py-3 text-left shadow-control"
+            class="flex w-full flex-col rounded-md px-3 py-3 text-left shadow-control"
             :interactive="report.id !== selectedReportId"
             padding="compact"
             :selected="report.id === selectedReportId"
@@ -159,88 +156,27 @@ const {
               </div>
 
               <div class="grid gap-4">
-                <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
-                  <AppFieldLabel as="div">Group combination</AppFieldLabel>
-                  <div class="mt-3 grid gap-2 md:grid-cols-2">
-                    <AppFieldInlineChoice>
+                <ContainerCard padding="compact" variant="muted">
+                  <AppFieldLabel as="div">Projects</AppFieldLabel>
+                  <p class="mt-2 text-xs text-text-muted">
+                    Leave all unchecked to include every project.
+                  </p>
+                  <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
+                    <AppFieldInlineChoice v-for="project in sortedProjects" :key="project.id">
                       <input
-                        v-model="draft.filters.groupOperator"
-                        type="radio"
-                        value="intersection"
+                        :checked="draft.filters.projectIds.includes(project.id)"
+                        type="checkbox"
+                        @change="
+                          setDraftSelection(
+                            'projectIds',
+                            project.id,
+                            ($event.target as HTMLInputElement).checked,
+                          )
+                        "
                       />
-                      Project AND tag
-                    </AppFieldInlineChoice>
-                    <AppFieldInlineChoice>
-                      <input v-model="draft.filters.groupOperator" type="radio" value="union" />
-                      Project OR tag
+                      {{ project.name }}
                     </AppFieldInlineChoice>
                   </div>
-                </ContainerCard>
-
-                <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
-                  <AppFieldLabel as="div">Tag matching</AppFieldLabel>
-                  <div class="mt-3 grid gap-2 md:grid-cols-2">
-                    <AppFieldInlineChoice>
-                      <input v-model="draft.filters.tagOperator" type="radio" value="any" />
-                      Any selected tag
-                    </AppFieldInlineChoice>
-                    <AppFieldInlineChoice>
-                      <input v-model="draft.filters.tagOperator" type="radio" value="all" />
-                      All selected tags
-                    </AppFieldInlineChoice>
-                  </div>
-                </ContainerCard>
-
-                <div class="grid gap-4 xl:grid-cols-2">
-                  <ContainerCard padding="compact" variant="muted">
-                    <AppFieldLabel as="div">Projects</AppFieldLabel>
-                    <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
-                      <AppFieldInlineChoice v-for="project in sortedProjects" :key="project.id">
-                        <input
-                          :checked="draft.filters.projectIds.includes(project.id)"
-                          type="checkbox"
-                          @change="
-                            setDraftSelection(
-                              'projectIds',
-                              project.id,
-                              ($event.target as HTMLInputElement).checked,
-                            )
-                          "
-                        />
-                        {{ project.name }}
-                      </AppFieldInlineChoice>
-                    </div>
-                  </ContainerCard>
-
-                  <ContainerCard v-if="!hideTags" padding="compact" variant="muted">
-                    <AppFieldLabel as="div">Tags</AppFieldLabel>
-                    <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
-                      <AppFieldInlineChoice v-for="tag in sortedTags" :key="tag.id">
-                        <input
-                          :checked="draft.filters.tagIds.includes(tag.id)"
-                          type="checkbox"
-                          @change="
-                            setDraftSelection(
-                              'tagIds',
-                              tag.id,
-                              ($event.target as HTMLInputElement).checked,
-                            )
-                          "
-                        />
-                        {{ tag.name }}
-                      </AppFieldInlineChoice>
-                    </div>
-                  </ContainerCard>
-                </div>
-
-                <ContainerCard
-                  v-if="hasHiddenLegacyTagFilters"
-                  class="text-sm text-text-muted shadow-none"
-                  padding="compact"
-                  variant="muted"
-                >
-                  This report still includes legacy tag filters. They remain active for existing
-                  data, but tag editing is hidden while project-only mode is on.
                 </ContainerCard>
               </div>
             </div>
