@@ -1,25 +1,18 @@
 import { useHostRuntime } from '~/composables/useHostRuntime'
 import { useTimerService } from '~/composables/useTimerService'
 
+import type { DesktopTimerAction } from '~~/shared/worklog'
+
 export default defineNuxtPlugin(() => {
   const { desktopApi, isDesktop } = useHostRuntime()
   const timerService = useTimerService()
+  const pendingActions: DesktopTimerAction[] = []
 
   if (!isDesktop || !desktopApi) {
     return
   }
 
-  watch(
-    () => timerService.isPersistentReady.value,
-    (isReady) => {
-      void desktopApi.setTimerBridgeReady(isReady).catch((error) => {
-        console.warn('[worklog] unable to publish timer bridge readiness to desktop shell', error)
-      })
-    },
-    { immediate: true },
-  )
-
-  desktopApi.subscribeToTimerAction((action) => {
+  const applyTimerAction = (action: DesktopTimerAction) => {
     switch (action.type) {
       case 'start_countup':
         void timerService.startCountup({
@@ -49,6 +42,33 @@ export default defineNuxtPlugin(() => {
         void timerService.cancel()
         break
     }
+  }
+
+  watch(
+    () => timerService.isPersistentReady.value,
+    (isReady) => {
+      void desktopApi.setTimerBridgeReady(isReady).catch((error) => {
+        console.warn('[worklog] unable to publish timer bridge readiness to desktop shell', error)
+      })
+
+      if (!isReady || pendingActions.length === 0) {
+        return
+      }
+
+      for (const action of pendingActions.splice(0, pendingActions.length)) {
+        applyTimerAction(action)
+      }
+    },
+    { immediate: true },
+  )
+
+  desktopApi.subscribeToTimerAction((action) => {
+    if (!timerService.isPersistentReady.value) {
+      pendingActions.push(action)
+      return
+    }
+
+    applyTimerAction(action)
   })
 
   let lastPublishedKey = ''
