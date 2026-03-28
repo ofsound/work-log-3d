@@ -1,166 +1,253 @@
-import type { TimerState } from '~~/shared/worklog'
+import { deleteDoc, getFirestore, onSnapshot, setDoc } from 'firebase/firestore'
+
+import type { DocumentData, DocumentReference, Unsubscribe } from 'firebase/firestore'
+import type { ActiveTimerDraftInput, ActiveTimerState } from '~~/shared/worklog'
 import {
   addCountdownSeconds,
-  cancelTimer,
-  createIdleTimerState,
+  applyActiveTimerDraft,
+  createIdleActiveTimerState,
   getTimerSnapshot,
   pauseTimer,
+  replaceActiveTimerState,
   resumeTimer,
   startCountdownTimer,
   startCountupTimer,
   stopTimer,
-  syncTimerState,
+  syncActiveTimerState,
 } from '~~/shared/worklog'
+import type { FirebaseActiveTimerDocument } from '~/utils/worklog-firebase'
+import { toActiveTimer, toActiveTimerPayload } from '~/utils/worklog-firebase'
+
+const ACTIVE_TIMER_DEVICE_ID_STORAGE_KEY = 'work-log:active-timer-device-id'
 
 let timerInterval: number | null = null
-let desktopTimerSubscription: (() => void) | null = null
-let desktopTimerSyncPromise: Promise<void> | null = null
+let activeTimerSubscription: Unsubscribe | null = null
+let activeTimerDocumentRef: DocumentReference<DocumentData> | null = null
+let timerServiceInitialized = false
+let localMutationSequence = 0
+
+const getStoredDeviceId = () => {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  const existing = window.localStorage.getItem(ACTIVE_TIMER_DEVICE_ID_STORAGE_KEY)
+
+  if (existing) {
+    return existing
+  }
+
+  const next =
+    typeof window.crypto?.randomUUID === 'function'
+      ? window.crypto.randomUUID()
+      : `device-${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  window.localStorage.setItem(ACTIVE_TIMER_DEVICE_ID_STORAGE_KEY, next)
+
+  return next
+}
+
+const stampLocalMutation = (state: ActiveTimerState, nowMs: number, deviceId: string) => {
+  localMutationSequence += 1
+
+  return {
+    ...state,
+    updatedAtMs: nowMs,
+    updatedByDeviceId: deviceId,
+    mutationId: localMutationSequence,
+  }
+}
 
 export function useTimerService() {
-  const { desktopApi, hasNativeTimer } = useHostRuntime()
-  const timerState = useState<TimerState>('active-timer-state', createIdleTimerState)
-  const timerNow = useState('active-timer-now', () => Date.now())
-  const isReady = useState('active-timer-ready', () => !hasNativeTimer)
+  const firebaseApp = useFirebaseApp()
+  const db = getFirestore(firebaseApp)
+  const currentUser = useCurrentUser()
+  const { activeTimerDocument } = useFirestoreCollections()
 
-  const clearLocalInterval = () => {
-    if (timerInterval === null || typeof window === 'undefined') {
+  const timerState = useState<ActiveTimerState>('active-timer-state', createIdleActiveTimerState)
+  const timerNow = useState('active-timer-now', () => Date.now())
+  const isReady = useState('active-timer-ready', () => currentUser.value !== undefined)
+  const deviceId = useState('active-timer-device-id', getStoredDeviceId)
+  const isPersistentReady = computed(
+    () => isReady.value && Boolean(currentUser.value) && activeTimerDocument.value !== null,
+  )
+
+  const persistActiveTimerState = async (nextState: ActiveTimerState) => {
+    if (!activeTimerDocumentRef) {
       return
     }
 
-    window.clearInterval(timerInterval)
-    timerInterval = null
+    if (nextState.status === 'idle') {
+      await deleteDoc(activeTimerDocumentRef)
+      return
+    }
+
+    await setDoc(activeTimerDocumentRef, toActiveTimerPayload(nextState))
+  }
+
+  const clearLocalSubscription = () => {
+    activeTimerSubscription?.()
+    activeTimerSubscription = null
   }
 
   const ensureInterval = () => {
-    if (typeof window === 'undefined' || timerInterval) {
+    if (typeof window === 'undefined' || timerInterval !== null) {
       return
     }
 
     timerInterval = window.setInterval(() => {
       timerNow.value = Date.now()
-      timerState.value = syncTimerState(timerState.value, timerNow.value)
+      const nextState = syncActiveTimerState(timerState.value, timerNow.value)
+
+      if (nextState === timerState.value) {
+        return
+      }
+
+      const stampedState = stampLocalMutation(nextState, timerNow.value, deviceId.value)
+      timerState.value = stampedState
+      void persistActiveTimerState(stampedState).catch((error) => {
+        console.warn('[worklog] unable to persist active timer completion state', error)
+      })
     }, 250)
   }
 
-  const ensureDesktopSync = async () => {
-    if (!desktopApi || desktopTimerSyncPromise) {
-      return desktopTimerSyncPromise
+  const applyMutation = async (
+    mutate: (state: ActiveTimerState, nowMs: number) => ActiveTimerState,
+  ) => {
+    timerNow.value = Date.now()
+    const currentState = syncActiveTimerState(timerState.value, timerNow.value)
+    const nextState = mutate(currentState, timerNow.value)
+
+    timerState.value =
+      nextState.status === 'idle'
+        ? createIdleActiveTimerState()
+        : stampLocalMutation(nextState, timerNow.value, deviceId.value)
+
+    try {
+      await persistActiveTimerState(timerState.value)
+    } catch (error) {
+      console.warn('[worklog] unable to persist active timer state', error)
     }
-
-    desktopTimerSyncPromise = (async () => {
-      clearLocalInterval()
-      timerNow.value = Date.now()
-      timerState.value = await desktopApi.getTimerState()
-      isReady.value = true
-
-      desktopTimerSubscription?.()
-      desktopTimerSubscription = desktopApi.subscribeToTimer((event) => {
-        timerNow.value = Date.now()
-        timerState.value = event.state
-      })
-    })()
-
-    await desktopTimerSyncPromise
   }
 
-  if (hasNativeTimer) {
-    void ensureDesktopSync()
-  } else {
-    isReady.value = true
+  if (import.meta.client && !timerServiceInitialized) {
+    timerServiceInitialized = true
     ensureInterval()
+
+    watch(
+      [() => currentUser.value, () => activeTimerDocument.value],
+      ([user, documentReference]) => {
+        timerNow.value = Date.now()
+        activeTimerDocumentRef = documentReference
+        clearLocalSubscription()
+
+        if (!documentReference) {
+          timerState.value = createIdleActiveTimerState()
+          isReady.value = user !== undefined
+          return
+        }
+
+        isReady.value = false
+        activeTimerSubscription = onSnapshot(
+          documentReference,
+          (snapshot) => {
+            timerNow.value = Date.now()
+            timerState.value = snapshot.exists()
+              ? toActiveTimer(snapshot.data() as FirebaseActiveTimerDocument)
+              : createIdleActiveTimerState()
+            isReady.value = true
+          },
+          (error) => {
+            console.warn('[worklog] unable to subscribe to active timer', error)
+            isReady.value = true
+          },
+        )
+      },
+      { immediate: true },
+    )
   }
 
-  const startCountup = async () => {
-    if (desktopApi) {
-      await ensureDesktopSync()
-      await desktopApi.startCountup()
-      return
-    }
-
-    timerNow.value = Date.now()
-    timerState.value = startCountupTimer(timerNow.value)
+  const startCountup = async (initialDraft: ActiveTimerDraftInput = {}) => {
+    await applyMutation((_state, nowMs) =>
+      applyActiveTimerDraft(
+        replaceActiveTimerState(createIdleActiveTimerState(), startCountupTimer(nowMs)),
+        initialDraft,
+      ),
+    )
   }
 
-  const startCountdown = async (durationMinutes: number) => {
-    if (desktopApi) {
-      await ensureDesktopSync()
-      await desktopApi.startCountdown(durationMinutes * 60)
-      return
-    }
+  const startCountdownSeconds = async (
+    durationSeconds: number,
+    initialDraft: ActiveTimerDraftInput = {},
+  ) => {
+    await applyMutation((_state, nowMs) =>
+      applyActiveTimerDraft(
+        replaceActiveTimerState(
+          createIdleActiveTimerState(),
+          startCountdownTimer(durationSeconds, nowMs),
+        ),
+        initialDraft,
+      ),
+    )
+  }
 
-    timerNow.value = Date.now()
-    timerState.value = startCountdownTimer(durationMinutes * 60, timerNow.value)
+  const startCountdown = async (
+    durationMinutes: number,
+    initialDraft: ActiveTimerDraftInput = {},
+  ) => {
+    await startCountdownSeconds(durationMinutes * 60, initialDraft)
   }
 
   const pause = async () => {
-    if (desktopApi) {
-      await ensureDesktopSync()
-      await desktopApi.pauseTimer()
-      return
-    }
-
-    timerNow.value = Date.now()
-    timerState.value = pauseTimer(timerState.value, timerNow.value)
+    await applyMutation((state, nowMs) => replaceActiveTimerState(state, pauseTimer(state, nowMs)))
   }
 
   const resume = async () => {
-    if (desktopApi) {
-      await ensureDesktopSync()
-      await desktopApi.resumeTimer()
-      return
-    }
-
-    timerNow.value = Date.now()
-    timerState.value = resumeTimer(timerState.value, timerNow.value)
+    await applyMutation((state, nowMs) => replaceActiveTimerState(state, resumeTimer(state, nowMs)))
   }
 
   const addCountdownMinutes = async (minutes: number) => {
     const durationSeconds = minutes * 60
 
-    if (desktopApi) {
-      await ensureDesktopSync()
-      await desktopApi.addCountdownTime(durationSeconds)
-      return
-    }
-
-    timerNow.value = Date.now()
-    timerState.value = addCountdownSeconds(timerState.value, durationSeconds, timerNow.value)
+    await applyMutation((state, nowMs) =>
+      replaceActiveTimerState(state, addCountdownSeconds(state, durationSeconds, nowMs)),
+    )
   }
 
   const stop = async () => {
-    if (desktopApi) {
-      await ensureDesktopSync()
-      await desktopApi.stopTimer()
-      return
-    }
-
-    timerNow.value = Date.now()
-    timerState.value = stopTimer(timerState.value, timerNow.value)
+    await applyMutation((state, nowMs) => replaceActiveTimerState(state, stopTimer(state, nowMs)))
   }
 
   const cancel = async () => {
-    if (desktopApi) {
-      await ensureDesktopSync()
-      await desktopApi.cancelTimer()
-      return
-    }
+    await applyMutation(() => createIdleActiveTimerState())
+  }
 
-    timerState.value = cancelTimer()
-    timerNow.value = Date.now()
+  const setDraftContext = async (draft: ActiveTimerDraftInput) => {
+    await applyMutation((state) => {
+      if (state.status === 'idle') {
+        return state
+      }
+
+      return applyActiveTimerDraft(state, draft)
+    })
   }
 
   const snapshot = computed(() => getTimerSnapshot(timerState.value, timerNow.value))
 
   return {
     isReady,
+    isPersistentReady,
     timerState,
     snapshot,
     startCountup,
     startCountdown,
+    startCountdownSeconds,
     addCountdownMinutes,
     pause,
     resume,
     stop,
     cancel,
+    setDraftContext,
+    firestore: db,
   }
 }

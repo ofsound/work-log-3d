@@ -1,14 +1,19 @@
 import {
   addCountdownSeconds,
+  applyActiveTimerDraft,
   cancelTimer,
+  createIdleActiveTimerState,
   createIdleTimerState,
   getTimerSnapshot,
   pauseTimer,
+  replaceActiveTimerState,
   resumeTimer,
+  reviveActiveTimerState,
   reviveTimerState,
   startCountdownTimer,
   startCountupTimer,
   stopTimer,
+  syncActiveTimerState,
   syncTimerState,
 } from '~/shared/worklog'
 
@@ -135,5 +140,64 @@ describe('timer state', () => {
 
     const countup = startCountupTimer(0)
     expect(addCountdownSeconds(countup, 300, 0)).toBe(countup)
+  })
+
+  it('applies synced draft context without disturbing timer state', () => {
+    const running = replaceActiveTimerState(createIdleActiveTimerState(), startCountupTimer(1_000))
+    const updated = applyActiveTimerDraft(running, {
+      project: ' project-1 ',
+      tags: ['tag-1', 'tag-1', ''],
+      draftNotes: ' Draft note ',
+    })
+
+    expect(updated.project).toBe('project-1')
+    expect(updated.tags).toEqual(['tag-1'])
+    expect(updated.draftNotes).toBe('Draft note')
+    expect(updated.status).toBe('running')
+    expect(updated.startedAtMs).toBe(1_000)
+  })
+
+  it('keeps draft context when countdown completion is synced', () => {
+    const running = applyActiveTimerDraft(
+      replaceActiveTimerState(createIdleActiveTimerState(), startCountdownTimer(10, 2_000)),
+      {
+        project: 'project-1',
+        tags: ['tag-1'],
+        draftNotes: 'Deep work',
+      },
+    )
+
+    const synced = syncActiveTimerState(running, 12_000)
+
+    expect(synced.status).toBe('completed')
+    expect(synced.project).toBe('project-1')
+    expect(synced.tags).toEqual(['tag-1'])
+    expect(synced.draftNotes).toBe('Deep work')
+  })
+
+  it('revives active timer state with sanitized draft metadata', () => {
+    const revived = reviveActiveTimerState({
+      mode: 'countup',
+      status: 'paused',
+      startedAtMs: 100,
+      durationSeconds: null,
+      originalDurationSeconds: null,
+      pausedAtMs: 200,
+      accumulatedPauseMs: 0,
+      endedAtMs: null,
+      lastExtensionConsumedSeconds: 0,
+      project: ' project-1 ',
+      tags: ['tag-1', '', 'tag-1'],
+      draftNotes: ' Draft note ',
+      updatedAtMs: 500,
+      updatedByDeviceId: 'device-1',
+      mutationId: 3,
+    })
+
+    expect(revived.project).toBe('project-1')
+    expect(revived.tags).toEqual(['tag-1'])
+    expect(revived.draftNotes).toBe('Draft note')
+    expect(revived.updatedByDeviceId).toBe('device-1')
+    expect(revived.mutationId).toBe(3)
   })
 })

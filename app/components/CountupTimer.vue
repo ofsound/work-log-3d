@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { snapshot, cancel, resume, startCountup, stop } = useTimerService()
+const { isReady, snapshot, cancel, resume, startCountup, stop } = useTimerService()
 
 const timerProgress = computed(() => {
   if (snapshot.value.mode !== 'countup') {
@@ -25,6 +25,7 @@ const countupParts = computed(() => {
 <template>
   <ContainerCard
     class="relative flex w-full flex-nowrap items-center justify-between gap-7 rounded-sm pt-7 pb-4"
+    :class="!isReady ? 'pointer-events-none opacity-60' : ''"
     padding="comfortable"
     variant="timer"
   >
@@ -38,11 +39,11 @@ const countupParts = computed(() => {
     </div>
 
     <div class="flex shrink-0 flex-nowrap items-center gap-2">
-      <TimerButton v-if="!timerIsRunning && !timerIsPaused" @click="startCountup"
+      <TimerButton v-if="isReady && !timerIsRunning && !timerIsPaused" @click="startCountup"
         >Start Timer</TimerButton
       >
-      <TimerButton v-if="timerIsRunning" @click="stop">Stop Timer</TimerButton>
-      <TimerButton v-if="timerIsPaused" @click="resume">Resume Timer </TimerButton>
+      <TimerButton v-if="isReady && timerIsRunning" @click="stop">Stop Timer</TimerButton>
+      <TimerButton v-if="isReady && timerIsPaused" @click="resume">Resume Timer </TimerButton>
     </div>
     <span
       class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-xs leading-none font-medium text-text-muted opacity-80"

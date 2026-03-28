@@ -177,6 +177,28 @@ describe('firestore rules', () => {
     )
   })
 
+  it('allows an owner to write a valid active timer document', async () => {
+    await assertSucceeds(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'runtime', 'activeTimer'), {
+        mode: 'countdown',
+        status: 'running',
+        startedAtMs: 1_710_000_000_000,
+        durationSeconds: 1_800,
+        originalDurationSeconds: 1_800,
+        pausedAtMs: null,
+        accumulatedPauseMs: 0,
+        endedAtMs: null,
+        lastExtensionConsumedSeconds: 0,
+        project: 'project-1',
+        tags: ['tag-1'],
+        draftNotes: 'Deep work draft',
+        updatedAtMs: 1_710_000_000_000,
+        updatedByDeviceId: 'device-1',
+        mutationId: 4,
+      }),
+    )
+  })
+
   it('rejects user settings fontFamilies that include a legacy script key', async () => {
     await assertFails(
       setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
@@ -283,6 +305,28 @@ describe('firestore rules', () => {
     )
   })
 
+  it('rejects malformed active timer documents', async () => {
+    await assertFails(
+      setDoc(authedDoc(testEnvironment, 'user-1', 'runtime', 'activeTimer'), {
+        mode: 'countdown',
+        status: 'running',
+        startedAtMs: 'bad',
+        durationSeconds: 1_800,
+        originalDurationSeconds: 1_800,
+        pausedAtMs: null,
+        accumulatedPauseMs: -1,
+        endedAtMs: null,
+        lastExtensionConsumedSeconds: 0,
+        project: 'project-1',
+        tags: ['tag-1'],
+        draftNotes: 'Deep work draft',
+        updatedAtMs: 1_710_000_000_000,
+        updatedByDeviceId: 'device-1',
+        mutationId: 4,
+      }),
+    )
+  })
+
   it('rejects writes into another user subtree', async () => {
     await assertFails(
       setDoc(authContextDoc(testEnvironment, 'user-1', 'user-2', 'projects', 'project-2'), {
@@ -307,6 +351,28 @@ describe('firestore rules', () => {
         },
         createdAt: Timestamp.fromDate(new Date('2026-03-23T08:00:00.000Z')),
         updatedAt: Timestamp.fromDate(new Date('2026-03-23T09:30:00.000Z')),
+      }),
+    )
+  })
+
+  it('rejects writes into another users active timer subtree', async () => {
+    await assertFails(
+      setDoc(authContextDoc(testEnvironment, 'user-1', 'user-2', 'runtime', 'activeTimer'), {
+        mode: 'countup',
+        status: 'running',
+        startedAtMs: 1_710_000_000_000,
+        durationSeconds: null,
+        originalDurationSeconds: null,
+        pausedAtMs: null,
+        accumulatedPauseMs: 0,
+        endedAtMs: null,
+        lastExtensionConsumedSeconds: 0,
+        project: '',
+        tags: [],
+        draftNotes: '',
+        updatedAtMs: 1_710_000_000_000,
+        updatedByDeviceId: 'device-2',
+        mutationId: 1,
       }),
     )
   })

@@ -32,6 +32,14 @@ service cloud.firestore {
       return value is list;
     }
 
+    function isNonNegativeInteger(value) {
+      return value is int && value >= 0;
+    }
+
+    function isNullableNonNegativeInteger(value) {
+      return value == null || isNonNegativeInteger(value);
+    }
+
     function isTimestampOrNull(value) {
       return value == null || value is timestamp;
     }
@@ -184,6 +192,50 @@ service cloud.firestore {
         && isUserSettingsTrayShortcutsList(request.resource.data.desktop.trayShortcuts);
     }
 
+    function isActiveTimerDocument() {
+      return hasExactKeys([
+          'mode',
+          'status',
+          'startedAtMs',
+          'durationSeconds',
+          'originalDurationSeconds',
+          'pausedAtMs',
+          'accumulatedPauseMs',
+          'endedAtMs',
+          'lastExtensionConsumedSeconds',
+          'project',
+          'tags',
+          'draftNotes',
+          'updatedAtMs',
+          'updatedByDeviceId',
+          'mutationId'
+        ])
+        && (
+          request.resource.data.mode == null
+          || request.resource.data.mode == 'countup'
+          || request.resource.data.mode == 'countdown'
+        )
+        && (
+          request.resource.data.status == 'idle'
+          || request.resource.data.status == 'running'
+          || request.resource.data.status == 'paused'
+          || request.resource.data.status == 'completed'
+        )
+        && isNullableNonNegativeInteger(request.resource.data.startedAtMs)
+        && isNullableNonNegativeInteger(request.resource.data.durationSeconds)
+        && isNullableNonNegativeInteger(request.resource.data.originalDurationSeconds)
+        && isNullableNonNegativeInteger(request.resource.data.pausedAtMs)
+        && isNonNegativeInteger(request.resource.data.accumulatedPauseMs)
+        && isNullableNonNegativeInteger(request.resource.data.endedAtMs)
+        && isNonNegativeInteger(request.resource.data.lastExtensionConsumedSeconds)
+        && request.resource.data.project is string
+        && isStringList(request.resource.data.tags)
+        && request.resource.data.draftNotes is string
+        && isNonNegativeInteger(request.resource.data.updatedAtMs)
+        && request.resource.data.updatedByDeviceId is string
+        && isNonNegativeInteger(request.resource.data.mutationId);
+    }
+
     match /users/{uid} {
       allow read, write: if isOwner(uid);
     }
@@ -222,6 +274,12 @@ service cloud.firestore {
       allow read: if isOwner(uid);
       allow create, update: if isOwner(uid) && settingsId == 'preferences' && isUserSettingsDocument();
       allow delete: if false;
+    }
+
+    match /users/{uid}/runtime/{runtimeId} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && runtimeId == 'activeTimer' && isActiveTimerDocument();
+      allow delete: if isOwner(uid) && runtimeId == 'activeTimer';
     }
   }
 }

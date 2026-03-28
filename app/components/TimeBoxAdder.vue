@@ -6,7 +6,7 @@ import { sortNamedEntities } from '~~/shared/worklog'
 import type { FirebaseProjectDocument, FirebaseTagDocument } from '~/utils/worklog-firebase'
 
 const route = useRoute()
-const { snapshot, cancel } = useTimerService()
+const { snapshot, timerState, cancel } = useTimerService()
 const { projectsCollection, tagsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
@@ -33,6 +33,12 @@ const routePrefill = computed(() =>
     validTagIds: sortedTags.value.map((tag) => tag.id),
   }),
 )
+
+const initialProject = computed(() => timerState.value.project || routePrefill.value.project)
+const initialTags = computed(() =>
+  timerState.value.tags.length > 0 ? timerState.value.tags : routePrefill.value.tags,
+)
+const initialNotes = computed(() => timerState.value.draftNotes)
 
 const startTimeFromTimer = computed(() => {
   if (snapshot.value.startedAtMs === null) {
@@ -92,8 +98,9 @@ const handleSave = async () => {
     <TimeBoxEditor
       :start-time-from-timer="startTimeFromTimer"
       :end-time-from-timer="endTimeFromTimer"
-      :initial-project="routePrefill.project"
-      :initial-tags="routePrefill.tags"
+      :initial-notes="initialNotes"
+      :initial-project="initialProject"
+      :initial-tags="initialTags"
       @saved="handleSave"
     />
   </div>

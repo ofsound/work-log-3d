@@ -27,11 +27,15 @@ export function useFirestoreCollections() {
   const reportsCollection = computed<CollectionReference<DocumentData> | null>(() =>
     uid.value ? collection(db, 'users', uid.value, 'reports') : null,
   )
+  const activeTimerDocument = computed<DocumentReference<DocumentData> | null>(() =>
+    uid.value ? doc(db, 'users', uid.value, 'runtime', 'activeTimer') : null,
+  )
   const settingsDocument = computed<DocumentReference<DocumentData> | null>(() =>
     uid.value ? doc(db, 'users', uid.value, 'settings', 'preferences') : null,
   )
 
   return {
+    activeTimerDocument,
     db,
     uid,
     timeBoxesCollection,

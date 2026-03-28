@@ -1,7 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 import type { IpcRendererEvent } from 'electron'
-import type { DesktopApi, DesktopTimerEvent, TimerState } from '~/shared/worklog'
+import type {
+  ActiveTimerState,
+  DesktopApi,
+  DesktopPublishedTimerState,
+  DesktopTimerAction,
+} from '~/shared/worklog'
 import { DEFAULT_DESKTOP_CAPABILITIES } from '~/shared/worklog'
 
 const api: DesktopApi = {
@@ -9,12 +14,8 @@ const api: DesktopApi = {
     return {
       ...DEFAULT_DESKTOP_CAPABILITIES,
       isDesktop: true,
-      nativeTimer: true,
       routeRequests: true,
     }
-  },
-  async getTimerState() {
-    return (await ipcRenderer.invoke('timer:getState')) as TimerState
   },
   async getAlertSound() {
     return (await ipcRenderer.invoke('desktop:getAlertSound')) as Awaited<
@@ -24,18 +25,29 @@ const api: DesktopApi = {
   async setTrayShortcuts(shortcuts) {
     await ipcRenderer.invoke('desktop:setTrayShortcuts', shortcuts)
   },
+  async setTimerBridgeReady(isReady) {
+    await ipcRenderer.invoke('desktop:setTimerBridgeReady', isReady)
+  },
+  async publishTimerState(state: ActiveTimerState, snapshot) {
+    await ipcRenderer.invoke('desktop:publishTimerState', {
+      state,
+      snapshot,
+    } satisfies DesktopPublishedTimerState)
+  },
   async setCountdownDefaultMinutes(minutes) {
     await ipcRenderer.invoke('desktop:setCountdownDefaultMinutes', minutes)
   },
-  subscribeToTimer(listener) {
-    const handler = (_event: IpcRendererEvent, payload: DesktopTimerEvent) => {
+  subscribeToTimerAction(listener) {
+    ipcRenderer.send('desktop:timerActionReady')
+
+    const handler = (_event: IpcRendererEvent, payload: DesktopTimerAction) => {
       listener(payload)
     }
 
-    ipcRenderer.on('timer:state', handler)
+    ipcRenderer.on('desktop:timerAction', handler)
 
     return () => {
-      ipcRenderer.removeListener('timer:state', handler)
+      ipcRenderer.removeListener('desktop:timerAction', handler)
     }
   },
   subscribeToRouteRequest(listener) {
@@ -48,27 +60,6 @@ const api: DesktopApi = {
     return () => {
       ipcRenderer.removeListener('app:navigate', handler)
     }
-  },
-  async startCountup() {
-    await ipcRenderer.invoke('timer:startCountup')
-  },
-  async startCountdown(durationSeconds) {
-    await ipcRenderer.invoke('timer:startCountdown', durationSeconds)
-  },
-  async addCountdownTime(durationSeconds) {
-    await ipcRenderer.invoke('timer:addCountdownTime', durationSeconds)
-  },
-  async pauseTimer() {
-    await ipcRenderer.invoke('timer:pause')
-  },
-  async resumeTimer() {
-    await ipcRenderer.invoke('timer:resume')
-  },
-  async stopTimer() {
-    await ipcRenderer.invoke('timer:stop')
-  },
-  async cancelTimer() {
-    await ipcRenderer.invoke('timer:cancel')
   },
   async chooseAlertSound() {
     return (await ipcRenderer.invoke('desktop:chooseAlertSound')) as Awaited<

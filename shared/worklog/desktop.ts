@@ -1,11 +1,40 @@
+import type { ActiveTimerState } from './active-timer'
 import type { UserSettingsTrayShortcut } from './settings'
 import type { TimerSnapshot, TimerState } from './timer'
 
-export interface DesktopTimerEvent {
-  state: TimerState
+export interface DesktopPublishedTimerState {
+  state: ActiveTimerState
   snapshot: TimerSnapshot
-  previousStatus: TimerState['status']
 }
+
+export type DesktopTimerAction =
+  | {
+      type: 'start_countup'
+      project: string
+      tags: string[]
+    }
+  | {
+      type: 'start_countdown'
+      durationSeconds: number
+      project: string
+      tags: string[]
+    }
+  | {
+      type: 'add_countdown_time'
+      durationSeconds: number
+    }
+  | {
+      type: 'pause'
+    }
+  | {
+      type: 'resume'
+    }
+  | {
+      type: 'stop'
+    }
+  | {
+      type: 'cancel'
+    }
 
 export interface DesktopWindowState {
   timerDisplay: string
@@ -84,18 +113,12 @@ export const DEFAULT_DESKTOP_CAPABILITIES: DesktopCapabilities = {
 
 export interface DesktopApi {
   getCapabilities(): DesktopCapabilities
-  getTimerState(): Promise<TimerState>
   getAlertSound(): Promise<DesktopAlertSoundState>
   setTrayShortcuts(shortcuts: UserSettingsTrayShortcut[]): Promise<void>
-  subscribeToTimer(listener: (event: DesktopTimerEvent) => void): () => void
+  setTimerBridgeReady(isReady: boolean): Promise<void>
+  publishTimerState(state: ActiveTimerState, snapshot: TimerSnapshot): Promise<void>
   subscribeToRouteRequest(listener: (path: string) => void): () => void
-  startCountup(): Promise<void>
-  startCountdown(durationSeconds: number): Promise<void>
-  addCountdownTime(durationSeconds: number): Promise<void>
-  pauseTimer(): Promise<void>
-  resumeTimer(): Promise<void>
-  stopTimer(): Promise<void>
-  cancelTimer(): Promise<void>
+  subscribeToTimerAction(listener: (action: DesktopTimerAction) => void): () => void
   chooseAlertSound(): Promise<DesktopAlertSoundState>
   clearAlertSound(): Promise<DesktopAlertSoundState>
   testAlertSound(): Promise<void>

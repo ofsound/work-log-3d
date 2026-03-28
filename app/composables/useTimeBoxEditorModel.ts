@@ -1,9 +1,10 @@
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { doc } from 'firebase/firestore'
 import { useCollection, useDocument } from 'vuefire'
 
 import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
+import { useTimerService } from '~/composables/useTimerService'
 import { useUserSettings } from '~/composables/useUserSettings'
 import type {
   FirebaseProjectDocument,
@@ -43,8 +44,10 @@ export interface UseTimeBoxEditorModelOptions {
 export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   const { hideTags } = useUserSettings()
   const { timeBoxesCollection, projectsCollection, tagsCollection } = useFirestoreCollections()
+  const { setDraftContext, timerState } = useTimerService()
 
   const dynamicDurationTypingTimer = ref<ReturnType<typeof setTimeout>>()
+  const draftSyncTimer = ref<ReturnType<typeof setTimeout>>()
 
   const allProjects = useCollection(projectsCollection)
   const allTags = useCollection(tagsCollection)
@@ -195,6 +198,13 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
     options.clearMutationError()
   }
 
+  const clearDraftSyncTimer = () => {
+    if (draftSyncTimer.value) {
+      clearTimeout(draftSyncTimer.value)
+      draftSyncTimer.value = undefined
+    }
+  }
+
   watch(
     () => options.props.startTimeFromTimer,
     (newValue) => {
@@ -250,6 +260,45 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   )
 
   watch(
+    () => [
+      isEditingExistingTimeBox.value,
+      dynamicProject.value,
+      dynamicNotes.value,
+      dynamicTags.value.join('|'),
+      timerState.value.status,
+    ],
+    () => {
+      if (isEditingExistingTimeBox.value || timerState.value.status === 'idle') {
+        clearDraftSyncTimer()
+        return
+      }
+
+      const project = dynamicProject.value.trim()
+      const draftNotes = dynamicNotes.value.trim()
+      const tags = [...new Set(dynamicTags.value.map((tag) => tag.trim()).filter(Boolean))]
+
+      if (
+        timerState.value.project === project &&
+        timerState.value.draftNotes === draftNotes &&
+        JSON.stringify(timerState.value.tags) === JSON.stringify(tags)
+      ) {
+        clearDraftSyncTimer()
+        return
+      }
+
+      clearDraftSyncTimer()
+      draftSyncTimer.value = setTimeout(() => {
+        void setDraftContext({
+          project,
+          tags,
+          draftNotes,
+        })
+      }, 250)
+    },
+    { immediate: true },
+  )
+
+  watch(
     () => dynamicDuration.value,
     () => {
       if (dynamicStartTime.value) {
@@ -279,6 +328,10 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
       }, 400)
     },
   )
+
+  onBeforeUnmount(() => {
+    clearDraftSyncTimer()
+  })
 
   const clampHeroDragTime = (proposed: string, partner: string, role: 'start' | 'end') => {
     const proposedMs = new Date(proposed).getTime()

@@ -1,3 +1,4 @@
+import type { ActiveTimerState } from './active-timer'
 import { formatDateKey, parseDateKey } from './calendar'
 import {
   cloneDailyNoteContent,
@@ -53,6 +54,22 @@ const requireNonEmptyString = (value: string, label: string) => {
 }
 
 const normalizeOptionalString = (value: string) => value.trim()
+
+const requireNonNegativeInteger = (value: number, label: string) => {
+  if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
+    throw new WorklogError('validation', `${label} must be a non-negative whole number.`)
+  }
+
+  return value
+}
+
+const requireNullableNonNegativeInteger = (value: number | null, label: string) => {
+  if (value === null) {
+    return null
+  }
+
+  return requireNonNegativeInteger(value, label)
+}
 
 const requireHexColor = (value: string, label: string) => {
   const normalized = normalizeHexColor(value)
@@ -188,6 +205,71 @@ export const validateTimeBoxInput = (input: TimeBoxInput): TimeBoxInput => {
     project: requireNonEmptyString(input.project, 'Project'),
     tags: normalizeOptionalEntityIds(input.tags),
   }
+}
+
+export const validateActiveTimerState = (input: ActiveTimerState): ActiveTimerState => {
+  const mode =
+    input.mode === 'countup' || input.mode === 'countdown'
+      ? input.mode
+      : input.mode === null
+        ? null
+        : (() => {
+            throw new WorklogError('validation', 'Timer mode is invalid.')
+          })()
+
+  const status =
+    input.status === 'idle' ||
+    input.status === 'running' ||
+    input.status === 'paused' ||
+    input.status === 'completed'
+      ? input.status
+      : (() => {
+          throw new WorklogError('validation', 'Timer status is invalid.')
+        })()
+
+  const normalized: ActiveTimerState = {
+    mode,
+    status,
+    startedAtMs: requireNullableNonNegativeInteger(input.startedAtMs, 'Timer start'),
+    durationSeconds: requireNullableNonNegativeInteger(input.durationSeconds, 'Timer duration'),
+    originalDurationSeconds: requireNullableNonNegativeInteger(
+      input.originalDurationSeconds,
+      'Original timer duration',
+    ),
+    pausedAtMs: requireNullableNonNegativeInteger(input.pausedAtMs, 'Timer pause'),
+    accumulatedPauseMs: requireNonNegativeInteger(input.accumulatedPauseMs, 'Pause duration'),
+    endedAtMs: requireNullableNonNegativeInteger(input.endedAtMs, 'Timer end'),
+    lastExtensionConsumedSeconds: requireNonNegativeInteger(
+      input.lastExtensionConsumedSeconds,
+      'Consumed extension',
+    ),
+    project: normalizeOptionalString(input.project),
+    tags: normalizeOptionalEntityIds(input.tags),
+    draftNotes: normalizeOptionalString(input.draftNotes),
+    updatedAtMs: requireNonNegativeInteger(input.updatedAtMs, 'Last update time'),
+    updatedByDeviceId: normalizeOptionalString(input.updatedByDeviceId),
+    mutationId: requireNonNegativeInteger(input.mutationId, 'Mutation id'),
+  }
+
+  if (normalized.mode === null && normalized.status !== 'idle') {
+    throw new WorklogError('validation', 'Idle timers are the only state allowed without a mode.')
+  }
+
+  if (
+    normalized.mode === 'countup' &&
+    (normalized.durationSeconds !== null || normalized.originalDurationSeconds !== null)
+  ) {
+    throw new WorklogError('validation', 'Count up timers cannot define a duration.')
+  }
+
+  if (
+    normalized.mode === 'countdown' &&
+    (normalized.durationSeconds === null || normalized.originalDurationSeconds === null)
+  ) {
+    throw new WorklogError('validation', 'Count down timers require durations.')
+  }
+
+  return normalized
 }
 
 export const validateDailyNoteInput = (

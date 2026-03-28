@@ -30,6 +30,8 @@ vi.mock('firebase/firestore', () => ({
 
 const {
   createFirestoreWorklogRepositories,
+  toActiveTimer,
+  toActiveTimerPayload,
   toDailyNote,
   toProject,
   toReport,
@@ -159,6 +161,46 @@ describe('firestore worklog repositories', () => {
       desktop: {
         trayShortcuts: [],
       },
+    })
+  })
+
+  it('serializes active timer documents and validates payload shape', () => {
+    const timer = toActiveTimer({
+      mode: 'countdown',
+      status: 'paused',
+      startedAtMs: 1_710_000_000_000,
+      durationSeconds: 1_800,
+      originalDurationSeconds: 1_800,
+      pausedAtMs: 1_710_000_900_000,
+      accumulatedPauseMs: 120_000,
+      endedAtMs: null,
+      lastExtensionConsumedSeconds: 0,
+      project: 'project-1',
+      tags: ['tag-1', 'tag-1', ''],
+      draftNotes: ' Draft note ',
+      updatedAtMs: 1_710_000_900_000,
+      updatedByDeviceId: 'device-1',
+      mutationId: 3,
+    })
+
+    expect(timer.tags).toEqual(['tag-1'])
+    expect(timer.draftNotes).toBe('Draft note')
+    expect(toActiveTimerPayload(timer)).toEqual({
+      mode: 'countdown',
+      status: 'paused',
+      startedAtMs: 1_710_000_000_000,
+      durationSeconds: 1_800,
+      originalDurationSeconds: 1_800,
+      pausedAtMs: 1_710_000_900_000,
+      accumulatedPauseMs: 120_000,
+      endedAtMs: null,
+      lastExtensionConsumedSeconds: 0,
+      project: 'project-1',
+      tags: ['tag-1'],
+      draftNotes: 'Draft note',
+      updatedAtMs: 1_710_000_900_000,
+      updatedByDeviceId: 'device-1',
+      mutationId: 3,
     })
   })
 

@@ -14,6 +14,7 @@ import {
 
 import type { CollectionReference, DocumentData } from 'firebase/firestore'
 import type {
+  ActiveTimerState,
   DailyNote,
   DailyNoteContentNode,
   DailyNoteInput,
@@ -29,12 +30,14 @@ import type {
 import {
   createDuplicateSlugError,
   createEntityInUseError,
+  createEmptyDailyNoteContent,
   createNamedEntityPayload,
   createProjectPayload,
-  createEmptyDailyNoteContent,
+  reviveActiveTimerState,
   resolveProjectColors,
   resolveProjectNotes,
   resolveUserSettings,
+  validateActiveTimerState,
   validateDailyNoteInput,
   validateReportInput,
   validateTimeBoxInput,
@@ -122,6 +125,8 @@ export interface FirebaseUserSettingsDocument {
   }
 }
 
+export type FirebaseActiveTimerDocument = ActiveTimerState
+
 export const toProject = (project: FirebaseProjectDocument): Project => ({
   id: project.id,
   name: project.name,
@@ -178,11 +183,15 @@ export const toDailyNote = (
 export const toUserSettings = (
   settings: FirebaseUserSettingsDocument | null | undefined,
 ): UserSettings => resolveUserSettings(settings)
+export const toActiveTimer = (
+  timer: FirebaseActiveTimerDocument | null | undefined,
+): ActiveTimerState => reviveActiveTimerState(timer)
 
 export const toProjects = (projects: FirebaseProjectDocument[]) => projects.map(toProject)
 export const toTags = (tags: FirebaseTagDocument[]) => tags.map(toTag)
 export const toTimeBoxes = (timeBoxes: FirebaseTimeBoxDocument[]) => timeBoxes.map(toTimeBox)
 export const toReports = (reports: FirebaseReportDocument[]) => reports.map(toReport)
+export const toActiveTimerPayload = (input: ActiveTimerState) => validateActiveTimerState(input)
 
 const toTimeBoxPayload = (input: TimeBoxInput) => ({
   ...validateTimeBoxInput(input),

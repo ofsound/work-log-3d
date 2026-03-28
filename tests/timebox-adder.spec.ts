@@ -40,6 +40,11 @@ const snapshot = ref({
 
 const cancel = vi.fn().mockResolvedValue(undefined)
 const scrollIntoView = vi.fn()
+const timerState = ref({
+  project: '',
+  tags: [] as string[],
+  draftNotes: '',
+})
 
 ;(
   globalThis as typeof globalThis & { useRoute?: () => { query: Record<string, never> } }
@@ -54,11 +59,13 @@ const scrollIntoView = vi.fn()
   globalThis as typeof globalThis & {
     useTimerService?: () => {
       snapshot: typeof snapshot
+      timerState: typeof timerState
       cancel: typeof cancel
     }
   }
 ).useTimerService = () => ({
   snapshot,
+  timerState,
   cancel,
 })
 ;(
@@ -149,6 +156,11 @@ describe('TimeBoxAdder', () => {
     cancel.mockClear()
     cancel.mockResolvedValue(undefined)
     scrollIntoView.mockClear()
+    timerState.value = {
+      project: '',
+      tags: [],
+      draftNotes: '',
+    }
   })
 
   it('cancels a paused countup timer after a successful save', async () => {

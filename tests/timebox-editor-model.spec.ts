@@ -70,6 +70,29 @@ vi.mock('~/composables/useUserSettings', () => ({
   }),
 }))
 
+vi.mock('~/composables/useTimerService', () => ({
+  useTimerService: () => ({
+    timerState: ref({
+      mode: null,
+      status: 'idle',
+      startedAtMs: null,
+      durationSeconds: null,
+      originalDurationSeconds: null,
+      pausedAtMs: null,
+      accumulatedPauseMs: 0,
+      endedAtMs: null,
+      lastExtensionConsumedSeconds: 0,
+      project: '',
+      tags: [],
+      draftNotes: '',
+      updatedAtMs: 0,
+      updatedByDeviceId: '',
+      mutationId: 0,
+    }),
+    setDraftContext: vi.fn().mockResolvedValue(undefined),
+  }),
+}))
+
 const { useTimeBoxEditorModel } = await import('~/app/composables/useTimeBoxEditorModel')
 
 const createBaseProps = () => ({

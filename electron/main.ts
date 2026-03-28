@@ -4,29 +4,25 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { Notification, app, BrowserWindow, dialog, ipcMain, screen, session } from 'electron'
 import type { Rectangle } from 'electron'
 
-import type { DesktopTimerEvent, TimerState, UserSettingsTrayShortcut } from '~/shared/worklog'
+import type {
+  ActiveTimerState,
+  DesktopPublishedTimerState,
+  DesktopTimerAction,
+  TimerSnapshot,
+  UserSettingsTrayShortcut,
+} from '~/shared/worklog'
 import {
   DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
-  addCountdownSeconds,
-  cancelTimer,
-  createIdleTimerState,
-  getDesktopTrayShortcutIdFromAction,
+  createIdleActiveTimerState,
   getDesktopTimerNotification,
+  getDesktopTrayShortcutIdFromAction,
   getTimerSnapshot,
   isDesktopTrayShortcutActionId,
   normalizeCountdownDefaultMinutes,
-  pauseTimer,
-  resumeTimer,
   resolveUserSettingsTrayShortcuts,
-  reviveTimerState,
-  serializeTimerState,
   shouldHideWindowOnClose,
   shouldPlayTimerAlert,
   shouldShowTimerNotification,
-  startCountdownTimer,
-  startCountupTimer,
-  stopTimer,
-  syncTimerState,
 } from '~/shared/worklog'
 import type { TrayController } from '~/electron/tray-controller'
 import {
@@ -34,19 +30,22 @@ import {
   getDesktopAlertSoundState,
   importDesktopAlertSound,
 } from '~/electron/audio-config'
+import { playTimerCompleteAlert } from '~/electron/play-timer-alert'
 import { createDesktopRendererServer } from '~/electron/renderer-server'
 import { createTrayController } from '~/electron/tray-controller'
-import { playTimerCompleteAlert } from '~/electron/play-timer-alert'
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
 
-let timerState: TimerState = createIdleTimerState()
-let timerInterval: NodeJS.Timeout | null = null
+let timerState: ActiveTimerState = createIdleActiveTimerState()
+let timerSnapshot: TimerSnapshot = getTimerSnapshot(timerState, Date.now())
 let mainWindow: BrowserWindow | null = null
 let isQuitting = false
 let trayController: TrayController | null = null
 let desktopTrayShortcuts: UserSettingsTrayShortcut[] = []
 let pendingRouteRequest: string | null = null
+let pendingTimerActions: DesktopTimerAction[] = []
+let rendererTimerActionsReady = false
+let rendererTimerBridgeReady = false
 let desktopRendererServer: Awaited<ReturnType<typeof createDesktopRendererServer>> | null = null
 let countdownDefaultMinutes = DEFAULT_COUNTDOWN_DEFAULT_MINUTES
 let restoredWindowState: PersistedWindowState | null = null
@@ -54,7 +53,6 @@ let restoredWindowState: PersistedWindowState | null = null
 /** Retain until `close` so macOS notification delivery is reliable (avoid premature GC). */
 const activeTimerNotifications: Notification[] = []
 
-const getTimerStatePath = () => join(app.getPath('userData'), 'timer-state.json')
 const getTrayShortcutsPath = () => join(app.getPath('userData'), 'tray-shortcuts.json')
 const getCountdownDefaultPath = () =>
   join(app.getPath('userData'), 'countdown-default-minutes.json')
@@ -123,21 +121,6 @@ const persistWindowState = async (window: BrowserWindow) => {
   await writeFile(windowStatePath, JSON.stringify(payload))
 }
 
-const persistTimerState = async () => {
-  const timerStatePath = getTimerStatePath()
-  await mkdir(dirname(timerStatePath), { recursive: true })
-  await writeFile(timerStatePath, JSON.stringify(serializeTimerState(timerState)))
-}
-
-const loadTimerState = async () => {
-  try {
-    const savedState = await readFile(getTimerStatePath(), 'utf8')
-    timerState = reviveTimerState(JSON.parse(savedState))
-  } catch {
-    timerState = createIdleTimerState()
-  }
-}
-
 const persistTrayShortcuts = async () => {
   const trayShortcutsPath = getTrayShortcutsPath()
   await mkdir(dirname(trayShortcutsPath), { recursive: true })
@@ -177,8 +160,8 @@ const setCountdownDefaultMinutesState = async (nextMinutes: number) => {
   await persistCountdownDefaultMinutes()
 }
 
-const syncTrayController = () => {
-  trayController?.sync(getTimerSnapshot(timerState, Date.now()), desktopTrayShortcuts)
+const syncTrayController = (snapshot = timerSnapshot) => {
+  trayController?.sync(snapshot, desktopTrayShortcuts)
 }
 
 const setTrayShortcuts = async (nextShortcuts: readonly UserSettingsTrayShortcut[]) => {
@@ -187,20 +170,6 @@ const setTrayShortcuts = async (nextShortcuts: readonly UserSettingsTrayShortcut
   syncTrayController()
 
   return desktopTrayShortcuts
-}
-
-const emitTimerEvent = (previousStatus: TimerState['status']) => {
-  const snapshot = getTimerSnapshot(timerState, Date.now())
-  const event: DesktopTimerEvent = {
-    state: timerState,
-    snapshot,
-    previousStatus,
-  }
-
-  syncTrayController()
-  BrowserWindow.getAllWindows().forEach((window) => {
-    window.webContents.send('timer:state', event)
-  })
 }
 
 const flushPendingRouteRequest = () => {
@@ -212,13 +181,37 @@ const flushPendingRouteRequest = () => {
   pendingRouteRequest = null
 }
 
-const clearTimerLoop = () => {
-  if (!timerInterval) {
+const flushPendingTimerActions = () => {
+  if (
+    !mainWindow ||
+    mainWindow.webContents.isLoadingMainFrame() ||
+    !rendererTimerActionsReady ||
+    !rendererTimerBridgeReady ||
+    pendingTimerActions.length === 0
+  ) {
     return
   }
 
-  clearInterval(timerInterval)
-  timerInterval = null
+  for (const action of pendingTimerActions) {
+    mainWindow.webContents.send('desktop:timerAction', action)
+  }
+
+  pendingTimerActions = []
+}
+
+const dispatchTimerAction = (action: DesktopTimerAction) => {
+  if (
+    !mainWindow ||
+    mainWindow.webContents.isLoadingMainFrame() ||
+    !rendererTimerActionsReady ||
+    !rendererTimerBridgeReady
+  ) {
+    pendingTimerActions.push(action)
+    focusOrCreateMainWindow()
+    return
+  }
+
+  mainWindow.webContents.send('desktop:timerAction', action)
 }
 
 const showTimerCompletionNotification = (payload: { title: string; body: string }) => {
@@ -249,30 +242,10 @@ const registerMediaPermissionHandler = () => {
   })
 }
 
-const ensureTimerLoop = () => {
-  if (timerInterval || timerState.status !== 'running') {
-    return
-  }
-
-  timerInterval = setInterval(() => {
-    const nextState = syncTimerState(timerState, Date.now())
-
-    if (nextState !== timerState) {
-      setTimerState(nextState)
-    } else {
-      emitTimerEvent(timerState.status)
-    }
-
-    if (timerState.status !== 'running') {
-      clearTimerLoop()
-    }
-  }, 250)
-}
-
-const setTimerState = (nextState: TimerState) => {
+const setPublishedTimerState = (nextState: ActiveTimerState, nextSnapshot: TimerSnapshot) => {
   const previousStatus = timerState.status
   timerState = nextState
-  void persistTimerState()
+  timerSnapshot = nextSnapshot
 
   if (shouldPlayTimerAlert(previousStatus, nextState)) {
     const alertWindow =
@@ -280,19 +253,11 @@ const setTimerState = (nextState: TimerState) => {
     void playTimerCompleteAlert(app.getPath('userData'), alertWindow)
   }
 
-  if (shouldShowTimerNotification(previousStatus, getTimerSnapshot(nextState, Date.now()))) {
-    showTimerCompletionNotification(
-      getDesktopTimerNotification(getTimerSnapshot(nextState, Date.now())),
-    )
+  if (shouldShowTimerNotification(previousStatus, nextSnapshot)) {
+    showTimerCompletionNotification(getDesktopTimerNotification(nextSnapshot))
   }
 
-  emitTimerEvent(previousStatus)
-
-  if (timerState.status === 'running') {
-    ensureTimerLoop()
-  } else {
-    clearTimerLoop()
-  }
+  syncTrayController(nextSnapshot)
 }
 
 const createMainWindow = () => {
@@ -331,6 +296,8 @@ const createMainWindow = () => {
 
   window.on('closed', () => {
     mainWindow = null
+    rendererTimerActionsReady = false
+    rendererTimerBridgeReady = false
   })
 
   window.on('resize', () => {
@@ -355,8 +322,14 @@ const createMainWindow = () => {
 
   restoredWindowState = null
 
+  window.webContents.on('did-start-loading', () => {
+    rendererTimerActionsReady = false
+    rendererTimerBridgeReady = false
+  })
+
   window.webContents.on('did-finish-load', () => {
     flushPendingRouteRequest()
+    flushPendingTimerActions()
   })
 
   const rendererUrl = desktopRendererUrl ?? desktopRendererServer?.url
@@ -382,6 +355,7 @@ const showMainWindow = () => {
   mainWindow.show()
   mainWindow.focus()
   flushPendingRouteRequest()
+  flushPendingTimerActions()
 }
 
 const hideMainWindow = () => {
@@ -427,16 +401,24 @@ const buildNewTimeBoxPath = (shortcut?: Pick<UserSettingsTrayShortcut, 'project'
 
 const runTrayShortcut = (shortcut: UserSettingsTrayShortcut) => {
   if (shortcut.timerMode === 'countdown') {
-    setTimerState(startCountdownTimer((shortcut.durationMinutes ?? 0) * 60, Date.now()))
+    dispatchTimerAction({
+      type: 'start_countdown',
+      durationSeconds: (shortcut.durationMinutes ?? 0) * 60,
+      project: shortcut.project,
+      tags: shortcut.tags,
+    })
   } else {
-    setTimerState(startCountupTimer(Date.now()))
+    dispatchTimerAction({
+      type: 'start_countup',
+      project: shortcut.project,
+      tags: shortcut.tags,
+    })
   }
 
   openMainWindow(buildNewTimeBoxPath(shortcut))
 }
 
 const registerIpc = () => {
-  ipcMain.handle('timer:getState', () => timerState)
   ipcMain.handle('desktop:getAlertSound', async () => {
     return getDesktopAlertSoundState(app.getPath('userData'))
   })
@@ -449,26 +431,23 @@ const registerIpc = () => {
   ipcMain.handle('desktop:setCountdownDefaultMinutes', async (_event, minutes: number) => {
     await setCountdownDefaultMinutesState(minutes)
   })
-  ipcMain.handle('timer:startCountup', () => {
-    setTimerState(startCountupTimer(Date.now()))
+  ipcMain.handle('desktop:setTimerBridgeReady', async (_event, isReady: boolean) => {
+    rendererTimerBridgeReady = isReady
+    if (!isReady) {
+      return
+    }
+
+    flushPendingTimerActions()
   })
-  ipcMain.handle('timer:startCountdown', (_event, durationSeconds: number) => {
-    setTimerState(startCountdownTimer(durationSeconds, Date.now()))
-  })
-  ipcMain.handle('timer:addCountdownTime', (_event, durationSeconds: number) => {
-    setTimerState(addCountdownSeconds(timerState, durationSeconds, Date.now()))
-  })
-  ipcMain.handle('timer:pause', () => {
-    setTimerState(pauseTimer(timerState, Date.now()))
-  })
-  ipcMain.handle('timer:resume', () => {
-    setTimerState(resumeTimer(timerState, Date.now()))
-  })
-  ipcMain.handle('timer:stop', () => {
-    setTimerState(stopTimer(timerState, Date.now()))
-  })
-  ipcMain.handle('timer:cancel', () => {
-    setTimerState(cancelTimer())
+  ipcMain.handle(
+    'desktop:publishTimerState',
+    async (_event, payload: DesktopPublishedTimerState) => {
+      setPublishedTimerState(payload.state, payload.snapshot)
+    },
+  )
+  ipcMain.on('desktop:timerActionReady', () => {
+    rendererTimerActionsReady = true
+    flushPendingTimerActions()
   })
   ipcMain.handle('desktop:chooseAlertSound', async () => {
     const selection = await dialog.showOpenDialog({
@@ -499,7 +478,6 @@ const registerIpc = () => {
 
 app.whenReady().then(async () => {
   registerMediaPermissionHandler()
-  await loadTimerState()
   await loadTrayShortcuts()
   await loadCountdownDefaultMinutes()
   restoredWindowState = await loadWindowState()
@@ -525,30 +503,34 @@ app.whenReady().then(async () => {
 
       switch (action) {
         case 'start_countup':
-          setTimerState(startCountupTimer(Date.now()))
+          dispatchTimerAction({
+            type: 'start_countup',
+            project: '',
+            tags: [],
+          })
           openMainWindow(buildNewTimeBoxPath())
           break
         case 'pause':
-          setTimerState(pauseTimer(timerState, Date.now()))
+          dispatchTimerAction({ type: 'pause' })
           break
         case 'add_countdown_5_minutes':
-          setTimerState(addCountdownSeconds(timerState, 5 * 60, Date.now()))
+          dispatchTimerAction({ type: 'add_countdown_time', durationSeconds: 5 * 60 })
           break
         case 'add_countdown_10_minutes':
-          setTimerState(addCountdownSeconds(timerState, 10 * 60, Date.now()))
+          dispatchTimerAction({ type: 'add_countdown_time', durationSeconds: 10 * 60 })
           break
         case 'resume':
-          setTimerState(resumeTimer(timerState, Date.now()))
+          dispatchTimerAction({ type: 'resume' })
           break
         case 'stop':
-          setTimerState(stopTimer(timerState, Date.now()))
+          dispatchTimerAction({ type: 'stop' })
           break
         case 'stop_and_log':
-          setTimerState(pauseTimer(timerState, Date.now()))
+          dispatchTimerAction({ type: 'pause' })
           openMainWindow(buildNewTimeBoxPath())
           break
         case 'reset':
-          setTimerState(cancelTimer())
+          dispatchTimerAction({ type: 'cancel' })
           break
         case 'show_window':
           openMainWindow()
@@ -565,7 +547,6 @@ app.whenReady().then(async () => {
   registerIpc()
   createMainWindow()
   syncTrayController()
-  ensureTimerLoop()
 
   app.on('activate', () => {
     focusOrCreateMainWindow()
