@@ -15,6 +15,7 @@ import type {
 import {
   DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
   createIdleActiveTimerState,
+  deriveDesktopPublishedTimerState,
   getDesktopTimerNotification,
   getDesktopTrayShortcutIdFromAction,
   getTimerSnapshot,
@@ -52,6 +53,7 @@ let countdownDefaultMinutes = DEFAULT_COUNTDOWN_DEFAULT_MINUTES
 let restoredWindowState: PersistedWindowState | null = null
 let nextTimerActionId = 0
 let inFlightTimerActionIds = new Set<number>()
+let trayTimerInterval: ReturnType<typeof setInterval> | null = null
 
 /** Retain until `close` so macOS notification delivery is reliable (avoid premature GC). */
 const activeTimerNotifications: Notification[] = []
@@ -168,6 +170,15 @@ const syncTrayController = (snapshot = timerSnapshot) => {
   trayController?.sync(snapshot, desktopTrayShortcuts, countdownDefaultMinutes)
 }
 
+const stopTrayTimerLoop = () => {
+  if (trayTimerInterval === null) {
+    return
+  }
+
+  clearInterval(trayTimerInterval)
+  trayTimerInterval = null
+}
+
 const setTrayShortcuts = async (nextShortcuts: readonly UserSettingsTrayShortcut[]) => {
   desktopTrayShortcuts = resolveUserSettingsTrayShortcuts(nextShortcuts)
   await persistTrayShortcuts()
@@ -248,8 +259,12 @@ const registerMediaPermissionHandler = () => {
   })
 }
 
-const setPublishedTimerState = (nextState: ActiveTimerState, nextSnapshot: TimerSnapshot) => {
+const syncDesktopTimerShellState = (publishedState: ActiveTimerState, nowMs = Date.now()) => {
   const previousStatus = timerState.status
+  const nextPublishedState = deriveDesktopPublishedTimerState(publishedState, nowMs)
+  const nextState = nextPublishedState.state
+  const nextSnapshot = nextPublishedState.snapshot
+
   timerState = nextState
   timerSnapshot = nextSnapshot
 
@@ -264,6 +279,27 @@ const setPublishedTimerState = (nextState: ActiveTimerState, nextSnapshot: Timer
   }
 
   syncTrayController(nextSnapshot)
+
+  if (nextState.status === 'running') {
+    return
+  }
+
+  stopTrayTimerLoop()
+}
+
+const ensureTrayTimerLoop = () => {
+  if (trayTimerInterval !== null) {
+    return
+  }
+
+  trayTimerInterval = setInterval(() => {
+    if (timerState.status !== 'running') {
+      stopTrayTimerLoop()
+      return
+    }
+
+    syncDesktopTimerShellState(timerState)
+  }, 250)
 }
 
 const createMainWindow = () => {
@@ -450,7 +486,11 @@ const registerIpc = () => {
   ipcMain.handle(
     'desktop:publishTimerState',
     async (_event, payload: DesktopPublishedTimerState) => {
-      setPublishedTimerState(payload.state, payload.snapshot)
+      syncDesktopTimerShellState(payload.state)
+
+      if (timerState.status === 'running') {
+        ensureTrayTimerLoop()
+      }
     },
   )
   ipcMain.handle('desktop:consumePendingTimerActions', async () => {
@@ -596,6 +636,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('will-quit', () => {
+  stopTrayTimerLoop()
   trayController?.destroy()
   void desktopRendererServer?.close()
 })

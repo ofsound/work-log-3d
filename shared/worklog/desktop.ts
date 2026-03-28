@@ -1,6 +1,8 @@
 import type { ActiveTimerState } from './active-timer'
 import type { UserSettingsTrayShortcut } from './settings'
 import type { TimerSnapshot, TimerState } from './timer'
+import { syncActiveTimerState } from './active-timer'
+import { getTimerSnapshot } from './timer'
 
 export interface DesktopPublishedTimerState {
   state: ActiveTimerState
@@ -144,6 +146,18 @@ export const getDesktopWindowState = (snapshot: TimerSnapshot): DesktopWindowSta
   isRunning: snapshot.status === 'running' || snapshot.status === 'paused',
   mode: snapshot.mode,
 })
+
+export const deriveDesktopPublishedTimerState = (
+  state: ActiveTimerState,
+  nowMs: number,
+): DesktopPublishedTimerState => {
+  const syncedState = syncActiveTimerState(state, nowMs)
+
+  return {
+    state: syncedState,
+    snapshot: getTimerSnapshot(syncedState, nowMs),
+  }
+}
 
 const getTimerModeLabel = (mode: TimerSnapshot['mode']) => {
   if (mode === 'countdown') {

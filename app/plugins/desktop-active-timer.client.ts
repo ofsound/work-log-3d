@@ -121,29 +121,7 @@ export default defineNuxtPlugin(() => {
   let lastPublishedKey = ''
 
   watch(
-    () => {
-      const snapshot = serializeTimerSnapshot(timerService.snapshot.value)
-      const state = serializeActiveTimerState(timerService.timerState.value)
-
-      return JSON.stringify([
-        snapshot.display,
-        snapshot.status,
-        snapshot.mode,
-        state.startedAtMs,
-        state.durationSeconds,
-        state.originalDurationSeconds,
-        state.pausedAtMs,
-        state.accumulatedPauseMs,
-        state.endedAtMs,
-        state.lastExtensionConsumedSeconds,
-        state.project,
-        state.tags,
-        state.draftNotes,
-        state.updatedAtMs,
-        state.updatedByDeviceId,
-        state.mutationId,
-      ])
-    },
+    () => JSON.stringify(serializeActiveTimerState(timerService.timerState.value)),
     () => {
       if (!timerService.isPersistentReady.value) {
         return
@@ -151,18 +129,7 @@ export default defineNuxtPlugin(() => {
 
       const serializedSnapshot = serializeTimerSnapshot(timerService.snapshot.value)
       const serializedState = serializeActiveTimerState(timerService.timerState.value)
-
-      const nextKey = JSON.stringify([
-        serializedSnapshot.display,
-        serializedSnapshot.status,
-        serializedSnapshot.mode,
-        serializedState.project,
-        serializedState.tags,
-        serializedState.draftNotes,
-        serializedState.updatedAtMs,
-        serializedState.updatedByDeviceId,
-        serializedState.mutationId,
-      ])
+      const nextKey = JSON.stringify(serializedState)
 
       if (nextKey === lastPublishedKey) {
         return
