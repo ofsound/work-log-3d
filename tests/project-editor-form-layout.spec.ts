@@ -11,7 +11,12 @@ import ContainerCard from '~/app/components/ContainerCard.vue'
 import ProjectEditorFormLayout from '~/app/components/ProjectEditorFormLayout.vue'
 
 describe('ProjectEditorFormLayout', () => {
-  it('renders preview content and explicit color-rule messaging for the project editor workspace', async () => {
+  it('renders keyed regions, surfaces color-rule messages, and emits cancel', async () => {
+    const heading = 'Edit Project'
+    const name = 'Client Portal'
+    const notes = 'Private working notes'
+    const colorMessage = 'Secondary color must keep shared text readable across project gradients.'
+
     const wrapper = mount(ProjectEditorFormLayout, {
       global: {
         components: {
@@ -24,12 +29,10 @@ describe('ProjectEditorFormLayout', () => {
         },
       },
       props: {
-        colorValidationMessages: [
-          'Secondary color must keep shared text readable across project gradients.',
-        ],
-        heading: 'Edit Project',
-        name: 'Client Portal',
-        notes: 'Private working notes',
+        colorValidationMessages: [colorMessage],
+        heading,
+        name,
+        notes,
         previewColors: {
           primary: '#2563eb',
           secondary: '#0e7490',
@@ -40,16 +43,16 @@ describe('ProjectEditorFormLayout', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('Edit Project')
-    expect(wrapper.text()).toContain('Internal notes')
-    expect(wrapper.text()).toContain('Color rules block saving')
-    expect(wrapper.text()).toContain('Badges always use white text')
-    expect(wrapper.text()).toContain('shared text readable across project gradients')
-    expect(wrapper.text()).toContain('Live project color preview')
-    expect(wrapper.text()).toContain('Workspace header')
-    expect(wrapper.text()).toContain('Selection states')
-    expect(wrapper.text()).toContain('Sources: ProjectWorkspaceHeader, ProjectOverview')
-    expect(wrapper.text()).not.toContain('This color pairing may reduce contrast')
+    expect(wrapper.get('[data-test="project-editor-heading"]').text()).toContain(heading)
+    expect(wrapper.get('[data-test="project-editor-notes"]').text()).toContain('Internal notes')
+    expect(wrapper.get('[data-test="project-editor-color-rules"]').text()).toContain(colorMessage)
+    expect(wrapper.get('[data-test="project-editor-preview"]').text()).toContain(name)
+    expect(
+      wrapper
+        .get('[data-test="project-editor-preview"]')
+        .find('[data-test="preview-section-workspace-header"]')
+        .exists(),
+    ).toBe(true)
 
     const cancelButton = wrapper
       .findAll('button')

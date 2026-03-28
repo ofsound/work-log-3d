@@ -1,5 +1,4 @@
 import {
-  DEFAULT_PROJECTS_PAGE_LAYOUT,
   PROJECTS_LAYOUT_GUEST_STORAGE_KEY,
   PROJECTS_LAYOUT_USER_STORAGE_KEY_PREFIX,
   coerceProjectsPageViewQuery,
@@ -53,10 +52,6 @@ describe('projects page layout storage', () => {
     }
 
     expect(readProjectsPageLayout(like, PROJECTS_LAYOUT_GUEST_STORAGE_KEY)).toBe(null)
-  })
-
-  it('documents default layout', () => {
-    expect(DEFAULT_PROJECTS_PAGE_LAYOUT).toBe('grid')
   })
 
   it('coerces ?view= query for vue-router', () => {

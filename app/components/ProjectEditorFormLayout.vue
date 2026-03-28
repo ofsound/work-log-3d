@@ -68,7 +68,7 @@ const toggleArchived = () => {
 <template>
   <div class="flex w-full min-w-0 flex-col gap-6">
     <ContainerCard as="section" class="w-full rounded-3xl" padding="comfortable">
-      <div class="mb-6">
+      <div class="mb-6" data-test="project-editor-heading">
         <h1 class="text-2xl font-bold text-text">{{ heading }}</h1>
       </div>
 
@@ -83,15 +83,17 @@ const toggleArchived = () => {
           />
         </AppField>
 
-        <AppField label="Internal notes">
-          <AppTextarea
-            density="comfortable"
-            :value="notes"
-            rows="8"
-            placeholder="Reference notes, goals, reminders, or project context"
-            @input="updateNotes"
-          ></AppTextarea>
-        </AppField>
+        <div data-test="project-editor-notes">
+          <AppField label="Internal notes">
+            <AppTextarea
+              density="comfortable"
+              :value="notes"
+              rows="8"
+              placeholder="Reference notes, goals, reminders, or project context"
+              @input="updateNotes"
+            ></AppTextarea>
+          </AppField>
+        </div>
 
         <div
           v-if="showArchiveToggle"
@@ -114,7 +116,7 @@ const toggleArchived = () => {
           </label>
         </div>
 
-        <section class="flex min-w-0 flex-col gap-4">
+        <section class="flex min-w-0 flex-col gap-4" data-test="project-editor-preview">
           <ProjectColorPreviewGallery
             :colors="previewColors"
             :name="name"
@@ -181,6 +183,7 @@ const toggleArchived = () => {
           <ContainerCard
             v-if="colorValidationMessages.length > 0"
             class="rounded-2xl py-3 text-sm"
+            data-test="project-editor-color-rules"
             padding="default"
             variant="danger"
           >

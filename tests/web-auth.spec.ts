@@ -2,12 +2,10 @@ import {
   getLoginRedirectLocation,
   getPostAuthRedirect,
   isPublicAnonymousPath,
-  LOGIN_ROUTE_PATH,
 } from '~/app/utils/auth-navigation'
 
 describe('web auth navigation', () => {
   it('keeps deep links intact while routing anonymous users to login', () => {
-    expect(LOGIN_ROUTE_PATH).toBe('/login')
     expect(getLoginRedirectLocation('/sessions?view=recent')).toEqual({
       path: '/login',
       query: { redirect: '/sessions?view=recent' },

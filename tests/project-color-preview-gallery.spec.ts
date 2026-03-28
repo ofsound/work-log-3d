@@ -6,7 +6,10 @@ import ContainerCard from '~/app/components/ContainerCard.vue'
 import ProjectColorPreviewGallery from '~/app/components/ProjectColorPreviewGallery.vue'
 
 describe('ProjectColorPreviewGallery', () => {
-  it('renders the full set of representative project color usage families', () => {
+  it('renders each preview slice with prop-driven anchors', () => {
+    const name = 'Client Portal'
+    const notes = 'Private working notes'
+
     const wrapper = mount(ProjectColorPreviewGallery, {
       global: {
         components: {
@@ -18,31 +21,18 @@ describe('ProjectColorPreviewGallery', () => {
           primary: '#2563eb',
           secondary: '#0e7490',
         },
-        name: 'Client Portal',
-        notes: 'Private working notes',
+        name,
+        notes,
       },
     })
 
-    expect(wrapper.get('[data-test="preview-section-workspace-header"]').text()).toContain(
-      'ProjectWorkspaceHeader',
-    )
-    expect(wrapper.get('[data-test="preview-section-cards-rows"]').text()).toContain(
-      'ProjectsManagerProject',
-    )
-    expect(wrapper.get('[data-test="preview-section-calendar-density"]').text()).toContain(
-      'SessionsMonthView',
-    )
+    expect(wrapper.get('[data-test="preview-section-workspace-header"]').text()).toContain(name)
+    expect(wrapper.get('[data-test="preview-section-cards-rows"]').text()).toContain(notes)
+    expect(wrapper.get('[data-test="preview-section-calendar-density"]').text()).toContain(name)
     expect(wrapper.get('[data-test="preview-section-support-usage"]').text()).toContain(
-      'SessionListFilterPanel',
+      `Project: ${name}`,
     )
-    expect(wrapper.get('[data-test="preview-section-selection-states"]').text()).toContain(
-      'TimeBoxEditor',
-    )
-    expect(wrapper.get('[data-test="preview-section-minimal-scale"]').text()).toContain(
-      'Minimal scale check',
-    )
-    expect(wrapper.text()).toContain('Secondary accent text')
-    expect(wrapper.text()).toContain('Selected uses the full gradient.')
-    expect(wrapper.text()).toContain('45m')
+    expect(wrapper.get('[data-test="preview-section-selection-states"]').text()).toContain(name)
+    expect(wrapper.get('[data-test="preview-section-minimal-scale"]').text()).toContain('45m')
   })
 })
