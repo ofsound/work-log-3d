@@ -57,7 +57,7 @@ describe('HomeActivityTimeline', () => {
     expect(bars[2]!.attributes('data-home-activity-current')).toBe('true')
   })
 
-  it('renders a subdued empty state when no weeks exist', () => {
+  it('renders a subdued empty state when no weeks exist and not loading', () => {
     const wrapper = mount(HomeActivityTimeline, {
       global: {
         components: {
@@ -66,10 +66,29 @@ describe('HomeActivityTimeline', () => {
       },
       props: {
         weeks: [],
+        loading: false,
       },
     })
 
     expect(wrapper.text()).toContain('No activity yet')
+    expect(wrapper.findAll('[data-home-activity-week]')).toHaveLength(0)
+  })
+
+  it('shows a loading skeleton instead of the empty copy while loading', () => {
+    const wrapper = mount(HomeActivityTimeline, {
+      global: {
+        components: {
+          ContainerCard,
+        },
+      },
+      props: {
+        weeks: [],
+        loading: true,
+      },
+    })
+
+    expect(wrapper.text()).not.toContain('No activity yet')
+    expect(wrapper.find('[data-home-activity-loading]').exists()).toBe(true)
     expect(wrapper.findAll('[data-home-activity-week]')).toHaveLength(0)
   })
 })

@@ -11,7 +11,9 @@ import { buildHomeActivityWeeks } from '~~/shared/worklog'
 definePageMeta({ layout: 'main-bleed' })
 
 const { timeBoxesCollection } = useFirestoreCollections()
-const allTimeBoxes = useCollection(timeBoxesCollection)
+const { data: allTimeBoxes, pending: timeBoxesPending } = useCollection(timeBoxesCollection)
+
+const isHomeActivityLoading = computed(() => !timeBoxesCollection.value || timeBoxesPending.value)
 
 const resolvedTimeBoxes = computed(() =>
   toTimeBoxes(allTimeBoxes.value as FirebaseTimeBoxDocument[]),
@@ -32,6 +34,6 @@ const homeActivityWeeks = computed(() =>
       decoding="async"
     />
 
-    <HomeActivityTimeline :weeks="homeActivityWeeks" />
+    <HomeActivityTimeline :weeks="homeActivityWeeks" :loading="isHomeActivityLoading" />
   </div>
 </template>
