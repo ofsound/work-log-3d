@@ -73,7 +73,6 @@ const timeBoxes = useCollection(projectTimeBoxesQuery, {
 
 const panelMode = ref<'closed' | 'day' | 'session'>('closed')
 const panelSessionId = ref('')
-const phonePanelDay = ref<Date | null>(null)
 const selectedSessionId = ref('')
 const mutationErrorMessage = ref('')
 
@@ -230,7 +229,6 @@ const updateRouteState = async (
 const closePanel = () => {
   panelMode.value = 'closed'
   panelSessionId.value = ''
-  phonePanelDay.value = null
   selectedSessionId.value = ''
 }
 
@@ -309,21 +307,6 @@ const openSessionFromDayPanel = (sessionId: string) => {
   panelSessionId.value = sessionId
   panelMode.value = 'session'
 }
-
-const openPhoneSessionPanel = ({ day, sessionId }: { day: Date; sessionId: string }) => {
-  phonePanelDay.value = day
-  selectedSessionId.value = sessionId
-  panelSessionId.value = sessionId
-  panelMode.value = 'session'
-}
-
-const phonePanelTimeBoxes = computed(() => {
-  if (!phonePanelDay.value) {
-    return []
-  }
-
-  return getTimeBoxesForDay(rawProjectTimeBoxes.value, phonePanelDay.value)
-})
 
 const persistSessionChange = async ({ id, input, duplicate }: SessionChangePayload) => {
   try {
@@ -446,13 +429,7 @@ onUnmounted(() => {
     <ProjectPhoneWorkspace
       v-if="isPhoneMode"
       :grouped-time-boxes="projectOverviewDayObjects"
-      :panel-day="phonePanelDay"
-      :panel-session-id="panelSessionId"
-      :panel-time-boxes="phonePanelTimeBoxes"
       :project="project"
-      :selected-session-id="selectedSessionId"
-      :on-close-panel="closePanel"
-      :on-open-session="openPhoneSessionPanel"
     />
 
     <SessionsWorkspaceShell

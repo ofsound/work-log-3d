@@ -47,6 +47,8 @@ const props = defineProps({
   opaqueSurface: { type: Boolean, default: false },
   hideActions: { type: Boolean, default: false },
   useProjectCardStyles: { type: Boolean, default: true },
+  showCompactActions: { type: Boolean, default: false },
+  compactRowOpensEditor: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['toggleEditor', 'deleted', 'open'])
@@ -175,6 +177,27 @@ const projectMetaTextStyle = computed(() =>
   project.value ? getProjectSecondaryAccentTextStyle(project.value.colors) : {},
 )
 const isOverviewVariant = computed(() => props.variant === 'overview')
+
+const handleCompactRowOpen = () => {
+  if (!props.compactRowOpensEditor) {
+    return
+  }
+
+  emit('toggleEditor')
+}
+
+const handleCompactRowKeydown = (event: KeyboardEvent) => {
+  if (!props.compactRowOpensEditor) {
+    return
+  }
+
+  if (event.key !== 'Enter' && event.key !== ' ') {
+    return
+  }
+
+  event.preventDefault()
+  emit('toggleEditor')
+}
 </script>
 
 <template>
@@ -278,15 +301,45 @@ const isOverviewVariant = computed(() => props.variant === 'overview')
   <ContainerCard
     v-if="isMinimized"
     class="!rounded-none !border-0 !bg-transparent px-3 py-2 shadow-none"
-    :class="props.compact ? 'mb-0' : 'mb-2.5'"
+    :class="[
+      props.compact ? 'mb-0' : 'mb-2.5',
+      props.compactRowOpensEditor ? 'cursor-pointer' : '',
+    ]"
+    :interactive="props.compactRowOpensEditor"
     padding="compact"
+    :role="props.compactRowOpensEditor ? 'button' : undefined"
+    :tabindex="props.compactRowOpensEditor ? 0 : undefined"
     :variant="variant === 'project' ? 'muted' : 'subtle'"
+    @click="handleCompactRowOpen"
+    @keydown="handleCompactRowKeydown"
   >
+    <div
+      v-if="showCompactActions && !hideActions"
+      class="mb-2 flex justify-end gap-0.5 text-text-subtle"
+    >
+      <button
+        type="button"
+        class="cursor-pointer px-1 hover:text-text"
+        aria-label="Edit session"
+        @click.stop="emit('toggleEditor')"
+      >
+        <EditIcon />
+      </button>
+      <button
+        type="button"
+        class="cursor-pointer px-1 hover:text-text"
+        aria-label="Delete session"
+        @click.stop="requestDeleteSession"
+      >
+        <DeleteIcon />
+      </button>
+    </div>
     <NuxtLink
       v-if="variant !== 'project' && timeBox?.project"
       :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
       class="mb-2 inline-flex max-w-full min-w-0 items-center text-xs font-bold tracking-[0.16em] uppercase no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
       :style="projectTextStyle"
+      @click.stop
     >
       <HighlightedText :text="projectName" :tokens="highlightTokens" />
     </NuxtLink>

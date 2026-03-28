@@ -40,16 +40,16 @@ const countupParts = computed(() => {
 
     <div class="flex shrink-0 flex-nowrap items-center gap-2">
       <TimerButton v-if="isReady && !timerIsRunning && !timerIsPaused" @click="startCountup"
-        >Start Timer</TimerButton
+        >Start</TimerButton
       >
-      <TimerButton v-if="isReady && timerIsRunning" @click="stop">Stop Timer</TimerButton>
-      <TimerButton v-if="isReady && timerIsPaused" @click="resume">Resume Timer </TimerButton>
+      <TimerButton v-if="isReady && timerIsRunning" @click="stop">Stop</TimerButton>
+      <TimerButton v-if="isReady && timerIsPaused" @click="resume">Resume</TimerButton>
     </div>
     <span
-      class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-xs leading-none font-medium text-text-muted opacity-80"
+      class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-sm leading-none font-semibold tracking-wide text-text opacity-80"
       aria-hidden="true"
     >
-      Count Up
+      Timer
     </span>
   </ContainerCard>
 </template>

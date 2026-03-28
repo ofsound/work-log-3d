@@ -9,6 +9,7 @@ import { useUserSettings } from '~/composables/useUserSettings'
 import { toUserSettings, type FirebaseUserSettingsDocument } from '~/utils/worklog-firebase'
 import {
   cloneUserSettings,
+  formatSecondsAsMinSecPhrase,
   formatSecondsToMinutesSeconds,
   normalizeCountdownDefaultMinutes,
 } from '~~/shared/worklog'
@@ -142,14 +143,6 @@ const timerShowsReadOnlyProgress = computed(
 )
 const minuteColumnInteractive = computed(() => !timerIsCompleted.value)
 
-const countdownOriginalDurationDisplay = computed(() => {
-  if (snapshot.value.mode !== 'countdown' || snapshot.value.originalDurationSeconds === null) {
-    return null
-  }
-
-  return formatSecondsToMinutesSeconds(snapshot.value.originalDurationSeconds)
-})
-
 const countdownAddedSeconds = computed(() => {
   if (
     snapshot.value.mode !== 'countdown' ||
@@ -162,26 +155,16 @@ const countdownAddedSeconds = computed(() => {
   return Math.max(0, snapshot.value.durationSeconds - snapshot.value.originalDurationSeconds)
 })
 
-const countdownAddedDurationDisplay = computed(() =>
-  countdownAddedSeconds.value > 0
-    ? formatSecondsToMinutesSeconds(countdownAddedSeconds.value)
-    : null,
-)
-
-const countdownTotalDurationDisplay = computed(() => {
-  if (snapshot.value.mode !== 'countdown' || snapshot.value.durationSeconds === null) {
-    return null
-  }
-
-  return formatSecondsToMinutesSeconds(snapshot.value.durationSeconds)
-})
-
 const countdownAddedSummaryDisplay = computed(() => {
-  if (!countdownAddedDurationDisplay.value || !countdownTotalDurationDisplay.value) {
+  if (
+    countdownAddedSeconds.value <= 0 ||
+    snapshot.value.mode !== 'countdown' ||
+    snapshot.value.durationSeconds === null
+  ) {
     return null
   }
 
-  return `Added +${countdownAddedDurationDisplay.value} total (${countdownTotalDurationDisplay.value} total)`
+  return `Added ${formatSecondsAsMinSecPhrase(countdownAddedSeconds.value)} (${formatSecondsAsMinSecPhrase(snapshot.value.durationSeconds)} total)`
 })
 
 const countdownCompletionGapDisplay = computed(() =>
@@ -196,11 +179,18 @@ const countdownConsumedExtensionDisplay = computed(() =>
     : null,
 )
 
-const showCountdownSummary = computed(
-  () =>
-    snapshot.value.mode === 'countdown' &&
-    (timerIsCompleted.value || countdownAddedSeconds.value > 0),
-)
+const showCountdownSummary = computed(() => {
+  if (snapshot.value.mode !== 'countdown') {
+    return false
+  }
+
+  const hasAdded = countdownAddedSeconds.value > 0
+  const hasConsumed = snapshot.value.lastExtensionConsumedSeconds > 0
+  const hasCompletionGap =
+    snapshot.value.completionGapSeconds !== null && snapshot.value.completionGapSeconds > 0
+
+  return hasAdded || hasConsumed || hasCompletionGap
+})
 
 /** Idle UI: hide minutes + ":ss" until preferences finish loading (no flash of ":00"). */
 const hideIdleTimeUntilPrefsLoaded = computed(
@@ -462,88 +452,73 @@ watch(
     padding="comfortable"
     variant="timer"
   >
-    <div
-      class="relative flex h-14 shrink-0 items-center rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 font-data text-5xl leading-none font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
-    >
-      <TimerCancelButton @click="handleCancel" />
+    <div class="flex min-w-0 flex-1 items-center gap-3">
       <div
-        class="flex touch-none flex-nowrap items-center self-stretch"
-        :class="
-          minuteDragActive
-            ? 'cursor-grabbing select-none'
-            : minuteColumnInteractive
-              ? 'cursor-ns-resize'
-              : 'cursor-default'
-        "
-        @pointerdown="handleMinuteColumnPointerDown"
+        class="relative flex h-14 shrink-0 items-center rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 font-data text-5xl leading-none font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
       >
-        <template v-if="!hideIdleTimeUntilPrefsLoaded">
-          <div>
-            <input
-              v-if="!timerShowsReadOnlyProgress"
-              id="dynamicMinutes"
-              v-model="dynamicMinutes"
-              type="text"
-              class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none select-text"
-              @keyup.enter="($event.target as HTMLElement).blur()"
-              @keyup.esc="($event.target as HTMLElement).blur()"
-              @blur="onMinutesBlur"
-            />
-            <div v-else class="w-14 text-right leading-none">
-              {{ countdownMinutesDisplay }}
+        <TimerCancelButton @click="handleCancel" />
+        <div
+          class="flex touch-none flex-nowrap items-center self-stretch"
+          :class="
+            minuteDragActive
+              ? 'cursor-grabbing select-none'
+              : minuteColumnInteractive
+                ? 'cursor-ns-resize'
+                : 'cursor-default'
+          "
+          @pointerdown="handleMinuteColumnPointerDown"
+        >
+          <template v-if="!hideIdleTimeUntilPrefsLoaded">
+            <div>
+              <input
+                v-if="!timerShowsReadOnlyProgress"
+                id="dynamicMinutes"
+                v-model="dynamicMinutes"
+                type="text"
+                class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none select-text"
+                @keyup.enter="($event.target as HTMLElement).blur()"
+                @keyup.esc="($event.target as HTMLElement).blur()"
+                @blur="onMinutesBlur"
+              />
+              <div v-else class="w-14 text-right leading-none">
+                {{ countdownMinutesDisplay }}
+              </div>
             </div>
-          </div>
-          <span class="relative -top-1">:</span>
-          {{ secondsProgress }}
-        </template>
+            <span class="relative -top-1">:</span>
+            {{ secondsProgress }}
+          </template>
+        </div>
       </div>
-    </div>
-    <div class="flex min-w-0 flex-1 flex-col items-end gap-2">
-      <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
-        <template v-if="timerShowsAddTimeButtons">
-          <AppButton
-            data-testid="countdown-add-5"
-            size="sm"
-            variant="secondary"
-            @click="extendCountdownByFiveMinutes"
-          >
-            +5 min
-          </AppButton>
-          <AppButton
-            data-testid="countdown-add-10"
-            size="sm"
-            variant="secondary"
-            @click="extendCountdownByTenMinutes"
-          >
-            +10 min
-          </AppButton>
-        </template>
-        <TimerButton
-          v-if="!timerIsRunning && !timerIsPaused && !timerIsCompleted"
-          @click="startTimer"
+      <div v-if="timerShowsAddTimeButtons" class="flex h-14 shrink-0 flex-col justify-center gap-2">
+        <AppButton
+          data-testid="countdown-add-5"
+          size="xs"
+          variant="secondary"
+          @click="extendCountdownByFiveMinutes"
         >
-          Start Timer
-        </TimerButton>
-        <TimerButton v-if="timerIsRunning && !timerIsPaused" @click="pause"
-          >Pause Timer</TimerButton
+          +5 min
+        </AppButton>
+        <AppButton
+          data-testid="countdown-add-10"
+          size="xs"
+          variant="secondary"
+          @click="extendCountdownByTenMinutes"
         >
-        <TimerButton v-if="timerIsPaused" @click="resume">Resume Timer </TimerButton>
+          +10 min
+        </AppButton>
       </div>
       <div
         v-if="showCountdownSummary"
-        class="flex max-w-full flex-col items-end gap-0.5 text-right text-xs leading-tight text-text-muted"
+        class="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left text-xs leading-tight text-text-muted"
       >
-        <span v-if="countdownOriginalDurationDisplay">
-          Originally {{ countdownOriginalDurationDisplay }}
+        <span v-if="countdownConsumedExtensionDisplay && !timerIsCompleted">
+          {{ countdownConsumedExtensionDisplay }} elapsed untracked
         </span>
         <span v-if="countdownAddedSummaryDisplay">
           {{ countdownAddedSummaryDisplay }}
         </span>
         <span v-if="timerIsCompleted && countdownCompletionGapDisplay">
           {{ countdownCompletionGapDisplay }} elapsed since completion
-        </span>
-        <span v-if="countdownConsumedExtensionDisplay && !timerIsCompleted">
-          {{ countdownConsumedExtensionDisplay }} had already elapsed when you extended it
         </span>
         <span
           v-else-if="
@@ -554,11 +529,23 @@ watch(
         </span>
       </div>
     </div>
+    <div class="flex shrink-0 flex-col items-end gap-2">
+      <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+        <TimerButton
+          v-if="!timerIsRunning && !timerIsPaused && !timerIsCompleted"
+          @click="startTimer"
+        >
+          Start
+        </TimerButton>
+        <TimerButton v-if="timerIsRunning && !timerIsPaused" @click="pause">Pause</TimerButton>
+        <TimerButton v-if="timerIsPaused" @click="resume">Resume</TimerButton>
+      </div>
+    </div>
     <span
-      class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-xs leading-none font-medium text-text-muted opacity-80"
+      class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-sm leading-none font-semibold tracking-wide text-text opacity-80"
       aria-hidden="true"
     >
-      Count Down
+      Countdown
     </span>
   </ContainerCard>
 </template>

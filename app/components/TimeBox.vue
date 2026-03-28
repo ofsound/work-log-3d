@@ -15,6 +15,8 @@ const props = defineProps({
   hideActions: { type: Boolean, default: false },
   useProjectCardStyles: { type: Boolean, default: true },
   embeddedInPanel: { type: Boolean, default: false },
+  showCompactActions: { type: Boolean, default: false },
+  compactRowOpensEditor: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['deleted', 'open'])
@@ -47,6 +49,8 @@ const toggleEditor = () => {
         :interactive="props.interactive"
         :opaque-surface="opaqueSurface"
         :selected="props.selected"
+        :show-compact-actions="showCompactActions"
+        :compact-row-opens-editor="compactRowOpensEditor"
         :use-project-card-styles="props.useProjectCardStyles"
         :variant
         :is-minimized

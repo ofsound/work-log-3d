@@ -54,6 +54,8 @@ const dayHeading = computed(() => {
           :id="item.id"
           :key="item.id"
           compact
+          compact-row-opens-editor
+          show-compact-actions
           variant="project"
         />
       </div>

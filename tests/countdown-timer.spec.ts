@@ -101,6 +101,9 @@ const mountCountdownTimer = () =>
   mount(CountdownTimer, {
     global: {
       stubs: {
+        AppButton: {
+          template: '<button type="button" v-bind="$attrs"><slot /></button>',
+        },
         TimerCancelButton: { template: '<button @click="$emit(\'click\')">Cancel</button>' },
         TimerButton: { template: '<button @click="$emit(\'click\')"><slot /></button>' },
         ContainerCard: { template: '<div><slot /></div>' },
@@ -255,7 +258,7 @@ describe('CountdownTimer', () => {
     const wrapper = mountCountdownTimer()
     await nextTick()
 
-    expect(wrapper.text()).toContain('Start Timer')
+    expect(wrapper.text()).toContain('Start')
     expect(wrapper.text()).not.toContain('+5 min')
     expect(wrapper.text()).not.toContain('+10 min')
   })
@@ -287,7 +290,7 @@ describe('CountdownTimer', () => {
     await nextTick()
 
     expect(wrapper.find('#dynamicMinutes').exists()).toBe(false)
-    expect(wrapper.text()).toContain('Originally 00:10')
+    expect(wrapper.text()).not.toContain('Originally')
   })
 
   it('restores the saved default minutes after a completed countdown returns to idle', async () => {
@@ -359,8 +362,7 @@ describe('CountdownTimer', () => {
     }
     await nextTick()
 
-    expect(wrapper.text()).toContain('Originally 30:00')
-    expect(wrapper.text()).toContain('Added +20:00 total (50:00 total)')
+    expect(wrapper.text()).toContain('Added 20 min (50 min total)')
     expect(wrapper.text()).toContain('02:00 elapsed since completion')
     expect(wrapper.text()).toContain('+5 min')
     expect(wrapper.text()).toContain('+10 min')
@@ -415,9 +417,8 @@ describe('CountdownTimer', () => {
     }
     await nextTick()
 
-    expect(wrapper.text()).toContain('Originally 30:00')
-    expect(wrapper.text()).toContain('Added +20:00 total (50:00 total)')
-    expect(wrapper.text()).toContain('15:00 had already elapsed when you extended it')
+    expect(wrapper.text()).toContain('Added 20 min (50 min total)')
+    expect(wrapper.text()).toContain('15:00 elapsed untracked')
     expect(wrapper.text()).toContain('+5 min')
     expect(wrapper.text()).toContain('+10 min')
   })
@@ -445,7 +446,32 @@ describe('CountdownTimer', () => {
 
     expect(wrapper.text()).toContain('+5 min')
     expect(wrapper.text()).toContain('+10 min')
-    expect(wrapper.text()).toContain('Resume Timer')
+    expect(wrapper.text()).toContain('Resume')
+  })
+
+  it('shows elapsed untracked while running even when duration matches original (no added summary)', async () => {
+    const wrapper = mountCountdownTimer()
+
+    snapshot.value = {
+      mode: 'countdown',
+      status: 'running',
+      startedAtMs: 0,
+      durationSeconds: 300,
+      originalDurationSeconds: 300,
+      pausedAtMs: null,
+      accumulatedPauseMs: 0,
+      endedAtMs: null,
+      lastExtensionConsumedSeconds: 23,
+      display: '04:51',
+      elapsedSeconds: 54,
+      remainingSeconds: 246,
+      completionGapSeconds: null,
+      isActive: true,
+    }
+    await nextTick()
+
+    expect(wrapper.text()).toContain('00:23 elapsed untracked')
+    expect(wrapper.text()).not.toContain('Added ')
   })
 
   it('routes repeated +10 clicks on a running countdown through addCountdownMinutes', async () => {

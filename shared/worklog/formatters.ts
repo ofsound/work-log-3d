@@ -80,6 +80,27 @@ export const formatSecondsToMinutesSecondsParts = (totalSeconds: number) => {
   }
 }
 
+/** Countdown summary lines: plain "N min" / "N sec" phrasing (no MM:SS padding). */
+export const formatSecondsAsMinSecPhrase = (totalSeconds: number): string => {
+  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) {
+    return '0 sec'
+  }
+
+  const whole = Math.floor(totalSeconds)
+  const minutes = Math.floor(whole / 60)
+  const seconds = whole % 60
+
+  if (whole < 60) {
+    return `${seconds} sec`
+  }
+
+  if (seconds === 0) {
+    return `${minutes} min`
+  }
+
+  return `${minutes} min ${seconds} sec`
+}
+
 export const DURATION_DISPLAY_FORMATS = ['hours-decimal', 'hours-rounded', 'minutes'] as const
 
 export type DurationDisplayFormat = (typeof DURATION_DISPLAY_FORMATS)[number]
