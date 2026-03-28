@@ -20,7 +20,6 @@ const reportDocuments = [
     id: 'report-1',
     title: 'Q1 Client Report',
     summary: 'Summary',
-    timezone: 'America/Denver',
     filters: {
       dateStart: '2026-03-01',
       dateEnd: '2026-03-23',
@@ -112,7 +111,7 @@ describe('ReportsWorkspace', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('Saved drafts')
+    expect(wrapper.text()).toContain('Reports')
     expect(wrapper.text()).toContain('Q1 Client Report')
     expect(wrapper.text()).toContain('Report settings')
     expect(wrapper.text()).toContain('Save draft')

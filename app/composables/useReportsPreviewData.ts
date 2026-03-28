@@ -24,7 +24,7 @@ export function useReportsPreviewData(options: UseReportsPreviewDataOptions) {
 
   const previewRange = computed(() => {
     try {
-      return getReportRange(options.draft.value.filters, options.draft.value.timezone)
+      return getReportRange(options.draft.value.filters)
     } catch {
       return null
     }
@@ -58,7 +58,6 @@ export function useReportsPreviewData(options: UseReportsPreviewDataOptions) {
     try {
       return buildReportSnapshot({
         filters: options.draft.value.filters,
-        timezone: options.draft.value.timezone,
         projects: options.sortedProjects.value,
         tags: options.sortedTags.value,
         timeBoxes: toTimeBoxes(previewTimeBoxes.value as FirebaseTimeBoxDocument[]),

@@ -10,9 +10,7 @@ definePageMeta({ layout: 'main-workspace' })
 
 const { projectDocumentId } = useResolvedProjectDocumentId('legacy-project-edit-route')
 const { hasResolvedViewport, isPhoneMode } = usePhoneMode()
-const shouldHoldProjectEditorWorkspace = computed(
-  () => import.meta.server || !hasResolvedViewport.value,
-)
+const shouldHoldProjectEditorWorkspace = computed(() => !hasResolvedViewport.value)
 </script>
 
 <template>

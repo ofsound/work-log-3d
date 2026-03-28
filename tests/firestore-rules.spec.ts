@@ -124,7 +124,6 @@ describe('firestore rules', () => {
       setDoc(authedDoc(testEnvironment, 'user-1', 'reports', 'report-1'), {
         title: 'March Report',
         summary: 'Client-ready summary',
-        timezone: 'America/Denver',
         filters: {
           dateStart: '2026-03-01',
           dateEnd: '2026-03-21',
@@ -240,7 +239,6 @@ describe('firestore rules', () => {
       setDoc(authedDoc(testEnvironment, 'user-1', 'reports', 'report-1'), {
         title: '',
         summary: 'Bad report',
-        timezone: '',
         filters: {
           dateStart: '',
           dateEnd: '',

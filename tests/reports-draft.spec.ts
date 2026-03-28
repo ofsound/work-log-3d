@@ -5,7 +5,6 @@ const reportDocuments = ref([
     id: 'report-1',
     title: 'Older draft',
     summary: 'Old summary',
-    timezone: 'America/Denver',
     filters: {
       dateEnd: '2026-03-20',
       dateStart: '2026-03-01',
@@ -23,7 +22,6 @@ const reportDocuments = ref([
     id: 'report-2',
     title: 'Newest draft',
     summary: 'New summary',
-    timezone: 'America/Denver',
     filters: {
       dateEnd: '2026-03-23',
       dateStart: '2026-03-10',

@@ -9,6 +9,9 @@ export const REPORT_TAG_OPERATORS = ['any', 'all'] as const
 export type ReportGroupOperator = (typeof REPORT_GROUP_OPERATORS)[number]
 export type ReportTagOperator = (typeof REPORT_TAG_OPERATORS)[number]
 
+/** IANA zone for report range boundaries, day keys, and rollups (UTC calendar dates). */
+export const REPORT_CALENDAR_TIMEZONE = 'UTC'
+
 export interface ReportFilter {
   dateStart: string
   dateEnd: string
@@ -21,7 +24,6 @@ export interface ReportFilter {
 export interface ReportInput {
   title: string
   summary: string
-  timezone: string
   filters: ReportFilter
 }
 
@@ -144,7 +146,6 @@ export interface ReportInsight {
 
 export interface ReportSnapshot {
   generatedAtIso: string
-  timezone: string
   rangeStartDateKey: string
   rangeEndDateKey: string
   rangeLabel: string
@@ -278,7 +279,7 @@ export const getTimeZoneDateKey = (date: Date, timeZone: string) => {
   return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-export const formatReportDateLabel = (dateKey: string, _timeZone: string) =>
+export const formatReportDateLabel = (dateKey: string) =>
   buildDisplayDateFromDateKey(dateKey).toLocaleDateString('en-US', {
     timeZone: 'UTC',
     month: 'short',
@@ -303,17 +304,17 @@ export const getTimeZoneStartOfDay = (dateKey: string, timeZone: string) => {
   return new Date(utcGuess.valueOf() - secondOffset)
 }
 
-export const getReportRange = (filters: ReportFilter, timeZone: string): ReportRange => ({
-  start: getTimeZoneStartOfDay(filters.dateStart, timeZone),
+export const getReportRange = (filters: ReportFilter): ReportRange => ({
+  start: getTimeZoneStartOfDay(filters.dateStart, REPORT_CALENDAR_TIMEZONE),
   end: getTimeZoneStartOfDay(
     formatDateKey(addDays(parseDateKey(filters.dateEnd) ?? new Date(), 1)),
-    timeZone,
+    REPORT_CALENDAR_TIMEZONE,
   ),
 })
 
-const getReportRangeLabel = (filters: ReportFilter, timeZone: string) => {
-  const startLabel = formatReportDateLabel(filters.dateStart, timeZone)
-  const endLabel = formatReportDateLabel(filters.dateEnd, timeZone)
+const getReportRangeLabel = (filters: ReportFilter) => {
+  const startLabel = formatReportDateLabel(filters.dateStart)
+  const endLabel = formatReportDateLabel(filters.dateEnd)
 
   return filters.dateStart === filters.dateEnd ? startLabel : `${startLabel} - ${endLabel}`
 }
@@ -413,15 +414,15 @@ const createClampedSession = ({
   }
 }
 
-const splitClampedSessionByDay = (session: ReportClampedSession, timeZone: string) => {
+const splitClampedSessionByDay = (session: ReportClampedSession) => {
   const segments: Array<{ dateKey: string; minutes: number }> = []
   let cursor = new Date(session.clampedStartTime.valueOf())
 
   while (cursor.valueOf() < session.clampedEndTime.valueOf()) {
-    const dateKey = getTimeZoneDateKey(cursor, timeZone)
+    const dateKey = getTimeZoneDateKey(cursor, REPORT_CALENDAR_TIMEZONE)
     const nextDayStart = getTimeZoneStartOfDay(
       formatDateKey(addDays(parseDateKey(dateKey) ?? new Date(), 1)),
-      timeZone,
+      REPORT_CALENDAR_TIMEZONE,
     )
     const segmentEnd =
       nextDayStart.valueOf() < session.clampedEndTime.valueOf()
@@ -436,17 +437,14 @@ const splitClampedSessionByDay = (session: ReportClampedSession, timeZone: strin
   return segments
 }
 
-export const groupReportSessionRows = (
-  rows: ReportSessionRow[],
-  timeZone: string,
-): ReportSessionGroup[] => {
+export const groupReportSessionRows = (rows: ReportSessionRow[]): ReportSessionGroup[] => {
   const groups = new Map<string, ReportSessionGroup>()
 
   rows.forEach((row) => {
     const dateKey = row.dateKey
     const existing = groups.get(dateKey) ?? {
       dateKey,
-      label: formatReportDateLabel(dateKey, timeZone),
+      label: formatReportDateLabel(dateKey),
       totalMinutes: 0,
       totalHours: 0,
       sessionCount: 0,
@@ -470,14 +468,11 @@ export const groupReportSessionRows = (
     .sort((left, right) => right.dateKey.localeCompare(left.dateKey))
 }
 
-const buildSessionGroups = (
-  sessions: ReportClampedSession[],
-  timeZone: string,
-): ReportSessionGroup[] =>
+const buildSessionGroups = (sessions: ReportClampedSession[]): ReportSessionGroup[] =>
   groupReportSessionRows(
     sessions.map((session) => ({
       sessionId: session.sessionId,
-      dateKey: getTimeZoneDateKey(session.clampedStartTime, timeZone),
+      dateKey: getTimeZoneDateKey(session.clampedStartTime, REPORT_CALENDAR_TIMEZONE),
       projectId: session.projectId,
       projectName: session.projectName,
       tagIds: [...session.tagIds],
@@ -489,7 +484,6 @@ const buildSessionGroups = (
       clampedStartTimeIso: session.clampedStartTime.toISOString(),
       clampedEndTimeIso: session.clampedEndTime.toISOString(),
     })),
-    timeZone,
   )
 
 const buildBreakdown = ({
@@ -559,11 +553,11 @@ const buildProjectTagMatrix = ({
   return { columns, rows }
 }
 
-const buildDailyRollups = (sessions: ReportClampedSession[], timeZone: string): ReportRollup[] => {
+const buildDailyRollups = (sessions: ReportClampedSession[]): ReportRollup[] => {
   const totals = new Map<string, { minutes: number; sessionCount: number }>()
 
   sessions.forEach((session) => {
-    splitClampedSessionByDay(session, timeZone).forEach((segment) => {
+    splitClampedSessionByDay(session).forEach((segment) => {
       const existing = totals.get(segment.dateKey) ?? { minutes: 0, sessionCount: 0 }
 
       existing.minutes += segment.minutes
@@ -575,7 +569,7 @@ const buildDailyRollups = (sessions: ReportClampedSession[], timeZone: string): 
   return [...totals.entries()]
     .map(([dateKey, entry]) => ({
       dateKey,
-      label: formatReportDateLabel(dateKey, timeZone),
+      label: formatReportDateLabel(dateKey),
       minutes: entry.minutes,
       hours: toHours(entry.minutes),
       sessionCount: entry.sessionCount,
@@ -614,7 +608,7 @@ const buildWeeklyRollups = (dailyRollups: ReportRollup[]): ReportWeekRollup[] =>
     .map(([weekStartDateKey, entry]) => ({
       weekStartDateKey,
       weekEndDateKey: entry.weekEndDateKey,
-      label: `${formatReportDateLabel(weekStartDateKey, 'UTC')} - ${formatReportDateLabel(entry.weekEndDateKey, 'UTC')}`,
+      label: `${formatReportDateLabel(weekStartDateKey)} - ${formatReportDateLabel(entry.weekEndDateKey)}`,
       minutes: entry.minutes,
       hours: toHours(entry.minutes),
       sessionCount: entry.sessionCount,
@@ -683,20 +677,18 @@ const buildInsights = ({
 
 export const buildReportSnapshot = ({
   filters,
-  timezone,
   projects,
   tags,
   timeBoxes,
   generatedAt = new Date(),
 }: {
   filters: ReportFilter
-  timezone: string
   projects: NamedEntity[]
   tags: NamedEntity[]
   timeBoxes: TimeBox[]
   generatedAt?: Date
 }): ReportSnapshot => {
-  const range = getReportRange(filters, timezone)
+  const range = getReportRange(filters)
   const projectNameById = getNamedEntityMap(projects)
   const tagNameById = getNamedEntityMap(tags)
   const matchedSessions = timeBoxes
@@ -762,9 +754,9 @@ export const buildReportSnapshot = ({
     sessionCounts: tagSessionCounts,
     totalMinutes,
   })
-  const dailyRollups = buildDailyRollups(matchedSessions, timezone)
+  const dailyRollups = buildDailyRollups(matchedSessions)
   const weeklyRollups = buildWeeklyRollups(dailyRollups)
-  const sessionGroups = buildSessionGroups(matchedSessions, timezone)
+  const sessionGroups = buildSessionGroups(matchedSessions)
   const busiestDay = dailyRollups.reduce<ReportRollup | null>(
     (best, current) => (best === null || current.minutes > best.minutes ? current : best),
     null,
@@ -835,10 +827,9 @@ export const buildReportSnapshot = ({
 
   return {
     generatedAtIso: generatedAt.toISOString(),
-    timezone,
     rangeStartDateKey: filters.dateStart,
     rangeEndDateKey: filters.dateEnd,
-    rangeLabel: getReportRangeLabel(filters, timezone),
+    rangeLabel: getReportRangeLabel(filters),
     overview,
     insights: buildInsights({
       dailyRollups,
@@ -860,15 +851,14 @@ export const buildReportSnapshot = ({
   }
 }
 
-export const createDefaultReportInput = (today = new Date(), timezone = 'UTC'): ReportInput => {
-  const todayDateKey = getTimeZoneDateKey(today, timezone)
+export const createDefaultReportInput = (today = new Date()): ReportInput => {
+  const todayDateKey = getTimeZoneDateKey(today, REPORT_CALENDAR_TIMEZONE)
   const todayDate = parseDateKey(todayDateKey) ?? today
   const monthStartDate = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
 
   return {
     title: 'Client Report',
     summary: '',
-    timezone,
     filters: {
       dateStart: formatDateKey(monthStartDate),
       dateEnd: todayDateKey,

@@ -27,7 +27,6 @@ describe('public report publishing', () => {
       id: 'report-1',
       title: 'March Report',
       summary: 'Summary',
-      timezone: 'America/Denver',
       filters: {
         dateStart: '2026-03-01',
         dateEnd: '2026-03-21',
@@ -88,7 +87,6 @@ describe('public report publishing', () => {
       id: 'report-1',
       title: 'March Report',
       summary: 'Summary',
-      timezone: 'America/Denver',
       filters: {
         dateStart: '2026-03-01',
         dateEnd: '2026-03-21',
@@ -127,7 +125,6 @@ describe('public report publishing', () => {
       id: 'report-1',
       title: 'March Report',
       summary: 'Summary',
-      timezone: 'America/Denver',
       filters: {
         dateStart: '2026-03-01',
         dateEnd: '2026-03-21',
@@ -166,7 +163,6 @@ describe('public report publishing', () => {
       publishedAtIso: '2026-03-21T12:00:00.000Z',
       snapshot: {
         generatedAtIso: '2026-03-21T12:00:00.000Z',
-        timezone: 'America/Denver',
         rangeStartDateKey: '2026-03-01',
         rangeEndDateKey: '2026-03-21',
         rangeLabel: 'Mar 1, 2026 - Mar 21, 2026',

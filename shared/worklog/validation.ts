@@ -98,18 +98,6 @@ const requireDateKey = (value: string, label: string) => {
   return formatDateKey(parsed)
 }
 
-const requireTimeZone = (value: string) => {
-  const normalized = requireNonEmptyString(value, 'Timezone')
-
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone: normalized }).format(new Date())
-  } catch {
-    throw new WorklogError('validation', 'Timezone must be valid.')
-  }
-
-  return normalized
-}
-
 const requireEnumValue = <T extends string>(
   value: string,
   values: readonly T[],
@@ -328,7 +316,6 @@ export const validateReportFilter = (input: ReportFilter): ReportFilter => {
 export const validateReportInput = (input: ReportInput): ReportInput => ({
   title: requireNonEmptyString(input.title, 'Title'),
   summary: normalizeOptionalString(input.summary),
-  timezone: requireTimeZone(input.timezone),
   filters: validateReportFilter(input.filters),
 })
 

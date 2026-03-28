@@ -3,11 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useCollection } from 'vuefire'
 import { orderBy, query } from 'firebase/firestore'
 
-import {
-  buildReportDatePresets,
-  cloneReportInput,
-  createDefaultBrowserReportInput,
-} from '~/utils/report-ui'
+import { cloneReportInput, createDefaultBrowserReportInput } from '~/utils/report-ui'
 import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
 import { useUserSettings } from '~/composables/useUserSettings'
 import type {
@@ -51,7 +47,6 @@ export function useReportsDraft() {
   const selectedReport = computed(
     () => reports.value.find((report) => report.id === selectedReportId.value) ?? null,
   )
-  const datePresets = computed(() => buildReportDatePresets(new Date(), draft.value.timezone))
   const hasHiddenLegacyTagFilters = computed(
     () => hideTags.value && draft.value.filters.tagIds.length > 0,
   )
@@ -79,17 +74,6 @@ export function useReportsDraft() {
       filters: {
         ...draft.value.filters,
         [type]: [...nextValues],
-      },
-    }
-  }
-
-  const applyDatePreset = (dateStart: string, dateEnd: string) => {
-    draft.value = {
-      ...draft.value,
-      filters: {
-        ...draft.value.filters,
-        dateStart,
-        dateEnd,
       },
     }
   }
@@ -129,8 +113,6 @@ export function useReportsDraft() {
   )
 
   return {
-    applyDatePreset,
-    datePresets,
     draft,
     hasHiddenLegacyTagFilters,
     hideTags,

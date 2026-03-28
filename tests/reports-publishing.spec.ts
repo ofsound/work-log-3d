@@ -42,7 +42,6 @@ describe('useReportsPublishing', () => {
         draft: ref({
           title: 'Draft',
           summary: '',
-          timezone: 'America/Denver',
           filters: {
             dateStart: '2026-03-01',
             dateEnd: '2026-03-31',

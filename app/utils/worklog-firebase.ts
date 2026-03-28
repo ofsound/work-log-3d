@@ -2,6 +2,7 @@ import {
   Timestamp,
   addDoc,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -79,7 +80,6 @@ export interface FirebaseReportDocument {
   id: string
   title: string
   summary: string
-  timezone: string
   filters: {
     dateStart: string
     dateEnd: string
@@ -155,7 +155,6 @@ export const toReport = (report: FirebaseReportDocument): Report => ({
   id: report.id,
   title: report.title ?? '',
   summary: report.summary ?? '',
-  timezone: report.timezone ?? 'UTC',
   filters: {
     dateStart: report.filters?.dateStart ?? '',
     dateEnd: report.filters?.dateEnd ?? '',
@@ -208,7 +207,6 @@ const toReportPayload = (input: ReportInput) => {
   return {
     title: normalized.title,
     summary: normalized.summary,
-    timezone: normalized.timezone,
     filters: normalized.filters,
   }
 }
@@ -441,6 +439,7 @@ export const createFirestoreWorklogRepositories = ({
       async update(id: string, input: ReportInput) {
         await updateDoc(doc(reportsCollection, id), {
           ...toReportPayload(input),
+          timezone: deleteField(),
           updatedAt: Timestamp.fromDate(new Date()),
         })
       },

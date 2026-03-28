@@ -8,7 +8,6 @@ import type { ReportSnapshot } from '~~/shared/worklog'
 
 const snapshot: ReportSnapshot = {
   generatedAtIso: '2026-03-23T18:00:00.000Z',
-  timezone: 'America/Denver',
   rangeStartDateKey: '2026-03-01',
   rangeEndDateKey: '2026-03-23',
   rangeLabel: 'Mar 1, 2026 - Mar 23, 2026',

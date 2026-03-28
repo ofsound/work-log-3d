@@ -16,11 +16,11 @@ const props = defineProps({
 })
 
 const publishedAtLabel = computed(() => {
-  if (!props.publishedAtIso || !props.snapshot) {
+  if (!props.publishedAtIso) {
     return ''
   }
 
-  return formatReportDateTime(props.publishedAtIso, props.snapshot.timezone)
+  return formatReportDateTime(props.publishedAtIso)
 })
 
 const visibleInsights = computed(
@@ -43,7 +43,7 @@ const visibleInsights = computed(
           </div>
           <h2 class="mt-2 text-3xl font-bold">{{ title }}</h2>
           <div class="mt-2 text-sm text-header-muted">
-            {{ snapshot.rangeLabel }} · {{ snapshot.timezone }}
+            {{ snapshot.rangeLabel }}
           </div>
           <div
             v-if="summary"
@@ -278,8 +278,8 @@ const visibleInsights = computed(
                   <div class="flex flex-wrap items-center gap-2">
                     <div class="font-bold text-text">{{ session.projectName }}</div>
                     <div class="text-sm text-text-subtle">
-                      {{ formatReportTime(session.clampedStartTimeIso, snapshot.timezone) }} -
-                      {{ formatReportTime(session.clampedEndTimeIso, snapshot.timezone) }}
+                      {{ formatReportTime(session.clampedStartTimeIso) }} -
+                      {{ formatReportTime(session.clampedEndTimeIso) }}
                     </div>
                   </div>
                   <div class="my-5 font-data whitespace-pre-line">
@@ -297,9 +297,6 @@ const visibleInsights = computed(
                 </div>
                 <div class="rounded-xl bg-surface-subtle px-3 py-2 text-sm text-text">
                   <div class="font-semibold">{{ formatReportHours(session.durationMinutes) }}</div>
-                  <div class="mt-1 text-text-subtle">
-                    {{ formatReportDateTime(session.startTimeIso, snapshot.timezone) }}
-                  </div>
                 </div>
               </div>
             </ContainerCard>

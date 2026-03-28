@@ -121,7 +121,7 @@ const shouldHoldForPhoneResolution = computed(() => {
     return false
   }
 
-  return import.meta.server || !hasResolvedViewport.value
+  return !hasResolvedViewport.value
 })
 
 useSessionsKeyboard({

@@ -19,8 +19,6 @@ const publishing = useReportsPublishing({
 })
 
 const {
-  applyDatePreset,
-  datePresets,
   draft,
   hasHiddenLegacyTagFilters,
   hideTags,
@@ -51,10 +49,7 @@ const {
     <template #sidebar>
       <div class="flex min-h-full flex-col">
         <div class="flex items-center justify-between gap-3">
-          <div>
-            <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Reports</div>
-            <div class="mt-1 text-3xl font-bold text-text">Saved drafts</div>
-          </div>
+          <div class="text-3xl font-bold text-text">Reports</div>
           <AppButton variant="primary" :disabled="isSaving" @click="createSavedReport">
             New
           </AppButton>
@@ -92,7 +87,6 @@ const {
             <div class="mt-2 text-xs text-text-subtle">
               {{ report.filters.dateStart }} - {{ report.filters.dateEnd }}
             </div>
-            <div class="mt-1 text-xs text-text-subtle">{{ report.timezone }}</div>
           </ContainerCard>
         </div>
       </div>
@@ -103,10 +97,7 @@ const {
         <ContainerCard as="section">
           <div class="flex flex-col gap-6">
             <div class="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Editor</div>
-                <div class="mt-1 text-2xl font-bold text-text">Report settings</div>
-              </div>
+              <div class="text-2xl font-bold text-text">Report settings</div>
               <div class="flex flex-wrap gap-2">
                 <AppButton variant="secondary" :disabled="isSaving" @click="ensureSavedReport">
                   {{ isSaving ? 'Saving…' : 'Save draft' }}
@@ -157,10 +148,7 @@ const {
                   />
                 </AppField>
 
-                <div class="grid gap-4 md:grid-cols-3">
-                  <AppField label="Timezone">
-                    <AppTextInput v-model="draft.timezone" placeholder="America/Denver" />
-                  </AppField>
+                <div class="grid gap-4 md:grid-cols-2">
                   <AppField label="Start date">
                     <AppTextInput v-model="draft.filters.dateStart" type="date" />
                   </AppField>
@@ -168,21 +156,6 @@ const {
                     <AppTextInput v-model="draft.filters.dateEnd" type="date" />
                   </AppField>
                 </div>
-
-                <AppField as="div" class="!gap-3" label="Quick ranges">
-                  <div class="flex flex-wrap gap-2">
-                    <AppButton
-                      v-for="preset in datePresets"
-                      :key="preset.id"
-                      shape="pill"
-                      size="sm"
-                      variant="secondary"
-                      @click="applyDatePreset(preset.dateStart, preset.dateEnd)"
-                    >
-                      {{ preset.label }}
-                    </AppButton>
-                  </div>
-                </AppField>
               </div>
 
               <div class="grid gap-4">
@@ -291,7 +264,6 @@ const {
         </ContainerCard>
 
         <ContainerCard v-if="previewSnapshot" as="section">
-          <div class="mb-5 text-xs tracking-[0.18em] text-text-subtle uppercase">Preview</div>
           <ReportSnapshotView
             :hide-tags="hideTags"
             :title="draft.title.trim() || 'Untitled report'"

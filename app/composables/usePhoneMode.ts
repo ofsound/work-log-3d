@@ -37,7 +37,10 @@ const attachPhoneModeListeners = (isPhoneMode: Ref<boolean>, hasResolvedViewport
 
   addMediaQueryListener(viewportQuery, updateState)
   addMediaQueryListener(touchQuery, updateState)
-  updateState()
+  // Defer initial read so the first client render matches SSR (hasResolvedViewport still false).
+  queueMicrotask(() => {
+    updateState()
+  })
 }
 
 export function usePhoneMode() {

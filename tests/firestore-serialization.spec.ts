@@ -91,7 +91,6 @@ describe('firestore worklog repositories', () => {
       id: 'report-1',
       title: 'March Report',
       summary: 'Summary',
-      timezone: 'America/Denver',
       filters: {
         dateStart: '2026-03-01',
         dateEnd: '2026-03-21',
@@ -268,7 +267,6 @@ describe('firestore worklog repositories', () => {
     await repositories.reports.create({
       title: '  March Report  ',
       summary: ' Summary ',
-      timezone: 'America/Denver',
       filters: {
         dateStart: '2026-03-01',
         dateEnd: '2026-03-21',
@@ -354,7 +352,6 @@ describe('firestore worklog repositories', () => {
       expect.objectContaining({
         title: 'March Report',
         summary: 'Summary',
-        timezone: 'America/Denver',
         shareToken: '',
         filters: expect.objectContaining({
           projectIds: ['project-1'],
@@ -509,7 +506,6 @@ describe('firestore worklog repositories', () => {
       repositories.reports.create({
         title: '',
         summary: 'Bad report',
-        timezone: 'America/Denver',
         filters: {
           dateStart: '2026-03-21',
           dateEnd: '2026-03-01',

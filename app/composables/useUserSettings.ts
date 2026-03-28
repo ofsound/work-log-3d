@@ -1,3 +1,4 @@
+import { onMounted, ref } from 'vue'
 import type { Ref } from 'vue'
 
 import { doc, getFirestore, setDoc } from 'firebase/firestore'
@@ -11,6 +12,9 @@ import { toUserSettings, toUserSettingsPayload } from '~/utils/worklog-firebase'
 import { DEFAULT_USER_SETTINGS, cloneUserSettings, type UserSettings } from '~~/shared/worklog'
 
 const USER_SETTINGS_DOCUMENT_ID = 'preferences'
+
+let registeredShellBackgroundCacheMount = false
+const shellBackgroundCacheAllowed = ref(false)
 
 export function useUserSettings() {
   const firebaseApp = useFirebaseApp()
@@ -43,6 +47,13 @@ export function useUserSettings() {
   const hideTags = computed(() => activeSettings.value.workflow.hideTags)
   const isReady = computed(() => currentUser.value !== undefined)
 
+  if (import.meta.client && !registeredShellBackgroundCacheMount) {
+    registeredShellBackgroundCacheMount = true
+    onMounted(() => {
+      shellBackgroundCacheAllowed.value = true
+    })
+  }
+
   /** Avoids a grid flash while Firestore prefs load; uses last cached preset per user. */
   const effectiveShellBackgroundPreset = computed(() => {
     if (previewSettings.value) {
@@ -50,7 +61,12 @@ export function useUserSettings() {
     }
 
     const uid = currentUser.value?.uid
-    if (import.meta.client && uid && preferencesDocumentPending.value) {
+    if (
+      import.meta.client &&
+      uid &&
+      preferencesDocumentPending.value &&
+      shellBackgroundCacheAllowed.value
+    ) {
       const cached = readCachedShellBackgroundPreset(window.localStorage, uid)
       if (cached) {
         return cached

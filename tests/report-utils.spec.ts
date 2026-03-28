@@ -38,7 +38,6 @@ describe('report utilities', () => {
     const report = validateReportInput({
       title: '  March Client Report  ',
       summary: '  Summary text  ',
-      timezone: 'America/Denver',
       filters: {
         ...baseFilters,
         projectIds: [' project-a ', 'project-a'],
@@ -100,51 +99,49 @@ describe('report utilities', () => {
     ).toBe(true)
   })
 
-  it('clamps report totals to the selected timezone-aware date range and splits overnight days', () => {
+  it('clamps report totals to the UTC date range and splits sessions across UTC midnights', () => {
     const snapshot = buildReportSnapshot({
       filters: {
         ...baseFilters,
-        dateStart: '2026-02-28',
-        dateEnd: '2026-03-01',
+        dateStart: '2026-03-01',
+        dateEnd: '2026-03-02',
       },
-      timezone: 'America/Denver',
       projects,
       tags,
       timeBoxes: [
         {
           id: 'tb-overnight',
-          startTime: new Date('2026-03-01T06:30:00.000Z'),
-          endTime: new Date('2026-03-01T08:00:00.000Z'),
-          notes: 'Overnight support wrap-up',
+          startTime: new Date('2026-03-01T22:00:00.000Z'),
+          endTime: new Date('2026-03-02T02:00:00.000Z'),
+          notes: 'Crosses UTC midnight',
           project: 'project-a',
           tags: ['tag-plan'],
         },
         {
-          id: 'tb-next-day',
-          startTime: new Date('2026-03-01T20:00:00.000Z'),
-          endTime: new Date('2026-03-01T21:00:00.000Z'),
-          notes: 'Afternoon client review',
+          id: 'tb-day2',
+          startTime: new Date('2026-03-02T10:00:00.000Z'),
+          endTime: new Date('2026-03-02T11:00:00.000Z'),
+          notes: 'Morning work',
           project: 'project-b',
           tags: ['tag-review'],
         },
       ],
     })
 
-    expect(snapshot.overview.totalMinutes).toBe(150)
+    expect(snapshot.overview.totalMinutes).toBe(300)
     expect(snapshot.overview.activeDayCount).toBe(2)
     expect(snapshot.dailyRollups.map((rollup) => [rollup.dateKey, rollup.minutes])).toEqual([
-      ['2026-02-28', 30],
       ['2026-03-01', 120],
+      ['2026-03-02', 180],
     ])
-    expect(snapshot.overview.busiestDayDateKey).toBe('2026-03-01')
-    expect(snapshot.sessionGroups[0]?.dateKey).toBe('2026-03-01')
-    expect(snapshot.sessionGroups[1]?.dateKey).toBe('2026-02-28')
+    expect(snapshot.overview.busiestDayDateKey).toBe('2026-03-02')
+    expect(snapshot.sessionGroups[0]?.dateKey).toBe('2026-03-02')
+    expect(snapshot.sessionGroups[1]?.dateKey).toBe('2026-03-01')
   })
 
   it('builds project and tag breakdowns, matrix totals, and context-switch insights', () => {
     const snapshot = buildReportSnapshot({
       filters: baseFilters,
-      timezone: 'America/Denver',
       projects,
       tags,
       timeBoxes: [
@@ -174,8 +171,8 @@ describe('report utilities', () => {
     expect(snapshot.insights.some((insight) => insight.id === 'top-project')).toBe(true)
   })
 
-  it('creates month-to-date defaults in the requested timezone', () => {
-    const report = createDefaultReportInput(new Date('2026-03-21T16:00:00.000Z'), 'America/Denver')
+  it('creates month-to-date defaults using UTC calendar dates', () => {
+    const report = createDefaultReportInput(new Date('2026-03-21T16:00:00.000Z'))
 
     expect(report.title).toBe('Client Report')
     expect(report.filters.dateStart).toBe('2026-03-01')

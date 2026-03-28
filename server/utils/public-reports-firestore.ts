@@ -43,7 +43,6 @@ const toReport = (snapshot: FirebaseFirestore.DocumentSnapshot): Report | null =
     id: snapshot.id,
     title: typeof data.title === 'string' ? data.title : '',
     summary: typeof data.summary === 'string' ? data.summary : '',
-    timezone: typeof data.timezone === 'string' ? data.timezone : 'UTC',
     filters: {
       dateStart: typeof data.filters?.dateStart === 'string' ? data.filters.dateStart : '',
       dateEnd: typeof data.filters?.dateEnd === 'string' ? data.filters.dateEnd : '',

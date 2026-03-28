@@ -9,7 +9,7 @@ import ReportsWorkspace from '~/components/ReportsWorkspace.vue'
 definePageMeta({ layout: 'main-workspace' })
 
 const { hasResolvedViewport, isPhoneMode } = usePhoneMode()
-const shouldHoldReportsWorkspace = computed(() => import.meta.server || !hasResolvedViewport.value)
+const shouldHoldReportsWorkspace = computed(() => !hasResolvedViewport.value)
 </script>
 
 <template>

@@ -69,7 +69,7 @@ export const publishReportDraft = async (
     throw new PublicReportError(404, 'Report not found.')
   }
 
-  const range = getReportRange(report.filters, report.timezone)
+  const range = getReportRange(report.filters)
   const [projects, tags, timeBoxes] = await Promise.all([
     dependencies.getProjects(uid),
     dependencies.getTags(uid),
@@ -77,7 +77,6 @@ export const publishReportDraft = async (
   ])
   const snapshot = buildReportSnapshot({
     filters: report.filters,
-    timezone: report.timezone,
     projects,
     tags,
     timeBoxes,
@@ -153,7 +152,7 @@ export const getPublishedReportByToken = async (
     publishedAtIso: record.publishedAtIso,
     snapshot: {
       ...record.snapshot,
-      sessionGroups: groupReportSessionRows(record.sessionRows, record.snapshot.timezone),
+      sessionGroups: groupReportSessionRows(record.sessionRows),
     },
   }
 }
