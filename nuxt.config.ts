@@ -64,9 +64,17 @@ export default defineNuxtConfig({
       alias: {
         // Workaround: nuxt-vuefire marks firebase-admin as optional peer dep; on Vercel build
         // the resolution can return a stub. Force resolution to the real package.
+        'firebase-admin/app': resolve(
+          process.cwd(),
+          'node_modules/firebase-admin/lib/esm/app/index.js',
+        ),
         'firebase-admin/auth': resolve(
           process.cwd(),
           'node_modules/firebase-admin/lib/esm/auth/index.js',
+        ),
+        'firebase-admin/firestore': resolve(
+          process.cwd(),
+          'node_modules/firebase-admin/lib/esm/firestore/index.js',
         ),
       },
     },

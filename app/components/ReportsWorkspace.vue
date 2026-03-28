@@ -131,8 +131,8 @@ const {
               </div>
             </div>
 
-            <div class="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)]">
-              <div class="flex flex-col gap-4">
+            <div class="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,0.62fr)]">
+              <div class="flex min-w-0 flex-col gap-4">
                 <AppField label="Title">
                   <AppTextInput v-model="draft.title" placeholder="Client Report" />
                 </AppField>
@@ -155,29 +155,27 @@ const {
                 </div>
               </div>
 
-              <div class="grid gap-4">
-                <ContainerCard padding="compact" variant="muted">
-                  <AppFieldLabel as="div">Projects</AppFieldLabel>
-                  <p class="mt-2 text-xs text-text-muted">
-                    Leave all unchecked to include every project.
-                  </p>
-                  <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
-                    <AppFieldInlineChoice v-for="project in sortedProjects" :key="project.id">
-                      <input
-                        :checked="draft.filters.projectIds.includes(project.id)"
-                        type="checkbox"
-                        @change="
-                          setDraftSelection(
-                            'projectIds',
-                            project.id,
-                            ($event.target as HTMLInputElement).checked,
-                          )
-                        "
-                      />
-                      {{ project.name }}
-                    </AppFieldInlineChoice>
-                  </div>
-                </ContainerCard>
+              <div class="min-w-0">
+                <AppFieldLabel as="div">Projects</AppFieldLabel>
+                <p class="mt-2 text-xs text-text-muted">
+                  Leave all unchecked to include every project.
+                </p>
+                <div class="mt-3 flex max-h-56 flex-col gap-2 overflow-auto">
+                  <AppFieldInlineChoice v-for="project in sortedProjects" :key="project.id">
+                    <input
+                      :checked="draft.filters.projectIds.includes(project.id)"
+                      type="checkbox"
+                      @change="
+                        setDraftSelection(
+                          'projectIds',
+                          project.id,
+                          ($event.target as HTMLInputElement).checked,
+                        )
+                      "
+                    />
+                    {{ project.name }}
+                  </AppFieldInlineChoice>
+                </div>
               </div>
             </div>
 
