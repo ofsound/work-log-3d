@@ -269,7 +269,7 @@ const handleCompactRowKeydown = (event: KeyboardEvent) => {
           >
             {{ sessionStartMetaLabel }}
           </div>
-          <div class="text-sm text-text tabular-nums" :style="projectMetaTextStyle">
+          <div class="text-sm text-text tabular-nums" :class="hideProjectChip ? 'mt-2' : ''">
             {{ startTimeFormatted }} &mdash; {{ endTimeFormatted }}
           </div>
         </div>

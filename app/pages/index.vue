@@ -25,6 +25,6 @@ const homeActivityWeeks = computed(() =>
 
 <template>
   <div class="flex h-full min-h-0 flex-col items-center justify-center px-4 py-8">
-    <HomeActivityTimeline :weeks="homeActivityWeeks" :loading="isHomeActivityLoading" />
+    <HomeActivityTimeline v-if="!isHomeActivityLoading" :weeks="homeActivityWeeks" />
   </div>
 </template>
