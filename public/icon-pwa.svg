@@ -1,13 +1,21 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- PWA / home-screen raster source: same artwork as icon-white-not-so-thin.svg but without
-       softShadow, which rasterizes to semi-transparent pixels that read as a light border on iOS. -->
+       softShadow. Layout scaled by 16/13 so the rounded tile (was 832×832 inset 96) fills the
+       1024×1024 viewBox with no outer transparency. -->
   <defs>
-    <linearGradient id="bgGradPwa" x1="96" y1="96" x2="928" y2="928" gradientUnits="userSpaceOnUse">
+    <linearGradient id="bgGradPwa" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#1E6EA3" />
       <stop offset="100%" stop-color="#0A2D4A" />
     </linearGradient>
 
-    <radialGradient id="faceGradPwa" cx="10" cy="11" r="12" gradientUnits="userSpaceOnUse">
+    <!-- Circle center / radius after translate(115.692…,115.692…) scale(34.4615…) on cx=12 cy=14 r=8 -->
+    <radialGradient
+      id="faceGradPwa"
+      cx="529.230769"
+      cy="598.153846"
+      r="275.692308"
+      gradientUnits="userSpaceOnUse"
+    >
       <stop offset="0%" stop-color="#C2E4FF" />
       <stop offset="40%" stop-color="#81C4FF" />
       <stop offset="100%" stop-color="#3A92DF" />
@@ -15,10 +23,26 @@
   </defs>
 
   <g>
-    <rect x="96" y="96" width="832" height="832" rx="184" fill="url(#bgGradPwa)" />
-    <rect x="100" y="100" width="824" height="824" rx="180" fill="none" stroke="#3D9EE4" stroke-opacity="0.4" stroke-width="4" />
+    <rect x="0" y="0" width="1024" height="1024" rx="226.461538" fill="url(#bgGradPwa)" />
+    <rect
+      x="4.923077"
+      y="4.923077"
+      width="1014.153846"
+      height="1014.153846"
+      rx="221.538462"
+      fill="none"
+      stroke="#3D9EE4"
+      stroke-opacity="0.4"
+      stroke-width="4.923077"
+    />
 
-    <g transform="translate(190, 190) scale(28)" stroke="#FFFFFF" stroke-width="1.64" stroke-linecap="round" stroke-linejoin="round">
+    <g
+      transform="translate(115.692308 115.692308) scale(34.461538)"
+      stroke="#FFFFFF"
+      stroke-width="1.64"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <circle cx="12" cy="14" r="8" fill="url(#faceGradPwa)" />
       <line x1="12" y1="2" x2="12" y2="6" />
       <line x1="9.5" y1="1.5" x2="14.5" y2="1.5" stroke-width="2.46" />
