@@ -45,12 +45,7 @@ const cancelCreateAndLoseFocus = (event?: KeyboardEvent) => {
     style="width: 100%; min-width: 100%"
     variant="gradient"
   >
-    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">Tags</div>
-        <div class="mt-1 text-2xl font-bold text-text">Manage tags</div>
-      </div>
-    </div>
+    <div class="mb-6 text-2xl font-bold text-text">Tags</div>
     <div class="flex flex-col gap-2">
       <TagsManagerTag
         v-for="item in sortedAllTags"

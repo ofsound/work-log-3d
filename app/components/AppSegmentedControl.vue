@@ -10,11 +10,14 @@ const props = withDefaults(
   defineProps<{
     activeId: string
     ariaLabel?: string
+    /** With `size="large"`, use medium styling below `sm` and large from `sm` up. */
+    compactBelowSm?: boolean
     items: AppSegmentedControlItem[]
     size?: 'large' | 'medium'
   }>(),
   {
     ariaLabel: undefined,
+    compactBelowSm: false,
     size: 'large',
   },
 )
@@ -39,15 +42,23 @@ const ACTIVE_BUTTON_CLASS_NAME =
 const INACTIVE_BUTTON_CLASS_NAME =
   'cursor-pointer text-text-muted hover:text-text hover:bg-[linear-gradient(135deg,_color-mix(in_srgb,var(--color-surface-strong)_96%,var(--color-header)_4%),_color-mix(in_srgb,var(--color-surface-strong)_92%,var(--color-header)_8%))]'
 
-const containerClassName = computed(
-  () =>
-    `inline-flex border border-border bg-surface-strong shadow-control ${SEGMENTED_CONTROL_SIZE_CLASS_NAMES[props.size].container}`,
-)
+const BUTTON_CHROME_CLASS_NAME =
+  'font-semibold transition-[background-color,color,box-shadow] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none'
 
-const buttonClassName = computed(
-  () =>
-    `font-semibold transition-[background-color,color,box-shadow] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none ${SEGMENTED_CONTROL_SIZE_CLASS_NAMES[props.size].button}`,
-)
+const containerClassName = computed(() => {
+  const shell = 'inline-flex border border-border bg-surface-strong shadow-control'
+  if (props.compactBelowSm && props.size === 'large') {
+    return `${shell} rounded-lg p-0.5 sm:rounded-xl sm:p-1`
+  }
+  return `${shell} ${SEGMENTED_CONTROL_SIZE_CLASS_NAMES[props.size].container}`
+})
+
+const buttonClassName = computed(() => {
+  if (props.compactBelowSm && props.size === 'large') {
+    return `${BUTTON_CHROME_CLASS_NAME} rounded-md px-3 py-1.5 text-xs sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm`
+  }
+  return `${BUTTON_CHROME_CLASS_NAME} ${SEGMENTED_CONTROL_SIZE_CLASS_NAMES[props.size].button}`
+})
 
 const getItemClassName = (id: string) =>
   `${buttonClassName.value} ${id === props.activeId ? ACTIVE_BUTTON_CLASS_NAME : INACTIVE_BUTTON_CLASS_NAME}`

@@ -6,6 +6,7 @@ import CloseIcon from '@/icons/CloseIcon.vue'
 import AppButton from '~/components/AppButton.vue'
 import AppSegmentedControl from '~/components/AppSegmentedControl.vue'
 import WorkspaceSubheaderShell from '~/components/WorkspaceSubheaderShell.vue'
+import { formatSessionsDayPageTitleCompact } from '~/utils/sessions-page-title-format'
 import type { SessionsViewMode } from '~/utils/sessions-route-state'
 
 interface SessionsWorkspaceHeaderSummary {
@@ -15,6 +16,10 @@ interface SessionsWorkspaceHeaderSummary {
 }
 
 const props = defineProps({
+  anchorDate: {
+    type: Date,
+    required: true,
+  },
   calendarHeaderSummary: {
     type: Object as PropType<SessionsWorkspaceHeaderSummary | null>,
     default: null,
@@ -51,37 +56,223 @@ const periodNavigationRowClassName = 'flex min-h-9 items-center gap-2'
 const handleModeSelect = (modeId: string) => {
   emit('select-mode', modeId as SessionsViewMode)
 }
+
+const dayTitleCompact = computed(() => formatSessionsDayPageTitleCompact(props.anchorDate))
+
+const isDayWithCalendarSummary = computed(
+  () => props.currentMode === 'day' && props.calendarHeaderSummary !== null,
+)
+
+const durationSummaryPillClassName =
+  'rounded-md bg-badge-duration px-2 py-1 text-xs font-bold tracking-tight text-badge-duration-text tabular-nums sm:rounded-lg sm:px-3 sm:py-1.5 sm:text-sm'
 </script>
 
 <template>
   <WorkspaceSubheaderShell layout="fluid" variant="neutral">
     <div class="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <div class="text-3xl font-bold tracking-tight">{{ pageTitle }}</div>
-        <div v-if="calendarHeaderSummary" class="mt-3 flex flex-wrap gap-2">
-          <div
-            class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums"
-          >
-            {{ calendarHeaderSummary.durationLabel }} hrs
+        <template v-if="currentMode === 'day' && calendarHeaderSummary">
+          <div class="flex flex-wrap items-center gap-2 sm:hidden">
+            <span
+              class="text-xl font-bold tracking-tight"
+              data-testid="sessions-header-day-title-short"
+              >{{ dayTitleCompact }}</span
+            >
+            <div
+              class="shrink-0"
+              :class="durationSummaryPillClassName"
+              data-testid="sessions-header-day-duration-inline"
+            >
+              {{ calendarHeaderSummary.durationLabel }} hrs
+            </div>
           </div>
           <div
-            class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+            class="mt-3 flex flex-row flex-wrap items-center justify-start gap-2 sm:hidden"
+            data-testid="sessions-header-day-sub-sm-controls"
           >
-            {{ calendarHeaderSummary.count }} sessions
+            <div v-if="showPeriodNavigation" :class="periodNavigationRowClassName">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"
+                aria-label="Previous period"
+                @click="emit('navigate-period', -1)"
+              >
+                <svg
+                  class="h-5 w-5 shrink-0"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <AppButton size="sm" variant="secondary" @click="emit('go-today')">Today</AppButton>
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"
+                aria-label="Next period"
+                @click="emit('navigate-period', 1)"
+              >
+                <svg
+                  class="h-5 w-5 shrink-0"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+            <AppSegmentedControl
+              class="shrink-0"
+              :active-id="currentMode"
+              aria-label="Sessions view modes"
+              compact-below-sm
+              :items="segmentedItems"
+              size="large"
+              @select="handleModeSelect"
+            />
           </div>
-          <div
-            class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
-          >
-            {{ calendarHeaderSummary.projectCount }} projects
+          <div class="hidden flex-col gap-3 sm:flex lg:hidden">
+            <div class="flex flex-row flex-wrap items-start justify-start gap-3">
+              <div class="min-w-0 text-xl font-bold tracking-tight sm:text-3xl">
+                <span data-testid="sessions-header-day-title-long">{{ pageTitle }}</span>
+              </div>
+              <AppSegmentedControl
+                class="shrink-0"
+                :active-id="currentMode"
+                aria-label="Sessions view modes"
+                compact-below-sm
+                :items="segmentedItems"
+                size="large"
+                @select="handleModeSelect"
+              />
+            </div>
+            <div v-if="showPeriodNavigation" :class="periodNavigationRowClassName">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"
+                aria-label="Previous period"
+                @click="emit('navigate-period', -1)"
+              >
+                <svg
+                  class="h-5 w-5 shrink-0"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <AppButton size="sm" variant="secondary" @click="emit('go-today')">Today</AppButton>
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center justify-center rounded-md border border-button-secondary-border bg-button-secondary p-1.5 text-button-secondary-text hover:bg-button-secondary-hover"
+                aria-label="Next period"
+                @click="emit('navigate-period', 1)"
+              >
+                <svg
+                  class="h-5 w-5 shrink-0"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <div :class="durationSummaryPillClassName">
+                {{ calendarHeaderSummary.durationLabel }} hrs
+              </div>
+              <div
+                class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+              >
+                {{ calendarHeaderSummary.count }} sessions
+              </div>
+              <div
+                class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+              >
+                {{ calendarHeaderSummary.projectCount }} projects
+              </div>
+            </div>
           </div>
-        </div>
+          <div class="hidden lg:flex lg:flex-col lg:gap-3">
+            <div class="text-3xl font-bold tracking-tight">
+              {{ pageTitle }}
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <div :class="durationSummaryPillClassName">
+                {{ calendarHeaderSummary.durationLabel }} hrs
+              </div>
+              <div
+                class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+              >
+                {{ calendarHeaderSummary.count }} sessions
+              </div>
+              <div
+                class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+              >
+                {{ calendarHeaderSummary.projectCount }} projects
+              </div>
+            </div>
+          </div>
+        </template>
 
-        <div v-else-if="currentMode === 'search'" class="mt-3 flex flex-wrap items-center gap-2">
-          <div
-            class="rounded-lg bg-badge-duration px-3 py-1.5 text-sm font-bold tracking-tight text-badge-duration-text tabular-nums"
-          >
-            {{ listSummary.durationLabel }} hrs
+        <template v-else-if="currentMode === 'day'">
+          <div class="text-xl font-bold tracking-tight sm:text-3xl">
+            <span class="sm:hidden" data-testid="sessions-header-day-title-short">{{
+              dayTitleCompact
+            }}</span>
+            <span class="hidden sm:inline" data-testid="sessions-header-day-title-long">{{
+              pageTitle
+            }}</span>
           </div>
+        </template>
+
+        <template v-else>
+          <div class="text-xl font-bold tracking-tight sm:text-3xl">
+            {{ pageTitle }}
+          </div>
+          <div v-if="calendarHeaderSummary" class="mt-3 flex flex-wrap gap-2">
+            <div :class="durationSummaryPillClassName">
+              {{ calendarHeaderSummary.durationLabel }} hrs
+            </div>
+            <div
+              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+            >
+              {{ calendarHeaderSummary.count }} sessions
+            </div>
+            <div
+              class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
+            >
+              {{ calendarHeaderSummary.projectCount }} projects
+            </div>
+          </div>
+        </template>
+
+        <div v-if="currentMode === 'search'" class="mt-3 flex flex-wrap items-center gap-2">
+          <div :class="durationSummaryPillClassName">{{ listSummary.durationLabel }} hrs</div>
           <div
             class="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-sm font-semibold text-text"
           >
@@ -105,10 +296,14 @@ const handleModeSelect = (modeId: string) => {
         </div>
       </div>
 
-      <div class="flex flex-col items-end gap-2">
+      <div
+        class="flex flex-col items-end gap-2"
+        :class="isDayWithCalendarSummary ? 'max-sm:hidden sm:hidden lg:flex' : ''"
+      >
         <AppSegmentedControl
           :active-id="currentMode"
           aria-label="Sessions view modes"
+          compact-below-sm
           :items="segmentedItems"
           size="large"
           @select="handleModeSelect"

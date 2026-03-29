@@ -80,4 +80,29 @@ describe('AppSegmentedControl', () => {
     expect(activeButton.classes()).toContain('py-1.5')
     expect(activeButton.classes()).toContain('text-xs')
   })
+
+  it('applies compact-below-sm large sizing (medium default, large from sm)', () => {
+    const wrapper = mount(AppSegmentedControl, {
+      props: {
+        activeId: 'day',
+        compactBelowSm: true,
+        items,
+        size: 'large',
+      },
+    })
+
+    const activeButton = wrapper.findAll('button')[0]!
+
+    expect(wrapper.classes()).toContain('rounded-lg')
+    expect(wrapper.classes()).toContain('p-0.5')
+    expect(wrapper.classes()).toContain('sm:rounded-xl')
+    expect(wrapper.classes()).toContain('sm:p-1')
+    expect(activeButton.classes()).toContain('rounded-md')
+    expect(activeButton.classes()).toContain('px-3')
+    expect(activeButton.classes()).toContain('text-xs')
+    expect(activeButton.classes()).toContain('sm:rounded-lg')
+    expect(activeButton.classes()).toContain('sm:px-4')
+    expect(activeButton.classes()).toContain('sm:py-2')
+    expect(activeButton.classes()).toContain('sm:text-sm')
+  })
 })

@@ -101,6 +101,7 @@ watch(
 <template>
   <div class="flex h-full min-h-0 flex-col overflow-hidden">
     <SessionsWorkspaceHeader
+      :anchor-date="anchorDate"
       :calendar-header-summary="calendarHeaderSummary"
       :current-mode="currentMode"
       :list-summary="listSummary"

@@ -230,6 +230,7 @@ const handleOpenSessionFromMonth = async (payload: { day: Date; sessionId: strin
   >
     <div ref="sessionsHeaderRef" class="shrink-0">
       <SessionsWorkspaceHeader
+        :anchor-date="anchorDate"
         :calendar-header-summary="calendarHeaderSummary"
         :current-mode="currentMode"
         :list-summary="listSummary"

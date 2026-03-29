@@ -12,10 +12,13 @@ const items = [
   { id: 'search', label: 'Search' },
 ] as const
 
+const anchorDateFixture = new Date(2026, 0, 15)
+
 describe('SessionsWorkspaceHeader', () => {
   it('renders calendar-mode summary badges and period navigation controls', () => {
     const wrapper = mount(SessionsWorkspaceHeader, {
       props: {
+        anchorDate: anchorDateFixture,
         calendarHeaderSummary: {
           count: 8,
           durationLabel: '14.5',
@@ -62,6 +65,7 @@ describe('SessionsWorkspaceHeader', () => {
   it('renders search-mode summary, clear action, and hides period navigation', async () => {
     const wrapper = mount(SessionsWorkspaceHeader, {
       props: {
+        anchorDate: anchorDateFixture,
         calendarHeaderSummary: null,
         currentMode: 'search',
         listSummary: {
@@ -105,6 +109,7 @@ describe('SessionsWorkspaceHeader', () => {
   it('renders year-mode summary badges without period navigation', () => {
     const wrapper = mount(SessionsWorkspaceHeader, {
       props: {
+        anchorDate: anchorDateFixture,
         calendarHeaderSummary: {
           count: 56,
           durationLabel: '66.16',
@@ -139,9 +144,46 @@ describe('SessionsWorkspaceHeader', () => {
     expect(wrapper.get('[data-test="nav-spacer"]').attributes('aria-hidden')).toBe('true')
   })
 
-  it('emits selected mode ids through the typed facade', async () => {
+  it('in day+calendar mode, places duration beside compact title on narrow and full badges from sm', () => {
+    const dayAnchor = new Date(2026, 2, 28)
     const wrapper = mount(SessionsWorkspaceHeader, {
       props: {
+        anchorDate: dayAnchor,
+        calendarHeaderSummary: {
+          count: 1,
+          durationLabel: '0.01',
+          projectCount: 1,
+        },
+        currentMode: 'day',
+        listSummary: {
+          count: 1,
+          durationLabel: '0.01',
+          projectCount: 1,
+        },
+        pageTitle: 'Saturday, March 28, 2026',
+        sessionViewItems: items,
+      },
+      global: {
+        stubs: {
+          AppButton: true,
+          AppSegmentedControl: true,
+          CloseIcon: true,
+        },
+      },
+    })
+
+    expect(wrapper.get('[data-testid="sessions-header-day-duration-inline"]').text()).toBe(
+      '0.01 hrs',
+    )
+    expect(wrapper.text()).toContain('1 sessions')
+    expect(wrapper.text()).toContain('1 projects')
+  })
+
+  it('emits selected mode ids through the typed facade', async () => {
+    const dayAnchor = new Date(2026, 2, 28)
+    const wrapper = mount(SessionsWorkspaceHeader, {
+      props: {
+        anchorDate: dayAnchor,
         calendarHeaderSummary: null,
         currentMode: 'day',
         listSummary: {
@@ -149,7 +191,7 @@ describe('SessionsWorkspaceHeader', () => {
           durationLabel: '1.0',
           projectCount: 1,
         },
-        pageTitle: 'Tuesday',
+        pageTitle: 'Saturday, March 28, 2026',
         sessionViewItems: items,
       },
       global: {
@@ -165,6 +207,13 @@ describe('SessionsWorkspaceHeader', () => {
         },
       },
     })
+
+    expect(wrapper.get('[data-testid="sessions-header-day-title-short"]').text()).toBe(
+      'Sat 3/28/2026',
+    )
+    expect(wrapper.get('[data-testid="sessions-header-day-title-long"]').text()).toBe(
+      'Saturday, March 28, 2026',
+    )
 
     await wrapper.get('[data-test="segmented"]').trigger('click')
 

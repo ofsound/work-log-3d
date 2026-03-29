@@ -40,7 +40,7 @@ const innerClassName = computed(() => [
     :class="[WORKSPACE_SUBHEADER_CARD_CLASS_NAME, WORKSPACE_SUBHEADER_VARIANT_CLASS_NAMES[variant]]"
     :style="surfaceStyle"
   >
-    <div :class="innerClassName">
+    <div data-testid="workspace-subheader-inner" :class="innerClassName">
       <slot />
 
       <div v-if="$slots.footer" :class="WORKSPACE_SUBHEADER_FOOTER_CLASS_NAME">

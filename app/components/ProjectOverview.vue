@@ -140,21 +140,29 @@ const lastActivityLabel = computed(() => {
 })
 const headerBadges = computed(() => {
   const badges: {
+    compactBelowSm?: boolean
+    hideBelowSm?: boolean
     label: string
     style?: Record<string, string>
     variant?: 'outline' | 'accent'
   }[] = [
     {
+      compactBelowSm: true,
       label: `${projectTimeBoxesTotalDuration.value} hrs`,
       style: durationBadgeStyle.value as Record<string, string>,
     },
     {
+      compactBelowSm: true,
       label: `${rawProjectTimeBoxes.value.length} sessions`,
       variant: 'outline',
     },
   ]
   if (lastActivityLabel.value) {
-    badges.push({ label: `Last activity ${lastActivityLabel.value}`, variant: 'outline' })
+    badges.push({
+      hideBelowSm: true,
+      label: `Last activity ${lastActivityLabel.value}`,
+      variant: 'outline',
+    })
   }
   return badges
 })
@@ -426,6 +434,7 @@ onUnmounted(() => {
     <ProjectWorkspaceHeader
       :active-mode="currentMode"
       :badges="headerBadges"
+      compact-title-below-sm
       :error-message="mutationErrorMessage"
       :mode-toggle-styles="modeToggleStyles"
       :tabs="projectHeaderTabs"

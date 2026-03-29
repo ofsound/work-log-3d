@@ -15,7 +15,7 @@ export const WORKSPACE_SUBHEADER_CARD_CLASS_NAME =
   'relative z-10 w-full !rounded-none border-0 !shadow-[var(--shadow-workspace-subheader)]'
 
 export const WORKSPACE_SUBHEADER_INNER_CLASS_NAME =
-  'w-full px-[var(--spacing-workspace-subheader-x)] py-[var(--spacing-workspace-subheader-y)]'
+  'w-full px-6 py-[var(--spacing-workspace-subheader-y)] sm:px-[var(--spacing-workspace-subheader-x)]'
 
 export const WORKSPACE_SUBHEADER_FOOTER_CLASS_NAME = 'mt-4 w-full'
 

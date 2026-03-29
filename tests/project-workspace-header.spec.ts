@@ -42,4 +42,44 @@ describe('ProjectWorkspaceHeader', () => {
 
     expect(wrapper.emitted('select-mode')).toEqual([['edit']])
   })
+
+  it('supports opt-in compact mobile title and badge treatments without changing defaults', () => {
+    const wrapper = mount(ProjectWorkspaceHeader, {
+      props: {
+        badges: [
+          {
+            compactBelowSm: true,
+            label: '12.0 hrs',
+            style: { backgroundColor: 'rgb(37, 99, 235)' },
+          },
+          {
+            compactBelowSm: true,
+            label: '8 sessions',
+            variant: 'outline',
+          },
+          {
+            hideBelowSm: true,
+            label: 'Last activity Mar 24, 2026',
+            variant: 'outline',
+          },
+        ],
+        compactTitleBelowSm: true,
+        title: 'Client Portal',
+      },
+    })
+
+    const title = wrapper.get('[data-testid="project-workspace-header-title"]')
+    expect(title.classes()).toContain('text-xl')
+    expect(title.classes()).toContain('sm:text-3xl')
+
+    const badges = wrapper.findAll('[data-testid="project-workspace-header-badge"]')
+    expect(badges).toHaveLength(3)
+    expect(badges[0]!.classes()).toContain('px-2')
+    expect(badges[0]!.classes()).toContain('text-xs')
+    expect(badges[0]!.classes()).toContain('sm:text-sm')
+    expect(badges[1]!.classes()).toContain('px-2')
+    expect(badges[1]!.classes()).toContain('text-xs')
+    expect(badges[2]!.classes()).toContain('hidden')
+    expect(badges[2]!.classes()).toContain('sm:block')
+  })
 })

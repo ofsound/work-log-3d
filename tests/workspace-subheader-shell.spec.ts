@@ -24,7 +24,9 @@ describe('WorkspaceSubheaderShell', () => {
       expect(wrapper.classes()).toContain(token)
     }
 
-    const inner = wrapper.get('.px-\\[var\\(--spacing-workspace-subheader-x\\)\\]')
+    const inner = wrapper.get('[data-testid="workspace-subheader-inner"]')
+    expect(inner.classes()).toContain('px-6')
+    expect(inner.classes()).toContain('sm:px-[var(--spacing-workspace-subheader-x)]')
     for (const token of WORKSPACE_SUBHEADER_LAYOUT_CLASS_NAMES.fluid.split(' ')) {
       expect(inner.classes()).toContain(token)
     }
@@ -50,7 +52,9 @@ describe('WorkspaceSubheaderShell', () => {
       expect(wrapper.classes()).toContain(token)
     }
 
-    const inner = wrapper.get('.px-\\[var\\(--spacing-workspace-subheader-x\\)\\]')
+    const inner = wrapper.get('[data-testid="workspace-subheader-inner"]')
+    expect(inner.classes()).toContain('px-6')
+    expect(inner.classes()).toContain('sm:px-[var(--spacing-workspace-subheader-x)]')
     for (const token of WORKSPACE_SUBHEADER_LAYOUT_CLASS_NAMES.content.split(' ')) {
       expect(inner.classes()).toContain(token)
     }

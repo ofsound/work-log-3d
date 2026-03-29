@@ -10,6 +10,8 @@ import {
 } from '~/utils/project-route-state'
 
 interface ProjectWorkspaceHeaderBadge {
+  compactBelowSm?: boolean
+  hideBelowSm?: boolean
   label: string
   style?: Record<string, string>
   variant?: 'accent' | 'outline'
@@ -28,6 +30,10 @@ const props = defineProps({
   headerStyle: {
     type: Object as PropType<Record<string, string>>,
     default: () => ({}),
+  },
+  compactTitleBelowSm: {
+    type: Boolean,
+    default: false,
   },
   modeToggleStyles: {
     type: Object as PropType<{
@@ -61,10 +67,21 @@ const outlineBadgeClassName = computed(() =>
     : 'rounded-full border border-border px-3 py-1.5 text-sm font-semibold text-text-muted',
 )
 
-const getBadgeClassName = (badge: ProjectWorkspaceHeaderBadge) =>
+const titleClassName = computed(() =>
+  props.compactTitleBelowSm
+    ? 'text-xl font-bold tracking-tight sm:text-3xl'
+    : 'text-3xl font-bold tracking-tight',
+)
+
+const getBadgeClassName = (badge: ProjectWorkspaceHeaderBadge) => [
   badge.variant === 'outline'
     ? outlineBadgeClassName.value
-    : 'rounded-full border px-3 py-1.5 font-data text-sm tracking-wide'
+    : 'rounded-full border px-3 py-1.5 font-data text-sm tracking-wide',
+  badge.compactBelowSm
+    ? 'px-2 py-1 text-xs tracking-tight sm:px-3 sm:py-1.5 sm:text-sm sm:tracking-wide'
+    : '',
+  badge.hideBelowSm ? 'hidden sm:block' : '',
+]
 
 const getModeButtonStyle = (tab: ProjectWorkspaceTab) => {
   const mt = props.modeToggleStyles
@@ -95,12 +112,15 @@ const getModeButtonClassName = (tab: ProjectWorkspaceTab) => {
     <div>
       <div class="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex flex-col gap-3">
-          <div class="text-3xl font-bold tracking-tight">{{ title }}</div>
+          <div data-testid="project-workspace-header-title" :class="titleClassName">
+            {{ title }}
+          </div>
 
           <div v-if="badges.length > 0" class="flex flex-wrap items-center gap-2">
             <div
               v-for="badge in badges"
               :key="badge.label"
+              data-testid="project-workspace-header-badge"
               :class="getBadgeClassName(badge)"
               :style="badge.style"
             >
