@@ -6,6 +6,12 @@ import { useRoute } from '#imports'
 import { useMinuteVerticalDrag } from '~/composables/useMinuteVerticalDrag'
 import { useTimerService } from '~/composables/useTimerService'
 import { useUserSettings } from '~/composables/useUserSettings'
+import {
+  TIMER_EXTENSION_BUTTON_MAX_SM_CLASSES,
+  TIMER_PRIMARY_ACTION_MAX_SM_CLASSES,
+  TIMER_READOUT_MAX_SM_CENTER_WRAPPER_CLASSES,
+  TIMER_READOUT_SHELL_CLASSES,
+} from '~/utils/timer-readout'
 import { toUserSettings, type FirebaseUserSettingsDocument } from '~/utils/worklog-firebase'
 import {
   cloneUserSettings,
@@ -453,50 +459,54 @@ watch(
 
 <template>
   <ContainerCard
-    class="relative flex w-full items-center justify-between gap-7 rounded-sm pt-7 pb-4"
+    class="relative flex w-full items-center justify-between gap-3 rounded-sm pt-10 pb-4 sm:gap-7 sm:pt-7"
     padding="comfortable"
     variant="timer"
   >
     <div class="flex min-w-0 flex-1 items-center gap-3">
-      <div
-        class="relative flex h-14 shrink-0 items-center rounded-sm border border-button-secondary-border bg-button-secondary px-2.5 font-data text-5xl leading-none font-bold whitespace-nowrap text-button-secondary-text tabular-nums"
-      >
+      <div :class="TIMER_READOUT_SHELL_CLASSES">
         <TimerCancelButton @click="handleCancel" />
-        <div
-          class="flex touch-none flex-nowrap items-center self-stretch"
-          :class="
-            minuteDragActive
-              ? 'cursor-grabbing select-none'
-              : minuteColumnInteractive
-                ? 'cursor-ns-resize'
-                : 'cursor-default'
-          "
-          @pointerdown="handleMinuteColumnPointerDown"
-        >
-          <template v-if="!hideIdleTimeUntilPrefsLoaded">
-            <div>
-              <input
-                v-if="!timerShowsReadOnlyProgress"
-                id="dynamicMinutes"
-                v-model="dynamicMinutes"
-                type="text"
-                class="m-0 w-14 border-0 bg-transparent p-0 text-right leading-none outline-none select-text"
-                @keyup.enter="($event.target as HTMLElement).blur()"
-                @keyup.esc="($event.target as HTMLElement).blur()"
-                @blur="onMinutesBlur"
-              />
-              <div v-else class="w-14 text-right leading-none">
-                {{ countdownMinutesDisplay }}
+        <div :class="TIMER_READOUT_MAX_SM_CENTER_WRAPPER_CLASSES">
+          <div
+            class="flex touch-none flex-nowrap items-center self-stretch"
+            :class="
+              minuteDragActive
+                ? 'cursor-grabbing select-none'
+                : minuteColumnInteractive
+                  ? 'cursor-ns-resize'
+                  : 'cursor-default'
+            "
+            @pointerdown="handleMinuteColumnPointerDown"
+          >
+            <template v-if="!hideIdleTimeUntilPrefsLoaded">
+              <div>
+                <input
+                  v-if="!timerShowsReadOnlyProgress"
+                  id="dynamicMinutes"
+                  v-model="dynamicMinutes"
+                  type="text"
+                  class="m-0 w-10 min-w-0 border-0 bg-transparent p-0 text-right leading-none outline-none select-text sm:w-14"
+                  @keyup.enter="($event.target as HTMLElement).blur()"
+                  @keyup.esc="($event.target as HTMLElement).blur()"
+                  @blur="onMinutesBlur"
+                />
+                <div v-else class="w-10 min-w-0 text-right leading-none sm:w-14">
+                  {{ countdownMinutesDisplay }}
+                </div>
               </div>
-            </div>
-            <span class="relative -top-1">:</span>
-            {{ secondsProgress }}
-          </template>
+              <span class="relative -top-1">:</span>
+              {{ secondsProgress }}
+            </template>
+          </div>
         </div>
       </div>
-      <div v-if="timerShowsAddTimeButtons" class="flex h-14 shrink-0 flex-col justify-center gap-2">
+      <div
+        v-if="timerShowsAddTimeButtons"
+        class="flex h-12 shrink-0 flex-col justify-center gap-1 sm:h-14 sm:gap-2"
+      >
         <AppButton
           data-testid="countdown-add-5"
+          :class="TIMER_EXTENSION_BUTTON_MAX_SM_CLASSES"
           size="xs"
           variant="secondary"
           @click="extendCountdownByFiveMinutes"
@@ -505,6 +515,7 @@ watch(
         </AppButton>
         <AppButton
           data-testid="countdown-add-10"
+          :class="TIMER_EXTENSION_BUTTON_MAX_SM_CLASSES"
           size="xs"
           variant="secondary"
           @click="extendCountdownByTenMinutes"
@@ -514,7 +525,7 @@ watch(
       </div>
       <div
         v-if="showCountdownSummary"
-        class="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left text-xs leading-tight text-text-muted"
+        class="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left text-xs leading-tight text-text-muted max-sm:hidden"
       >
         <span v-if="countdownConsumedExtensionDisplay && !timerIsCompleted">
           {{ countdownConsumedExtensionDisplay }} elapsed untracked
@@ -534,16 +545,29 @@ watch(
         </span>
       </div>
     </div>
-    <div class="flex shrink-0 flex-col items-end gap-2">
-      <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+    <div class="flex shrink-0 flex-col items-end gap-1 sm:gap-2">
+      <div class="flex shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2">
         <TimerButton
           v-if="!timerIsRunning && !timerIsPaused && !timerIsCompleted"
+          :class="TIMER_PRIMARY_ACTION_MAX_SM_CLASSES"
           @click="startTimer"
         >
           Start
         </TimerButton>
-        <TimerButton v-if="timerIsRunning && !timerIsPaused" @click="pause">Pause</TimerButton>
-        <TimerButton v-if="timerIsPaused" @click="resume">Resume</TimerButton>
+        <TimerButton
+          v-if="timerIsRunning && !timerIsPaused"
+          :class="TIMER_PRIMARY_ACTION_MAX_SM_CLASSES"
+          @click="pause"
+        >
+          Pause
+        </TimerButton>
+        <TimerButton
+          v-if="timerIsPaused"
+          :class="TIMER_PRIMARY_ACTION_MAX_SM_CLASSES"
+          @click="resume"
+        >
+          Resume
+        </TimerButton>
       </div>
     </div>
     <span

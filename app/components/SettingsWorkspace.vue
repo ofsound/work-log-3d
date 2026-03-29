@@ -11,6 +11,7 @@ import { useSettingsAccount } from '~/composables/useSettingsAccount'
 import { useSettingsDraft } from '~/composables/useSettingsDraft'
 import { useTrayShortcutsEditor } from '~/composables/useTrayShortcutsEditor'
 import { USER_SETTINGS_BACKGROUND_OPTIONS } from '~/utils/user-settings'
+import { BELOW_SM_VIEWPORT_MEDIA_QUERY } from '~/utils/viewport'
 import type { FirebaseProjectDocument, FirebaseTagDocument } from '~/utils/worklog-firebase'
 import { toProjects, toTags } from '~/utils/worklog-firebase'
 import { sortNamedEntities } from '~~/shared/worklog'
@@ -20,7 +21,7 @@ const runtimeConfig = useRuntimeConfig()
 const { projectsCollection, tagsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
-const isBelowSmViewport = useMediaQuery('(max-width: 639px)', false)
+const isBelowSmViewport = useMediaQuery(BELOW_SM_VIEWPORT_MEDIA_QUERY, false)
 
 const draftState = useSettingsDraft()
 const account = useSettingsAccount()

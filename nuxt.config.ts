@@ -64,10 +64,10 @@ export default defineNuxtConfig({
     admin: isElectronBuild
       ? undefined
       : {
-        options: {
-          projectId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_PROJECT_ID ?? '',
+          options: {
+            projectId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_PROJECT_ID ?? '',
+          },
         },
-      },
   },
   typescript: {
     typeCheck: false, // use `npm run typecheck` or `npm run check`

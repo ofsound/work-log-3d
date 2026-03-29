@@ -11,6 +11,7 @@ import ListLayoutIcon from '~/icons/ListLayoutIcon.vue'
 import { sortNamedEntities } from '~~/shared/worklog'
 import { toProjects } from '~/utils/worklog-firebase'
 import { getProjectNewPath } from '~/utils/worklog-routes'
+import { BELOW_SM_VIEWPORT_MEDIA_QUERY } from '~/utils/viewport'
 
 import { coerceProjectsPageViewQuery, type ProjectsPageLayout } from '~/utils/projects-page-layout'
 import type { Project } from '~~/shared/worklog'
@@ -20,7 +21,7 @@ const { projectsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
 const route = useRoute()
 const router = useRouter()
-const isBelowSmViewport = useMediaQuery('(max-width: 639px)', false)
+const isBelowSmViewport = useMediaQuery(BELOW_SM_VIEWPORT_MEDIA_QUERY, false)
 
 /** Grid is the default; `?view=list` opts into list. Omit `view` for grid. */
 const projectsLayout = computed<ProjectsPageLayout>(() =>

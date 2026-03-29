@@ -218,8 +218,8 @@ const heroValueBlockClass = computed(() => {
     }
 
     return widePrimaryRow
-      ? 'mt-[calc(0.75rem+4px)] [@container(min-width:38rem)]:mt-0'
-      : 'mt-[calc(0.75rem+4px)]'
+      ? 'mt-[calc(0.75rem+4px)] max-sm:mt-0 [@container(min-width:38rem)]:mt-0'
+      : 'mt-[calc(0.75rem+4px)] max-sm:mt-0'
   }
 
   if (isPanelSurface.value) {
@@ -231,20 +231,20 @@ const heroValueBlockClass = computed(() => {
   }
 
   return widePrimaryRow
-    ? 'mt-[calc(0.75rem+4px)] [@container(min-width:38rem)]:mt-0'
-    : 'mt-[calc(0.75rem+4px)]'
+    ? 'mt-[calc(0.75rem+4px)] max-sm:mt-0 [@container(min-width:38rem)]:mt-0'
+    : 'mt-[calc(0.75rem+4px)] max-sm:mt-0'
 })
 
 const heroValueTextClass = computed(() =>
   isThinLayout.value
-    ? 'min-w-0 text-3xl leading-tight font-bold tracking-tight tabular-nums'
-    : 'min-w-0 text-4xl leading-none font-bold tracking-tight tabular-nums',
+    ? 'min-w-0 text-2xl leading-tight font-bold tracking-tight tabular-nums sm:text-3xl'
+    : 'min-w-0 text-2xl leading-tight font-bold tracking-tight tabular-nums sm:text-4xl sm:leading-none',
 )
 
 const heroPlaceholderTextClass = computed(() =>
   isThinLayout.value
-    ? 'min-w-0 text-3xl leading-tight font-bold tracking-tight text-text-muted tabular-nums'
-    : 'min-w-0 text-4xl leading-none font-bold tracking-tight text-text-muted tabular-nums',
+    ? 'min-w-0 text-2xl leading-tight font-bold tracking-tight text-text-muted tabular-nums sm:text-3xl'
+    : 'min-w-0 text-2xl leading-tight font-bold tracking-tight text-text-muted tabular-nums sm:text-4xl sm:leading-none',
 )
 
 const projectTagsSectionClass = computed(() => {
@@ -306,7 +306,12 @@ const tagsListClass = computed(() =>
       >
         <div :class="isPanelSurface ? 'px-5 pb-5' : ''">
           <section data-testid="timebox-editor-primary-section" :class="primarySectionClass">
-            <AppField as="div" class="min-w-0 self-start" density="comfortable" label="Duration">
+            <AppField
+              as="div"
+              class="w-full min-w-0 self-start max-sm:max-w-32 sm:w-auto"
+              density="comfortable"
+              label="Duration"
+            >
               <!-- Block wrapper: avoids a single flex row inheriting stretched height from the grid row. -->
               <div class="rounded-md border border-input-border bg-input px-3 py-3">
                 <div class="flex min-w-0 items-end gap-2">
@@ -326,7 +331,7 @@ const tagsListClass = computed(() =>
                     />
                   </div>
                   <span
-                    class="inline-block -translate-y-1 pb-0.5 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
+                    class="inline-block shrink-0 -translate-y-1 pb-0.5 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
                     >min</span
                   >
                 </div>
@@ -334,7 +339,7 @@ const tagsListClass = computed(() =>
             </AppField>
 
             <div :class="heroColumnClass">
-              <div aria-live="polite" class="flex min-w-0 flex-col gap-[1.85rem]">
+              <div aria-live="polite" class="flex min-w-0 flex-col gap-3 sm:gap-[1.85rem]">
                 <AppFieldLabel v-if="sessionTimeHero && !isPanelSurface">Start & End</AppFieldLabel>
                 <div class="flex min-w-0 flex-col gap-1" :class="heroValueBlockClass">
                   <p v-if="sessionTimeHero" :class="heroValueTextClass">
@@ -409,7 +414,7 @@ const tagsListClass = computed(() =>
           <div
             data-testid="timebox-editor-project-tags-section"
             class="min-w-0 border-t border-border-subtle"
-            :class="[projectTagsSectionClass, isPanelSurface ? 'mt-5' : 'md:mt-5']"
+            :class="[projectTagsSectionClass, isPanelSurface ? 'mt-5' : 'max-sm:mt-4 md:mt-5']"
           >
             <section class="flex min-w-0 flex-col" :class="isThinLayout ? 'gap-2.5' : 'gap-3'">
               <AppFieldLabel as="div">Project</AppFieldLabel>
