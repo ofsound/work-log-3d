@@ -50,9 +50,9 @@ const snapshot = ref({
   isActive: false,
 })
 
-;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-  useRoute: () => ({ path: '/new' }),
-}
+  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+    useRoute: () => ({ path: '/new' }),
+  }
 
 vi.mock('~/composables/useMinuteVerticalDrag', () => ({
   useMinuteVerticalDrag: (options: UseMinuteVerticalDragOptions) => {
@@ -319,6 +319,53 @@ describe('CountdownTimer', () => {
     await nextTick()
 
     expect(wrapper.find('#dynamicMinutes').exists()).toBe(false)
+
+    snapshot.value = {
+      mode: null,
+      status: 'idle',
+      startedAtMs: null,
+      durationSeconds: null,
+      originalDurationSeconds: null,
+      pausedAtMs: null,
+      accumulatedPauseMs: 0,
+      endedAtMs: null,
+      lastExtensionConsumedSeconds: 0,
+      display: '00:00',
+      elapsedSeconds: 0,
+      remainingSeconds: null,
+      completionGapSeconds: null,
+      isActive: false,
+    }
+    await nextTick()
+
+    expect((wrapper.get('#dynamicMinutes').element as HTMLInputElement).value).toBe('30')
+  })
+
+  it('restores the saved default minutes when a running countdown returns to idle (e.g. tray reset)', async () => {
+    rawSettingsRef.value = buildRawDoc(30)
+
+    const wrapper = mountCountdownTimer()
+    await nextTick()
+
+    snapshot.value = {
+      mode: 'countdown',
+      status: 'running',
+      startedAtMs: 60_000,
+      durationSeconds: 300,
+      originalDurationSeconds: 300,
+      pausedAtMs: null,
+      accumulatedPauseMs: 0,
+      endedAtMs: null,
+      lastExtensionConsumedSeconds: 0,
+      display: '05:00',
+      elapsedSeconds: 0,
+      remainingSeconds: 300,
+      completionGapSeconds: null,
+      isActive: true,
+    }
+    await nextTick()
+
+    expect(wrapper.text()).toContain('05')
 
     snapshot.value = {
       mode: null,

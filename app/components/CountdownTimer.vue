@@ -327,6 +327,11 @@ watch(
       return
     }
 
+    if (previousSnapshot?.mode === 'countdown' && nextSnapshot.status === 'idle') {
+      resetIdleMinutesToSavedDefault()
+      return
+    }
+
     const leftCompletedCountdown =
       previousSnapshot?.mode === 'countdown' &&
       previousSnapshot.status === 'completed' &&

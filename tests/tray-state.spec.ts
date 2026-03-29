@@ -111,6 +111,24 @@ describe('desktop tray state', () => {
       ]),
     ).not.toBe(getDesktopTrayStructuralKey(idleSnapshot, [customShortcuts[0]]))
     expect(getDesktopTrayStructuralKey(idleSnapshot, [], 45)).toBe('idle:45')
+
+    const completedCountdownSnap = getTimerSnapshot(startCountdownTimer(10, 0), 10_000)
+    expect(
+      getDesktopTrayStructuralKey(
+        { ...completedCountdownSnap, status: 'completed', endedAtMs: 10_000 },
+        [],
+        30,
+      ),
+    ).toBe('completed:countdown:30')
+
+    const completedCountupSnap = getTimerSnapshot(startCountupTimer(0), 10_000)
+    expect(
+      getDesktopTrayStructuralKey(
+        { ...completedCountupSnap, status: 'completed', endedAtMs: 10_000 },
+        [],
+        30,
+      ),
+    ).toBe('completed:countup:30')
   })
 
   it('uses live text in the macOS tray while a timer is active', () => {
@@ -126,13 +144,22 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Running • Count Up', enabled: false },
       { kind: 'separator' },
-      { kind: 'action', id: 'pause', label: 'Pause', enabled: true },
-      { kind: 'action', id: 'stop_and_log', label: 'Stop and Log', enabled: true },
       { kind: 'action', id: 'reset', label: 'Reset', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
       { kind: 'action', id: 'quit', label: 'Quit', enabled: true },
     ])
+  })
+
+  it('omits Stop from running and paused countdown tray menus', () => {
+    const runningCountdown = getTimerSnapshot(startCountdownTimer(300, 0), 60_000)
+    const pausedCountdown = getTimerSnapshot(pauseTimer(startCountdownTimer(300, 0), 60_000), 0)
+
+    const runningItems = getDesktopTrayState(runningCountdown, 'darwin').menuItems
+    const pausedItems = getDesktopTrayState(pausedCountdown, 'darwin').menuItems
+
+    expect(runningItems.filter((i) => i.kind === 'action' && i.id === 'stop')).toEqual([])
+    expect(pausedItems.filter((i) => i.kind === 'action' && i.id === 'stop')).toEqual([])
   })
 
   it('includes add-time actions for active countdown tray menus', () => {
@@ -188,7 +215,7 @@ describe('desktop tray state', () => {
     })
   })
 
-  it('exposes stopped countup tray actions for resume, log, and reset', () => {
+  it('exposes paused countup tray actions for resume and reset without log', () => {
     const pausedCountup = getTimerSnapshot(pauseTimer(startCountupTimer(0), 65_000), 125_000)
     const trayState = getDesktopTrayState(pausedCountup, 'darwin')
 
@@ -202,7 +229,6 @@ describe('desktop tray state', () => {
       { kind: 'status', label: 'Stopped • Count Up', enabled: false },
       { kind: 'separator' },
       { kind: 'action', id: 'resume', label: 'Resume', enabled: true },
-      { kind: 'action', id: 'open_window_to_log_session', label: 'Log', enabled: true },
       { kind: 'action', id: 'reset', label: 'Reset', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
@@ -220,6 +246,30 @@ describe('desktop tray state', () => {
       label: '+10 min',
       enabled: true,
     })
+    expect(
+      trayState.menuItems.filter(
+        (i) => i.kind === 'action' && i.id === 'open_window_to_log_session',
+      ),
+    ).toEqual([])
+  })
+
+  it('omits open-window log action from completed countup tray menu', () => {
+    const completedCountup = getTimerSnapshot(startCountupTimer(0), 10_000)
+    const trayState = getDesktopTrayState(
+      {
+        ...completedCountup,
+        status: 'completed',
+        endedAtMs: 10_000,
+        mode: 'countup',
+      },
+      'darwin',
+    )
+
+    expect(
+      trayState.menuItems.filter(
+        (i) => i.kind === 'action' && i.id === 'open_window_to_log_session',
+      ),
+    ).toEqual([])
   })
 
   it('exposes the completed tray actions for logging a finished session', () => {

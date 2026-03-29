@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { isReady, snapshot, cancel, resume, startCountup, stop } = useTimerService()
+const { isReady, snapshot, cancel, startCountup } = useTimerService()
 
 const timerProgress = computed(() => {
   if (snapshot.value.mode !== 'countup') {
@@ -9,12 +9,7 @@ const timerProgress = computed(() => {
   return snapshot.value.display
 })
 
-const timerIsRunning = computed(
-  () => snapshot.value.mode === 'countup' && snapshot.value.status === 'running',
-)
-const timerIsPaused = computed(
-  () => snapshot.value.mode === 'countup' && snapshot.value.status === 'paused',
-)
+const timerIsIdle = computed(() => snapshot.value.status === 'idle')
 const countupParts = computed(() => {
   const [mins = '00', secs = '00'] = timerProgress.value.split(':')
 
@@ -39,11 +34,7 @@ const countupParts = computed(() => {
     </div>
 
     <div class="flex shrink-0 flex-nowrap items-center gap-2">
-      <TimerButton v-if="isReady && !timerIsRunning && !timerIsPaused" @click="startCountup"
-        >Start</TimerButton
-      >
-      <TimerButton v-if="isReady && timerIsRunning" @click="stop">Stop</TimerButton>
-      <TimerButton v-if="isReady && timerIsPaused" @click="resume">Resume</TimerButton>
+      <TimerButton v-if="isReady && timerIsIdle" @click="startCountup">Start</TimerButton>
     </div>
     <span
       class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 text-sm leading-none font-semibold tracking-wide text-text opacity-80"

@@ -247,7 +247,9 @@ const getTrayShortcutStructuralKey = (shortcuts: readonly UserSettingsTrayShortc
 /**
  * Identifies tray **menu structure** (which actions exist). When this is unchanged, only
  * time-derived labels/tooltip/title need updating — not a full `Menu.buildFromTemplate`.
- * Running and paused menus also depend on timer mode because countdowns expose add-time actions.
+ * Running and paused menus also depend on timer mode because countdowns expose add-time actions
+ * and omit Stop (countdown completion is automatic or via Reset in the tray). Count-up running
+ * menus omit Pause / log shortcuts; completed menus include mode because count-up omits log.
  */
 export const getDesktopTrayStructuralKey = (
   snapshot: TimerSnapshot,
@@ -260,6 +262,15 @@ export const getDesktopTrayStructuralKey = (
 
   const shortcutKey = getTrayShortcutStructuralKey(shortcuts)
   const countdownKey = Math.max(1, Math.trunc(countdownDefaultMinutes))
+  const modeKey = snapshot.mode ?? 'timer'
+
+  if (snapshot.status === 'completed') {
+    if (!shortcutKey) {
+      return `${snapshot.status}:${modeKey}:${countdownKey}`
+    }
+
+    return `${snapshot.status}:${modeKey}:${countdownKey}:${shortcutKey}`
+  }
 
   if (!shortcutKey) {
     return `${snapshot.status}:${countdownKey}`
@@ -319,8 +330,10 @@ export const getDesktopTrayState = (
     const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
     const timerActions =
       snapshot.mode === 'countup'
-        ? [createActionItem('pause', 'Pause'), createActionItem('stop_and_log', 'Stop and Log')]
-        : [createActionItem('pause', 'Pause'), createActionItem('stop', 'Stop')]
+        ? []
+        : snapshot.mode === 'countdown'
+          ? [createActionItem('pause', 'Pause')]
+          : [createActionItem('pause', 'Pause'), createActionItem('stop', 'Stop')]
 
     return {
       mode: 'running',
@@ -353,23 +366,33 @@ export const getDesktopTrayState = (
             createStatusItem(statusLabel),
             separatorItem,
             createActionItem('resume', 'Resume'),
-            createActionItem('open_window_to_log_session', 'Log'),
             createActionItem('reset', 'Reset'),
             separatorItem,
             createActionItem('show_window', 'Show Window'),
             createActionItem('quit', 'Quit'),
           ]
-        : [
-            createStatusItem(statusLabel),
-            separatorItem,
-            createActionItem('resume', 'Resume'),
-            ...countdownActions,
-            createActionItem('stop', 'Stop'),
-            createActionItem('reset', 'Reset'),
-            separatorItem,
-            createActionItem('show_window', 'Show Window'),
-            createActionItem('quit', 'Quit'),
-          ]
+        : snapshot.mode === 'countdown'
+          ? [
+              createStatusItem(statusLabel),
+              separatorItem,
+              createActionItem('resume', 'Resume'),
+              ...countdownActions,
+              createActionItem('reset', 'Reset'),
+              separatorItem,
+              createActionItem('show_window', 'Show Window'),
+              createActionItem('quit', 'Quit'),
+            ]
+          : [
+              createStatusItem(statusLabel),
+              separatorItem,
+              createActionItem('resume', 'Resume'),
+              ...countdownActions,
+              createActionItem('stop', 'Stop'),
+              createActionItem('reset', 'Reset'),
+              separatorItem,
+              createActionItem('show_window', 'Show Window'),
+              createActionItem('quit', 'Quit'),
+            ]
 
     return {
       mode: 'paused',
@@ -385,6 +408,10 @@ export const getDesktopTrayState = (
 
   const statusLabel = `Completed • ${modeLabel}`
   const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
+  const logCompletedSessionItem = createActionItem(
+    'open_window_to_log_session',
+    'Open Window to Log Session',
+  )
 
   return {
     mode: 'completed',
@@ -402,7 +429,7 @@ export const getDesktopTrayState = (
       createActionItem('start_countup', 'Start Timer'),
       ...trayShortcutItems,
       separatorItem,
-      createActionItem('open_window_to_log_session', 'Open Window to Log Session'),
+      ...(snapshot.mode === 'countup' ? [] : [logCompletedSessionItem]),
       createActionItem('reset', 'Reset'),
       separatorItem,
       createActionItem('show_window', 'Show Window'),
