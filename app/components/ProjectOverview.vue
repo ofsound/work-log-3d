@@ -3,6 +3,7 @@ import { doc, query, where } from 'firebase/firestore'
 
 import PhoneRouteLoading from '~/components/PhoneRouteLoading.vue'
 import ProjectPhoneWorkspace from '~/components/ProjectPhoneWorkspace.vue'
+import { useDelayedPending } from '~/composables/useDelayedPending'
 import { usePhoneMode } from '~/composables/usePhoneMode'
 import { getProjectBadgeStyle, getProjectModeToggleStyles } from '~/utils/project-color-styles'
 import {
@@ -158,7 +159,7 @@ const headerBadges = computed(() => {
   return badges
 })
 const projectHeaderTabs = computed(() => (isPhoneMode.value ? [] : PROJECT_WORKSPACE_TABS))
-const shouldHoldForPhoneResolution = computed(() => {
+const shouldBlockForPhoneResolution = computed(() => {
   if (
     !routeRequiresPhoneResolution({
       path: route.path,
@@ -170,6 +171,9 @@ const shouldHoldForPhoneResolution = computed(() => {
 
   return !hasResolvedViewport.value
 })
+const { showPending: shouldHoldForPhoneResolution } = useDelayedPending(
+  shouldBlockForPhoneResolution,
+)
 
 const hasSameQueryState = (
   left: Record<string, string | string[] | undefined>,
@@ -415,7 +419,10 @@ onUnmounted(() => {
 <template>
   <PhoneRouteLoading v-if="shouldHoldForPhoneResolution" />
 
-  <div v-else class="flex h-full min-h-0 flex-col overflow-hidden">
+  <div
+    v-else-if="!shouldBlockForPhoneResolution"
+    class="flex h-full min-h-0 flex-col overflow-hidden"
+  >
     <ProjectWorkspaceHeader
       :active-mode="currentMode"
       :badges="headerBadges"

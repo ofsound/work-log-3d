@@ -6,6 +6,7 @@ import { addDays } from '~~/shared/worklog'
 
 import PhoneRouteLoading from '~/components/PhoneRouteLoading.vue'
 import SessionsPhoneWorkspace from '~/components/SessionsPhoneWorkspace.vue'
+import { useDelayedPending } from '~/composables/useDelayedPending'
 import { usePhoneMode } from '~/composables/usePhoneMode'
 import { useSessionsKeyboard } from '~/composables/useSessionsKeyboard'
 import { useSessionsPanelState } from '~/composables/useSessionsPanelState'
@@ -111,7 +112,7 @@ const phoneSessionViewItems = computed(() =>
   ),
 )
 
-const shouldHoldForPhoneResolution = computed(() => {
+const shouldBlockForPhoneResolution = computed(() => {
   if (
     !routeRequiresPhoneResolution({
       path: route.path,
@@ -123,6 +124,9 @@ const shouldHoldForPhoneResolution = computed(() => {
 
   return !hasResolvedViewport.value
 })
+const { showPending: shouldHoldForPhoneResolution } = useDelayedPending(
+  shouldBlockForPhoneResolution,
+)
 
 useSessionsKeyboard({
   anchorDate: routedState.anchorDate,
@@ -185,7 +189,7 @@ const handleOpenSessionFromMonth = async (payload: { day: Date; sessionId: strin
   <PhoneRouteLoading v-if="shouldHoldForPhoneResolution" />
 
   <SessionsPhoneWorkspace
-    v-else-if="isPhoneMode"
+    v-else-if="!shouldBlockForPhoneResolution && isPhoneMode"
     :anchor-date="anchorDate"
     :calendar-header-summary="calendarHeaderSummary"
     :current-mode="currentMode"
@@ -220,7 +224,10 @@ const handleOpenSessionFromMonth = async (payload: { day: Date; sessionId: strin
     :on-update-filters="updateListFilters"
   />
 
-  <div v-else class="flex h-full min-h-0 flex-col overflow-hidden">
+  <div
+    v-else-if="!shouldBlockForPhoneResolution"
+    class="flex h-full min-h-0 flex-col overflow-hidden"
+  >
     <div ref="sessionsHeaderRef" class="shrink-0">
       <SessionsWorkspaceHeader
         :calendar-header-summary="calendarHeaderSummary"

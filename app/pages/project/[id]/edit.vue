@@ -5,15 +5,23 @@ import { definePageMeta } from '#imports'
 
 import PhoneRouteLoading from '~/components/PhoneRouteLoading.vue'
 import ProjectEditorWorkspace from '~/components/ProjectEditorWorkspace.vue'
+import { useDelayedPending } from '~/composables/useDelayedPending'
+import { usePhoneMode } from '~/composables/usePhoneMode'
 
 definePageMeta({ layout: 'main-workspace' })
 
 const { projectDocumentId } = useResolvedProjectDocumentId('legacy-project-edit-route')
 const { hasResolvedViewport, isPhoneMode } = usePhoneMode()
-const shouldHoldProjectEditorWorkspace = computed(() => !hasResolvedViewport.value)
+const shouldBlockProjectEditorWorkspace = computed(() => !hasResolvedViewport.value)
+const { showPending: shouldHoldProjectEditorWorkspace } = useDelayedPending(
+  shouldBlockProjectEditorWorkspace,
+)
 </script>
 
 <template>
   <PhoneRouteLoading v-if="shouldHoldProjectEditorWorkspace" />
-  <ProjectEditorWorkspace v-else-if="projectDocumentId && !isPhoneMode" :id="projectDocumentId" />
+  <ProjectEditorWorkspace
+    v-else-if="!shouldBlockProjectEditorWorkspace && projectDocumentId && !isPhoneMode"
+    :id="projectDocumentId"
+  />
 </template>
