@@ -21,12 +21,28 @@ export default defineNuxtConfig({
   },
   devtools: { enabled: true },
   ssr: isElectronBuild ? false : true,
-  app: isElectronBuild
-    ? {
-        baseURL: '/',
-        buildAssetsDir: 'assets/',
-      }
-    : undefined,
+  app: {
+    head: {
+      link: [
+        {
+          rel: 'manifest',
+          href: '/manifest.webmanifest',
+          type: 'application/manifest+json',
+        },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      ],
+      meta: [
+        { name: 'theme-color', content: '#0A2D4A' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-title', content: 'Work Log' },
+        {
+          name: 'apple-mobile-web-app-status-bar-style',
+          content: 'black-translucent',
+        },
+      ],
+    },
+    ...(isElectronBuild ? { baseURL: '/', buildAssetsDir: 'assets/' } : {}),
+  },
   modules: ['@nuxt/eslint', '@nuxtjs/color-mode', 'nuxt-vuefire'],
   colorMode: {
     classSuffix: '',
@@ -48,10 +64,10 @@ export default defineNuxtConfig({
     admin: isElectronBuild
       ? undefined
       : {
-          options: {
-            projectId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_PROJECT_ID ?? '',
-          },
+        options: {
+          projectId: process.env.NUXT_PUBLIC_VUEFIRE_CONFIG_PROJECT_ID ?? '',
         },
+      },
   },
   typescript: {
     typeCheck: false, // use `npm run typecheck` or `npm run check`

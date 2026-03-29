@@ -77,6 +77,8 @@ Web app:
 npm run dev
 ```
 
+The production web build is a minimal PWA: [`public/manifest.webmanifest`](public/manifest.webmanifest) plus `apple-mobile-web-app-*` meta tags in [`nuxt.config.ts`](nuxt.config.ts). **HTTPS is required** for a reliable install experience. On iPhone, open the deployed site in Safari, tap **Share → Add to Home Screen**, then launch from the home screen icon to run in standalone mode (no Safari chrome).
+
 Electron app:
 
 ```bash

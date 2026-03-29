@@ -50,9 +50,9 @@ const snapshot = ref({
   isActive: false,
 })
 
-  ; (globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
-    useRoute: () => ({ path: '/new' }),
-  }
+;(globalThis as { __nuxtTestMocks?: Record<string, unknown> }).__nuxtTestMocks = {
+  useRoute: () => ({ path: '/new' }),
+}
 
 vi.mock('~/composables/useMinuteVerticalDrag', () => ({
   useMinuteVerticalDrag: (options: UseMinuteVerticalDragOptions) => {

@@ -249,7 +249,7 @@ const getTrayShortcutStructuralKey = (shortcuts: readonly UserSettingsTrayShortc
  * time-derived labels/tooltip/title need updating — not a full `Menu.buildFromTemplate`.
  * Running and paused menus also depend on timer mode because countdowns expose add-time actions
  * and omit Stop (countdown completion is automatic or via Reset in the tray). Count-up running
- * menus omit Pause / log shortcuts; completed menus include mode because count-up omits log.
+ * menus include Stop only (no Pause); completed menus include mode because count-up omits log.
  */
 export const getDesktopTrayStructuralKey = (
   snapshot: TimerSnapshot,
@@ -330,7 +330,7 @@ export const getDesktopTrayState = (
     const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
     const timerActions =
       snapshot.mode === 'countup'
-        ? []
+        ? [createActionItem('stop', 'Stop')]
         : snapshot.mode === 'countdown'
           ? [createActionItem('pause', 'Pause')]
           : [createActionItem('pause', 'Pause'), createActionItem('stop', 'Stop')]

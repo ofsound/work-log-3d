@@ -144,6 +144,7 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Running • Count Up', enabled: false },
       { kind: 'separator' },
+      { kind: 'action', id: 'stop', label: 'Stop', enabled: true },
       { kind: 'action', id: 'reset', label: 'Reset', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },
