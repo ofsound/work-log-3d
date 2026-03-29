@@ -172,6 +172,27 @@ export function useSessionsPanelState(options: UseSessionsPanelStateOptions) {
     return next
   }
 
+  const getDefaultCreateStartTime = () =>
+    isSameDay(options.anchorDate.value, new Date())
+      ? roundToSnapMinutes(new Date())
+      : setTimeOnDate(options.anchorDate.value, 9, 0)
+
+  const getLatestVisibleDayEndTime = () => {
+    let latestEndTime: Date | null = null
+
+    for (const timeBox of options.visibleDayTimeBoxes.value) {
+      if (!timeBox.endTime) {
+        continue
+      }
+
+      if (!latestEndTime || timeBox.endTime.getTime() > latestEndTime.getTime()) {
+        latestEndTime = new Date(timeBox.endTime.valueOf())
+      }
+    }
+
+    return latestEndTime
+  }
+
   const getSelectedDayTimeBox = () =>
     options.visibleDayTimeBoxes.value.find((timeBox) => timeBox.id === selectedSessionId.value) ??
     null
@@ -206,9 +227,7 @@ export function useSessionsPanelState(options: UseSessionsPanelStateOptions) {
 
   const openSuggestedCreatePanel = async () => {
     const selectedTimeBox = getSelectedDayTimeBox()
-    const defaultStart = isSameDay(options.anchorDate.value, new Date())
-      ? roundToSnapMinutes(new Date())
-      : setTimeOnDate(options.anchorDate.value, 9, 0)
+    const defaultStart = getDefaultCreateStartTime()
 
     const startTime = selectedTimeBox?.startTime
       ? new Date(selectedTimeBox.startTime.valueOf())
@@ -218,6 +237,15 @@ export function useSessionsPanelState(options: UseSessionsPanelStateOptions) {
     await openCreatePanel({
       startTime,
       endTime: addMinutes(startTime, durationMinutes),
+    })
+  }
+
+  const openMobileDayCreatePanel = async () => {
+    const startTime = getLatestVisibleDayEndTime() ?? getDefaultCreateStartTime()
+
+    await openCreatePanel({
+      startTime,
+      endTime: addMinutes(startTime, 60),
     })
   }
 
@@ -377,6 +405,7 @@ export function useSessionsPanelState(options: UseSessionsPanelStateOptions) {
     markCreatePreviewSaved,
     moveDaySelection,
     openCreatePanel,
+    openMobileDayCreatePanel,
     openOverviewPanel,
     openScratchpadPanel,
     openSessionPanel,

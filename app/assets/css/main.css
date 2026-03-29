@@ -156,6 +156,10 @@
     color-mix(in srgb, var(--color-white) 80%, transparent),
     color-mix(in srgb, var(--color-white) 80%, transparent)
   );
+  --color-home-activity-month-divider: light-dark(
+    color-mix(in srgb, var(--color-slate-500) 18%, transparent),
+    color-mix(in srgb, var(--color-zinc-300) 16%, transparent)
+  );
   --color-home-activity-bar-ghost-top: light-dark(
     color-mix(in srgb, var(--color-slate-100) 88%, var(--color-white)),
     color-mix(in srgb, var(--color-zinc-500) 62%, var(--color-zinc-300))

@@ -83,6 +83,10 @@ describe('useSessionsPanelState', () => {
     mediaMatches.value = true
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('restores the remembered persistent panel tab when escape dismisses a session panel', async () => {
     const flushScratchpad = vi.fn(async () => {})
     const { wrapper, getState } = mountHarness()
@@ -162,6 +166,75 @@ describe('useSessionsPanelState', () => {
     expect(currentMode.value).toBe('week')
     expect(state.panelMode.value).toBe('overview')
     expect(updateRouteState).toHaveBeenCalledWith({ date: nextDay }, { history: 'push' })
+
+    wrapper.unmount()
+  })
+
+  it('prefills mobile create from the latest visible session end time with a 60-minute duration', async () => {
+    const { visibleDayTimeBoxes, wrapper, getState } = mountHarness()
+    const state = getState()
+
+    visibleDayTimeBoxes.value = [
+      buildTimeBox('session-1', new Date(2026, 2, 23, 9, 0), new Date(2026, 2, 23, 10, 0)),
+      buildTimeBox('session-2', new Date(2026, 2, 23, 14, 0), new Date(2026, 2, 23, 15, 30)),
+      buildTimeBox('session-3', new Date(2026, 2, 23, 11, 0), new Date(2026, 2, 23, 12, 0)),
+    ]
+    await flushPendingWork()
+
+    await state.openMobileDayCreatePanel()
+
+    expect(state.panelMode.value).toBe('create')
+    expect(state.createPreview.value?.range.startTime.getTime()).toBe(
+      new Date(2026, 2, 23, 15, 30).getTime(),
+    )
+    expect(state.createPreview.value?.range.endTime.getTime()).toBe(
+      new Date(2026, 2, 23, 16, 30).getTime(),
+    )
+
+    wrapper.unmount()
+  })
+
+  it('prefills mobile create from rounded current time when today has no sessions', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 2, 23, 13, 24, 49))
+
+    const { visibleDayTimeBoxes, wrapper, getState } = mountHarness()
+    const state = getState()
+
+    visibleDayTimeBoxes.value = []
+    await flushPendingWork()
+
+    await state.openMobileDayCreatePanel()
+
+    expect(state.createPreview.value?.range.startTime.getTime()).toBe(
+      new Date(2026, 2, 23, 13, 20).getTime(),
+    )
+    expect(state.createPreview.value?.range.endTime.getTime()).toBe(
+      new Date(2026, 2, 23, 14, 20).getTime(),
+    )
+
+    wrapper.unmount()
+  })
+
+  it('prefills mobile create from 9:00 AM on non-today dates when there are no sessions', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 2, 23, 13, 24, 49))
+
+    const { anchorDate, visibleDayTimeBoxes, wrapper, getState } = mountHarness()
+    const state = getState()
+
+    anchorDate.value = nextDay
+    visibleDayTimeBoxes.value = []
+    await flushPendingWork()
+
+    await state.openMobileDayCreatePanel()
+
+    expect(state.createPreview.value?.range.startTime.getTime()).toBe(
+      new Date(2026, 2, 24, 9, 0).getTime(),
+    )
+    expect(state.createPreview.value?.range.endTime.getTime()).toBe(
+      new Date(2026, 2, 24, 10, 0).getTime(),
+    )
 
     wrapper.unmount()
   })

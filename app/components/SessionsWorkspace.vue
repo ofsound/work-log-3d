@@ -77,6 +77,7 @@ const {
   createPreviewRange,
   handleOpenDay,
   isPersistentScratchpad,
+  openMobileDayCreatePanel,
   openCreatePanel,
   openOverviewPanel,
   openScratchpadPanel,
@@ -212,6 +213,7 @@ const handleOpenSessionFromMonth = async (payload: { day: Date; sessionId: strin
     :sorted-tags="sortedTags"
     :visible-day-time-boxes="visibleDayTimeBoxes"
     :on-back-to-overview="backToOverlayOverviewPanel"
+    :on-add-session="openMobileDayCreatePanel"
     :on-clear-filters="clearListFilters"
     :on-close-panel="closePanel"
     :on-created="handlePanelCreated"

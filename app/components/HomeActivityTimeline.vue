@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, type PropType } from 'vue'
+import { computed, type CSSProperties, type PropType } from 'vue'
 
 import type { HomeActivityWeek } from '~~/shared/worklog'
 
@@ -65,6 +65,16 @@ const getBarFrameClass = (week: HomeActivityWeek) => [
     ? '[box-shadow:0_0_0_1px_var(--color-home-activity-bar-current-ring),0_18px_28px_-18px_var(--color-home-activity-bar-shadow),0_0_26px_-8px_var(--color-home-activity-bar-current-glow)]'
     : '',
 ]
+
+const getMonthDividerStyle = (week: HomeActivityWeek): CSSProperties | undefined => {
+  if (week.monthBoundaryOffsetDays === null) {
+    return undefined
+  }
+
+  return {
+    left: `${(week.monthBoundaryOffsetDays / 7) * 100}%`,
+  }
+}
 </script>
 
 <template>
@@ -164,7 +174,13 @@ const getBarFrameClass = (week: HomeActivityWeek) => [
                 class="relative flex h-full min-w-0 items-end justify-center overflow-visible px-[0.5px] md:px-[1px]"
               >
                 <div
-                  class="relative w-[74%] min-w-[3px]"
+                  v-if="week.monthBoundaryOffsetDays !== null"
+                  class="pointer-events-none absolute top-0 bottom-4 z-0 w-px -translate-x-1/2 bg-home-activity-month-divider"
+                  data-home-activity-month-divider
+                  :style="getMonthDividerStyle(week)"
+                />
+                <div
+                  class="relative z-[1] w-[74%] min-w-[3px]"
                   :data-home-activity-current="week.isCurrentWeek ? 'true' : 'false'"
                   :data-home-activity-empty="week.hasActivity ? 'false' : 'true'"
                   data-home-activity-week

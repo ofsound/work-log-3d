@@ -53,6 +53,7 @@ export interface HomeActivityWeek {
   sessionCount: number
   hasActivity: boolean
   isCurrentWeek: boolean
+  monthBoundaryOffsetDays: number | null
 }
 
 export const YEAR_HEATMAP_INTENSITY_THRESHOLDS = [120, 240, 360, 480] as const
@@ -548,6 +549,10 @@ export const buildHomeActivityWeeks = (
     const key = formatDateKey(cursor)
     const summary = summaryByWeekKey.get(key)
     const totalMinutes = summary?.totalMinutes ?? 0
+    const monthBoundaryOffsetDays =
+      Array.from({ length: WEEK_DAY_COUNT }, (_, offset) => offset).find(
+        (offset) => addDays(cursor, offset).getDate() === 1,
+      ) ?? null
 
     weeks.push({
       weekStart: cursor,
@@ -556,6 +561,7 @@ export const buildHomeActivityWeeks = (
       sessionCount: summary?.sessionIds.size ?? 0,
       hasActivity: totalMinutes > 0,
       isCurrentWeek: isSameDay(cursor, currentWeek),
+      monthBoundaryOffsetDays,
     })
 
     cursor = addDays(cursor, WEEK_DAY_COUNT)

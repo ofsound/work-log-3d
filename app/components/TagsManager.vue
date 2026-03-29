@@ -40,12 +40,12 @@ const cancelCreateAndLoseFocus = (event?: KeyboardEvent) => {
 <template>
   <ContainerCard
     as="section"
-    class="mb-4 w-full rounded-sm py-4"
+    class="mb-4 w-full min-w-0 rounded-sm py-4"
     padding="comfortable"
     style="width: 100%; min-width: 100%"
-    variant="gradient"
+    variant="projectGradient"
   >
-    <div class="mb-6 text-2xl font-bold text-text">Tags</div>
+    <div class="mb-8 text-center text-2xl font-bold text-text">Tags</div>
     <div class="flex flex-col gap-2">
       <TagsManagerTag
         v-for="item in sortedAllTags"

@@ -36,6 +36,7 @@ const props = defineProps<{
   sortedTags: NamedEntity[]
   visibleDayTimeBoxes: TimeBox[]
   onBackToOverview: () => void
+  onAddSession: () => void
   onClearFilters: () => void
   onClosePanel: () => void
   onCreated: (sessionId: string) => void
@@ -140,18 +141,38 @@ watch(
             </AppButton>
           </div>
 
-          <DaySessionsOverviewPanel
-            v-if="currentMode === 'day'"
-            :day="anchorDate"
-            :project-by-id="projectById"
-            :project-name-by-id="projectNameById"
-            :selected-session-id="selectedSessionId"
-            :show-day-summary="false"
-            show-project-name
-            :time-boxes="visibleDayTimeBoxes"
-            use-project-card-styles
-            @open-session="onOpenSession({ sessionId: $event })"
-          />
+          <template v-if="currentMode === 'day'">
+            <ContainerCard
+              v-if="visibleDayTimeBoxes.length === 0"
+              class="border-dashed px-6 py-8 text-center shadow-none"
+              padding="comfortable"
+              variant="subtle"
+            >
+              <div class="text-xs tracking-[0.18em] text-text-subtle uppercase">No sessions</div>
+              <div class="mt-2 text-sm text-text-muted">No sessions on the selected day.</div>
+              <div class="mt-4 flex justify-center">
+                <AppButton @click="onAddSession">Add Session</AppButton>
+              </div>
+            </ContainerCard>
+
+            <template v-else>
+              <DaySessionsOverviewPanel
+                :day="anchorDate"
+                :project-by-id="projectById"
+                :project-name-by-id="projectNameById"
+                :selected-session-id="selectedSessionId"
+                :show-day-summary="false"
+                show-project-name
+                :time-boxes="visibleDayTimeBoxes"
+                use-project-card-styles
+                @open-session="onOpenSession({ sessionId: $event })"
+              />
+
+              <div class="flex">
+                <AppButton @click="onAddSession">Add Session</AppButton>
+              </div>
+            </template>
+          </template>
 
           <ContainerCard
             v-else-if="filteredSessionListTimeBoxes.length === 0"

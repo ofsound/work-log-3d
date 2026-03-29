@@ -14,6 +14,7 @@ const weeks: HomeActivityWeek[] = [
     sessionCount: 2,
     hasActivity: true,
     isCurrentWeek: false,
+    monthBoundaryOffsetDays: 6,
   },
   {
     weekStart: new Date('2026-03-09T12:00:00.000Z'),
@@ -22,6 +23,7 @@ const weeks: HomeActivityWeek[] = [
     sessionCount: 0,
     hasActivity: false,
     isCurrentWeek: false,
+    monthBoundaryOffsetDays: null,
   },
   {
     weekStart: new Date('2026-03-16T12:00:00.000Z'),
@@ -30,6 +32,7 @@ const weeks: HomeActivityWeek[] = [
     sessionCount: 3,
     hasActivity: true,
     isCurrentWeek: true,
+    monthBoundaryOffsetDays: null,
   },
 ]
 
@@ -51,8 +54,11 @@ describe('HomeActivityTimeline', () => {
     expect(wrapper.text()).toContain('Today')
 
     const bars = wrapper.findAll('[data-home-activity-week]')
+    const monthDividers = wrapper.findAll('[data-home-activity-month-divider]')
 
     expect(bars).toHaveLength(3)
+    expect(monthDividers).toHaveLength(1)
+    expect(monthDividers[0]!.attributes('style')).toContain('85.71428571428571%')
     expect(bars[1]!.attributes('data-home-activity-empty')).toBe('true')
     expect(bars[2]!.attributes('data-home-activity-current')).toBe('true')
   })
@@ -72,6 +78,7 @@ describe('HomeActivityTimeline', () => {
 
     expect(wrapper.text()).toContain('No activity yet')
     expect(wrapper.findAll('[data-home-activity-week]')).toHaveLength(0)
+    expect(wrapper.findAll('[data-home-activity-month-divider]')).toHaveLength(0)
   })
 
   it('shows a loading skeleton instead of the empty copy while loading', () => {
@@ -90,5 +97,6 @@ describe('HomeActivityTimeline', () => {
     expect(wrapper.text()).not.toContain('No activity yet')
     expect(wrapper.find('[data-home-activity-loading]').exists()).toBe(true)
     expect(wrapper.findAll('[data-home-activity-week]')).toHaveLength(0)
+    expect(wrapper.findAll('[data-home-activity-month-divider]')).toHaveLength(0)
   })
 })

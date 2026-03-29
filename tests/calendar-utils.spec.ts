@@ -259,6 +259,7 @@ describe('calendar utilities', () => {
     expect(weeks.map((week) => week.totalMinutes)).toEqual([120, 0, 90])
     expect(weeks[1]!.hasActivity).toBe(false)
     expect(weeks[2]!.isCurrentWeek).toBe(true)
+    expect(weeks.map((week) => week.monthBoundaryOffsetDays)).toEqual([null, null, null])
     expect(formatDateKey(weeks[2]!.weekEnd)).toBe('2026-03-22')
   })
 
@@ -278,6 +279,31 @@ describe('calendar utilities', () => {
     expect(weeks.map((week) => formatDateKey(week.weekStart))).toEqual(['2026-03-02', '2026-03-09'])
     expect(weeks.map((week) => week.totalMinutes)).toEqual([60, 120])
     expect(weeks.map((week) => week.sessionCount)).toEqual([1, 1])
+    expect(weeks.map((week) => week.monthBoundaryOffsetDays)).toEqual([null, null])
+  })
+
+  it('marks the week containing a month boundary with the first-of-month offset', () => {
+    const weeks = buildHomeActivityWeeks(
+      [
+        {
+          ...baseTimeBox,
+          startTime: new Date(2026, 1, 24, 9, 0, 0, 0),
+          endTime: new Date(2026, 1, 24, 10, 0, 0, 0),
+        },
+        {
+          ...baseTimeBox,
+          id: 'tb-next-month',
+          startTime: new Date(2026, 2, 2, 14, 0, 0, 0),
+          endTime: new Date(2026, 2, 2, 15, 0, 0, 0),
+        },
+      ],
+      new Date(2026, 2, 4, 12, 0, 0, 0),
+    )
+
+    expect(weeks.map((week) => formatDateKey(week.weekStart))).toEqual(['2026-02-23', '2026-03-02'])
+    expect(weeks.map((week) => week.totalMinutes)).toEqual([60, 60])
+    expect(weeks[0]!.monthBoundaryOffsetDays).toBe((new Date(2026, 2, 1).getDay() + 6) % 7)
+    expect(weeks[1]!.monthBoundaryOffsetDays).toBeNull()
   })
 
   it('returns no homepage activity weeks when there are no timeboxes', () => {
