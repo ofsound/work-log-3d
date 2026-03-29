@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import CloseIcon from '@/icons/CloseIcon.vue'
 
+import {
+  formatDateKey,
+  type NamedEntity,
+  type Project,
+  type SessionListFilters,
+  type TimeBox,
+} from '~~/shared/worklog'
+
 import type { PanelMode } from '~/composables/useSessionsPanelState'
 import type { SessionsViewMode } from '~/utils/sessions-route-state'
-import type { NamedEntity, Project, SessionListFilters, TimeBox } from '~~/shared/worklog'
 
 interface SessionsWorkspaceHeaderSummary {
   count: number
@@ -50,6 +57,24 @@ const props = defineProps<{
 }>()
 
 const isFilterSheetOpen = ref(false)
+const mainScrollEl = ref<HTMLElement | null>(null)
+
+watch(
+  () => (props.currentMode === 'day' ? formatDateKey(props.anchorDate) : null),
+  async (nextKey, prevKey) => {
+    if (nextKey === null) {
+      return
+    }
+    if (prevKey === undefined) {
+      return
+    }
+    if (prevKey === nextKey) {
+      return
+    }
+    await nextTick()
+    mainScrollEl.value?.scrollTo({ top: 0, behavior: 'auto' })
+  },
+)
 
 const activeFilterCount = computed(() => {
   let count = 0
@@ -120,7 +145,7 @@ watch(
       :overlay-aside="shouldShowAside"
       @dismiss-aside="shouldShowSessionPanel ? onClosePanel() : (isFilterSheetOpen = false)"
     >
-      <div class="min-h-0 flex-1 overflow-auto overscroll-contain px-4 py-4">
+      <div ref="mainScrollEl" class="min-h-0 flex-1 overflow-auto overscroll-contain px-4 py-4">
         <div class="mx-auto flex w-full max-w-3xl flex-col gap-4">
           <div
             v-if="currentMode === 'search'"
