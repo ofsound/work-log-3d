@@ -77,7 +77,7 @@ Web app:
 npm run dev
 ```
 
-The production web build is a minimal PWA: [`public/manifest.webmanifest`](public/manifest.webmanifest) plus `apple-mobile-web-app-*` meta tags in [`nuxt.config.ts`](nuxt.config.ts). **HTTPS is required** for a reliable install experience. On iPhone, open the deployed site in Safari, tap **Share → Add to Home Screen**, then launch from the home screen icon to run in standalone mode (no Safari chrome).
+The production web build is a minimal PWA: [`public/manifest.webmanifest`](public/manifest.webmanifest) plus `apple-mobile-web-app-*` meta tags in [`nuxt.config.ts`](nuxt.config.ts). **HTTPS is required** for a reliable install experience. On iPhone, open the deployed site in Safari, tap **Share → Add to Home Screen**, then launch from the home screen icon to run in standalone mode (no Safari chrome). Home screen / manifest PNGs are rasterized from [`public/icon-pwa.svg`](public/icon-pwa.svg) (no clock drop shadow, flattened on `#0A2D4A`) so small icons do not show a light halo; re-export with ImageMagick if you change the artwork, e.g. `magick -background "#0A2D4A" public/icon-pwa.svg -resize 180x180 -flatten public/apple-touch-icon.png` (and the same pattern for `192`/`512` under `public/pwa/`).
 
 Electron app:
 

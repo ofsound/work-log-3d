@@ -1,0 +1,29 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- PWA / home-screen raster source: same artwork as icon-white-not-so-thin.svg but without
+       softShadow, which rasterizes to semi-transparent pixels that read as a light border on iOS. -->
+  <defs>
+    <linearGradient id="bgGradPwa" x1="96" y1="96" x2="928" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E6EA3" />
+      <stop offset="100%" stop-color="#0A2D4A" />
+    </linearGradient>
+
+    <radialGradient id="faceGradPwa" cx="10" cy="11" r="12" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C2E4FF" />
+      <stop offset="40%" stop-color="#81C4FF" />
+      <stop offset="100%" stop-color="#3A92DF" />
+    </radialGradient>
+  </defs>
+
+  <g>
+    <rect x="96" y="96" width="832" height="832" rx="184" fill="url(#bgGradPwa)" />
+    <rect x="100" y="100" width="824" height="824" rx="180" fill="none" stroke="#3D9EE4" stroke-opacity="0.4" stroke-width="4" />
+
+    <g transform="translate(190, 190) scale(28)" stroke="#FFFFFF" stroke-width="1.64" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="14" r="8" fill="url(#faceGradPwa)" />
+      <line x1="12" y1="2" x2="12" y2="6" />
+      <line x1="9.5" y1="1.5" x2="14.5" y2="1.5" stroke-width="2.46" />
+      <line x1="12" y1="10" x2="12" y2="14" />
+      <line x1="4.5" y1="6.5" x2="6.34" y2="8.34" />
+    </g>
+  </g>
+</svg>
