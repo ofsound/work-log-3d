@@ -412,6 +412,9 @@
 
 :root {
   color-scheme: light dark;
+  /* Duotone project surfaces (`project-color-styles` inline color-mix); light keeps original tints. */
+  --project-duotone-mix-base: 8%;
+  --project-duotone-mix-gradient: 14%;
 }
 
 .light {
@@ -420,6 +423,9 @@
 
 .dark {
   color-scheme: dark;
+  /* Nuxt Color Mode: richer project color on cards than light (zinc surface needs higher mix %). */
+  --project-duotone-mix-base: 34%;
+  --project-duotone-mix-gradient: 52%;
 }
 
 @layer base {

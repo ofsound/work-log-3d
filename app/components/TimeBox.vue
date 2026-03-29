@@ -13,7 +13,6 @@ const props = defineProps({
   highlightTokens: { type: Array as PropType<string[]>, default: () => [] },
   hideProjectChip: { type: Boolean, default: false },
   flushTop: { type: Boolean, default: false },
-  opaqueSurface: { type: Boolean, default: false },
   hideActions: { type: Boolean, default: false },
   useProjectCardStyles: { type: Boolean, default: true },
   embeddedInPanel: { type: Boolean, default: false },
@@ -58,7 +57,6 @@ const editorLayout = computed<TimeBoxEditorLayout>(() =>
         :hide-actions="hideActions"
         :hide-project-chip="hideProjectChip"
         :interactive="props.interactive"
-        :opaque-surface="opaqueSurface"
         :selected="props.selected"
         :show-compact-actions="showCompactActions"
         :compact-row-opens-editor="compactRowOpensEditor"

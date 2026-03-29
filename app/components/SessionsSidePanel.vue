@@ -229,7 +229,6 @@ defineExpose({
         :id="props.sessionId"
         embedded-in-panel
         :variant="props.sessionsViewMode === 'day' ? 'sessions-day' : undefined"
-        :opaque-surface="props.overlay"
         flush-top
         @deleted="emit('close')"
       />

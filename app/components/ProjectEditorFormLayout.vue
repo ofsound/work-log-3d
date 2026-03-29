@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { PropType } from 'vue'
+import { computed, type PropType } from 'vue'
 
-import ProjectColorPreviewGallery from '~/components/ProjectColorPreviewGallery.vue'
-import { getProjectSwatchStyle } from '~/utils/project-color-styles'
+import { getProjectPickerOptionStyle, getProjectSwatchStyle } from '~/utils/project-color-styles'
 import type { ProjectColors } from '~~/shared/worklog'
 import { PROJECT_COLOR_PALETTE } from '~~/shared/worklog'
 
@@ -15,11 +14,6 @@ const props = defineProps({
   isSaving: { type: Boolean, default: false },
   name: { type: String, required: true },
   notes: { type: String, required: true },
-  previewColors: {
-    type: Object as PropType<ProjectColors>,
-    required: true,
-  },
-  previewNotesFallback: { type: String, default: 'Notes remain private to the edit page for now.' },
   primaryColor: { type: String, required: true },
   secondaryColor: { type: String, required: true },
   showInlineActions: { type: Boolean, default: true },
@@ -64,6 +58,17 @@ const toggleArchived = () => {
   emit('update:archived', !props.archived)
   emit('clear-error')
 }
+
+const draftProjectColors = computed<ProjectColors>(() => ({
+  primary: props.primaryColor,
+  secondary: props.secondaryColor,
+}))
+
+const projectGradientPreviewStyle = computed(() =>
+  getProjectPickerOptionStyle(draftProjectColors.value, true),
+)
+
+const gradientPreviewTitle = computed(() => props.name.trim() || 'Untitled project')
 </script>
 
 <template>
@@ -117,105 +122,6 @@ const toggleArchived = () => {
           </label>
         </div>
 
-        <section class="flex min-w-0 flex-col gap-4" data-test="project-editor-preview">
-          <ProjectColorPreviewGallery
-            :colors="previewColors"
-            :name="name"
-            :notes="notes"
-            :preview-notes-fallback="previewNotesFallback"
-          />
-        </section>
-
-        <div class="flex min-w-0 flex-col gap-4">
-          <div class="grid w-full min-w-0 grid-cols-1 items-start gap-4 md:grid-cols-2 md:gap-6">
-            <AppField label="Primary color" class="min-w-0">
-              <template #hint>
-                <p class="text-sm text-text-muted">
-                  Badges always use white text, so the primary color has to stay dark enough for
-                  that to read cleanly.
-                </p>
-              </template>
-              <div
-                class="flex items-center gap-3 rounded-2xl border border-input-border bg-input px-3 py-3"
-              >
-                <input
-                  :value="primaryColor"
-                  type="color"
-                  class="h-10 w-14 cursor-pointer rounded-lg border border-input-border bg-transparent"
-                  @input="updatePrimaryColor"
-                />
-                <input
-                  :value="primaryColor"
-                  type="text"
-                  class="min-w-0 flex-1 rounded-xl border border-input-border bg-surface px-3 py-2 font-data text-text"
-                  placeholder="#2563eb"
-                  @input="updatePrimaryColor"
-                />
-              </div>
-            </AppField>
-
-            <AppField label="Secondary color" class="min-w-0">
-              <template #hint>
-                <p class="text-sm text-text-muted">
-                  Project gradients use one shared text color. Pick a secondary that keeps that text
-                  readable across the full gradient.
-                </p>
-              </template>
-              <div
-                class="flex items-center gap-3 rounded-2xl border border-input-border bg-input px-3 py-3"
-              >
-                <input
-                  :value="secondaryColor"
-                  type="color"
-                  class="h-10 w-14 cursor-pointer rounded-lg border border-input-border bg-transparent"
-                  @input="updateSecondaryColor"
-                />
-                <input
-                  :value="secondaryColor"
-                  type="text"
-                  class="min-w-0 flex-1 rounded-xl border border-input-border bg-surface px-3 py-2 font-data text-text"
-                  placeholder="#0e7490"
-                  @input="updateSecondaryColor"
-                />
-              </div>
-            </AppField>
-          </div>
-
-          <ContainerCard
-            v-if="colorValidationMessages.length > 0"
-            class="rounded-2xl py-3 text-sm"
-            data-test="project-editor-color-rules"
-            padding="default"
-            variant="danger"
-          >
-            <div class="flex flex-col gap-1">
-              <div class="font-semibold text-danger">Color rules block saving</div>
-              <ul class="list-disc pl-5 text-text">
-                <li v-for="message in colorValidationMessages" :key="message" class="leading-6">
-                  {{ message }}
-                </li>
-              </ul>
-            </div>
-          </ContainerCard>
-
-          <div class="flex flex-col gap-2">
-            <AppFieldLabel>Palette presets</AppFieldLabel>
-
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="(palette, index) in PROJECT_COLOR_PALETTE"
-                :key="`${palette.primary}-${palette.secondary}`"
-                type="button"
-                class="size-9 shrink-0 cursor-pointer rounded-full border border-overlay-border-strong shadow-control transition-[box-shadow,filter] duration-150 ease-out hover:shadow-[var(--shadow-panel)] hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
-                :style="getProjectSwatchStyle(palette)"
-                :aria-label="`Apply color preset ${index + 1}`"
-                :title="`${palette.primary} / ${palette.secondary}`"
-                @click="emit('apply-palette', palette)"
-              />
-            </div>
-          </div>
-        </div>
-
         <div
           v-if="showInlineActions"
           data-test="project-editor-inline-actions"
@@ -228,5 +134,138 @@ const toggleArchived = () => {
         </div>
       </div>
     </ContainerCard>
+
+    <ContainerCard as="section" class="w-full rounded-3xl" padding="comfortable">
+      <div class="flex min-w-0 flex-col gap-4">
+        <div
+          v-if="colorValidationMessages.length === 0"
+          class="flex min-h-[4.5rem] w-full min-w-0 items-center rounded-2xl border border-solid px-4 py-4 shadow-panel-selected sm:min-h-[5rem] sm:px-5"
+          data-test="project-editor-gradient-preview"
+          role="img"
+          :aria-label="`Gradient preview for ${gradientPreviewTitle}`"
+          :style="projectGradientPreviewStyle"
+        >
+          <span class="min-w-0 truncate text-base font-medium">{{ gradientPreviewTitle }}</span>
+        </div>
+
+        <ContainerCard
+          v-else
+          class="rounded-2xl py-3 text-sm"
+          data-test="project-editor-color-rules"
+          padding="default"
+          variant="danger"
+        >
+          <div class="flex flex-col gap-1">
+            <div class="font-semibold text-danger">Color rules block saving</div>
+            <ul class="list-disc pl-5 text-text">
+              <li v-for="message in colorValidationMessages" :key="message" class="leading-6">
+                {{ message }}
+              </li>
+            </ul>
+          </div>
+        </ContainerCard>
+
+        <div class="grid w-full min-w-0 grid-cols-1 items-start gap-4 md:grid-cols-2 md:gap-6">
+          <AppField label="Primary color" class="min-w-0">
+            <template #hint>
+              <p class="text-sm text-text-muted">
+                Badges always use white text, so the primary color has to stay dark enough for that
+                to read cleanly.
+              </p>
+            </template>
+            <div class="flex min-w-0 items-center gap-3">
+              <div
+                class="h-10 w-14 shrink-0 overflow-hidden rounded-xl border border-input-border bg-surface focus-within:ring-2 focus-within:ring-link focus-within:ring-offset-2 focus-within:outline-none"
+              >
+                <input
+                  :value="primaryColor"
+                  type="color"
+                  class="project-editor-native-color block h-full w-full cursor-pointer outline-none"
+                  aria-label="Primary color"
+                  @input="updatePrimaryColor"
+                />
+              </div>
+              <input
+                :value="primaryColor"
+                type="text"
+                class="min-h-10 min-w-0 flex-1 rounded-xl border border-input-border bg-surface px-3 py-2 font-data text-text"
+                placeholder="#2563eb"
+                @input="updatePrimaryColor"
+              />
+            </div>
+          </AppField>
+
+          <AppField label="Secondary color" class="min-w-0">
+            <template #hint>
+              <p class="text-sm text-text-muted">
+                Project gradients use one shared text color. Pick a secondary that keeps that text
+                readable across the full gradient.
+              </p>
+            </template>
+            <div class="flex min-w-0 items-center gap-3">
+              <div
+                class="h-10 w-14 shrink-0 overflow-hidden rounded-xl border border-input-border bg-surface focus-within:ring-2 focus-within:ring-link focus-within:ring-offset-2 focus-within:outline-none"
+              >
+                <input
+                  :value="secondaryColor"
+                  type="color"
+                  class="project-editor-native-color block h-full w-full cursor-pointer outline-none"
+                  aria-label="Secondary color"
+                  @input="updateSecondaryColor"
+                />
+              </div>
+              <input
+                :value="secondaryColor"
+                type="text"
+                class="min-h-10 min-w-0 flex-1 rounded-xl border border-input-border bg-surface px-3 py-2 font-data text-text"
+                placeholder="#0e7490"
+                @input="updateSecondaryColor"
+              />
+            </div>
+          </AppField>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <AppFieldLabel>Palette presets</AppFieldLabel>
+
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="(palette, index) in PROJECT_COLOR_PALETTE"
+              :key="`${palette.primary}-${palette.secondary}`"
+              type="button"
+              class="size-9 shrink-0 cursor-pointer rounded-full border border-overlay-border-strong shadow-control transition-[box-shadow,filter] duration-150 ease-out hover:shadow-[var(--shadow-panel)] hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+              :style="getProjectSwatchStyle(palette)"
+              :aria-label="`Apply color preset ${index + 1}`"
+              :title="`${palette.primary} / ${palette.secondary}`"
+              @click="emit('apply-palette', palette)"
+            />
+          </div>
+        </div>
+      </div>
+    </ContainerCard>
   </div>
 </template>
+
+<style scoped>
+/* Flush native color swatch to the rounded frame (removes default inner padding). */
+.project-editor-native-color {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.project-editor-native-color::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.project-editor-native-color::-webkit-color-swatch {
+  border: none;
+  border-radius: 0.75rem;
+}
+
+.project-editor-native-color::-moz-color-swatch {
+  border: none;
+  border-radius: 0.75rem;
+}
+</style>

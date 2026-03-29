@@ -30,10 +30,6 @@ const isSaving = ref(false)
 const initialFormSnapshot = ref<string | null>(null)
 const allowNextNavigation = ref(false)
 
-const previewColors = computed<ProjectColors>(() => ({
-  primary: normalizeHexColor(dynamicPrimaryColor.value) ?? '#2563eb',
-  secondary: normalizeHexColor(dynamicSecondaryColor.value) ?? '#0e7490',
-}))
 const colorValidationMessages = computed(() => {
   const primary = normalizeHexColor(dynamicPrimaryColor.value)
   const secondary = normalizeHexColor(dynamicSecondaryColor.value)
@@ -201,8 +197,6 @@ onBeforeRouteLeave(async (to) => {
       :is-saving="isSaving"
       :name="dynamicName"
       :notes="dynamicNotes"
-      :preview-colors="previewColors"
-      preview-notes-fallback="Notes can help you frame the project before the first session."
       :primary-color="dynamicPrimaryColor"
       :secondary-color="dynamicSecondaryColor"
       submit-label="Create project"

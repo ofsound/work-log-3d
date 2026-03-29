@@ -33,10 +33,6 @@ describe('ProjectEditorFormLayout', () => {
         heading,
         name,
         notes,
-        previewColors: {
-          primary: '#2563eb',
-          secondary: '#0e7490',
-        },
         primaryColor: '#2563eb',
         secondaryColor: '#0e7490',
         submitLabel: 'Save project',
@@ -44,16 +40,10 @@ describe('ProjectEditorFormLayout', () => {
     })
 
     expect(wrapper.get('[data-test="project-editor-heading"]').text()).toContain(heading)
+    expect(wrapper.find('[data-test="project-editor-gradient-preview"]').exists()).toBe(false)
     expect(wrapper.get('[data-test="project-editor-notes"]').text()).toContain('Internal notes')
     expect(wrapper.get('[data-test="project-editor-color-rules"]').text()).toContain(colorMessage)
-    expect(wrapper.get('[data-test="project-editor-preview"]').text()).toContain(name)
     expect(wrapper.get('[data-test="project-editor-inline-actions"]').exists()).toBe(true)
-    expect(
-      wrapper
-        .get('[data-test="project-editor-preview"]')
-        .find('[data-test="preview-section-workspace-header"]')
-        .exists(),
-    ).toBe(true)
 
     const cancelButton = wrapper
       .findAll('button')
@@ -64,6 +54,35 @@ describe('ProjectEditorFormLayout', () => {
     await cancelButton!.trigger('click')
 
     expect(wrapper.emitted('cancel')).toEqual([[]])
+  })
+
+  it('shows the gradient preview when color validation is clear', () => {
+    const name = 'Client Portal'
+
+    const wrapper = mount(ProjectEditorFormLayout, {
+      global: {
+        components: {
+          AppButton,
+          AppField,
+          AppFieldLabel,
+          AppTextInput,
+          AppTextarea,
+          ContainerCard,
+        },
+      },
+      props: {
+        colorValidationMessages: [],
+        heading: 'Edit Project',
+        name,
+        notes: 'Private working notes',
+        primaryColor: '#2563eb',
+        secondaryColor: '#0e7490',
+        submitLabel: 'Save project',
+      },
+    })
+
+    expect(wrapper.get('[data-test="project-editor-gradient-preview"]').text()).toContain(name)
+    expect(wrapper.find('[data-test="project-editor-color-rules"]').exists()).toBe(false)
   })
 
   it('can hide the inline action row when a workspace renders persistent footer actions', () => {
@@ -82,10 +101,6 @@ describe('ProjectEditorFormLayout', () => {
         heading: 'Edit Project',
         name: 'Client Portal',
         notes: 'Private working notes',
-        previewColors: {
-          primary: '#2563eb',
-          secondary: '#0e7490',
-        },
         primaryColor: '#2563eb',
         secondaryColor: '#0e7490',
         showInlineActions: false,

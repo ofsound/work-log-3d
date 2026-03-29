@@ -8,9 +8,8 @@ import type { PropType } from 'vue'
 import {
   getProjectAccentTextStyle,
   getProjectBadgeStyle,
-  getProjectDuotoneSoftSurfaceStyle,
-  getProjectOpaqueSoftSurfaceStyle,
   getProjectSecondaryAccentTextStyle,
+  getProjectTimeBoxSurfaceStyle,
 } from '~/utils/project-color-styles'
 import { getSessionsSearchRouteForTag } from '~/utils/sessions-route-state'
 import { getProjectPath, getProjectPathFromProject } from '~/utils/worklog-routes'
@@ -44,7 +43,6 @@ const props = defineProps({
   hideProjectChip: { type: Boolean, default: false },
   embeddedInPanel: { type: Boolean, default: false },
   flushTop: { type: Boolean, default: false },
-  opaqueSurface: { type: Boolean, default: false },
   hideActions: { type: Boolean, default: false },
   useProjectCardStyles: { type: Boolean, default: true },
   showCompactActions: { type: Boolean, default: false },
@@ -163,9 +161,7 @@ const sessionCardStyle = computed(() => {
     return {}
   }
 
-  return props.opaqueSurface
-    ? getProjectOpaqueSoftSurfaceStyle(project.value.colors)
-    : getProjectDuotoneSoftSurfaceStyle(project.value.colors)
+  return getProjectTimeBoxSurfaceStyle(project.value.colors)
 })
 const projectBadgeStyle = computed(() =>
   project.value ? getProjectBadgeStyle(project.value.colors) : {},

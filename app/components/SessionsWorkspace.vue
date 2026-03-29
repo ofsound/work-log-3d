@@ -289,7 +289,6 @@ const handleOpenSessionFromMonth = async (payload: { day: Date; sessionId: strin
               :id="item.id"
               :key="item.id"
               :highlight-tokens="listSearchTokens"
-              :opaque-surface="true"
             />
           </div>
         </template>

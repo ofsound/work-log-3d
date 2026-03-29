@@ -33,6 +33,10 @@ const getGradientEndColor = (colors: ProjectColors) => colors.secondary
 const mixWithSurface = (value: string, amount: number) =>
   `color-mix(in srgb, ${value} ${amount}%, var(--color-surface))`
 
+/** Uses `--project-duotone-mix-*` from theme so dark mode can use a higher mix than light. */
+const mixWithSurfaceDuotone = (value: string, mixCustomProperty: string) =>
+  `color-mix(in srgb, ${value} var(${mixCustomProperty}), var(--color-surface))`
+
 const mixColors = (left: string, leftAmount: number, right: string) =>
   `color-mix(in srgb, ${left} ${leftAmount}%, ${right})`
 
@@ -55,9 +59,15 @@ export const getProjectSecondarySoftSurfaceStyle = (colors: ProjectColors): CSSP
 })
 
 export const getProjectDuotoneSoftSurfaceStyle = (colors: ProjectColors): CSSProperties => ({
-  backgroundColor: mixWithSurface(colors.primary, 8),
-  backgroundImage: `linear-gradient(135deg, ${mixWithSurface(colors.primary, 14)}, ${mixWithSurface(colors.secondary, 14)})`,
+  backgroundColor: mixWithSurfaceDuotone(colors.primary, '--project-duotone-mix-base'),
+  backgroundImage: `linear-gradient(135deg, ${mixWithSurfaceDuotone(colors.primary, '--project-duotone-mix-gradient')}, ${mixWithSurfaceDuotone(colors.secondary, '--project-duotone-mix-gradient')})`,
   borderColor: mixColors(colors.secondary, 58, colors.primary),
+})
+
+/** Session cards in `TimeBoxViewer`: solid primary tint (same in panel overlay and elsewhere). */
+export const getProjectTimeBoxSurfaceStyle = (colors: ProjectColors): CSSProperties => ({
+  backgroundColor: mixWithSurface(colors.primary, 10),
+  borderColor: toRgba(colors.primary, 0.42),
 })
 
 export const getProjectOpaqueSoftSurfaceStyle = (colors: ProjectColors): CSSProperties => ({

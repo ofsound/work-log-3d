@@ -136,7 +136,6 @@ const showOverlayDaySummary = computed(() => props.overlay && props.mode === 'da
         :id="sessionId"
         embedded-in-panel
         hide-project-chip
-        :opaque-surface="overlay"
         flush-top
         @deleted="emit('close')"
       />

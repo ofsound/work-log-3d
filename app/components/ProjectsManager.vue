@@ -66,7 +66,7 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
     variant="projectGradient"
   >
     <div class="mb-8 flex items-center justify-between gap-3">
-      <div v-if="!isBelowSmViewport" class="min-w-0 flex-1 justify-start">
+      <div v-if="!isBelowSmViewport" class="flex min-w-0 flex-1 justify-start">
         <AppButton
           data-testid="projects-new-project-top"
           class="w-max tracking-wide"
@@ -79,7 +79,7 @@ const archivedProjects = computed(() => allProjectsNormalized.value.filter((p) =
         </AppButton>
       </div>
       <div class="shrink-0 text-2xl font-bold">Projects</div>
-      <div v-if="!isBelowSmViewport" class="min-w-0 flex-1 justify-end">
+      <div v-if="!isBelowSmViewport" class="flex min-w-0 flex-1 justify-end">
         <div
           data-testid="projects-layout-toggle"
           class="inline-flex rounded-md border border-border bg-surface-muted p-0.5 shadow-control"

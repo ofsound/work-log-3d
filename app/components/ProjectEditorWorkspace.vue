@@ -360,7 +360,6 @@ onBeforeRouteLeave(async () => {
             :is-saving="isSaving"
             :name="dynamicName"
             :notes="dynamicNotes"
-            :preview-colors="previewColors"
             :primary-color="dynamicPrimaryColor"
             :secondary-color="dynamicSecondaryColor"
             :show-inline-actions="false"
@@ -377,9 +376,9 @@ onBeforeRouteLeave(async () => {
             @update:secondary-color="dynamicSecondaryColor = $event"
           />
 
-          <ContainerCard as="section" padding="default" variant="danger">
-            <h2 class="text-sm font-bold tracking-wide text-danger uppercase">Danger zone</h2>
-            <p class="mt-2 max-w-xl text-sm text-text">
+          <ContainerCard as="section" padding="default" variant="overlay">
+            <h2 class="text-sm font-semibold text-text">Danger zone</h2>
+            <p class="mt-2 text-sm text-text">
               Permanently delete this project. Sessions that use this project must be removed or
               reassigned first, or deletion will fail.
             </p>
