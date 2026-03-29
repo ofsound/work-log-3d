@@ -4,6 +4,7 @@ import { nextTick, ref, watch } from 'vue'
 const props = withDefaults(
   defineProps<{
     contentBodyClass?: string
+    hideSidebar?: boolean
     sidebarBodyClass?: string
     sidebarFooterClass?: string
     /** When this value changes, the main content column scrolls to the top. */
@@ -11,6 +12,7 @@ const props = withDefaults(
   }>(),
   {
     contentBodyClass: '',
+    hideSidebar: false,
     sidebarBodyClass: '',
     sidebarFooterClass: '',
     contentScrollResetKey: undefined,
@@ -39,6 +41,7 @@ watch(
 <template>
   <div class="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row">
     <aside
+      v-if="!hideSidebar"
       class="flex w-full shrink-0 flex-col overflow-hidden border-b border-border-subtle bg-surface/96 backdrop-blur max-lg:max-h-[var(--height-workspace-sidebar-mobile-max)] lg:h-full lg:max-h-none lg:w-[var(--width-workspace-sidebar-rail)] lg:border-r lg:border-b-0"
     >
       <div class="flex min-h-0 flex-1 flex-col">

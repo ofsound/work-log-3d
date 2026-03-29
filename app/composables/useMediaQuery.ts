@@ -1,3 +1,5 @@
+import { onBeforeUnmount, readonly, ref } from 'vue'
+
 export function useMediaQuery(query: string, initialValue = false) {
   const matches = ref(initialValue)
 

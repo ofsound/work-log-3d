@@ -24,16 +24,7 @@ const homeActivityWeeks = computed(() =>
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col items-center justify-center gap-8 px-4 py-8 md:gap-10">
-    <img
-      src="/icon-white-not-so-thin.svg"
-      alt=""
-      width="400"
-      height="400"
-      class="h-[400px] w-[400px] max-w-[min(400px,calc(100vw-2rem))] shrink-0 object-contain"
-      decoding="async"
-    />
-
+  <div class="flex h-full min-h-0 flex-col items-center justify-center px-4 py-8">
     <HomeActivityTimeline :weeks="homeActivityWeeks" :loading="isHomeActivityLoading" />
   </div>
 </template>

@@ -6,6 +6,7 @@ import { useRuntimeConfig } from '#imports'
 
 import { useDesktopAlertSettings } from '~/composables/useDesktopAlertSettings'
 import { useFirestoreCollections } from '~/composables/useFirestoreCollections'
+import { useMediaQuery } from '~/composables/useMediaQuery'
 import { useSettingsAccount } from '~/composables/useSettingsAccount'
 import { useSettingsDraft } from '~/composables/useSettingsDraft'
 import { useTrayShortcutsEditor } from '~/composables/useTrayShortcutsEditor'
@@ -19,6 +20,7 @@ const runtimeConfig = useRuntimeConfig()
 const { projectsCollection, tagsCollection } = useFirestoreCollections()
 const allProjects = useCollection(projectsCollection)
 const allTags = useCollection(tagsCollection)
+const isBelowSmViewport = useMediaQuery('(max-width: 639px)', false)
 
 const draftState = useSettingsDraft()
 const account = useSettingsAccount()
@@ -78,12 +80,13 @@ const sortedTags = computed(() =>
 
 <template>
   <WorkspaceSidebarLayout
+    :hide-sidebar="isBelowSmViewport"
     content-body-class="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pt-12 pb-6"
     sidebar-body-class="px-6 pt-12 pb-6"
     sidebar-footer-class="px-6 pb-6"
   >
     <template #sidebar>
-      <div class="flex min-h-full flex-col">
+      <div v-if="!isBelowSmViewport" class="flex min-h-full flex-col">
         <div class="min-h-0 flex-1">
           <h1 class="text-3xl font-bold text-text">User Settings</h1>
           <ContainerCard class="mt-4" padding="compact" variant="muted" aria-live="polite">
@@ -187,12 +190,84 @@ const sortedTags = computed(() =>
     </template>
 
     <template #sidebarFooter>
-      <p class="text-center text-xs text-text-subtle">
+      <p v-if="!isBelowSmViewport" class="text-center text-xs text-text-subtle">
         Work Log {{ runtimeConfig.public.appVersion }}
       </p>
     </template>
 
     <template #default>
+      <template v-if="isBelowSmViewport">
+        <h1 class="text-3xl font-bold text-text">User Settings</h1>
+        <ContainerCard padding="compact" variant="muted" aria-live="polite">
+          <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Account</div>
+
+          <p
+            v-if="!isAccountUiReady || currentUser === undefined"
+            class="mt-2 text-sm text-text-muted"
+          >
+            Loading account…
+          </p>
+
+          <div v-else-if="accountUid" class="mt-3 flex gap-4">
+            <img
+              v-if="accountPhotoUrl"
+              :src="accountPhotoUrl"
+              alt=""
+              class="h-12 w-12 shrink-0 rounded-full border border-border-subtle bg-surface object-cover"
+              referrerpolicy="no-referrer"
+            />
+            <div class="min-w-0 flex-1">
+              <div v-if="accountDisplayName" class="font-semibold text-text">
+                {{ accountDisplayName }}
+              </div>
+              <div
+                v-if="accountEmail"
+                class="flex flex-wrap items-center justify-between gap-2"
+                :class="accountDisplayName ? 'mt-0.5' : ''"
+              >
+                <div
+                  class="min-w-0 text-sm"
+                  :class="accountDisplayName ? 'text-text-muted' : 'font-semibold text-text'"
+                >
+                  {{ accountEmail }}
+                </div>
+                <button
+                  type="button"
+                  class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                  @click="handleSignOut"
+                >
+                  Sign out
+                </button>
+              </div>
+              <div
+                v-else-if="accountDisplayName"
+                class="mt-2 flex flex-wrap items-center justify-end gap-2"
+              >
+                <button
+                  type="button"
+                  class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                  @click="handleSignOut"
+                >
+                  Sign out
+                </button>
+              </div>
+              <div v-else class="flex flex-wrap items-center justify-between gap-2">
+                <div class="text-sm font-semibold text-text">Signed-in user</div>
+                <button
+                  type="button"
+                  class="shrink-0 cursor-pointer text-sm font-semibold text-link underline hover:text-link-hover"
+                  @click="handleSignOut"
+                >
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p v-else class="mt-2 text-sm text-text-muted">No user is signed in.</p>
+        </ContainerCard>
+      </template>
+
       <ContainerCard as="section">
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div class="flex flex-col gap-4">
@@ -498,6 +573,40 @@ const sortedTags = computed(() =>
           </section>
         </div>
       </ContainerCard>
+
+      <template v-if="isBelowSmViewport">
+        <ContainerCard as="section">
+          <div class="flex flex-col gap-2">
+            <div class="flex gap-2">
+              <AppButton class="min-w-0 flex-1" variant="secondary" @click="handleCancel">
+                Cancel
+              </AppButton>
+              <AppButton
+                class="min-w-0 flex-1"
+                variant="primary"
+                :disabled="!isDirty || isSaving"
+                @click="handleSave"
+              >
+                {{ isSaving ? 'Saving…' : 'Save changes' }}
+              </AppButton>
+            </div>
+          </div>
+
+          <div
+            v-if="saveMessage"
+            class="mt-4 rounded-xl bg-surface-muted px-4 py-3 text-sm text-text"
+          >
+            {{ saveMessage }}
+          </div>
+          <p v-if="mutationErrorMessage" class="mt-4 text-sm text-danger">
+            {{ mutationErrorMessage }}
+          </p>
+        </ContainerCard>
+
+        <p class="text-center text-xs text-text-subtle">
+          Work Log {{ runtimeConfig.public.appVersion }}
+        </p>
+      </template>
     </template>
   </WorkspaceSidebarLayout>
 </template>
