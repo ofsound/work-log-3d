@@ -278,7 +278,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
       }
 
       const project = dynamicProject.value.trim()
-      const draftNotes = dynamicNotes.value.trim()
+      const draftNotes = dynamicNotes.value
       const tags = [...new Set(dynamicTags.value.map((tag) => tag.trim()).filter(Boolean))]
 
       if (

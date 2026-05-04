@@ -48,8 +48,7 @@ export const applyActiveTimerDraft = (
   project:
     draft.project === undefined ? state.project : normalizeOptionalString(draft.project) || '',
   tags: draft.tags === undefined ? state.tags : normalizeOptionalEntityIds(draft.tags),
-  draftNotes:
-    draft.draftNotes === undefined ? state.draftNotes : normalizeOptionalString(draft.draftNotes),
+  draftNotes: draft.draftNotes === undefined ? state.draftNotes : (draft.draftNotes ?? ''),
 })
 
 export const replaceActiveTimerState = (

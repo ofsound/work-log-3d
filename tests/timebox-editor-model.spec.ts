@@ -70,26 +70,39 @@ vi.mock('~/composables/useUserSettings', () => ({
   }),
 }))
 
+const timerServiceMocks = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Vitest hoisted + vue ref bootstrap
+  const { ref: vueRef } = require('vue') as typeof import('vue')
+
+  const createIdleTimerState = () => ({
+    mode: null as string | null,
+    status: 'idle' as const,
+    startedAtMs: null as number | null,
+    durationSeconds: null as number | null,
+    originalDurationSeconds: null as number | null,
+    pausedAtMs: null as number | null,
+    accumulatedPauseMs: 0,
+    endedAtMs: null as number | null,
+    lastExtensionConsumedSeconds: 0,
+    project: '',
+    tags: [] as string[],
+    draftNotes: '',
+    updatedAtMs: 0,
+    updatedByDeviceId: '',
+    mutationId: 0,
+  })
+
+  return {
+    createIdleTimerState,
+    setDraftContext: vi.fn().mockResolvedValue(undefined),
+    timerState: vueRef(createIdleTimerState()),
+  }
+})
+
 vi.mock('~/composables/useTimerService', () => ({
   useTimerService: () => ({
-    timerState: ref({
-      mode: null,
-      status: 'idle',
-      startedAtMs: null,
-      durationSeconds: null,
-      originalDurationSeconds: null,
-      pausedAtMs: null,
-      accumulatedPauseMs: 0,
-      endedAtMs: null,
-      lastExtensionConsumedSeconds: 0,
-      project: '',
-      tags: [],
-      draftNotes: '',
-      updatedAtMs: 0,
-      updatedByDeviceId: '',
-      mutationId: 0,
-    }),
-    setDraftContext: vi.fn().mockResolvedValue(undefined),
+    timerState: timerServiceMocks.timerState,
+    setDraftContext: timerServiceMocks.setDraftContext,
   }),
 }))
 
@@ -142,6 +155,8 @@ const mountHarness = (propsOverrides: Partial<ReturnType<typeof createBaseProps>
 describe('useTimeBoxEditorModel', () => {
   beforeEach(() => {
     timeBoxDocumentData.value = null
+    timerServiceMocks.timerState.value = timerServiceMocks.createIdleTimerState()
+    timerServiceMocks.setDraftContext.mockClear()
   })
 
   it('keeps duration and end-time state in sync for create flows', async () => {
@@ -172,6 +187,36 @@ describe('useTimeBoxEditorModel', () => {
     expect(clearMutationError).toHaveBeenCalled()
 
     wrapper.unmount()
+  })
+
+  it('passes draft notes to setDraftContext without trimming trailing spaces', async () => {
+    timerServiceMocks.timerState.value = {
+      ...timerServiceMocks.createIdleTimerState(),
+      mode: 'countup',
+      status: 'running',
+      startedAtMs: 1000,
+    }
+
+    vi.useFakeTimers()
+
+    try {
+      const { wrapper, getState } = mountHarness()
+      const state = getState()
+
+      state.dynamicNotes.value = 'hello '
+      await nextTick()
+
+      vi.advanceTimersByTime(300)
+      await nextTick()
+
+      expect(timerServiceMocks.setDraftContext).toHaveBeenCalledWith(
+        expect.objectContaining({ draftNotes: 'hello ' }),
+      )
+
+      wrapper.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('hydrates edit flows from the bound document and marks the editor as editing', async () => {

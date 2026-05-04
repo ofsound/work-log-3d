@@ -152,7 +152,7 @@ describe('timer state', () => {
 
     expect(updated.project).toBe('project-1')
     expect(updated.tags).toEqual(['tag-1'])
-    expect(updated.draftNotes).toBe('Draft note')
+    expect(updated.draftNotes).toBe(' Draft note ')
     expect(updated.status).toBe('running')
     expect(updated.startedAtMs).toBe(1_000)
   })
