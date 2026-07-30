@@ -279,5 +279,17 @@ service cloud.firestore {
       allow create, update: if isOwner(uid) && runtimeId == 'activeTimer' && isActiveTimerDocument();
       allow delete: if isOwner(uid) && runtimeId == 'activeTimer';
     }
+
+    match /publicReports/{token} {
+      allow read: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow write: if false;
+
+      match /sessionRows/{rowId} {
+        allow read: if request.auth != null
+          && get(/databases/$(database)/documents/publicReports/$(token)).data.ownerId
+            == request.auth.uid;
+        allow write: if false;
+      }
+    }
   }
 }

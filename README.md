@@ -52,7 +52,9 @@ guessing their types.
 The file records its backup-format version, app version, export time, source account metadata,
 per-collection counts, published-report counts, and best-effort consistency mode. It does not
 include passwords, auth tokens, local-only Electron alert sounds, browser-local theme state, or
-device identifiers.
+device identifiers. If the currently deployed Firestore rules predate owner backup access, the
+core backup still downloads and marks `publicReportSnapshots` as `unavailable`; after the updated
+rules are deployed, exact published snapshots are included and marked `complete`.
 
 ## Phone Mode
 
@@ -337,6 +339,9 @@ New projects are created from `/project/new`, where the initial notes and curate
 `publicReports/{token}`
 
 Server-managed published report snapshots for anonymous client access. The top-level document stores the frozen report snapshot metadata, while detailed session rows are written to a `sessionRows` subcollection so large reports stay within Firestore document limits.
+Direct Firestore writes remain server-only. The owning authenticated user may read their snapshot and
+session rows so the portable account backup can preserve the exact published state; anonymous
+viewers continue to use the server-managed `/r/:token` flow.
 
 ## Sessions Views
 

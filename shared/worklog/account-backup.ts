@@ -51,6 +51,7 @@ export interface WorkLogBackupV1 {
     consistency: 'best-effort'
     documentCount: number
     collectionDocumentCounts: Record<WorkLogBackupCollectionId, number>
+    publicReportSnapshots: 'complete' | 'unavailable'
     publicReportCount: number
     publicReportSessionRowCount: number
   }
@@ -68,6 +69,7 @@ export interface CreateWorkLogBackupInput {
   userDocument: WorkLogBackupDocument | null
   collections: WorkLogBackupCollections
   publicReports: WorkLogBackupPublicReport[]
+  publicReportSnapshots: WorkLogBackupV1['manifest']['publicReportSnapshots']
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -83,6 +85,7 @@ export const createWorkLogBackup = ({
   userDocument,
   collections,
   publicReports,
+  publicReportSnapshots,
 }: CreateWorkLogBackupInput): WorkLogBackupV1 => {
   const collectionDocumentCounts = Object.fromEntries(
     WORK_LOG_BACKUP_COLLECTION_IDS.map((collectionId) => [
@@ -113,6 +116,7 @@ export const createWorkLogBackup = ({
         publicReportSessionRowCount +
         (userDocument ? 1 : 0),
       collectionDocumentCounts,
+      publicReportSnapshots,
       publicReportCount: publicReports.length,
       publicReportSessionRowCount,
     },
@@ -146,6 +150,8 @@ export const parseWorkLogBackup = (serialized: string): WorkLogBackupV1 => {
     parsed.manifest.consistency !== 'best-effort' ||
     typeof parsed.manifest.documentCount !== 'number' ||
     !isRecord(parsed.manifest.collectionDocumentCounts) ||
+    (parsed.manifest.publicReportSnapshots !== 'complete' &&
+      parsed.manifest.publicReportSnapshots !== 'unavailable') ||
     typeof parsed.manifest.publicReportCount !== 'number' ||
     typeof parsed.manifest.publicReportSessionRowCount !== 'number' ||
     !isRecord(parsed.data) ||

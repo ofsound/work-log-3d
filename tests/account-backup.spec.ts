@@ -1,9 +1,6 @@
-import { Buffer } from 'node:buffer'
+import { Bytes, GeoPoint, Timestamp } from 'firebase/firestore'
 
-import { GeoPoint, Timestamp } from 'firebase-admin/firestore'
-
-import { getWorkLogBackupFileName } from '~/app/utils/account-backup'
-import { encodeFirestoreBackupValue } from '~/server/utils/account-backup'
+import { encodeFirestoreBackupValue, getWorkLogBackupFileName } from '~/app/utils/account-backup'
 import {
   WORK_LOG_BACKUP_COLLECTION_IDS,
   createWorkLogBackup,
@@ -68,6 +65,7 @@ describe('account backup', () => {
           ],
         },
       ],
+      publicReportSnapshots: 'complete',
     })
     const parsed = parseWorkLogBackup(serializeWorkLogBackup(backup))
 
@@ -76,6 +74,7 @@ describe('account backup', () => {
     expect(parsed.manifest.collectionDocumentCounts.timeBoxes).toBe(1)
     expect(parsed.manifest.publicReportCount).toBe(1)
     expect(parsed.manifest.publicReportSessionRowCount).toBe(1)
+    expect(parsed.manifest.publicReportSnapshots).toBe('complete')
     expect(getWorkLogBackupFileName(parsed.exportedAt)).toBe('work-log-backup-2026-07-29.json')
   })
 
@@ -92,6 +91,7 @@ describe('account backup', () => {
       userDocument: null,
       collections: createEmptyCollections(),
       publicReports: [],
+      publicReportSnapshots: 'unavailable',
     })
 
     backup.manifest.documentCount = 4
@@ -108,7 +108,7 @@ describe('account backup', () => {
       encodeFirestoreBackupValue({
         timestamp: Timestamp.fromDate(date),
         point: new GeoPoint(39.7392, -104.9903),
-        bytes: Buffer.from('backup'),
+        bytes: Bytes.fromUint8Array(new TextEncoder().encode('backup')),
         specialNumber: Number.POSITIVE_INFINITY,
         nestedUserMap: {
           $firestoreType: 'ordinary user data',

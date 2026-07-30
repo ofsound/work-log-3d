@@ -6,7 +6,16 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing'
-import { Timestamp, doc, setDoc } from 'firebase/firestore'
+import {
+  Timestamp,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  where,
+} from 'firebase/firestore'
 import { afterAll, afterEach, beforeAll, describe, it } from 'vitest'
 
 const projectId = 'demo-work-log'
@@ -371,6 +380,41 @@ describe('firestore rules', () => {
         updatedAtMs: 1_710_000_000_000,
         updatedByDeviceId: 'device-2',
         mutationId: 1,
+      }),
+    )
+  })
+
+  it('allows only the owner to read server-managed public report backup data', async () => {
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'publicReports', 'token-1'), {
+        ownerId: 'user-1',
+        title: 'Published report',
+      })
+      await setDoc(doc(context.firestore(), 'publicReports', 'token-1', 'sessionRows', 'row-1'), {
+        sessionId: 'session-1',
+      })
+    })
+
+    const ownerFirestore = testEnvironment.authenticatedContext('user-1').firestore()
+    const otherUserFirestore = testEnvironment.authenticatedContext('user-2').firestore()
+    const anonymousFirestore = testEnvironment.unauthenticatedContext().firestore()
+    const ownerReport = doc(ownerFirestore, 'publicReports', 'token-1')
+    const ownerRow = doc(ownerFirestore, 'publicReports', 'token-1', 'sessionRows', 'row-1')
+
+    await assertSucceeds(getDoc(ownerReport))
+    await assertSucceeds(getDoc(ownerRow))
+    await assertSucceeds(
+      getDocs(query(collection(ownerFirestore, 'publicReports'), where('ownerId', '==', 'user-1'))),
+    )
+    await assertFails(getDoc(doc(otherUserFirestore, 'publicReports', 'token-1')))
+    await assertFails(
+      getDoc(doc(otherUserFirestore, 'publicReports', 'token-1', 'sessionRows', 'row-1')),
+    )
+    await assertFails(getDoc(doc(anonymousFirestore, 'publicReports', 'token-1')))
+    await assertFails(
+      setDoc(ownerReport, {
+        ownerId: 'user-1',
+        title: 'Changed from the client',
       }),
     )
   })
