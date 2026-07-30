@@ -23,7 +23,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - Phone mode is a deliberate subset of the app, not just CSS reflow. It activates only when the device is both narrow (`max-width: 767px`) and touch-first (`hover: none` with a coarse pointer), so a resized desktop browser stays on the desktop UI.
 - In phone mode, `/sessions` supports only `day` and `search`; `week`, `month`, and `year` redirect to `day`. `/project/:segment` supports only `List`; `Calendar` and `/project/:segment/edit` redirect to the project overview. `/reports` redirects to `/sessions`. `/tags` stays available on phone.
-- `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences, synced desktop tray shortcuts, and desktop-only local alert sound controls
+- `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences, synced desktop tray shortcuts, desktop-only local alert sound controls, and portable account backup exports
 - `/new` can accept desktop-prefill query params: `project=<documentId>` and `tags=id1,id2`
 - Each project and tag has a `slug` derived from its name; URLs prefer it for readability while Firestore keeps using document ids
 - Project slug `new` is reserved so `/project/new` always points to the create workspace
@@ -38,6 +38,21 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - The Electron tray idle menu includes a built-in `Start Countdown (XXm)` action that uses the synced workflow default countdown minutes from `users/{uid}/settings/preferences`
 - While a timer is active, the Electron tray menu is mode-specific: count-up does not offer Pause, Stop/Log, or open-window log shortcuts (use **Reset** or cancel in the app); count-down omits **Stop** while running or paused and uses **Pause** / add-time / **Reset** as appropriate
 - The active timer is synced in Firestore at `users/{uid}/runtime/activeTimer`; open web/Electron clients subscribe in real time, and the synced timer carries draft project, tags, and notes for `/new`
+
+### Account backups
+
+Authenticated users can download a versioned `work-log-backup-YYYY-MM-DD.json` file from the bottom
+of the first column on `/settings`. The export contains the user document plus all documents in the
+user-scoped `projects`, `tags`, `timeBoxes`, `dailyNotes`, `reports`, `settings`, and `runtime`
+collections, plus the account's exact published-report snapshots and their session rows. Document
+IDs are preserved, and Firestore-only values such as timestamps, references, geopoints, bytes, and
+non-finite numbers use explicit `$firestoreType` tags so a future importer can restore them without
+guessing their types.
+
+The file records its backup-format version, app version, export time, source account metadata,
+per-collection counts, published-report counts, and best-effort consistency mode. It does not
+include passwords, auth tokens, local-only Electron alert sounds, browser-local theme state, or
+device identifiers.
 
 ## Phone Mode
 

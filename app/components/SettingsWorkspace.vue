@@ -88,7 +88,7 @@ const sortedTags = computed(() =>
   >
     <template #sidebar>
       <div v-if="!isBelowSmViewport" class="flex min-h-full flex-col">
-        <div class="min-h-0 flex-1">
+        <div class="min-h-0">
           <h1 class="text-3xl font-bold text-text">User Settings</h1>
           <ContainerCard class="mt-4" padding="compact" variant="muted" aria-live="polite">
             <div class="text-xs tracking-[0.16em] text-text-subtle uppercase">Account</div>
@@ -186,6 +186,10 @@ const sortedTags = computed(() =>
               {{ mutationErrorMessage }}
             </p>
           </ContainerCard>
+        </div>
+
+        <div v-if="accountUid" class="mt-auto pt-6">
+          <AccountBackupCard />
         </div>
       </div>
     </template>
@@ -603,6 +607,8 @@ const sortedTags = computed(() =>
             {{ mutationErrorMessage }}
           </p>
         </ContainerCard>
+
+        <AccountBackupCard v-if="accountUid" />
 
         <p class="text-center text-xs text-text-subtle">
           Work Log {{ runtimeConfig.public.appVersion }}

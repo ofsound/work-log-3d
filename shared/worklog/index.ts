@@ -1,4 +1,5 @@
 export * from './active-timer'
+export * from './account-backup'
 export * from './calendar'
 export * from './daily-notes'
 export * from './desktop'

@@ -4,6 +4,7 @@ import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 
 import AppButton from '~/app/components/AppButton.vue'
+import AccountBackupCard from '~/app/components/AccountBackupCard.vue'
 import AppField from '~/app/components/AppField.vue'
 import AppFieldLabel from '~/app/components/AppFieldLabel.vue'
 import AppSelect from '~/app/components/AppSelect.vue'
@@ -90,6 +91,7 @@ describe('settings page', () => {
       global: {
         components: {
           AppButton,
+          AccountBackupCard,
           AppField,
           AppFieldLabel,
           AppSelect,
@@ -109,6 +111,7 @@ describe('settings page', () => {
       'Open the desktop app to import a local sound file or manage tray shortcuts.',
     )
     expect(wrapper.text()).toContain('Project-only mode')
+    expect(wrapper.text()).toContain('Data backup')
     expect(wrapper.text()).toContain('Work Log 0.0.0-test')
   })
 })
