@@ -223,6 +223,8 @@ Static generate preview:
 npm run preview
 ```
 
+The active icon artwork centers the clock face itself, independently of the controls above it. The app/Dock SVGs place its center at `(512, 512)`; the PWA SVG crops that same centered artwork to the background tile and omits the shadow. The header and tray share `shared/icons/newTimeboxIcon.ts`, whose square viewBox is centered on `(12, 14)`. After changing the artwork, regenerate the active PNG/ICO assets (including both tray resolutions), rebuild the web target, and package Electron with `npm run electron:dist`.
+
 ## Firestore Data Shape
 
 `users/{uid}/projects/{projectId}`
