@@ -20,9 +20,9 @@
     <rect x="96" y="96" width="832" height="832" rx="184" fill="url(#bgGrad)" />
     <rect x="100" y="100" width="824" height="824" rx="180" fill="none" stroke="#3D9EE4" stroke-opacity="0.4" stroke-width="4" />
 
-    <!-- Center the clock face at (512, 512), independent of the timer controls above it. -->
+    <!-- Center the clock face horizontally at x=512; preserve its original vertical placement. -->
     <g>
-      <g transform="translate(176, 120) scale(28)" stroke="#FFFFFF" stroke-width="1.64" stroke-linecap="round" stroke-linejoin="round">
+      <g transform="translate(176, 190) scale(28)" stroke="#FFFFFF" stroke-width="1.64" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="14" r="8" fill="url(#faceGrad)" />
         <line x1="12" y1="2" x2="12" y2="6" />
         <line x1="9.5" y1="1.5" x2="14.5" y2="1.5" stroke-width="2.46" />
