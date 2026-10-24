@@ -255,25 +255,21 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   }
 
   watch(
-    () => options.props.startTimeFromTimer,
-    (newValue) => {
+    () => [options.props.startTimeFromTimer, options.props.endTimeFromTimer] as const,
+    ([start, end], [previousStart, previousEnd]) => {
       if (options.props.id) {
         return
       }
 
-      dynamicStartTime.value = newValue || options.props.initialStartTime || ''
-      options.clearMutationError()
-    },
-  )
-
-  watch(
-    () => options.props.endTimeFromTimer,
-    (newValue) => {
-      if (options.props.id) {
-        return
+      if (start !== previousStart) {
+        dynamicStartTime.value = start || options.props.initialStartTime || ''
       }
 
-      dynamicEndTime.value = newValue || options.props.initialEndTime || ''
+      // A fresh timer has no end yet. Clear the previous session's end even when
+      // the timer's end prop was already empty before starting.
+      if (start !== previousStart || end !== previousEnd) {
+        dynamicEndTime.value = end || options.props.initialEndTime || ''
+      }
       options.clearMutationError()
     },
   )
@@ -374,6 +370,12 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
     () => dynamicDuration.value,
     () => {
       clearDurationTypingTimer()
+      const durationFromTimes =
+        dynamicStartTime.value && dynamicEndTime.value ? timeBoxDuration() : null
+      if (dynamicDuration.value === (durationFromTimes || '')) {
+        return
+      }
+
       if (dynamicStartTime.value) {
         const tempDate = new Date(dynamicStartTime.value)
         tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value || 0))

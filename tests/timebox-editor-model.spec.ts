@@ -189,6 +189,26 @@ describe('useTimeBoxEditorModel', () => {
     wrapper.unmount()
   })
 
+  it('clears a previous end time when a fresh countdown starts without an end', async () => {
+    const { props, wrapper, getState } = mountHarness()
+    const state = getState()
+    state.dynamicStartTime.value = formatToDatetimeLocal(new Date(2026, 9, 24, 11, 55))
+    state.dynamicEndTime.value = formatToDatetimeLocal(new Date(2026, 9, 24, 12, 31))
+    await nextTick()
+    expect(state.dynamicDuration.value).toBe(36)
+
+    props.startTimeFromTimer = formatToDatetimeLocal(new Date(2026, 9, 24, 12, 44))
+    await nextTick()
+    expect(state.dynamicStartTime.value).toBe(props.startTimeFromTimer)
+    expect(state.dynamicEndTime.value).toBe('')
+    expect(state.dynamicDuration.value).toBe('')
+
+    props.endTimeFromTimer = formatToDatetimeLocal(new Date(2026, 9, 24, 13, 20))
+    await nextTick()
+    expect(state.dynamicDuration.value).toBe(36)
+    wrapper.unmount()
+  })
+
   it('preserves edited duration and dirty state across project/tag draft echoes', async () => {
     const { props, wrapper, getState } = mountHarness({
       startTimeFromTimer: formatToDatetimeLocal(new Date(2026, 2, 23, 9, 0)),
