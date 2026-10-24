@@ -27,12 +27,13 @@ watch(
 
     const handler = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault()
         emit('cancel')
       }
     }
 
-    window.addEventListener('keydown', handler)
-    onWatcherCleanup(() => window.removeEventListener('keydown', handler))
+    window.addEventListener('keydown', handler, { capture: true })
+    onWatcherCleanup(() => window.removeEventListener('keydown', handler, { capture: true }))
   },
 )
 </script>

@@ -219,6 +219,96 @@ describe('useTimeBoxEditorModel', () => {
     }
   })
 
+  it('ignores the Firestore echo of sent draft notes so newer typing is never overwritten', async () => {
+    timerServiceMocks.timerState.value = {
+      ...timerServiceMocks.createIdleTimerState(),
+      mode: 'countup',
+      status: 'running',
+      startedAtMs: 1000,
+    }
+
+    vi.useFakeTimers()
+
+    try {
+      const { props, wrapper, getState } = mountHarness()
+      const state = getState()
+
+      state.dynamicNotes.value = 'Reviewed the PR\n'
+      await nextTick()
+      vi.advanceTimersByTime(300)
+      await nextTick()
+
+      state.dynamicNotes.value = 'Reviewed the PR\nNext: '
+      await nextTick()
+
+      props.initialNotes = 'Reviewed the PR\n'
+      await nextTick()
+
+      expect(state.dynamicNotes.value).toBe('Reviewed the PR\nNext: ')
+
+      wrapper.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('still applies draft notes changed on another device', async () => {
+    const { props, wrapper, getState } = mountHarness()
+    const state = getState()
+
+    props.initialNotes = 'Typed on my phone '
+    await nextTick()
+
+    expect(state.dynamicNotes.value).toBe('Typed on my phone ')
+
+    wrapper.unmount()
+  })
+
+  it('tracks unsaved edits against the loaded session', async () => {
+    timeBoxDocumentData.value = {
+      id: 'session-1',
+      notes: 'Hydrated notes',
+      project: 'project-1',
+      startTime: { toDate: () => new Date(2026, 2, 23, 13, 0) },
+      endTime: { toDate: () => new Date(2026, 2, 23, 14, 30) },
+      tags: ['tag-1'],
+    }
+
+    const { wrapper, getState } = mountHarness({ id: 'session-1' })
+    const state = getState()
+
+    await nextTick()
+    await nextTick()
+    expect(state.isDirty.value).toBe(false)
+
+    state.dynamicNotes.value = 'Hydrated notes, edited'
+    await nextTick()
+    expect(state.isDirty.value).toBe(true)
+
+    state.dynamicNotes.value = 'Hydrated notes'
+    await nextTick()
+    expect(state.isDirty.value).toBe(false)
+
+    wrapper.unmount()
+  })
+
+  it('treats create defaults as pristine until the user changes something', async () => {
+    const { wrapper, getState } = mountHarness({
+      initialStartTime: formatToDatetimeLocal(new Date(2026, 2, 23, 9, 0)),
+      initialEndTime: formatToDatetimeLocal(new Date(2026, 2, 23, 10, 0)),
+    })
+    const state = getState()
+
+    await nextTick()
+    expect(state.isDirty.value).toBe(false)
+
+    state.dynamicProject.value = 'project-1'
+    await nextTick()
+    expect(state.isDirty.value).toBe(true)
+
+    wrapper.unmount()
+  })
+
   it('hydrates edit flows from the bound document and marks the editor as editing', async () => {
     timeBoxDocumentData.value = {
       id: 'session-1',

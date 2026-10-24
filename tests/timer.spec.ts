@@ -15,6 +15,7 @@ import {
   stopTimer,
   syncActiveTimerState,
   syncTimerState,
+  validateActiveTimerState,
 } from '~/shared/worklog'
 
 describe('timer state', () => {
@@ -192,6 +193,18 @@ describe('timer state', () => {
     expect(structuredClone(snapshot)).toEqual(snapshot)
   })
 
+  it('round-trips in-progress draft notes through the Firestore write and read paths unchanged', () => {
+    const typedNotes = '  Reviewed the PR \nNext: '
+    const running = applyActiveTimerDraft(
+      replaceActiveTimerState(createIdleActiveTimerState(), startCountupTimer(1_000)),
+      { draftNotes: typedNotes },
+    )
+
+    const echoed = reviveActiveTimerState(validateActiveTimerState(running))
+
+    expect(echoed.draftNotes).toBe(typedNotes)
+  })
+
   it('revives active timer state with sanitized draft metadata', () => {
     const revived = reviveActiveTimerState({
       mode: 'countup',
@@ -213,7 +226,7 @@ describe('timer state', () => {
 
     expect(revived.project).toBe('project-1')
     expect(revived.tags).toEqual(['tag-1'])
-    expect(revived.draftNotes).toBe('Draft note')
+    expect(revived.draftNotes).toBe(' Draft note ')
     expect(revived.updatedByDeviceId).toBe('device-1')
     expect(revived.mutationId).toBe(3)
   })

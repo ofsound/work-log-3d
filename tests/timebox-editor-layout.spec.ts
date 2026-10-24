@@ -52,6 +52,14 @@ const mutationErrorMessage = ref('')
   dragActive: ref(false),
   onPointerDown: vi.fn(),
 })
+;(
+  globalThis as typeof globalThis & {
+    useConfirmDialog?: () => { confirm: ReturnType<typeof vi.fn>; state: ReturnType<typeof ref> }
+  }
+).useConfirmDialog = () => ({
+  confirm: vi.fn(),
+  state: ref({ open: false }),
+})
 
 const resetModelState = () => {
   sortedPickerProjects.value = createProjects(5)
@@ -84,6 +92,7 @@ vi.mock('~/composables/useTimeBoxEditorModel', () => ({
     dynamicStartTime,
     dynamicTags,
     hideTags: hideTagsModel,
+    isDirty: computed(() => false),
     isEditingExistingTimeBox: computed(() => false),
     projectRadiosTwoColumns: computed(() => sortedPickerProjects.value.length > 4),
     resetTimeBoxEditor: vi.fn(),

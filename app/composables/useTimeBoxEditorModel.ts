@@ -63,6 +63,45 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   const dynamicTags = ref<string[]>([])
   const dynamicDuration = ref<string | number>('')
 
+  /** Last notes value pushed to the active timer; its Firestore echo must not overwrite newer typing. */
+  let lastSentDraftNotes: string | null = null
+
+  const serializeEditorFields = (fields: {
+    startTime: string
+    endTime: string
+    notes: string
+    project: string
+    tags: readonly string[]
+  }) =>
+    JSON.stringify([
+      fields.startTime,
+      fields.endTime,
+      fields.notes,
+      fields.project,
+      [...fields.tags].sort(),
+    ])
+
+  const getCurrentEditorFields = () => ({
+    startTime: dynamicStartTime.value,
+    endTime: dynamicEndTime.value,
+    notes: dynamicNotes.value,
+    project: dynamicProject.value,
+    tags: dynamicTags.value,
+  })
+
+  const pristineEditorFields = ref(serializeEditorFields(getCurrentEditorFields()))
+
+  const markPristine = (overrides: { notes?: string } = {}) => {
+    pristineEditorFields.value = serializeEditorFields({
+      ...getCurrentEditorFields(),
+      ...overrides,
+    })
+  }
+
+  const isDirty = computed(
+    () => serializeEditorFields(getCurrentEditorFields()) !== pristineEditorFields.value,
+  )
+
   const sortedPickerProjects = computed(() =>
     sortNamedEntities(
       projectsForSessionPicker(
@@ -152,6 +191,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
     dynamicProject.value = options.props.initialProject || ''
     dynamicTags.value = [...options.props.initialTags]
     syncDynamicDurationFromTimes()
+    markPristine({ notes: options.props.initialNotes || '' })
   }
 
   if (options.props.id) {
@@ -176,6 +216,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
         dynamicProject.value = timeBox.project
         dynamicTags.value = timeBox.tags
         syncDynamicDurationFromTimes()
+        markPristine()
         options.clearMutationError()
       },
       { immediate: true },
@@ -199,6 +240,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
     dynamicProject.value = ''
     dynamicNotes.value = ''
     dynamicTags.value = []
+    markPristine()
     options.clearMutationError()
   }
 
@@ -250,9 +292,17 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   watch(
     () => options.props.initialNotes,
     (nextNotes) => {
-      if (!options.props.id) {
-        dynamicNotes.value = nextNotes || ''
+      if (options.props.id) {
+        return
       }
+
+      const incomingNotes = nextNotes || ''
+
+      if (draftSyncTimer.value !== undefined || incomingNotes === lastSentDraftNotes) {
+        return
+      }
+
+      dynamicNotes.value = incomingNotes
     },
   )
 
@@ -292,6 +342,8 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
 
       clearDraftSyncTimer()
       draftSyncTimer.value = setTimeout(() => {
+        draftSyncTimer.value = undefined
+        lastSentDraftNotes = draftNotes
         void setDraftContext({
           project,
           tags,
@@ -371,6 +423,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
     dynamicTags,
     getTimeBoxInput,
     hideTags,
+    isDirty,
     isEditingExistingTimeBox,
     projectRadiosTwoColumns,
     resetTimeBoxEditor,

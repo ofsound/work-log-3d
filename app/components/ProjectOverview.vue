@@ -395,7 +395,7 @@ const clearCalendarSelectionFromEscape = async () => {
 }
 
 const handleProjectOverviewKeydown = (event: KeyboardEvent) => {
-  if (event.key !== 'Escape') {
+  if (event.key !== 'Escape' || event.defaultPrevented) {
     return
   }
 

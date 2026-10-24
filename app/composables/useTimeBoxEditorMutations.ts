@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 
-import { useConfirmDialog } from '~/composables/useConfirmDialog'
 import { useOverlayToast } from '~/composables/useOverlayToast'
 import { useWorklogRepository } from '~/composables/useWorklogRepository'
 import type { TimeBoxEditorProps } from '~/composables/useTimeBoxEditorModel'
@@ -16,7 +15,6 @@ export interface UseTimeBoxEditorMutationsOptions {
 
 export function useTimeBoxEditorMutations(options: UseTimeBoxEditorMutationsOptions) {
   const repositories = useWorklogRepository()
-  const { confirm } = useConfirmDialog()
   const { show: showOverlayToast } = useOverlayToast()
 
   const mutationErrorMessage = ref('')
@@ -27,19 +25,6 @@ export function useTimeBoxEditorMutations(options: UseTimeBoxEditorMutationsOpti
 
   const updateTimeBoxDocument = async () => {
     if (!options.props.id) {
-      return
-    }
-
-    const confirmed = await confirm({
-      title: 'Update this session?',
-      message: 'Save your changes to this time box.',
-      confirmLabel: 'Update',
-      variant: 'primary',
-    })
-
-    if (!confirmed) {
-      clearMutationError()
-      options.emit('toggleEditor')
       return
     }
 

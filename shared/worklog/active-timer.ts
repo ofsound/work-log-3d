@@ -27,6 +27,9 @@ const normalizeOptionalEntityIds = (values: EntityId[] | null | undefined) =>
 
 const normalizeOptionalString = (value: string | null | undefined) => value?.trim() ?? ''
 
+/** Draft notes are in-progress text synced while typing; trimming here would eat spaces and newlines. */
+export const normalizeDraftNotes = (value: unknown) => (typeof value === 'string' ? value : '')
+
 const reviveNonNegativeInteger = (value: unknown, fallback = 0) =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : fallback
 
@@ -48,7 +51,8 @@ export const applyActiveTimerDraft = (
   project:
     draft.project === undefined ? state.project : normalizeOptionalString(draft.project) || '',
   tags: draft.tags === undefined ? state.tags : normalizeOptionalEntityIds(draft.tags),
-  draftNotes: draft.draftNotes === undefined ? state.draftNotes : (draft.draftNotes ?? ''),
+  draftNotes:
+    draft.draftNotes === undefined ? state.draftNotes : normalizeDraftNotes(draft.draftNotes),
 })
 
 export const replaceActiveTimerState = (
@@ -86,7 +90,7 @@ export const reviveActiveTimerState = (value: unknown): ActiveTimerState => {
     ...reviveTimerState(candidate),
     project: normalizeOptionalString(candidate.project),
     tags: normalizeOptionalEntityIds(candidate.tags),
-    draftNotes: normalizeOptionalString(candidate.draftNotes),
+    draftNotes: normalizeDraftNotes(candidate.draftNotes),
     updatedAtMs: reviveNonNegativeInteger(candidate.updatedAtMs),
     updatedByDeviceId: normalizeOptionalString(candidate.updatedByDeviceId),
     mutationId: reviveNonNegativeInteger(candidate.mutationId),

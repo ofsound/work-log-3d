@@ -109,4 +109,17 @@ describe('useSessionsKeyboard', () => {
     input.remove()
     harness.wrapper.unmount()
   })
+
+  it('does not close the panel when an open editor already handled Escape', () => {
+    const harness = mountHarness()
+    const markHandled = (event: KeyboardEvent) => event.preventDefault()
+
+    window.addEventListener('keydown', markHandled, { capture: true })
+    dispatchKeyboard('Escape', {}, document.body)
+    window.removeEventListener('keydown', markHandled, { capture: true })
+
+    expect(harness.applyCalendarEscapeDismiss).not.toHaveBeenCalled()
+
+    harness.wrapper.unmount()
+  })
 })

@@ -22,7 +22,7 @@ describe('active timer validation', () => {
 
     expect(valid.project).toBe('project-1')
     expect(valid.tags).toEqual(['tag-1'])
-    expect(valid.draftNotes).toBe('Draft note')
+    expect(valid.draftNotes).toBe(' Draft note ')
   })
 
   it('rejects countdown timers without duration metadata', () => {

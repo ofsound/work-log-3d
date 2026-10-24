@@ -55,6 +55,7 @@ const {
   dynamicStartTime,
   dynamicTags,
   hideTags,
+  isDirty,
   isEditingExistingTimeBox,
   projectRadiosTwoColumns,
   sessionTimeHero,
@@ -148,18 +149,58 @@ const { dragActive: endTimeMinuteDragActive, onPointerDown: onEndTimeMinutePoint
     },
   })
 
-const handleEscape = (event: { key: string }) => {
-  if (event.key === 'Escape') {
-    emit('toggleEditor')
+const { confirm, state: confirmDialogState } = useConfirmDialog()
+
+const canCloseEditor = computed(() => isEditingExistingTimeBox.value || props.showCreateCancel)
+
+const isEditableTarget = (target: EventTarget | null): target is HTMLElement =>
+  target instanceof HTMLElement &&
+  Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
+
+/**
+ * Registered in the capture phase so it runs before page-level Escape handlers (which close the
+ * surrounding panel); `preventDefault()` tells those handlers the key was already handled.
+ */
+const handleEscape = async (event: KeyboardEvent) => {
+  if (
+    event.key !== 'Escape' ||
+    event.defaultPrevented ||
+    !canCloseEditor.value ||
+    confirmDialogState.value.open
+  ) {
+    return
   }
+
+  event.preventDefault()
+
+  if (isEditableTarget(event.target)) {
+    event.target.blur()
+    return
+  }
+
+  if (isDirty.value) {
+    const discard = await confirm({
+      title: 'Discard changes?',
+      message: 'Your edits to this session will be lost.',
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep editing',
+      variant: 'danger',
+    })
+
+    if (!discard) {
+      return
+    }
+  }
+
+  emit('toggleEditor')
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleEscape)
+  window.addEventListener('keydown', handleEscape, { capture: true })
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleEscape)
+  window.removeEventListener('keydown', handleEscape, { capture: true })
   if (dynamicDurationTypingTimer.value) {
     clearTimeout(dynamicDurationTypingTimer.value)
   }

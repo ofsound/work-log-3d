@@ -183,7 +183,7 @@ describe('firestore worklog repositories', () => {
     })
 
     expect(timer.tags).toEqual(['tag-1'])
-    expect(timer.draftNotes).toBe('Draft note')
+    expect(timer.draftNotes).toBe(' Draft note ')
     expect(toActiveTimerPayload(timer)).toEqual({
       mode: 'countdown',
       status: 'paused',
@@ -196,7 +196,7 @@ describe('firestore worklog repositories', () => {
       lastExtensionConsumedSeconds: 0,
       project: 'project-1',
       tags: ['tag-1'],
-      draftNotes: 'Draft note',
+      draftNotes: ' Draft note ',
       updatedAtMs: 1_710_000_900_000,
       updatedByDeviceId: 'device-1',
       mutationId: 3,

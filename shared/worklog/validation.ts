@@ -1,4 +1,4 @@
-import type { ActiveTimerState } from './active-timer'
+import { normalizeDraftNotes, type ActiveTimerState } from './active-timer'
 import { formatDateKey, parseDateKey } from './calendar'
 import {
   cloneDailyNoteContent,
@@ -233,7 +233,7 @@ export const validateActiveTimerState = (input: ActiveTimerState): ActiveTimerSt
     ),
     project: normalizeOptionalString(input.project),
     tags: normalizeOptionalEntityIds(input.tags),
-    draftNotes: normalizeOptionalString(input.draftNotes),
+    draftNotes: normalizeDraftNotes(input.draftNotes),
     updatedAtMs: requireNonNegativeInteger(input.updatedAtMs, 'Last update time'),
     updatedByDeviceId: normalizeOptionalString(input.updatedByDeviceId),
     mutationId: requireNonNegativeInteger(input.mutationId, 'Mutation id'),

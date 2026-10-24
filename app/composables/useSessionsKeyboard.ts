@@ -29,6 +29,7 @@ const isEditableTarget = (event: KeyboardEvent) => {
 export function useSessionsKeyboard(options: UseSessionsKeyboardOptions) {
   const handleCalendarKeyboard = (event: KeyboardEvent) => {
     if (
+      event.defaultPrevented ||
       ['search', 'year'].includes(options.currentMode.value) ||
       isEditableTarget(event) ||
       event.metaKey ||
