@@ -313,7 +313,8 @@ const tagsListClass = computed(() =>
                       :id="durationInputId"
                       v-model="dynamicDuration"
                       inputmode="numeric"
-                      class="block h-9 w-full min-w-0 bg-transparent p-0 text-right outline-none select-text"
+                      placeholder="0"
+                      class="block h-9 w-full min-w-0 bg-transparent p-0 text-right outline-none select-text placeholder:text-text"
                       :class="timeValueClass"
                       @input="mutationErrorMessage = ''"
                     />
