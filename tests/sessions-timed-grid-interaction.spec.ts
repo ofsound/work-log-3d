@@ -153,7 +153,7 @@ describe('useSessionsTimedGridInteraction', () => {
     vi.useRealTimers()
   })
 
-  it('treats day-view create clicks as scratchpad opens and session clicks as session opens', async () => {
+  it('opens a 30-minute draft on day-view clicks and existing sessions on session clicks', async () => {
     const harness = mountHarness()
     const state = harness.getState()
     const surface = document.createElement('div')
@@ -179,8 +179,11 @@ describe('useSessionsTimedGridInteraction', () => {
       clientY: HOUR_HEIGHT * 8,
     })
 
-    expect(harness.onOpenScratchpad).toHaveBeenCalledTimes(1)
-    expect(harness.onCreateSession).not.toHaveBeenCalled()
+    expect(harness.onOpenScratchpad).not.toHaveBeenCalled()
+    expect(harness.onCreateSession).toHaveBeenCalledWith({
+      startTime: new Date(2026, 2, 23, 8, 0),
+      endTime: new Date(2026, 2, 23, 8, 30),
+    })
 
     const layout = state.dayLayouts.value[0]![0]!
 
@@ -249,6 +252,33 @@ describe('useSessionsTimedGridInteraction', () => {
     harness.wrapper.unmount()
   })
 
+  it('opens a half-hour draft from a week-view click without also navigating to the day', () => {
+    const harness = mountHarness({ days: [activeDate, nextDay] })
+    const state = harness.getState()
+    const surface = document.createElement('div')
+    const grid = document.createElement('div')
+    setRect(surface, { width: 560, height: HOUR_HEIGHT * 24 })
+    setRect(grid, { width: 560, height: HOUR_HEIGHT * 24 })
+    state.setCalendarSurfaceRef(surface, 0)
+    state.weekCalendarGridRef.value = grid
+    const pointer = { button: 0, clientX: 320, clientY: HOUR_HEIGHT * 23.5 }
+    state.handleCreatePointerDown(new MouseEvent('pointerdown', pointer) as unknown as PointerEvent)
+    dispatchPointer('pointerup', pointer)
+    expect(harness.onCreateSession).toHaveBeenCalledWith({
+      startTime: new Date(2026, 2, 24, 23, 30),
+      endTime: new Date(2026, 2, 25, 0, 0),
+    })
+    const currentTarget = document.createElement('div')
+    state.handleWeekColumnBackingClick(nextDay, {
+      currentTarget,
+      target: currentTarget,
+      preventDefault: vi.fn(),
+    } as unknown as MouseEvent)
+    expect(harness.onOpenDay).not.toHaveBeenCalled()
+    expect(harness.onDismissCalendar).not.toHaveBeenCalled()
+    harness.wrapper.unmount()
+  })
+
   it('creates week-view sessions across columns and suppresses the next backing click', async () => {
     const harness = mountHarness({
       days: [activeDate, nextDay],
@@ -312,6 +342,40 @@ describe('useSessionsTimedGridInteraction', () => {
     harness.wrapper.unmount()
   })
 
+  it('opens today near the current evening time without repeatedly snapping while browsing', async () => {
+    vi.setSystemTime(new Date(2026, 2, 23, 21, 15))
+    const harness = mountHarness()
+    const state = harness.getState()
+    const scrollContainer = document.createElement('div')
+    const marker = document.createElement('div')
+    setRect(scrollContainer, { top: 0, width: 320, height: 500 })
+    setRect(marker, { top: HOUR_HEIGHT * 7.5 })
+    state.scrollContainerRef.value = scrollContainer
+    state.setSevenThirtyLineRef(marker, 0)
+    await flushGridWork()
+    expect(scrollContainer.scrollTop).toBe(HOUR_HEIGHT * 20.25)
+    scrollContainer.scrollTop = 200
+    vi.advanceTimersByTime(60_000)
+    await flushGridWork()
+    expect(scrollContainer.scrollTop).toBe(200)
+    harness.wrapper.unmount()
+  })
+
+  it('keeps week view aligned to the morning even when today is in the week', async () => {
+    vi.setSystemTime(new Date(2026, 2, 23, 21, 15))
+    const harness = mountHarness({ days: [activeDate, nextDay] })
+    const state = harness.getState()
+    const scrollContainer = document.createElement('div')
+    const marker = document.createElement('div')
+    setRect(scrollContainer, { top: 0, width: 560, height: 500 })
+    setRect(marker, { top: HOUR_HEIGHT * 7.5 })
+    state.scrollContainerRef.value = scrollContainer
+    state.setSevenThirtyLineRef(marker, 0)
+    await flushGridWork()
+    expect(scrollContainer.scrollTop).toBe(HOUR_HEIGHT * 7.5)
+    harness.wrapper.unmount()
+  })
+
   it('realigns the scroll container to the 7:30 marker when visible days change', async () => {
     const scrollAlignTarget = document.createElement('div')
     const harness = mountHarness({
@@ -352,6 +416,27 @@ describe('useSessionsTimedGridInteraction', () => {
 
     expect(scrollContainer.scrollTop).toBe(240)
 
+    harness.wrapper.unmount()
+  })
+  it('discards a cancelled calendar drag without creating a session on the next pointer release', () => {
+    const harness = mountHarness()
+    const state = harness.getState()
+    const surface = document.createElement('div')
+    setRect(surface, { width: 320, height: HOUR_HEIGHT * 24 })
+    state.setCalendarSurfaceRef(surface, 0)
+    state.handleCreatePointerDown(
+      new MouseEvent('pointerdown', {
+        button: 0,
+        clientX: 120,
+        clientY: HOUR_HEIGHT * 8,
+      }) as unknown as PointerEvent,
+    )
+    dispatchPointer('pointermove', { clientX: 120, clientY: HOUR_HEIGHT * 9 })
+    window.dispatchEvent(new MouseEvent('pointercancel'))
+    dispatchPointer('pointerup', { clientX: 120, clientY: HOUR_HEIGHT * 9 })
+    expect(harness.onCreateSession).not.toHaveBeenCalled()
+    expect(state.interactionState.value).toBeNull()
+    expect(state.previewStyle.value).toBeNull()
     harness.wrapper.unmount()
   })
 })

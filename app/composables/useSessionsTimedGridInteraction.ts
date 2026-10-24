@@ -321,6 +321,14 @@ export function useSessionsTimedGridInteraction(options: UseSessionsTimedGridInt
   const stopInteraction = () => {
     window.removeEventListener('pointermove', handleWindowPointerMove)
     window.removeEventListener('pointerup', handleWindowPointerUp)
+    window.removeEventListener('pointercancel', cancelInteraction)
+    window.removeEventListener('blur', cancelInteraction)
+  }
+
+  const cancelInteraction = () => {
+    interactionState.value = null
+    lastPointerSlot.value = null
+    stopInteraction()
   }
 
   const handleWindowPointerUp = (event: PointerEvent) => {
@@ -336,12 +344,9 @@ export function useSessionsTimedGridInteraction(options: UseSessionsTimedGridInt
 
     if (state.mode === 'create') {
       if (!state.moved) {
-        if (isWeekView.value) {
-          options.onDismissCalendar()
-        } else {
-          options.onOpenScratchpad()
-        }
-
+        const startTime = createDateForSlot(state.startDayIndex, state.startMinutes)
+        if (isWeekView.value) suppressNextWeekColumnBackingClick.value = true
+        options.onCreateSession({ startTime, endTime: addMinutes(startTime, 30) })
         return
       }
 
@@ -429,6 +434,8 @@ export function useSessionsTimedGridInteraction(options: UseSessionsTimedGridInt
 
     window.addEventListener('pointermove', handleWindowPointerMove)
     window.addEventListener('pointerup', handleWindowPointerUp)
+    window.addEventListener('pointercancel', cancelInteraction)
+    window.addEventListener('blur', cancelInteraction)
   }
 
   const handleCreatePointerDown = (event: PointerEvent) => {
@@ -582,7 +589,7 @@ export function useSessionsTimedGridInteraction(options: UseSessionsTimedGridInt
     }
   })
 
-  const scrollAlignTo730 = async () => {
+  const scrollAlignToInitialTime = async () => {
     await nextTick()
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => {
@@ -603,7 +610,13 @@ export function useSessionsTimedGridInteraction(options: UseSessionsTimedGridInt
         : (options.props.scrollAlignTarget?.getBoundingClientRect().bottom ??
           scrollContainer.getBoundingClientRect().top)
 
-    const delta = marker.getBoundingClientRect().top - targetY
+    const isTodayInDayView = !isWeekView.value && isSameDay(visibleDays.value[0]!, now.value)
+    // Leave an hour of context above now; historical dates and week view start at 7:30.
+    const targetMinutes = isTodayInDayView
+      ? Math.max(0, getMinutesSinceStartOfDay(now.value) - 60)
+      : 7.5 * 60
+    const offsetFromMorningMarker = ((targetMinutes - 7.5 * 60) / 60) * options.hourHeight
+    const delta = marker.getBoundingClientRect().top - targetY + offsetFromMorningMarker
     scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop + delta)
   }
 
@@ -634,7 +647,7 @@ export function useSessionsTimedGridInteraction(options: UseSessionsTimedGridInt
   watch(
     () => visibleDays.value.map((day) => formatDateKey(day)).join('|'),
     () => {
-      void scrollAlignTo730()
+      void scrollAlignToInitialTime()
     },
     { immediate: true },
   )

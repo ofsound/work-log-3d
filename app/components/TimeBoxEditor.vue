@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { PropType } from 'vue'
+import { useId, type PropType } from 'vue'
 
 import ContainerCard from '~/components/ContainerCard.vue'
+import ProjectPicker from '~/components/ProjectPicker.vue'
 
 import {
   useTimeBoxEditorModel,
@@ -10,7 +11,6 @@ import {
   type TimeBoxEditorSurface,
 } from '~/composables/useTimeBoxEditorModel'
 import { useTimeBoxEditorMutations } from '~/composables/useTimeBoxEditorMutations'
-import { getProjectPickerOptionStyle } from '~/utils/project-color-styles'
 import { formatLocaleTime } from '~~/shared/worklog'
 
 const props = defineProps({
@@ -32,6 +32,7 @@ const props = defineProps({
 const emit = defineEmits(['toggleEditor', 'saved'])
 
 const timeBoxEditorRef = ref<HTMLElement | null>(null)
+const durationInputId = `timebox-duration-${useId()}`
 const mutationState = useTimeBoxEditorMutations({
   emit,
   getTimeBoxInput: () => model.getTimeBoxInput(),
@@ -57,19 +58,18 @@ const {
   hideTags,
   isDirty,
   isEditingExistingTimeBox,
-  projectRadiosTwoColumns,
   sessionTimeHero,
-  showLegacyTagNotice,
   sortedAllTags,
   sortedPickerProjects,
 } = model
-const { createTimeBoxDocument, mutationErrorMessage, updateTimeBoxDocument } = mutationState
+const { createTimeBoxDocument, isSaving, mutationErrorMessage, updateTimeBoxDocument } =
+  mutationState
 
 let durationDragBaselineMinutes = 0
 
 const { dragActive: durationMinuteDragActive, onPointerDown: onDurationMinutePointerDown } =
   useMinuteVerticalDrag({
-    blurSelector: '#timebox-duration-minutes',
+    blurSelector: `#${durationInputId}`,
     onSessionStart() {
       const raw = dynamicDuration.value
       const current = Number(typeof raw === 'string' ? raw.trim() || '0' : raw || 0)
@@ -171,6 +171,17 @@ const handleEscape = async (event: KeyboardEvent) => {
     return
   }
 
+  const target = event.target instanceof Element ? event.target : null
+  if (target?.closest('dialog[open], [role="dialog"]')) return
+  const targetEditor = target?.closest('[data-timebox-editor]')
+  if (targetEditor) {
+    if (targetEditor !== timeBoxEditorRef.value) return
+  } else {
+    // Outside an editor, dismiss the most recently rendered dismissible editor.
+    const editors = document.querySelectorAll('[data-timebox-editor-dismissible]')
+    if (editors[editors.length - 1] !== timeBoxEditorRef.value) return
+  }
+
   event.preventDefault()
 
   if (isEditableTarget(event.target)) {
@@ -227,66 +238,15 @@ const editorRootBind = computed(() =>
         },
 )
 
-const primarySectionClass = computed(() => {
-  if (isThinLayout.value) {
-    return 'grid min-w-0 gap-4 grid-cols-[minmax(0,8rem)_minmax(0,1fr)]'
-  }
-
-  const alignWithProjectTagsColumns = !hideTags.value
-
-  return [
-    'flex min-w-0 flex-col gap-5',
-    alignWithProjectTagsColumns
-      ? '[@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[minmax(0,8rem)_minmax(0,1fr)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-12'
-      : '',
-  ]
-    .filter(Boolean)
-    .join(' ')
-})
-
-const heroColumnClass = computed(() =>
+const primarySectionClass = computed(() =>
   isThinLayout.value
-    ? 'col-span-1 ml-6 flex min-w-0 flex-col gap-4'
-    : 'flex min-w-0 flex-col gap-4',
+    ? 'grid min-w-0 grid-cols-[9rem_minmax(0,1fr)] items-start gap-x-8 gap-y-4'
+    : 'flex min-w-0 flex-col gap-5 [@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[9rem_minmax(0,1fr)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-12',
 )
 
-const heroValueBlockClass = computed(() => {
-  const widePrimaryRow = !hideTags.value && !isThinLayout.value
-
-  if (!sessionTimeHero.value) {
-    if (isThinLayout.value) {
-      return 'mt-[calc(1rem+0.75rem+0.75rem+4px)]'
-    }
-
-    return widePrimaryRow
-      ? 'mt-[calc(0.75rem+4px)] max-sm:mt-0 [@container(min-width:38rem)]:mt-0'
-      : 'mt-[calc(0.75rem+4px)] max-sm:mt-0'
-  }
-
-  if (isPanelSurface.value) {
-    return 'mt-0 mb-4'
-  }
-
-  if (isThinLayout.value) {
-    return 'mt-0'
-  }
-
-  return widePrimaryRow
-    ? 'mt-[calc(0.75rem+4px)] max-sm:mt-0 [@container(min-width:38rem)]:mt-0'
-    : 'mt-[calc(0.75rem+4px)] max-sm:mt-0'
-})
-
-const heroValueTextClass = computed(() =>
-  isThinLayout.value
-    ? 'min-w-0 text-2xl leading-tight font-bold tracking-tight tabular-nums sm:text-3xl'
-    : 'min-w-0 text-2xl leading-tight font-bold tracking-tight tabular-nums sm:text-4xl sm:leading-none',
-)
-
-const heroPlaceholderTextClass = computed(() =>
-  isThinLayout.value
-    ? 'min-w-0 text-2xl leading-tight font-bold tracking-tight text-text-muted tabular-nums sm:text-3xl'
-    : 'min-w-0 text-2xl leading-tight font-bold tracking-tight text-text-muted tabular-nums sm:text-4xl sm:leading-none',
-)
+const timeControlClass =
+  'flex h-16 items-center rounded-md border border-input-border bg-input px-3 py-3'
+const timeValueClass = 'text-4xl leading-none font-bold tracking-tight tabular-nums'
 
 const projectTagsSectionClass = computed(() => {
   if (hideTags.value) {
@@ -300,21 +260,6 @@ const projectTagsSectionClass = computed(() => {
       : 'gap-6 pt-5 [@container(min-width:38rem)]:gap-x-6',
   ].join(' ')
 })
-
-const projectRadioGroupClass = computed(() =>
-  [
-    'project-radio-group grid',
-    isThinLayout.value ? 'gap-2' : 'gap-2.5',
-    projectRadiosTwoColumns.value ? '[@container(min-width:52rem)]:grid-cols-2' : '',
-    !hideTags.value
-      ? isThinLayout.value
-        ? '[@container(min-width:38rem)]:border-r [@container(min-width:38rem)]:border-border-subtle [@container(min-width:38rem)]:pr-5'
-        : '[@container(min-width:38rem)]:border-r [@container(min-width:38rem)]:border-border-subtle [@container(min-width:38rem)]:pr-6'
-      : '',
-  ]
-    .filter(Boolean)
-    .join(' '),
-)
 
 const tagsSectionClass = computed(() =>
   [
@@ -334,6 +279,8 @@ const tagsListClass = computed(() =>
 <template>
   <div
     ref="timeBoxEditorRef"
+    data-timebox-editor
+    :data-timebox-editor-dismissible="canCloseEditor ? '' : undefined"
     class="[container-type:inline-size] w-full max-w-full min-w-0 font-data text-text"
     :class="isPanelSurface ? 'flex h-full min-h-0 flex-col' : ''"
   >
@@ -349,13 +296,12 @@ const tagsListClass = computed(() =>
           <section data-testid="timebox-editor-primary-section" :class="primarySectionClass">
             <AppField
               as="div"
-              class="w-full min-w-0 self-start max-sm:max-w-32 sm:w-auto"
+              class="w-36 min-w-0 self-start"
               density="comfortable"
               label="Duration"
             >
-              <!-- Block wrapper: avoids a single flex row inheriting stretched height from the grid row. -->
-              <div class="rounded-md border border-input-border bg-input px-3 py-3">
-                <div class="flex min-w-0 items-end gap-2">
+              <div :class="timeControlClass">
+                <div class="flex w-full min-w-0 items-end gap-2">
                   <div
                     class="flex min-w-0 flex-1 touch-none"
                     :class="
@@ -364,10 +310,11 @@ const tagsListClass = computed(() =>
                     @pointerdown="onDurationMinutePointerDown"
                   >
                     <input
-                      id="timebox-duration-minutes"
+                      :id="durationInputId"
                       v-model="dynamicDuration"
                       inputmode="numeric"
-                      class="w-full min-w-0 bg-transparent text-right text-4xl leading-none font-bold tabular-nums outline-none select-text"
+                      class="block h-9 w-full min-w-0 bg-transparent p-0 text-right outline-none select-text"
+                      :class="timeValueClass"
                       @input="mutationErrorMessage = ''"
                     />
                   </div>
@@ -379,11 +326,15 @@ const tagsListClass = computed(() =>
               </div>
             </AppField>
 
-            <div :class="heroColumnClass">
-              <div aria-live="polite" class="flex min-w-0 flex-col gap-3 sm:gap-[1.85rem]">
+            <div class="flex min-w-0 flex-col">
+              <div aria-live="polite" class="flex min-w-0 flex-col gap-3">
                 <AppFieldLabel v-if="sessionTimeHero && !isPanelSurface">Start & End</AppFieldLabel>
-                <div class="flex min-w-0 flex-col gap-1" :class="heroValueBlockClass">
-                  <p v-if="sessionTimeHero" :class="heroValueTextClass">
+                <div class="flex min-w-0 flex-col gap-1">
+                  <p
+                    v-if="sessionTimeHero"
+                    class="w-fit max-w-full min-w-0 gap-2"
+                    :class="[timeControlClass, timeValueClass]"
+                  >
                     <span
                       class="inline touch-none"
                       :class="
@@ -409,7 +360,7 @@ const tagsListClass = computed(() =>
                     (v-if above) — if only one of start/end is set, a visible dash looked like a
                     broken hero. Keep `invisible` whenever we are not on the real hero branch.
                   -->
-                    <p :class="heroPlaceholderTextClass">
+                    <p class="min-w-0 text-text-muted" :class="timeValueClass">
                       <span class="invisible" aria-hidden="true">—</span>
                     </p>
                   </template>
@@ -458,52 +409,11 @@ const tagsListClass = computed(() =>
             :class="[projectTagsSectionClass, isPanelSurface ? 'mt-5' : 'max-sm:mt-4 md:mt-5']"
           >
             <section class="flex min-w-0 flex-col" :class="isThinLayout ? 'gap-2.5' : 'gap-3'">
-              <AppFieldLabel as="div">Project</AppFieldLabel>
-
-              <!-- Width refinement only: at ~52rem, large project lists can use a second radio column. -->
-              <div data-testid="timebox-editor-project-radio-group" :class="projectRadioGroupClass">
-                <label
-                  v-for="thisProject in sortedPickerProjects"
-                  :key="thisProject.id"
-                  class="flex min-w-0 cursor-pointer items-center gap-3 rounded-md border border-solid px-3 py-3 transition-[border-color,box-shadow,filter] duration-150 ease-out select-none"
-                  :class="[
-                    dynamicProject === thisProject.id
-                      ? 'shadow-panel-selected hover:brightness-[1.02]'
-                      : 'project-radio-option-muted shadow-control',
-                  ]"
-                  :style="
-                    getProjectPickerOptionStyle(
-                      thisProject.colors,
-                      dynamicProject === thisProject.id,
-                    )
-                  "
-                >
-                  <input
-                    v-model="dynamicProject"
-                    type="radio"
-                    :value="thisProject.id"
-                    name="projectSelection"
-                    class="shrink-0"
-                    @change="mutationErrorMessage = ''"
-                  />
-                  <span class="min-w-0 text-base font-medium">{{ thisProject.name }}</span>
-                </label>
-              </div>
-
-              <ContainerCard
-                v-if="hideTags"
-                class="py-3 shadow-none"
-                padding="compact"
-                variant="muted"
-              >
-                <span v-if="showLegacyTagNotice" class="text-sm text-text-muted">
-                  Existing tags on this session are preserved, but tag editing is hidden in
-                  project-only mode.
-                </span>
-                <span v-else class="text-sm text-text-muted">
-                  Tags are hidden in project-only mode. New sessions will save without tags.
-                </span>
-              </ContainerCard>
+              <ProjectPicker
+                v-model="dynamicProject"
+                :projects="sortedPickerProjects"
+                @update:model-value="mutationErrorMessage = ''"
+              />
             </section>
 
             <section
@@ -580,31 +490,24 @@ const tagsListClass = computed(() =>
             v-if="isEditingExistingTimeBox"
             class="min-w-0 flex-1"
             variant="primary"
+            :disabled="isSaving"
+            :aria-busy="isSaving"
             @click="updateTimeBoxDocument"
           >
-            Update
+            {{ isSaving ? 'Saving…' : 'Update' }}
           </AppButton>
-          <AppButton v-else class="min-w-0 flex-1" variant="primary" @click="createTimeBoxDocument">
-            {{ createButtonLabel }}
+          <AppButton
+            v-else
+            class="min-w-0 flex-1"
+            variant="primary"
+            :disabled="isSaving"
+            :aria-busy="isSaving"
+            @click="createTimeBoxDocument"
+          >
+            {{ isSaving ? 'Saving…' : createButtonLabel }}
           </AppButton>
         </div>
       </div>
     </component>
   </div>
 </template>
-
-<style scoped>
-.project-radio-option-muted {
-  background-image: linear-gradient(135deg, var(--project-picker-from), var(--project-picker-to));
-  border-color: var(--project-picker-border);
-}
-
-.project-radio-option-muted:hover {
-  background-image: linear-gradient(
-    135deg,
-    var(--project-picker-from-hover),
-    var(--project-picker-to-hover)
-  );
-  border-color: var(--project-picker-border-hover);
-}
-</style>

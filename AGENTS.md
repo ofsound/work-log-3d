@@ -43,7 +43,6 @@
 - Remaining raw card-like patterns to migrate after the first `ContainerCard` pass:
   - internal calendar event pills and cells in `app/components/SessionsTimedGrid.vue`, `app/components/SessionsMonthView.vue`, and `app/components/ProjectCalendarView.vue`
   - dropdown/popover panel chrome in `app/components/SessionListMultiSelect.vue` (field stack uses `AppField`; popover surface is still bespoke)
-  - project picker radio cards in `app/components/TimeBoxEditor.vue` (tag chips use `AppToggleChip`)
 
 ## Verification
 

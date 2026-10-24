@@ -32,6 +32,9 @@ export default defineNuxtPlugin(() => {
           tags: action.tags,
         })
         break
+      case 'add_countup_time':
+        await timerService.addCountupMinutes(action.durationSeconds / 60)
+        break
       case 'add_countdown_time':
         await timerService.addCountdownMinutes(action.durationSeconds / 60)
         break

@@ -53,6 +53,11 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   const dynamicDurationTypingTimer = ref<ReturnType<typeof setTimeout>>()
   const draftSyncTimer = ref<ReturnType<typeof setTimeout>>()
 
+  const clearDurationTypingTimer = () => {
+    clearTimeout(dynamicDurationTypingTimer.value)
+    dynamicDurationTypingTimer.value = undefined
+  }
+
   const allProjects = useCollection(projectsCollection)
   const allTags = useCollection(tagsCollection)
 
@@ -113,8 +118,6 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   const sortedAllTags = computed(() =>
     sortNamedEntities(toTags(allTags.value as FirebaseTagDocument[])),
   )
-  const showLegacyTagNotice = computed(() => hideTags.value && dynamicTags.value.length > 0)
-  const projectRadiosTwoColumns = computed(() => sortedPickerProjects.value.length > 4)
   const isEditingExistingTimeBox = computed(() => Boolean(options.props.id))
   const sessionTimeHero = computed(() => {
     if (!dynamicStartTime.value || !dynamicEndTime.value) {
@@ -164,6 +167,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   }
 
   const syncDynamicDurationFromTimes = () => {
+    clearDurationTypingTimer()
     if (!dynamicStartTime.value || !dynamicEndTime.value) {
       dynamicDuration.value = ''
       return
@@ -179,14 +183,12 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
     dynamicDuration.value = durationMinutes === 0 ? '' : durationMinutes
   }
 
-  const applyCreateDefaults = (applyOptions?: { preserveNotes?: boolean }) => {
+  const applyCreateDefaults = () => {
     dynamicStartTime.value =
       options.props.initialStartTime || options.props.startTimeFromTimer || ''
     dynamicEndTime.value = options.props.initialEndTime || options.props.endTimeFromTimer || ''
 
-    if (!applyOptions?.preserveNotes) {
-      dynamicNotes.value = options.props.initialNotes || ''
-    }
+    dynamicNotes.value = options.props.initialNotes || ''
 
     dynamicProject.value = options.props.initialProject || ''
     dynamicTags.value = [...options.props.initialTags]
@@ -234,6 +236,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   })
 
   const resetTimeBoxEditor = () => {
+    clearDurationTypingTimer()
     dynamicStartTime.value = ''
     dynamicEndTime.value = ''
     dynamicDuration.value = ''
@@ -275,16 +278,29 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
     },
   )
 
+  // Parent draft echoes must update only their own fields, never reinitialize edited times.
   watch(
-    () => [
-      options.props.initialStartTime,
-      options.props.initialEndTime,
-      options.props.initialProject,
-      options.props.initialTags,
-    ],
-    () => {
-      if (!options.props.id) {
-        applyCreateDefaults({ preserveNotes: true })
+    () =>
+      [
+        options.props.initialStartTime,
+        options.props.initialEndTime,
+        options.props.initialProject,
+        options.props.initialTags,
+      ] as const,
+    ([start, end, project, tags], [previousStart, previousEnd, previousProject, previousTags]) => {
+      if (options.props.id) return
+
+      if (start !== previousStart) {
+        dynamicStartTime.value = start || options.props.startTimeFromTimer || ''
+      }
+      if (end !== previousEnd) {
+        dynamicEndTime.value = end || options.props.endTimeFromTimer || ''
+      }
+      if (project !== previousProject) {
+        dynamicProject.value = project || ''
+      }
+      if (JSON.stringify(tags) !== JSON.stringify(previousTags)) {
+        dynamicTags.value = [...tags]
       }
     },
   )
@@ -357,6 +373,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
   watch(
     () => dynamicDuration.value,
     () => {
+      clearDurationTypingTimer()
       if (dynamicStartTime.value) {
         const tempDate = new Date(dynamicStartTime.value)
         tempDate.setMinutes(tempDate.getMinutes() + Number(dynamicDuration.value || 0))
@@ -367,13 +384,11 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
       const raw = dynamicDuration.value
 
       if (raw === '' || raw === null || raw === undefined) {
-        clearTimeout(dynamicDurationTypingTimer.value)
-        dynamicDurationTypingTimer.value = undefined
         return
       }
 
-      clearTimeout(dynamicDurationTypingTimer.value)
       dynamicDurationTypingTimer.value = setTimeout(() => {
+        dynamicDurationTypingTimer.value = undefined
         const now = new Date()
         const tempDate = new Date(
           now.setMinutes(now.getMinutes() - parseInt(String(dynamicDuration.value || 0), 10)),
@@ -387,6 +402,7 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
 
   onBeforeUnmount(() => {
     clearDraftSyncTimer()
+    clearDurationTypingTimer()
   })
 
   const clampHeroDragTime = (proposed: string, partner: string, role: 'start' | 'end') => {
@@ -425,10 +441,8 @@ export function useTimeBoxEditorModel(options: UseTimeBoxEditorModelOptions) {
     hideTags,
     isDirty,
     isEditingExistingTimeBox,
-    projectRadiosTwoColumns,
     resetTimeBoxEditor,
     sessionTimeHero,
-    showLegacyTagNotice,
     sortedAllTags,
     sortedPickerProjects,
   }

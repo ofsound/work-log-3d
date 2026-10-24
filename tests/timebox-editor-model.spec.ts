@@ -189,6 +189,73 @@ describe('useTimeBoxEditorModel', () => {
     wrapper.unmount()
   })
 
+  it('preserves edited duration and dirty state across project/tag draft echoes', async () => {
+    const { props, wrapper, getState } = mountHarness({
+      startTimeFromTimer: formatToDatetimeLocal(new Date(2026, 2, 23, 9, 0)),
+      endTimeFromTimer: formatToDatetimeLocal(new Date(2026, 2, 23, 10, 0)),
+      initialProject: 'project-1',
+      initialTags: ['tag-1'],
+    })
+    const state = getState()
+    state.dynamicDuration.value = 90
+    state.dynamicNotes.value = 'Updated notes '
+    await nextTick()
+
+    props.initialProject = 'project-2'
+    props.initialTags = ['tag-1']
+    await nextTick()
+    expect(state.dynamicDuration.value).toBe(90)
+    expect(state.dynamicEndTime.value).toBe(formatToDatetimeLocal(new Date(2026, 2, 23, 10, 30)))
+    expect(state.dynamicNotes.value).toBe('Updated notes ')
+    expect(state.dynamicProject.value).toBe('project-2')
+    expect(state.isDirty.value).toBe(true)
+
+    props.initialTags = ['tag-2']
+    await nextTick()
+    expect(state.dynamicTags.value).toEqual(['tag-2'])
+    expect(state.dynamicDuration.value).toBe(90)
+    expect(state.getTimeBoxInput().endTime).toEqual(new Date(2026, 2, 23, 10, 30))
+    wrapper.unmount()
+  })
+
+  it('keeps typed duration through a context update before its delayed time initialization', async () => {
+    vi.useFakeTimers()
+    try {
+      const { props, wrapper, getState } = mountHarness()
+      const state = getState()
+      state.dynamicDuration.value = '45'
+      await nextTick()
+      props.initialProject = 'project-1'
+      await nextTick()
+      expect(Number(state.dynamicDuration.value)).toBe(45)
+      vi.advanceTimersByTime(450)
+      await nextTick()
+      expect(Number(state.dynamicDuration.value)).toBe(45)
+      expect(
+        state.getTimeBoxInput().endTime.getTime() - state.getTimeBoxInput().startTime.getTime(),
+      ).toBe(45 * 60_000)
+      wrapper.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('still accepts new create-time defaults without resetting notes or project selection', async () => {
+    const { props, wrapper, getState } = mountHarness({
+      initialStartTime: formatToDatetimeLocal(new Date(2026, 2, 23, 9, 0)),
+      initialEndTime: formatToDatetimeLocal(new Date(2026, 2, 23, 10, 0)),
+    })
+    const state = getState()
+    state.dynamicProject.value = 'project-1'
+    state.dynamicNotes.value = 'Keep this '
+    props.initialEndTime = formatToDatetimeLocal(new Date(2026, 2, 23, 11, 0))
+    await nextTick()
+    expect(state.dynamicDuration.value).toBe(120)
+    expect(state.dynamicNotes.value).toBe('Keep this ')
+    expect(state.dynamicProject.value).toBe('project-1')
+    wrapper.unmount()
+  })
+
   it('passes draft notes to setDraftContext without trimming trailing spaces', async () => {
     timerServiceMocks.timerState.value = {
       ...timerServiceMocks.createIdleTimerState(),
@@ -334,5 +401,46 @@ describe('useTimeBoxEditorModel', () => {
     expect(clearMutationError).toHaveBeenCalled()
 
     wrapper.unmount()
+  })
+  it('cancels pending duration initialization when the timer supplies a new start', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 2, 23, 12, 0))
+    try {
+      const { props, wrapper, getState } = mountHarness()
+      const state = getState()
+      state.dynamicDuration.value = '45'
+      await nextTick()
+      props.startTimeFromTimer = formatToDatetimeLocal(new Date(2026, 2, 23, 9, 0))
+      await nextTick()
+      vi.advanceTimersByTime(450)
+      await nextTick()
+      expect(state.dynamicStartTime.value).toBe(formatToDatetimeLocal(new Date(2026, 2, 23, 9, 0)))
+      expect(state.dynamicDurationTypingTimer.value).toBeUndefined()
+      wrapper.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it.each(['reset', 'unmount'] as const)('cancels delayed duration work on %s', async (action) => {
+    vi.useFakeTimers()
+    try {
+      const { wrapper, getState } = mountHarness()
+      const state = getState()
+      state.dynamicDuration.value = '45'
+      await nextTick()
+      expect(state.dynamicDurationTypingTimer.value).toBeDefined()
+      if (action === 'reset') state.resetTimeBoxEditor()
+      else wrapper.unmount()
+      await nextTick()
+      vi.advanceTimersByTime(450)
+      await nextTick()
+      expect(state.dynamicStartTime.value).toBe('')
+      expect(state.dynamicEndTime.value).toBe('')
+      expect(state.dynamicDurationTypingTimer.value).toBeUndefined()
+      if (action === 'reset') wrapper.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

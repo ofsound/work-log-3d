@@ -1,5 +1,6 @@
 import {
   addCountdownSeconds,
+  addCountupSeconds,
   applyActiveTimerDraft,
   cancelTimer,
   createIdleActiveTimerState,
@@ -30,6 +31,61 @@ describe('timer state', () => {
 
     const resumed = resumeTimer(stopped, 12_000)
     expect(getTimerSnapshot(resumed, 15_000).elapsedSeconds).toBe(8)
+  })
+
+  it('adds missed time by backdating a running countup start, preserving its draft', () => {
+    const state = applyActiveTimerDraft(
+      replaceActiveTimerState(createIdleActiveTimerState(), startCountupTimer(1_000_000)),
+      { project: 'client', tags: ['work'], draftNotes: 'Started late ' },
+    )
+    const updated = replaceActiveTimerState(state, addCountupSeconds(state, 300, 1_060_000))
+    expect(updated.startedAtMs).toBe(700_000)
+    expect(updated.status).toBe('running')
+    expect(getTimerSnapshot(updated, 1_060_000).display).toBe('06:00')
+    expect(updated.project).toBe('client')
+    expect(updated.tags).toEqual(['work'])
+    expect(updated.draftNotes).toBe('Started late ')
+    expect(validateActiveTimerState(updated)).toEqual(updated)
+    expect(getTimerSnapshot(stopTimer(updated, 1_120_000), 1_200_000).display).toBe('07:00')
+  })
+
+  it('accumulates added countup time while paused and continues correctly on resume', () => {
+    const paused = pauseTimer(startCountupTimer(1_000_000), 1_060_000)
+    const updated = addCountupSeconds(addCountupSeconds(paused, 300, 1_180_000), 600, 1_180_000)
+    expect(updated.pausedAtMs).toBe(1_060_000)
+    expect(updated.accumulatedPauseMs).toBe(0)
+    expect(getTimerSnapshot(updated, 1_180_000).display).toBe('16:00')
+    const resumed = resumeTimer(updated, 1_180_000)
+    expect(getTimerSnapshot(resumed, 1_240_000).display).toBe('17:00')
+    expect(reviveTimerState(JSON.parse(JSON.stringify(updated)))).toEqual(updated)
+  })
+
+  it('only adjusts running or paused countups with finite time and never backdates before epoch', () => {
+    const countup = startCountupTimer(1_000_000)
+    for (const seconds of [0, NaN, Infinity]) {
+      expect(addCountupSeconds(countup, seconds, 1_060_000)).toBe(countup)
+    }
+    const idle = createIdleTimerState()
+    const countdown = startCountdownTimer(300, 1_000_000)
+    const completed = { ...countup, status: 'completed' as const }
+    for (const state of [idle, countdown, completed]) {
+      expect(addCountupSeconds(state, 300, 1_060_000)).toBe(state)
+    }
+    expect(addCountupSeconds(startCountupTimer(1000), 300, 1000).startedAtMs).toBe(0)
+  })
+
+  it('subtracts relative countup time without going negative or counting a pause', () => {
+    const running = startCountupTimer(1_000_000)
+    const reduced = addCountupSeconds(running, -60, 1_120_000)
+    expect(getTimerSnapshot(reduced, 1_120_000).elapsedSeconds).toBe(60)
+    expect(reduced.startedAtMs).toBe(1_060_000)
+    const paused = pauseTimer(reduced, 1_120_000)
+    const zero = addCountupSeconds(paused, -600, 1_900_000)
+    expect(getTimerSnapshot(zero, 1_900_000).elapsedSeconds).toBe(0)
+    expect(zero.startedAtMs).toBe(1_120_000)
+    expect(zero.status).toBe('paused')
+    const resumed = resumeTimer(zero, 1_900_000)
+    expect(getTimerSnapshot(resumed, 1_960_000).elapsedSeconds).toBe(60)
   })
 
   it('handles countdown start, pause, resume: remaining excludes paused wall time', () => {

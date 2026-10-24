@@ -585,6 +585,12 @@ app.whenReady().then(async () => {
         case 'pause':
           dispatchTimerAction({ type: 'pause' })
           break
+        case 'add_countup_5_minutes':
+          dispatchTimerAction({ type: 'add_countup_time', durationSeconds: 5 * 60 })
+          break
+        case 'add_countup_10_minutes':
+          dispatchTimerAction({ type: 'add_countup_time', durationSeconds: 10 * 60 })
+          break
         case 'add_countdown_5_minutes':
           dispatchTimerAction({ type: 'add_countdown_time', durationSeconds: 5 * 60 })
           break

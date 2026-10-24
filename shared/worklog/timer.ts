@@ -173,6 +173,31 @@ export const resumeTimer = (state: TimerState, nowMs: number): TimerState => {
   }
 }
 
+/** Adjust counted work by shifting its start, preserving status and never subtracting below zero. */
+export const addCountupSeconds = (
+  state: TimerState,
+  seconds: number,
+  nowMs: number,
+): TimerState => {
+  if (
+    state.mode !== 'countup' ||
+    (state.status !== 'running' && state.status !== 'paused') ||
+    state.startedAtMs === null ||
+    !Number.isFinite(seconds)
+  ) {
+    return state
+  }
+
+  const deltaSeconds = Math.trunc(seconds)
+  const appliedDeltaSeconds = Math.max(deltaSeconds, -getElapsedSeconds(state, nowMs))
+  if (appliedDeltaSeconds === 0) return state
+
+  return {
+    ...state,
+    startedAtMs: Math.max(0, state.startedAtMs - appliedDeltaSeconds * 1000),
+  }
+}
+
 export const addCountdownSeconds = (
   state: TimerState,
   seconds: number,

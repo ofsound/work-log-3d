@@ -18,16 +18,18 @@ export function useTimeBoxEditorMutations(options: UseTimeBoxEditorMutationsOpti
   const { show: showOverlayToast } = useOverlayToast()
 
   const mutationErrorMessage = ref('')
+  const isSaving = ref(false)
 
   const clearMutationError = () => {
     mutationErrorMessage.value = ''
   }
 
   const updateTimeBoxDocument = async () => {
-    if (!options.props.id) {
+    if (!options.props.id || isSaving.value) {
       return
     }
 
+    isSaving.value = true
     try {
       clearMutationError()
       await repositories.timeBoxes.update(options.props.id, options.getTimeBoxInput())
@@ -35,10 +37,14 @@ export function useTimeBoxEditorMutations(options: UseTimeBoxEditorMutationsOpti
       options.emit('toggleEditor')
     } catch (error) {
       mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to update the session.')
+    } finally {
+      isSaving.value = false
     }
   }
 
   const createTimeBoxDocument = async () => {
+    if (isSaving.value) return
+    isSaving.value = true
     try {
       clearMutationError()
       const createdId = await repositories.timeBoxes.create(options.getTimeBoxInput())
@@ -54,6 +60,8 @@ export function useTimeBoxEditorMutations(options: UseTimeBoxEditorMutationsOpti
       options.emit('saved', createdId)
     } catch (error) {
       mutationErrorMessage.value = getWorklogErrorMessage(error, 'Unable to save the session.')
+    } finally {
+      isSaving.value = false
     }
   }
 
@@ -61,6 +69,7 @@ export function useTimeBoxEditorMutations(options: UseTimeBoxEditorMutationsOpti
     clearMutationError,
     createTimeBoxDocument,
     mutationErrorMessage,
+    isSaving,
     updateTimeBoxDocument,
   }
 }

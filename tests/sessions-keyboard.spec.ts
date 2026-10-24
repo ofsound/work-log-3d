@@ -110,16 +110,19 @@ describe('useSessionsKeyboard', () => {
     harness.wrapper.unmount()
   })
 
-  it('does not close the panel when an open editor already handled Escape', () => {
-    const harness = mountHarness()
-    const markHandled = (event: KeyboardEvent) => event.preventDefault()
+  it.each(['day', 'week'] as const)(
+    'does not close the %s panel when an editor handled Escape',
+    (mode) => {
+      const harness = mountHarness(mode)
+      const markHandled = (event: KeyboardEvent) => event.preventDefault()
 
-    window.addEventListener('keydown', markHandled, { capture: true })
-    dispatchKeyboard('Escape', {}, document.body)
-    window.removeEventListener('keydown', markHandled, { capture: true })
+      window.addEventListener('keydown', markHandled, { capture: true })
+      dispatchKeyboard('Escape', {}, document.body)
+      window.removeEventListener('keydown', markHandled, { capture: true })
 
-    expect(harness.applyCalendarEscapeDismiss).not.toHaveBeenCalled()
+      expect(harness.applyCalendarEscapeDismiss).not.toHaveBeenCalled()
 
-    harness.wrapper.unmount()
-  })
+      harness.wrapper.unmount()
+    },
+  )
 })

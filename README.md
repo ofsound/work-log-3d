@@ -16,6 +16,20 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 
 ## Key Conventions
 
+- Cancelled pointer gestures or window focus loss discard timer/calendar drags. Session saves ignore repeated clicks while a write is pending, and Escape targets the focused inline editor (or the last open editor when focus is outside).
+
+- Countdown drag previews use the live remaining time, including time since completion. Late settings-save failures cannot replace newer countdown edits, and delayed session-duration initialization is cancelled when timer times arrive, the editor resets, or it unmounts.
+
+- Opening today in sessions day view scrolls to the current time with an hour of preceding context. Historical days and week view retain the 7:30 start; the view does not keep scrolling as the clock ticks.
+
+- Click an empty day/week calendar slot to open a 30-minute session draft; drag to choose a custom range. Drag the count-up timer readout up/down to add/subtract minutes while running or stopped, without dropping below zero.
+
+- Saving a renamed project opens its updated slug URL while preserving the selected view and date. Session draft project/tag synchronization updates those fields without resetting manually edited times or duration.
+
+- Running or paused count-up timers have the same `+5 min` / `+10 min` controls as the countdown, both beside the timer readout and in the Electron menu bar menu. These backdate the start time to include work done before starting the timer, and sync through the existing active-timer document.
+
+- Session editors use a compact project picker: click the selected project for Spotlight-style title search; an empty search shows all projects. Search accepts reordered word fragments, initials, ordered abbreviations, accents, and small typos; arrow keys and Enter select, and Escape closes without changing the project.
+
 - Authenticated pages use Nuxt layouts built on `AppShell` (fixed header; main content uses the shared `header-bar` spacing token for top clearance): **`main-simple`** (`px-6` padded scroll) for `/new`, `/projects`, `/tags`, and **`/project/new`**; **`main-workspace`** (full-height; page content handles padding and scroll regions) for `/sessions`, `/settings`, `/reports`, **`/project/:segment`**, and **`/project/:segment/edit`**; **`main-bleed`** for `/` (hero only). **`default`** matches **`main-simple`** if a page omits `definePageMeta({ layout: ... })`.
 - Project creation lives at `/project/new`; project pages live at `/project/:segment` and `/project/:segment/edit`. In-app tag navigation uses **`getSessionsSearchRouteForTag`** from `app/utils/sessions-route-state.ts`. Sessions still store **project** and **tags** by document id.
 - `/project/:segment` is query-driven like `/sessions`: the default `List` mode omits `mode`, `Calendar` persists `mode=calendar`, and both modes preserve `date=YYYY-MM-DD` for the selected project day context

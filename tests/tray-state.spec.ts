@@ -144,6 +144,8 @@ describe('desktop tray state', () => {
     expect(trayState.menuItems).toEqual([
       { kind: 'status', label: 'Running • Count Up', enabled: false },
       { kind: 'separator' },
+      { kind: 'action', id: 'add_countup_5_minutes', label: '+5 min', enabled: true },
+      { kind: 'action', id: 'add_countup_10_minutes', label: '+10 min', enabled: true },
       { kind: 'action', id: 'stop', label: 'Stop', enabled: true },
       { kind: 'action', id: 'reset', label: 'Reset', enabled: true },
       { kind: 'separator' },
@@ -230,6 +232,8 @@ describe('desktop tray state', () => {
       { kind: 'status', label: 'Stopped • Count Up', enabled: false },
       { kind: 'separator' },
       { kind: 'action', id: 'resume', label: 'Resume', enabled: true },
+      { kind: 'action', id: 'add_countup_5_minutes', label: '+5 min', enabled: true },
+      { kind: 'action', id: 'add_countup_10_minutes', label: '+10 min', enabled: true },
       { kind: 'action', id: 'reset', label: 'Reset', enabled: true },
       { kind: 'separator' },
       { kind: 'action', id: 'show_window', label: 'Show Window', enabled: true },

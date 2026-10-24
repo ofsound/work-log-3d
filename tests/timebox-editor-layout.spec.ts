@@ -94,12 +94,10 @@ vi.mock('~/composables/useTimeBoxEditorModel', () => ({
     hideTags: hideTagsModel,
     isDirty: computed(() => false),
     isEditingExistingTimeBox: computed(() => false),
-    projectRadiosTwoColumns: computed(() => sortedPickerProjects.value.length > 4),
     resetTimeBoxEditor: vi.fn(),
     sessionTimeHero: computed(() => ({
       secondary: 'Mon, Mar 23',
     })),
-    showLegacyTagNotice: computed(() => false),
     sortedAllTags,
     sortedPickerProjects,
     getTimeBoxInput: vi.fn(),
@@ -115,10 +113,6 @@ vi.mock('~/composables/useTimeBoxEditorMutations', () => ({
   }),
 }))
 
-vi.mock('~/utils/project-color-styles', () => ({
-  getProjectPickerOptionStyle: () => ({}),
-}))
-
 const { default: TimeBoxEditor } = await import('~/app/components/TimeBoxEditor.vue')
 
 const mountTimeBoxEditor = (props: Record<string, unknown> = {}) =>
@@ -130,6 +124,11 @@ const mountTimeBoxEditor = (props: Record<string, unknown> = {}) =>
     },
     global: {
       stubs: {
+        ProjectPicker: {
+          name: 'ProjectPicker',
+          props: ['modelValue', 'projects'],
+          template: '<div data-testid="project-picker" />',
+        },
         AppButton: {
           template: '<button type="button" v-bind="$attrs"><slot /></button>',
         },
@@ -173,7 +172,7 @@ describe('TimeBoxEditor layout classes', () => {
     ).toContain('[@container(min-width:38rem)]:grid')
     expect(
       thinWrapper.get('[data-testid="timebox-editor-primary-section"]').attributes('class'),
-    ).toContain('grid-cols-[minmax(0,8rem)_minmax(0,1fr)]')
+    ).toContain('grid-cols-[9rem_minmax(0,1fr)]')
     expect(
       thinWrapper.get('[data-testid="timebox-editor-primary-section"]').attributes('class'),
     ).not.toContain('@container')
@@ -181,13 +180,13 @@ describe('TimeBoxEditor layout classes', () => {
     expect(thinWrapper.html()).not.toContain('min-width:44rem')
   })
 
-  it('does not use a two-column primary row when tags are hidden (project-only mode)', () => {
+  it('keeps the compact time row when tags are hidden (project-only mode)', () => {
     hideTagsModel.value = true
     const wrapper = mountTimeBoxEditor({ layout: 'regular', surface: 'card' })
 
     expect(
       wrapper.get('[data-testid="timebox-editor-primary-section"]').attributes('class'),
-    ).not.toContain('[@container(min-width:38rem)]:grid')
+    ).toContain('[@container(min-width:38rem)]:grid')
   })
 
   it('keeps the project and tags split as the surviving 38rem width refinement', () => {
@@ -201,18 +200,13 @@ describe('TimeBoxEditor layout classes', () => {
     ).toContain('[@container(min-width:38rem)]:border-t-0')
   })
 
-  it('keeps the 52rem radio breakpoint only when enough projects are present', () => {
-    const wideWrapper = mountTimeBoxEditor({ layout: 'regular', surface: 'card' })
-
-    expect(
-      wideWrapper.get('[data-testid="timebox-editor-project-radio-group"]').attributes('class'),
-    ).toContain('[@container(min-width:52rem)]:grid-cols-2')
-
-    sortedPickerProjects.value = createProjects(4)
-    const compactWrapper = mountTimeBoxEditor({ layout: 'regular', surface: 'card' })
-
-    expect(
-      compactWrapper.get('[data-testid="timebox-editor-project-radio-group"]').attributes('class'),
-    ).not.toContain('[@container(min-width:52rem)]:grid-cols-2')
+  it('uses a compact project picker regardless of project count', async () => {
+    const wrapper = mountTimeBoxEditor()
+    sortedPickerProjects.value = createProjects(50)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.getComponent({ name: 'ProjectPicker' }).props('projects')).toHaveLength(50)
+    expect(wrapper.findAll('input[type="radio"]')).toHaveLength(0)
+    expect(wrapper.find('[data-testid="project-picker"]').exists()).toBe(true)
+    wrapper.unmount()
   })
 })

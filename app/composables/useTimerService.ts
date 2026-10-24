@@ -4,6 +4,7 @@ import type { DocumentData, DocumentReference, Unsubscribe } from 'firebase/fire
 import type { ActiveTimerDraftInput, ActiveTimerState } from '~~/shared/worklog'
 import {
   addCountdownSeconds,
+  addCountupSeconds,
   applyActiveTimerDraft,
   createIdleActiveTimerState,
   getTimerSnapshot,
@@ -206,6 +207,12 @@ export function useTimerService() {
     await applyMutation((state, nowMs) => replaceActiveTimerState(state, resumeTimer(state, nowMs)))
   }
 
+  const addCountupMinutes = async (minutes: number) => {
+    await applyMutation((state, nowMs) =>
+      replaceActiveTimerState(state, addCountupSeconds(state, minutes * 60, nowMs)),
+    )
+  }
+
   const addCountdownMinutes = async (minutes: number) => {
     const durationSeconds = minutes * 60
 
@@ -243,6 +250,7 @@ export function useTimerService() {
     startCountdown,
     startCountdownSeconds,
     addCountdownMinutes,
+    addCountupMinutes,
     pause,
     resume,
     stop,

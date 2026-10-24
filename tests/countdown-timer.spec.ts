@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { computed, nextTick, ref } from 'vue'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 
 import { toUserSettings } from '~/utils/worklog-firebase'
 import { DEFAULT_USER_SETTINGS } from '~~/shared/worklog'
@@ -552,5 +552,106 @@ describe('CountdownTimer', () => {
     expect(addCountdownMinutes).toHaveBeenNthCalledWith(1, 10)
     expect(addCountdownMinutes).toHaveBeenNthCalledWith(2, 10)
     expect(addCountdownMinutes).toHaveBeenNthCalledWith(3, 10)
+  })
+  it('keeps newer typing when an older save fails and a stale settings echo arrives', async () => {
+    let rejectSave!: (reason: Error) => void
+    saveSettings.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectSave = reject
+        }),
+    )
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = mountCountdownTimer()
+    await nextTick()
+    const input = wrapper.get('#dynamicMinutes')
+    await input.setValue('45')
+    await input.trigger('blur')
+    await input.setValue('60')
+    rejectSave(new Error('Delayed save failure'))
+    await flushPromises()
+    rawSettingsRef.value = buildRawDoc(45)
+    await nextTick()
+    const actual = (input.element as HTMLInputElement).value
+    wrapper.unmount()
+    warning.mockRestore()
+    expect(actual).toBe('60')
+  })
+
+  it('keeps the countdown drag preview live and matches the committed value on release', async () => {
+    snapshot.value = {
+      ...snapshot.value,
+      mode: 'countdown',
+      status: 'running',
+      startedAtMs: 1_000_000,
+      durationSeconds: 600,
+      originalDurationSeconds: 600,
+      remainingSeconds: 300,
+      elapsedSeconds: 300,
+      display: '05:00',
+      isActive: true,
+    }
+    const wrapper = mountCountdownTimer()
+    await nextTick()
+    minutePointerSession.value = true
+    const drag = minuteDragOptions!
+    drag.onSessionStart()
+    drag.onDrag(5)
+    await nextTick()
+    expect(wrapper.text().replace(/\s/g, '')).toContain('10:00')
+    snapshot.value = {
+      ...snapshot.value,
+      remainingSeconds: 240,
+      elapsedSeconds: 360,
+      display: '04:00',
+    }
+    await nextTick()
+    expect(wrapper.text().replace(/\s/g, '')).toContain('09:00')
+    addCountdownMinutes.mockImplementationOnce(() => {
+      snapshot.value = {
+        ...snapshot.value,
+        durationSeconds: 900,
+        remainingSeconds: 540,
+        display: '09:00',
+      }
+    })
+    minutePointerSession.value = false
+    drag.onSessionEnd({ deltaMinutes: 5, didDragBeyondThreshold: true })
+    await nextTick()
+    expect(wrapper.text().replace(/\s/g, '')).toContain('09:00')
+    expect(addCountdownMinutes).toHaveBeenCalledWith(5)
+    wrapper.unmount()
+  })
+
+  it('accounts for time since completion when an active countdown finishes during a drag', async () => {
+    snapshot.value = {
+      ...snapshot.value,
+      mode: 'countdown',
+      status: 'running',
+      startedAtMs: 1_000_000,
+      durationSeconds: 600,
+      originalDurationSeconds: 600,
+      remainingSeconds: 60,
+      elapsedSeconds: 540,
+      display: '01:00',
+      isActive: true,
+    }
+    const wrapper = mountCountdownTimer()
+    await nextTick()
+    minutePointerSession.value = true
+    const drag = minuteDragOptions!
+    drag.onSessionStart()
+    drag.onDrag(5)
+    snapshot.value = {
+      ...snapshot.value,
+      status: 'completed',
+      elapsedSeconds: 600,
+      remainingSeconds: 0,
+      completionGapSeconds: 60,
+      display: '00:00',
+    }
+    await nextTick()
+    expect(wrapper.text().replace(/\s/g, '')).toContain('04:00')
+    wrapper.unmount()
   })
 })

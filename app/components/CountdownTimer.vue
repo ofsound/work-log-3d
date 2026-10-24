@@ -84,7 +84,7 @@ const persistCountdownDefaultMinutes = async (minutes: number) => {
   const normalized = normalizeCountdownDefaultMinutes(minutes)
 
   if (normalized === savedSettings.value.workflow.countdownDefaultMinutes) {
-    clearIdleMinutesLocalOverride()
+    if (normalizeParsedIdleMinutes() === normalized) clearIdleMinutesLocalOverride()
     return
   }
 
@@ -94,8 +94,15 @@ const persistCountdownDefaultMinutes = async (minutes: number) => {
   try {
     await saveSettings(next)
   } catch (error) {
-    // Keep the local override active so stale saved settings do not snap the field back.
-    markIdleMinutesAsLocallyEdited(normalized)
+    // A delayed failure must not replace the override belonging to a newer edit.
+    if (
+      !timerIsRunning.value &&
+      !timerIsPaused.value &&
+      !timerIsCompleted.value &&
+      normalizeParsedIdleMinutes() === normalized
+    ) {
+      markIdleMinutesAsLocallyEdited(normalized)
+    }
     console.warn('[worklog] unable to persist countdown default minutes', error)
   }
 }
@@ -119,9 +126,17 @@ onBeforeUnmount(() => {
 })
 
 const minuteDragBaselineIdleMinutes = ref(0)
-const minuteDragBaselineRemainingSeconds = ref(0)
 const minuteDragIsActiveTimer = ref(false)
-const minuteDragPreviewRemainingSeconds = ref<number | null>(null)
+const minuteDragDeltaMinutes = ref<number | null>(null)
+let minuteDragStartedAtMs: number | null = null
+const minuteDragPreviewRemainingSeconds = computed(() => {
+  if (minuteDragDeltaMinutes.value === null || !minuteDragIsActiveTimer.value) return null
+  const liveRemaining =
+    (snapshot.value.durationSeconds ?? 0) -
+    snapshot.value.elapsedSeconds -
+    (snapshot.value.completionGapSeconds ?? 0)
+  return Math.max(0, liveRemaining + minuteDragDeltaMinutes.value * 60)
+})
 
 const parseBaselineIdleMinutes = () => {
   const n = Number(dynamicMinutes.value || '0')
@@ -214,17 +229,15 @@ const {
 } = useMinuteVerticalDrag({
   blurSelector: '#dynamicMinutes',
   onSessionStart() {
+    clearPersistDebounce()
     minuteDragBaselineIdleMinutes.value = parseBaselineIdleMinutes()
-    minuteDragBaselineRemainingSeconds.value = snapshot.value.remainingSeconds ?? 0
+    minuteDragStartedAtMs = snapshot.value.startedAtMs
     minuteDragIsActiveTimer.value = timerIsRunning.value || timerIsPaused.value
-    minuteDragPreviewRemainingSeconds.value = null
+    minuteDragDeltaMinutes.value = null
   },
   onDrag(deltaMinutes) {
     if (minuteDragIsActiveTimer.value) {
-      minuteDragPreviewRemainingSeconds.value = Math.max(
-        0,
-        minuteDragBaselineRemainingSeconds.value + deltaMinutes * 60,
-      )
+      minuteDragDeltaMinutes.value = deltaMinutes
     } else {
       const nextMinutes = Math.max(0, minuteDragBaselineIdleMinutes.value + deltaMinutes)
       markIdleMinutesAsLocallyEdited(nextMinutes > 0 ? nextMinutes : null)
@@ -232,7 +245,13 @@ const {
     }
   },
   onSessionEnd({ deltaMinutes, didDragBeyondThreshold }) {
-    if (didDragBeyondThreshold && minuteDragIsActiveTimer.value && deltaMinutes !== 0) {
+    if (
+      didDragBeyondThreshold &&
+      minuteDragIsActiveTimer.value &&
+      deltaMinutes !== 0 &&
+      snapshot.value.mode === 'countdown' &&
+      snapshot.value.startedAtMs === minuteDragStartedAtMs
+    ) {
       void addCountdownMinutes(deltaMinutes)
     }
 
@@ -245,7 +264,7 @@ const {
       }
     }
 
-    minuteDragPreviewRemainingSeconds.value = null
+    minuteDragDeltaMinutes.value = null
   },
 })
 

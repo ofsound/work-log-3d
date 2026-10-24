@@ -18,15 +18,28 @@ const hasWeeks = computed(() => props.weeks.length > 0)
 const maxMinutes = computed(() =>
   props.weeks.reduce((maximum, week) => Math.max(maximum, week.totalMinutes), 0),
 )
-const firstWeekLabel = computed(() =>
-  hasWeeks.value
-    ? props.weeks[0]!.weekStart.toLocaleDateString([], {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : '',
-)
+const monthLabels = computed(() => {
+  const labels: { key: string; label: string; title: string; left: string }[] = []
+  const addMonth = (date: Date, weekOffset: number) => {
+    const key = `${date.getFullYear()}-${date.getMonth()}`
+    if (labels.some((label) => label.key === key)) return
+    labels.push({
+      key,
+      label: date.toLocaleDateString([], { month: 'short' }),
+      title: date.toLocaleDateString([], { month: 'long', year: 'numeric' }),
+      left: `${(weekOffset / props.weeks.length) * 100}%`,
+    })
+  }
+
+  if (props.weeks[0]) addMonth(props.weeks[0].weekStart, 0)
+  props.weeks.forEach((week, index) => {
+    if (week.monthBoundaryOffsetDays === null) return
+    const boundary = new Date(week.weekStart.getTime())
+    boundary.setDate(boundary.getDate() + week.monthBoundaryOffsetDays)
+    addMonth(boundary, index + week.monthBoundaryOffsetDays / 7)
+  })
+  return labels
+})
 
 const getBarHeight = (week: HomeActivityWeek) => {
   if (!week.hasActivity || maxMinutes.value === 0) {
@@ -41,18 +54,8 @@ const getFrontFaceClass = (week: HomeActivityWeek) =>
     ? 'border-home-activity-bar-edge bg-linear-to-b from-home-activity-bar-top via-home-activity-bar-mid to-home-activity-bar-base'
     : 'border-home-activity-bar-ghost-edge bg-linear-to-b from-home-activity-bar-ghost-top to-home-activity-bar-ghost-base opacity-88'
 
-const getSideFaceClass = (week: HomeActivityWeek) =>
-  week.hasActivity
-    ? 'bg-linear-to-b from-home-activity-bar-cap/70 via-home-activity-bar-side to-home-activity-bar-side-shadow'
-    : 'bg-linear-to-b from-home-activity-bar-ghost-top to-home-activity-bar-ghost-edge opacity-75'
-
-const getTopCapClass = (week: HomeActivityWeek) =>
-  week.hasActivity
-    ? 'border-home-activity-bar-edge bg-linear-to-r from-home-activity-bar-cap via-home-activity-bar-top to-home-activity-bar-mid'
-    : 'border-home-activity-bar-ghost-edge bg-linear-to-r from-home-activity-bar-ghost-top to-home-activity-bar-ghost-base'
-
 const getBarFrameClass = (week: HomeActivityWeek) => [
-  'absolute inset-0 rounded-t-[8px] rounded-b-[3px] border shadow-[0_18px_28px_-18px_var(--color-home-activity-bar-shadow)]',
+  'absolute inset-0 border shadow-[0_18px_28px_-18px_var(--color-home-activity-bar-shadow)]',
   getFrontFaceClass(week),
   week.isCurrentWeek
     ? '[box-shadow:0_0_0_1px_var(--color-home-activity-bar-current-ring),0_18px_28px_-18px_var(--color-home-activity-bar-shadow),0_0_26px_-8px_var(--color-home-activity-bar-current-glow)]'
@@ -77,16 +80,9 @@ const getMonthDividerStyle = (week: HomeActivityWeek): CSSProperties | undefined
       padding="compact"
       variant="gradient"
     >
-      <div
-        class="mb-3 flex items-center justify-between gap-4 text-[0.68rem] font-semibold tracking-[0.18em] text-text-subtle uppercase"
-      >
-        <span>{{ firstWeekLabel }}</span>
-        <span>{{ hasWeeks ? 'Today' : '' }}</span>
-      </div>
-
       <div v-if="hasWeeks" class="min-w-0">
         <div
-          class="from-home-activity-stage-top via-home-activity-stage-mid to-home-activity-stage-bottom relative overflow-hidden rounded-[1.35rem] bg-linear-to-b px-3 pt-3 pb-4"
+          class="from-home-activity-stage-top via-home-activity-stage-mid to-home-activity-stage-bottom relative overflow-hidden bg-linear-to-b px-3 pt-3 pb-4"
         >
           <div
             class="pointer-events-none absolute inset-0 opacity-35"
@@ -138,14 +134,6 @@ const getMonthDividerStyle = (week: HomeActivityWeek): CSSProperties | undefined
                 />
                 <div :class="getBarFrameClass(week)" />
                 <div
-                  class="absolute inset-y-[8%] right-0 w-[18%] rounded-r-[4px]"
-                  :class="getSideFaceClass(week)"
-                />
-                <div
-                  class="absolute top-0 right-[8%] left-[8%] h-[6px] rounded-t-[5px] border"
-                  :class="getTopCapClass(week)"
-                />
-                <div
                   v-if="week.isCurrentWeek"
                   class="absolute inset-x-[14%] top-[22%] h-px bg-home-activity-current-highlight"
                 />
@@ -153,11 +141,24 @@ const getMonthDividerStyle = (week: HomeActivityWeek): CSSProperties | undefined
             </div>
           </div>
         </div>
+        <div
+          class="relative mx-3 mt-1 h-3 text-[9px] leading-none font-medium tracking-wide text-text-subtle uppercase"
+        >
+          <span
+            v-for="month in monthLabels"
+            :key="month.key"
+            class="absolute top-0 whitespace-nowrap"
+            :style="{ left: month.left }"
+            :title="month.title"
+            data-home-activity-month-label
+            >{{ month.label }}</span
+          >
+        </div>
       </div>
 
       <div
         v-else
-        class="border-home-activity-stage-border from-home-activity-stage-top via-home-activity-stage-mid to-home-activity-stage-bottom relative h-28 overflow-hidden rounded-[1.35rem] border bg-linear-to-b px-3 pt-3 pb-4"
+        class="border-home-activity-stage-border from-home-activity-stage-top via-home-activity-stage-mid to-home-activity-stage-bottom relative h-28 overflow-hidden border bg-linear-to-b px-3 pt-3 pb-4"
       >
         <div
           class="from-home-activity-floor-left via-home-activity-floor-mid to-home-activity-floor-right absolute inset-x-3 bottom-3 h-4 rounded-full bg-linear-to-r opacity-90"
@@ -167,7 +168,7 @@ const getMonthDividerStyle = (week: HomeActivityWeek): CSSProperties | undefined
           class="absolute inset-x-[10%] bottom-4 h-4 rounded-full bg-home-activity-bar-shadow/25 blur-[8px]"
         />
         <div
-          class="absolute inset-x-[16%] bottom-3 h-4 rounded-t-[6px] border border-home-activity-bar-ghost-edge bg-linear-to-b from-home-activity-bar-ghost-top to-home-activity-bar-ghost-base opacity-80"
+          class="absolute inset-x-[16%] bottom-3 h-4 border border-home-activity-bar-ghost-edge bg-linear-to-b from-home-activity-bar-ghost-top to-home-activity-bar-ghost-base opacity-80"
         />
         <div class="absolute inset-x-0 top-5 text-center text-sm font-medium text-text-subtle">
           No activity yet

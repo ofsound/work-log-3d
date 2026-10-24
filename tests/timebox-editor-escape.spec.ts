@@ -48,10 +48,8 @@ vi.mock('~/composables/useTimeBoxEditorModel', () => ({
     hideTags: ref(true),
     isDirty: computed(() => isDirty.value),
     isEditingExistingTimeBox: computed(() => isEditingExistingTimeBox.value),
-    projectRadiosTwoColumns: computed(() => false),
     resetTimeBoxEditor: vi.fn(),
     sessionTimeHero: computed(() => null),
-    showLegacyTagNotice: computed(() => false),
     sortedAllTags: ref([]),
     sortedPickerProjects: ref([]),
     getTimeBoxInput: vi.fn(),
@@ -67,10 +65,6 @@ vi.mock('~/composables/useTimeBoxEditorMutations', () => ({
   }),
 }))
 
-vi.mock('~/utils/project-color-styles', () => ({
-  getProjectPickerOptionStyle: () => ({}),
-}))
-
 const { default: TimeBoxEditor } = await import('~/app/components/TimeBoxEditor.vue')
 
 const mountEditor = (props: Record<string, unknown> = {}) =>
@@ -84,6 +78,10 @@ const mountEditor = (props: Record<string, unknown> = {}) =>
     },
     global: {
       stubs: {
+        ProjectPicker: {
+          props: ['modelValue', 'projects'],
+          template: '<div data-testid="project-picker" />',
+        },
         AppButton: { template: '<button type="button" v-bind="$attrs"><slot /></button>' },
         AppField: {
           props: ['as'],
@@ -184,5 +182,40 @@ describe('TimeBoxEditor Escape handling', () => {
     expect(wrapper.emitted('toggleEditor')).toBeUndefined()
 
     wrapper.unmount()
+  })
+  it('closes the focused editor without dismissing a different inline editor', async () => {
+    const first = mountEditor({ id: 'session-first' })
+    const second = mountEditor({ id: 'session-second' })
+    pressEscape(second.get('button').element)
+    await flushPromises()
+    expect(first.emitted('toggleEditor')).toBeUndefined()
+    expect(second.emitted('toggleEditor')).toHaveLength(1)
+    first.unmount()
+    second.unmount()
+  })
+
+  it('blurs a field only in the editor receiving Escape when multiple editors are open', async () => {
+    const first = mountEditor()
+    const second = mountEditor()
+    const field = second.get('textarea').element as HTMLTextAreaElement
+    field.focus()
+    pressEscape(field)
+    await flushPromises()
+    expect(document.activeElement).not.toBe(field)
+    expect(first.emitted('toggleEditor')).toBeUndefined()
+    expect(second.emitted('toggleEditor')).toBeUndefined()
+    first.unmount()
+    second.unmount()
+  })
+
+  it('dismisses only the last open editor when Escape comes from outside any editor', async () => {
+    const first = mountEditor()
+    const second = mountEditor()
+    pressEscape(document.body)
+    await flushPromises()
+    expect(first.emitted('toggleEditor')).toBeUndefined()
+    expect(second.emitted('toggleEditor')).toHaveLength(1)
+    first.unmount()
+    second.unmount()
   })
 })

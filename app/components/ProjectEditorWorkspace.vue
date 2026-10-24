@@ -16,6 +16,7 @@ import type { FirebaseProjectDocument, FirebaseTimeBoxDocument } from '~/utils/w
 import { toProject, toTimeBoxes } from '~/utils/worklog-firebase'
 import type { ProjectColors, ProjectInput } from '~~/shared/worklog'
 import {
+  createProjectPayload,
   getProjectColorValidationMessages,
   getTotalDurationLabel,
   getWorklogErrorMessage,
@@ -250,6 +251,7 @@ const saveProject = async () => {
 
   try {
     const nextInput = buildProjectInput()
+    const savedProjectSegment = createProjectPayload(nextInput).slug
 
     mutationErrorMessage.value = ''
     await repositories.projects.update(props.id, nextInput)
@@ -257,7 +259,7 @@ const saveProject = async () => {
     allowNextNavigation.value = true
     await router.push(
       buildProjectWorkspaceLocation(
-        projectPathSegment.value,
+        savedProjectSegment,
         routeState.value.mode,
         routeState.value,
         routeQuery.value,

@@ -22,7 +22,7 @@ export type DesktopTimerAction =
       tags: string[]
     }
   | {
-      type: 'add_countdown_time'
+      type: 'add_countdown_time' | 'add_countup_time'
       durationSeconds: number
     }
   | {
@@ -54,6 +54,8 @@ export type DesktopTrayActionId =
   | 'start_countup'
   | 'add_countdown_5_minutes'
   | 'add_countdown_10_minutes'
+  | 'add_countup_5_minutes'
+  | 'add_countup_10_minutes'
   | 'pause'
   | 'resume'
   | 'stop'
@@ -217,6 +219,11 @@ const createCountdownAdjustmentItems = (): DesktopTrayMenuItem[] => [
   createActionItem('add_countdown_10_minutes', '+10 min'),
 ]
 
+const createCountupAdjustmentItems = (): DesktopTrayMenuItem[] => [
+  createActionItem('add_countup_5_minutes', '+5 min'),
+  createActionItem('add_countup_10_minutes', '+10 min'),
+]
+
 const createDefaultCountdownItem = (countdownDefaultMinutes: number): DesktopTrayMenuItem =>
   createActionItem(
     'start_default_countdown',
@@ -327,7 +334,12 @@ export const getDesktopTrayState = (
 
   if (snapshot.status === 'running') {
     const statusLabel = `Running • ${modeLabel}`
-    const countdownActions = snapshot.mode === 'countdown' ? createCountdownAdjustmentItems() : []
+    const adjustmentActions =
+      snapshot.mode === 'countdown'
+        ? createCountdownAdjustmentItems()
+        : snapshot.mode === 'countup'
+          ? createCountupAdjustmentItems()
+          : []
     const timerActions =
       snapshot.mode === 'countup'
         ? [createActionItem('stop', 'Stop')]
@@ -346,7 +358,7 @@ export const getDesktopTrayState = (
       menuItems: [
         createStatusItem(statusLabel),
         separatorItem,
-        ...countdownActions,
+        ...adjustmentActions,
         ...timerActions,
         createActionItem('reset', 'Reset'),
         separatorItem,
@@ -366,6 +378,7 @@ export const getDesktopTrayState = (
             createStatusItem(statusLabel),
             separatorItem,
             createActionItem('resume', 'Resume'),
+            ...createCountupAdjustmentItems(),
             createActionItem('reset', 'Reset'),
             separatorItem,
             createActionItem('show_window', 'Show Window'),

@@ -23,19 +23,23 @@ export function useMinuteVerticalDrag(options: UseMinuteVerticalDragOptions) {
   function removeWindowListeners() {
     window.removeEventListener('pointermove', onWindowPointerMove)
     window.removeEventListener('pointerup', onWindowPointerUp)
-    window.removeEventListener('pointercancel', onWindowPointerUp)
+    window.removeEventListener('pointercancel', onWindowPointerCancel)
+    window.removeEventListener('blur', onWindowPointerCancel)
   }
 
-  function endSession(event: PointerEvent) {
+  function endSession(event?: PointerEvent) {
     if (!pointerSessionActive.value) {
       return
     }
 
-    const y = Number.isFinite(event.clientY) ? event.clientY : lastClientY.value
-    const deltaMinutes = minuteDragDeltaMinutes(startClientY.value, y)
-    const didDragBeyondThreshold = dragActive.value
+    const cancelled = event === undefined
+    const y = event && Number.isFinite(event.clientY) ? event.clientY : lastClientY.value
+    const deltaMinutes = cancelled ? 0 : minuteDragDeltaMinutes(startClientY.value, y)
+    const didDragBeyondThreshold = !cancelled && dragActive.value
 
     removeWindowListeners()
+    // Restore previews and fields that update continuously, without committing the gesture.
+    if (cancelled && dragActive.value) options.onDrag(0)
     pointerSessionActive.value = false
     dragActive.value = false
 
@@ -74,8 +78,12 @@ export function useMinuteVerticalDrag(options: UseMinuteVerticalDragOptions) {
     endSession(event)
   }
 
+  function onWindowPointerCancel() {
+    endSession()
+  }
+
   function onPointerDown(event: PointerEvent) {
-    if (event.button !== 0) {
+    if (event.button !== 0 || pointerSessionActive.value) {
       return
     }
 
@@ -87,7 +95,8 @@ export function useMinuteVerticalDrag(options: UseMinuteVerticalDragOptions) {
 
     window.addEventListener('pointermove', onWindowPointerMove)
     window.addEventListener('pointerup', onWindowPointerUp)
-    window.addEventListener('pointercancel', onWindowPointerUp)
+    window.addEventListener('pointercancel', onWindowPointerCancel)
+    window.addEventListener('blur', onWindowPointerCancel)
   }
 
   onBeforeUnmount(() => {
