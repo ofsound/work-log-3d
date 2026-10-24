@@ -133,7 +133,6 @@ onBeforeUnmount(() => {
         />
         <span class="min-w-0 truncate">{{ selectedProject?.name || 'Choose a project' }}</span>
       </span>
-      <span class="shrink-0 text-xs text-text-muted">Search</span>
     </button>
     <Teleport to="body">
       <dialog
