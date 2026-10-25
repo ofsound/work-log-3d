@@ -296,66 +296,71 @@ const handleCompactRowKeydown = (event: KeyboardEvent) => {
   </ContainerCard>
   <ContainerCard
     v-if="isMinimized"
-    class="!rounded-none !border-0 !bg-transparent px-3 py-2 shadow-none"
+    class="!rounded-none !border-0 !bg-transparent px-3 py-3"
+    flat-surface
     :class="[
       props.compact ? 'mb-0' : 'mb-2.5',
       props.compactRowOpensEditor ? 'cursor-pointer' : '',
     ]"
     :interactive="props.compactRowOpensEditor"
-    padding="compact"
+    padding="none"
     :role="props.compactRowOpensEditor ? 'button' : undefined"
     :tabindex="props.compactRowOpensEditor ? 0 : undefined"
     :variant="variant === 'project' ? 'muted' : 'subtle'"
     @click="handleCompactRowOpen"
     @keydown="handleCompactRowKeydown"
   >
-    <div
-      v-if="showCompactActions && !hideActions"
-      class="mb-2 flex justify-end gap-0.5 text-text-subtle"
-    >
-      <button
-        type="button"
-        class="cursor-pointer px-1 hover:text-text"
-        aria-label="Edit session"
-        @click.stop="emit('toggleEditor')"
+    <div class="flex min-w-0 items-center gap-3" data-testid="compact-session-row">
+      <div class="flex min-w-0 flex-1 flex-col gap-1">
+        <NuxtLink
+          v-if="variant !== 'project' && timeBox?.project"
+          :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
+          class="inline-flex max-w-full min-w-0 items-center text-xs font-bold tracking-[0.16em] uppercase no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
+          :style="projectTextStyle"
+          @click.stop
+        >
+          <HighlightedText :text="projectName" :tokens="highlightTokens" />
+        </NuxtLink>
+        <div
+          v-else-if="variant !== 'project'"
+          class="inline-flex text-xs font-bold tracking-[0.16em] uppercase"
+          :style="projectTextStyle"
+        >
+          <HighlightedText :text="projectName" :tokens="highlightTokens" />
+        </div>
+        <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-data">
+          <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
+          <DurationPill
+            class="shrink-0"
+            format="minutes"
+            :minutes="timeBoxDuration"
+            :style="projectBadgeStyle"
+            tone="project"
+            variant="compact"
+          />
+        </div>
+      </div>
+      <div
+        v-if="showCompactActions && !hideActions"
+        class="flex shrink-0 items-center gap-1 text-text-subtle"
       >
-        <EditIcon />
-      </button>
-      <button
-        type="button"
-        class="cursor-pointer px-1 hover:text-text"
-        aria-label="Delete session"
-        @click.stop="requestDeleteSession"
-      >
-        <DeleteIcon />
-      </button>
-    </div>
-    <NuxtLink
-      v-if="variant !== 'project' && timeBox?.project"
-      :to="project ? getProjectPathFromProject(project) : getProjectPath(timeBox.project)"
-      class="mb-2 inline-flex max-w-full min-w-0 items-center text-xs font-bold tracking-[0.16em] uppercase no-underline focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2 focus-visible:outline-none"
-      :style="projectTextStyle"
-      @click.stop
-    >
-      <HighlightedText :text="projectName" :tokens="highlightTokens" />
-    </NuxtLink>
-    <div
-      v-else-if="variant !== 'project'"
-      class="mb-2 inline-flex text-xs font-bold tracking-[0.16em] uppercase"
-      :style="projectTextStyle"
-    >
-      <HighlightedText :text="projectName" :tokens="highlightTokens" />
-    </div>
-    <div class="pb-2 font-data">
-      <HighlightedText :text="timeBox?.notes ?? ''" :tokens="highlightTokens" />
-      <DurationPill
-        class="ml-2 shrink-0"
-        format="minutes"
-        :minutes="timeBoxDuration"
-        :style="projectBadgeStyle"
-        tone="project"
-        variant="compact"
-      />
+        <button
+          type="button"
+          class="cursor-pointer px-1 hover:text-text"
+          aria-label="Edit session"
+          @click.stop="emit('toggleEditor')"
+        >
+          <EditIcon />
+        </button>
+        <button
+          type="button"
+          class="cursor-pointer px-1 hover:text-text"
+          aria-label="Delete session"
+          @click.stop="requestDeleteSession"
+        >
+          <DeleteIcon />
+        </button>
+      </div>
     </div>
   </ContainerCard>
 </template>

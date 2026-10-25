@@ -298,13 +298,14 @@ const handleSegmentDragEnd = () => {
 
 <template>
   <div class="min-h-0 flex-1 overflow-hidden">
-    <div class="h-full overflow-auto overscroll-contain px-6 py-6">
-      <div class="flex w-full min-w-[980px] flex-col gap-6">
+    <div class="h-full overflow-auto overscroll-contain">
+      <div class="flex min-h-full w-full min-w-[980px] flex-col">
         <ContainerCard
           v-for="month in monthEntries"
           :key="`${month.year}-${month.monthIndex}`"
           as="section"
-          class="overflow-hidden"
+          class="flex flex-1 flex-col overflow-hidden rounded-none border-0"
+          flat-surface
           padding="none"
           variant="subtle"
         >
@@ -323,7 +324,7 @@ const handleSegmentDragEnd = () => {
             </div>
           </div>
 
-          <div class="grid grid-cols-7">
+          <div class="grid flex-1 auto-rows-fr grid-cols-7">
             <template v-for="day in month.gridDays" :key="formatDateKey(day)">
               <component
                 :is="dayHasSessions(month.segmentsByKey, day) ? 'button' : 'div'"
