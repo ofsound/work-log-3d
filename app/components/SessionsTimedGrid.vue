@@ -156,11 +156,12 @@ const getEventStyle = (layout: TimeBoxDaySegmentLayout) => {
     <div
       v-if="!isWeekView"
       ref="scrollContainerRef"
-      class="h-full overflow-auto overscroll-contain px-6 py-6"
+      class="h-full overflow-auto overscroll-contain"
     >
       <ContainerCard
         ref="weekCalendarGridRef"
-        class="grid min-h-full w-full overflow-hidden"
+        class="grid min-h-full w-full overflow-hidden rounded-none border-0"
+        flat-surface
         padding="none"
         variant="subtle"
         :style="dayViewGridStyle"
@@ -279,9 +280,10 @@ const getEventStyle = (layout: TimeBoxDaySegmentLayout) => {
     </div>
 
     <!-- Week view: fixed header row; hours + sessions scroll underneath. -->
-    <div v-else class="flex h-full min-h-0 flex-col px-6 py-6">
+    <div v-else class="flex h-full min-h-0 flex-col">
       <ContainerCard
-        class="flex min-h-0 flex-1 flex-col overflow-hidden"
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-none border-0"
+        flat-surface
         padding="none"
         variant="subtle"
       >

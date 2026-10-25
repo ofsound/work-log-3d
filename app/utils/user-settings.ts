@@ -29,6 +29,11 @@ export const USER_SETTINGS_BACKGROUND_OPTIONS: UserSettingsBackgroundOption[] = 
     label: 'Aurora',
     description: 'A soft gradient wash for a calmer shell.',
   },
+  {
+    id: 'argon',
+    label: 'Argon',
+    description: 'Generative technical line art — subtle circuit traces and arcs.',
+  },
 ]
 
 export const getUserSettingsBackgroundOption = (preset: UserSettingsBackgroundPreset) =>
@@ -52,6 +57,12 @@ export const getShellBackgroundStyle = (preset: UserSettingsBackgroundPreset): C
     case 'aurora':
       return {
         backgroundImage: 'var(--background-image-shell-aurora)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+      }
+    case 'argon':
+      return {
+        backgroundImage: 'var(--background-image-shell-argon)',
         backgroundSize: 'cover',
         backgroundPosition: 'center center',
       }

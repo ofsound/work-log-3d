@@ -180,8 +180,13 @@ service cloud.firestore {
           || request.resource.data.appearance.backgroundPreset == 'mist'
           || request.resource.data.appearance.backgroundPreset == 'dusk'
           || request.resource.data.appearance.backgroundPreset == 'aurora'
+          || request.resource.data.appearance.backgroundPreset == 'argon'
         )
-        && hasExactMapKeys(request.resource.data.workflow, ['hideTags', 'countdownDefaultMinutes'])
+        && request.resource.data.workflow is map
+        && request.resource.data.workflow.keys().hasAll(['hideTags', 'countdownDefaultMinutes'])
+        && request.resource.data.workflow.keys().hasOnly(['hideTags', 'hideReports', 'countdownDefaultMinutes'])
+        && (!('hideReports' in request.resource.data.workflow)
+          || request.resource.data.workflow.hideReports is bool)
         && request.resource.data.workflow.hideTags is bool
         && request.resource.data.workflow.countdownDefaultMinutes is int
         && request.resource.data.workflow.countdownDefaultMinutes > 0

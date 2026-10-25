@@ -14,6 +14,13 @@ import {
 const state = ref(startCountupTimer(1_000_000))
 const nowMs = ref(1_060_000)
 const isReady = ref(true)
+const startCountup = vi.fn(async (_draft: unknown, initialElapsedSeconds: number) => {
+  state.value = addCountupSeconds(
+    startCountupTimer(nowMs.value),
+    initialElapsedSeconds,
+    nowMs.value,
+  )
+})
 const addCountupMinutes = vi.fn(async (minutes: number) => {
   state.value = addCountupSeconds(state.value, minutes * 60, nowMs.value)
 })
@@ -24,7 +31,7 @@ vi.mock('~/composables/useTimerService', () => ({
     addCountupMinutes,
     cancel: vi.fn(),
     resume: vi.fn(),
-    startCountup: vi.fn(),
+    startCountup,
     stop: vi.fn(),
   }),
 }))
@@ -46,6 +53,7 @@ beforeEach(() => {
   nowMs.value = 1_060_000
   isReady.value = true
   addCountupMinutes.mockClear()
+  startCountup.mockClear()
 })
 
 describe('countup missed-time controls', () => {
@@ -72,7 +80,7 @@ describe('countup missed-time controls', () => {
     wrapper.unmount()
   })
 
-  it('hides adjustment controls before starting and until the service is ready', async () => {
+  it('shows idle adjustment controls after the service is ready', async () => {
     const wrapper = mountTimer()
     isReady.value = false
     await wrapper.vm.$nextTick()
@@ -80,9 +88,25 @@ describe('countup missed-time controls', () => {
     isReady.value = true
     state.value = createIdleTimerState()
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-testid="countup-add-10"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="countup-add-10"]').exists()).toBe(true)
     wrapper.unmount()
   })
+  it('preloads missed time while idle and applies it when Start is clicked', async () => {
+    state.value = createIdleTimerState()
+    const wrapper = mountTimer()
+    await wrapper.get('[data-testid="countup-add-5"]').trigger('click')
+    await wrapper.get('[data-testid="countup-add-10"]').trigger('click')
+    expect(wrapper.text()).toContain('15:00')
+    expect(state.value.status).toBe('idle')
+    expect(addCountupMinutes).not.toHaveBeenCalled()
+    const start = wrapper.findAll('button').find((button) => button.text() === 'Start')!
+    await start.trigger('click')
+    expect(startCountup).toHaveBeenCalledWith({}, 900)
+    expect(state.value.status).toBe('running')
+    expect(wrapper.text()).toContain('15:00')
+    wrapper.unmount()
+  })
+
   it('previews a relative drag while running and commits only once on release', async () => {
     const wrapper = mountTimer()
     wrapper

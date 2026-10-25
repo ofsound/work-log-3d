@@ -40,37 +40,8 @@ const emit = defineEmits<{
 
 const scratchpadPanelRef = ref<{ flushPendingChanges: () => Promise<void> } | null>(null)
 
-const persistentPanelItems = computed(() => {
-  const items = [
-    { id: 'scratchpad', label: 'Scratchpad' },
-    { id: 'overview', label: 'Overview' },
-  ]
-
-  if (props.mode === 'session' || props.mode === 'create') {
-    items.push({
-      id: 'session',
-      label: props.mode === 'session' ? 'Session' : 'New Session',
-    })
-  }
-
-  return items
-})
-
-const persistentPanelActiveId = computed(() => (props.mode === 'create' ? 'session' : props.mode))
-
 const handleCreated = (sessionId: string) => {
   emit('created', sessionId)
-}
-
-const handlePersistentPanelSelect = (itemId: string) => {
-  if (itemId === 'scratchpad') {
-    emit('showScratchpad')
-    return
-  }
-
-  if (itemId === 'overview') {
-    emit('showOverview')
-  }
 }
 
 const flushScratchpad = async () => {
@@ -88,6 +59,10 @@ const panelUsesEdgeAlignedEditorScroll = computed(
   () => props.mode === 'session' || props.mode === 'create',
 )
 const panelBodyPaddingClass = computed(() => {
+  if (props.persistent && (props.mode === 'scratchpad' || props.mode === 'overview')) {
+    return 'pt-4'
+  }
+
   if (panelUsesEdgeAlignedEditorScroll.value) {
     return showOverlaySessionHeader.value ? 'pb-4' : 'pt-4 pb-4'
   }
@@ -149,26 +124,29 @@ defineExpose({
         </button>
       </div>
       <div
-        v-else
-        class="flex shrink-0 items-center gap-3 px-3 py-3"
-        :class="props.persistent ? 'justify-center' : 'justify-between'"
+        v-else-if="!props.persistent || props.mode === 'session' || props.mode === 'create'"
+        class="flex shrink-0 items-center justify-between gap-3 px-3 py-2"
       >
-        <div v-if="props.persistent" class="flex min-w-0 flex-wrap items-center gap-2">
-          <AppSegmentedControl
-            :active-id="persistentPanelActiveId"
-            aria-label="Day sidebar sections"
-            :items="persistentPanelItems"
-            size="medium"
-            @select="handlePersistentPanelSelect"
-          />
-        </div>
+        <button
+          v-if="props.persistent && props.mode !== 'create'"
+          type="button"
+          class="inline-flex cursor-pointer items-center gap-1 py-2 text-sm font-semibold text-text-muted hover:text-text"
+          @click="emit('close')"
+        >
+          <ChevronLeftIcon />
+          Back to day
+        </button>
+
+        <h2 v-if="props.persistent && props.mode === 'create'" class="text-lg font-bold text-text">
+          New Session
+        </h2>
 
         <button
-          v-if="!props.persistent"
+          v-if="!props.persistent || props.mode === 'create'"
           type="button"
           class="cursor-pointer rounded-md p-2 text-text-subtle hover:text-text"
           :class="props.overlay ? 'hover:bg-overlay-inverse' : 'hover:bg-surface'"
-          aria-label="Close"
+          :aria-label="props.mode === 'create' ? 'Cancel new session' : 'Close'"
           @click="emit('close')"
         >
           <CloseIcon />
@@ -191,21 +169,11 @@ defineExpose({
       </div>
     </template>
 
-    <div
-      v-if="props.persistent"
-      v-show="props.mode === 'scratchpad'"
-      class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-4"
-    >
-      <DailyScratchpadPanel
-        ref="scratchpadPanelRef"
-        class="min-h-0 flex-1"
-        :active="props.mode === 'scratchpad'"
-        :date-key="props.dateKey"
-      />
-    </div>
-
     <DaySessionsOverviewPanel
-      v-if="props.mode === 'overview' && props.day"
+      v-if="
+        props.day &&
+        (props.mode === 'overview' || (props.persistent && props.mode === 'scratchpad'))
+      "
       class="px-4"
       :day="props.day"
       empty-message="No sessions on the selected day."
@@ -251,5 +219,19 @@ defineExpose({
         @toggle-editor="emit('close')"
       />
     </div>
+    <template v-if="props.persistent" #footer>
+      <div
+        v-show="!panelUsesEdgeAlignedEditorScroll"
+        class="flex h-1/4 min-h-36 shrink-0 flex-col border-t border-border px-4 py-3"
+        data-testid="daily-scratchpad-footer"
+      >
+        <DailyScratchpadPanel
+          ref="scratchpadPanelRef"
+          class="min-h-0 flex-1"
+          :active="!panelUsesEdgeAlignedEditorScroll"
+          :date-key="props.dateKey"
+        />
+      </div>
+    </template>
   </WorkspaceSidePanelFrame>
 </template>

@@ -18,6 +18,8 @@ import {
 } from 'firebase/firestore'
 import { afterAll, afterEach, beforeAll, describe, it } from 'vitest'
 
+import { DEFAULT_USER_SETTINGS, USER_SETTINGS_BACKGROUND_PRESETS } from '../shared/worklog/settings'
+
 const projectId = 'demo-work-log'
 const firestoreRules = readFileSync(resolve(process.cwd(), 'firestore.rules'), 'utf8')
 
@@ -162,28 +164,50 @@ describe('firestore rules', () => {
     )
   })
 
-  it('allows an owner to write valid user settings', async () => {
-    await assertSucceeds(
-      setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
-        appearance: {
-          fontImportUrl:
-            'https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap',
-          fontFamilies: {
-            ui: "'National Park', sans-serif",
-            data: "'Lato', sans-serif",
+  it.each(USER_SETTINGS_BACKGROUND_PRESETS)(
+    'allows an owner to save the %s background',
+    async (backgroundPreset) => {
+      await assertSucceeds(
+        setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
+          appearance: {
+            fontImportUrl:
+              'https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap',
+            fontFamilies: {
+              ui: "'National Park', sans-serif",
+              data: "'Lato', sans-serif",
+            },
+            backgroundPreset,
           },
-          backgroundPreset: 'mist',
-        },
+          workflow: {
+            hideTags: true,
+            countdownDefaultMinutes: 30,
+          },
+          desktop: {
+            trayShortcuts: [],
+          },
+        }),
+      )
+    },
+  )
+
+  it.each([undefined, false, true, 'true', 1, null])(
+    'validates the optional hideReports preference: %s',
+    async (hideReports) => {
+      const write = setDoc(authedDoc(testEnvironment, 'user-1', 'settings', 'preferences'), {
+        ...DEFAULT_USER_SETTINGS,
         workflow: {
-          hideTags: true,
+          hideTags: false,
           countdownDefaultMinutes: 30,
+          ...(hideReports === undefined ? {} : { hideReports }),
         },
-        desktop: {
-          trayShortcuts: [],
-        },
-      }),
-    )
-  })
+      })
+      if (hideReports === undefined || typeof hideReports === 'boolean') {
+        await assertSucceeds(write)
+      } else {
+        await assertFails(write)
+      }
+    },
+  )
 
   it('allows an owner to write a valid active timer document', async () => {
     await assertSucceeds(

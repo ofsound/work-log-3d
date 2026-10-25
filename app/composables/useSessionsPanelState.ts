@@ -165,6 +165,21 @@ export function useSessionsPanelState(options: UseSessionsPanelStateOptions) {
     }
   }
 
+  const finishCreate = async (sessionId: string) => {
+    markCreatePreviewSaved(sessionId)
+    if (isPersistentScratchpad.value) {
+      await flushScratchpadIfNeeded()
+      selectedSessionId.value = ''
+      resetPanelState(daySidebarTab.value, {
+        preserveCreatePreview: true,
+        rememberDayTab: false,
+      })
+      return
+    }
+
+    await openSessionPanel(sessionId, { preserveCreatePreview: true })
+  }
+
   const roundToSnapMinutes = (date: Date) => {
     const next = new Date(date.valueOf())
     next.setSeconds(0, 0)
@@ -399,6 +414,7 @@ export function useSessionsPanelState(options: UseSessionsPanelStateOptions) {
     createPreviewRange,
     daySidebarTab,
     flushScratchpadIfNeeded,
+    finishCreate,
     handleOpenDay,
     isPersistentScratchpad,
     isWideViewport,

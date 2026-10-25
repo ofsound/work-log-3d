@@ -26,6 +26,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 
 - Saving a renamed project opens its updated slug URL while preserving the selected view and date. Session draft project/tag synchronization updates those fields without resetting manually edited times or duration.
 
+- Both timer panels keep `+5 min` / `+10 min` available while idle: countdown adjusts the saved starting duration, and count-up preloads elapsed time that is applied when Start is clicked.
 - Running or paused count-up timers have the same `+5 min` / `+10 min` controls as the countdown, both beside the timer readout and in the Electron menu bar menu. These backdate the start time to include work done before starting the timer, and sync through the existing active-timer document.
 
 - Session editors use a compact project picker: click the selected project for Spotlight-style title search; an empty search shows all projects. Search accepts reordered word fragments, initials, ordered abbreviations, accents, and small typos; arrow keys and Enter select, and Escape closes without changing the project.
@@ -37,7 +38,9 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - `/reports` is the authenticated saved-report workspace; `/r/:token` is the anonymous client-facing published report route
 - Phone mode is a deliberate subset of the app, not just CSS reflow. It activates only when the device is both narrow (`max-width: 767px`) and touch-first (`hover: none` with a coarse pointer), so a resized desktop browser stays on the desktop UI.
 - In phone mode, `/sessions` supports only `day` and `search`; `week`, `month`, and `year` redirect to `day`. `/project/:segment` supports only `List`; `Calendar` and `/project/:segment/edit` redirect to the project overview. `/reports` redirects to `/sessions`. `/tags` stays available on phone.
+- Settings → Navigation → **Hide reports** hides Reports from the top menu. It previews immediately and syncs when saved; report URLs remain accessible. Older settings default to showing Reports.
 - `/settings` is the authenticated user settings workspace for synced appearance/workflow preferences, synced desktop tray shortcuts, desktop-only local alert sound controls, and portable account backup exports
+- Settings → Appearance → Background style includes **Argon**, a procedural SVG background of subtle circuit traces, arcs, and node dots. Select it to preview and save settings to keep it across launches. Desktop bundles need to be rebuilt with `npm run electron:dist` to include new presets; deploy matching settings validation with `npx firebase deploy --only firestore:rules --project work-log-3d`.
 - `/new` can accept desktop-prefill query params: `project=<documentId>` and `tags=id1,id2`
 - Each project and tag has a `slug` derived from its name; URLs prefer it for readability while Firestore keeps using document ids
 - Project slug `new` is reserved so `/project/new` always points to the create workspace
@@ -49,6 +52,7 @@ Work Log 3D is a Nuxt 4 + Vue 3 time-tracking app with a Firebase-backed web UI 
 - Theme preference is stored in `localStorage` per Firebase user, with a guest fallback before auth resolves
 - `/projects` defaults to **grid**; add **`?view=list`** for list. Grid leaves `view` out of the URL; toggling uses `router.replace`. **`ProjectsManagerProject` uses a `viewMode` prop** because Nuxt exposes the route layout name as `layout` in templates, which would shadow a prop named `layout`
 - Appearance, workflow (including the default countdown minutes for `/new`), and tray shortcut settings are stored in Firestore at `users/{uid}/settings/preferences`, while desktop alert sounds stay local to each Electron install
+- The Electron tray separates custom shortcuts from built-in timer actions with a divider, and keeps its open menu stable until dismissed.
 - The Electron tray idle menu includes a built-in `Start Countdown (XXm)` action that uses the synced workflow default countdown minutes from `users/{uid}/settings/preferences`
 - While a timer is active, the Electron tray menu is mode-specific: count-up does not offer Pause, Stop/Log, or open-window log shortcuts (use **Reset** or cancel in the app); count-down omits **Stop** while running or paused and uses **Pause** / add-time / **Reset** as appropriate
 - Narrow, touch-first phone browsers configure Firestore with forced long-polling before VueFire starts, working around delayed/missed iOS streaming updates (Firebase JS SDK issue #9789). Other clients keep the default transport.
@@ -314,6 +318,7 @@ New projects are created from `/project/new`, where the initial notes and curate
   }
   workflow: {
     hideTags: boolean
+    hideReports?: boolean // defaults to false for older settings; hides Reports from navigation
     countdownDefaultMinutes: number // whole minutes, 1–1440; default 30; last idle countdown start on `/new`
   }
   desktop: {
@@ -363,7 +368,7 @@ viewers continue to use the server-managed `/r/:token` flow.
 ## Sessions Views
 
 - `Day` is the default `/sessions` experience and uses a focused single-day timed calendar with keyboard navigation
-- On desktop, Day view keeps the right sidebar open with a private per-day scratchpad; selecting a session or drag-creating a new one swaps that sidebar to the contextual session tab until you return to the scratchpad
+- On desktop, Day view shows the day’s session overview in the right sidebar, with an autosaving daily scratchpad in roughly the bottom quarter. The scratchpad has no formatting toolbar. Viewing or creating a session takes over the full sidebar, with no tabs; **Back to day** or Cancel restores the combined overview and notes, and saving a new session returns there too. Existing formatted notes remain intact.
 - `List` is a live-filter workspace with URL-synced search over notes, project names, and tag names, plus project/tag/date/duration filters and list-specific sorting
 - `Week` uses a Monday-first timed grid with live today/now indicators, drag-to-create, drag-to-move, and resize handles
 - `Month` uses a Monday-first month grid with compact session chips and day drill-down into Day mode

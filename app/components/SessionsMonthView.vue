@@ -128,9 +128,10 @@ const handleSegmentDragEnd = () => {
 
 <template>
   <div class="min-h-0 flex-1 overflow-hidden">
-    <div class="h-full overflow-auto overscroll-contain px-6 py-6">
+    <div class="h-full overflow-auto overscroll-contain">
       <ContainerCard
-        class="overflow-hidden"
+        class="flex min-h-full flex-col overflow-hidden rounded-none border-0"
+        flat-surface
         padding="none"
         variant="subtle"
         :style="{ minWidth: `${CALENDAR_SEVEN_DAY_MIN_WIDTH_PX}px` }"
@@ -145,7 +146,7 @@ const handleSegmentDragEnd = () => {
           </div>
         </div>
 
-        <div class="grid grid-cols-7">
+        <div class="grid flex-1 auto-rows-fr grid-cols-7">
           <template v-for="day in gridDays" :key="formatDateKey(day)">
             <component
               :is="dayHasSessions(day) ? 'button' : 'div'"

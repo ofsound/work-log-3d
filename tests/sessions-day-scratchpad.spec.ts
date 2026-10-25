@@ -145,6 +145,8 @@ const SessionsSidePanelStub = defineComponent({
           'data-session-id': props.sessionId,
         },
         [
+          h('button', { 'data-test': 'cancel-create', onClick: () => emit('close') }),
+          h('button', { 'data-test': 'save-create', onClick: () => emit('created', 'session-2') }),
           h('button', { 'data-test': 'tab-scratchpad', onClick: () => emit('showScratchpad') }),
           h('button', { 'data-test': 'tab-overview', onClick: () => emit('showOverview') }),
           h('button', {
@@ -336,6 +338,23 @@ describe('sessions day scratchpad', () => {
     expect(wrapper.get('[data-test="side-panel"]').attributes('data-date-key')).toBe('2026-03-24')
     expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('overview')
   })
+
+  it.each(['cancel-create', 'save-create'])(
+    'returns to the combined day sidebar after %s',
+    async (action) => {
+      const wrapper = mount(SessionsPage, { global: { stubs: pageStubs } })
+      await flushPendingWork()
+      await wrapper.get('[data-test="create-session"]').trigger('click')
+      await flushPendingWork()
+      expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('create')
+      expect(flushScratchpad).toHaveBeenCalled()
+      await wrapper.get(`[data-test="${action}"]`).trigger('click')
+      await flushPendingWork()
+      expect(wrapper.get('[data-test="side-panel"]').attributes('data-mode')).toBe('scratchpad')
+      expect(wrapper.get('[data-test="side-panel"]').attributes('data-session-id')).toBe('')
+      wrapper.unmount()
+    },
+  )
 
   it('omits the scratchpad on narrow screens but keeps existing session panel behavior', async () => {
     mediaMatches.value = false

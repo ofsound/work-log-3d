@@ -30,12 +30,17 @@ const { showPending: shouldShowLoadingOverlay } = useDelayedPending(isResolvingP
 const shellBackgroundStyle = computed(() =>
   getShellBackgroundStyle(effectiveShellBackgroundPreset.value),
 )
+const isArgonPreset = computed(() => effectiveShellBackgroundPreset.value === 'argon')
 </script>
 
 <template>
-  <div :style="shellBackgroundStyle" class="relative mx-auto h-dvh bg-shell text-text shadow-shell">
+  <div
+    :style="shellBackgroundStyle"
+    class="relative isolate mx-auto h-dvh bg-shell text-text shadow-shell"
+  >
+    <ShellBackgroundArgon v-if="isArgonPreset" class="absolute inset-0 z-0 overflow-hidden" />
     <HeaderBar v-if="shouldRenderProtectedContent" />
-    <div :class="isPublicRoute ? 'h-full' : 'h-full md:pt-header-bar'">
+    <div class="relative z-0" :class="isPublicRoute ? 'h-full' : 'h-full md:pt-header-bar'">
       <slot v-if="shouldShowProtectedContent" />
     </div>
     <div

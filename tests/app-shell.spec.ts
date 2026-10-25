@@ -5,9 +5,11 @@ import { nextTick, reactive, ref } from 'vue'
 
 vi.mock('~/composables/useUserSettings', () => ({
   useUserSettings: () => ({
-    effectiveShellBackgroundPreset: ref('grid'),
+    effectiveShellBackgroundPreset: backgroundPreset,
   }),
 }))
+
+const backgroundPreset = ref('grid')
 
 const currentUser = ref<null | { uid: string } | undefined>(undefined)
 const route = reactive({
@@ -19,6 +21,7 @@ const route = reactive({
   useRoute: () => route,
 }
 
+const { default: ShellBackgroundArgon } = await import('~/app/components/ShellBackgroundArgon.vue')
 const { default: AppShell } = await import('~/app/components/AppShell.vue')
 
 describe('AppShell', () => {
@@ -26,10 +29,40 @@ describe('AppShell', () => {
     vi.useFakeTimers()
     currentUser.value = undefined
     route.path = '/sessions'
+    backgroundPreset.value = 'grid'
   })
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  it('renders Argon behind protected content and removes it when another preset is selected', async () => {
+    currentUser.value = { uid: 'user-123' }
+    const wrapper = mount(AppShell, {
+      global: {
+        components: { ShellBackgroundArgon },
+        stubs: { HeaderBar: true },
+      },
+      slots: { default: '<button data-test="page-control">Page control</button>' },
+    })
+
+    await nextTick()
+    expect(wrapper.find('[data-shell-background="argon"]').exists()).toBe(false)
+
+    backgroundPreset.value = 'argon'
+    await nextTick()
+
+    const background = wrapper.get('[data-shell-background="argon"]')
+    expect(background.attributes('aria-hidden')).toBe('true')
+    expect(background.classes()).toContain('pointer-events-none')
+    expect(background.findAll('line').length).toBeGreaterThan(0)
+    expect(background.findAll('path').length).toBeGreaterThan(0)
+    expect(wrapper.get('[data-test="page-control"]').isVisible()).toBe(true)
+
+    backgroundPreset.value = 'mist'
+    await nextTick()
+    expect(wrapper.find('[data-shell-background="argon"]').exists()).toBe(false)
+    wrapper.unmount()
   })
 
   it('does not show the protected fallback on public anonymous routes', async () => {

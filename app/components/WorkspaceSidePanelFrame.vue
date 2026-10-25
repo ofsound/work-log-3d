@@ -38,5 +38,6 @@ withDefaults(
         <slot />
       </div>
     </div>
+    <slot name="footer" />
   </ContainerCard>
 </template>

@@ -73,6 +73,7 @@ describe('desktop tray state', () => {
         enabled: true,
       },
       { kind: 'action', id: 'start_countup', label: 'Start Timer', enabled: true },
+      { kind: 'separator' },
       {
         kind: 'action',
         id: createDesktopTrayShortcutActionId('deep-work'),

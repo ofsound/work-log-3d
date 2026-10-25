@@ -111,6 +111,7 @@ export interface FirebaseUserSettingsDocument {
   }
   workflow?: {
     hideTags?: boolean
+    hideReports?: boolean
     countdownDefaultMinutes?: number
   }
   desktop?: {
@@ -225,6 +226,7 @@ export const toUserSettingsPayload = (input: UserSettings) => {
     },
     workflow: {
       hideTags: normalized.workflow.hideTags,
+      hideReports: normalized.workflow.hideReports,
       countdownDefaultMinutes: normalized.workflow.countdownDefaultMinutes,
     },
     desktop: {

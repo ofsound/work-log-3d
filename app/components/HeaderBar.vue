@@ -12,7 +12,7 @@ interface HeaderNavItem {
 const route = useRoute()
 const isDesktopViewport = useMediaQuery('(min-width: 768px)', false)
 const { isPhoneMode } = usePhoneMode()
-const { hideTags } = useUserSettings()
+const { hideTags, hideReports } = useUserSettings()
 const mobileMenuOpen = ref(false)
 const mobileNavPanelId = 'mobile-navigation-panel'
 const savedBodyOverflow = ref<string | null>(null)
@@ -60,7 +60,7 @@ const navItems = computed<HeaderNavItem[]>(() => {
     })
   }
 
-  if (!isPhoneMode.value) {
+  if (!isPhoneMode.value && !hideReports.value) {
     items.push({
       label: 'Reports',
       to: '/reports',
@@ -190,8 +190,10 @@ watch(
       <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>
       <NuxtLink to="/tags" class="hover:underline">Tags</NuxtLink>
     </template>
-    <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>
-    <NuxtLink to="/reports" class="hover:underline">Reports</NuxtLink>
+    <template v-if="!hideReports">
+      <div class="text-sm leading-none text-header-muted select-none" aria-hidden="true">/</div>
+      <NuxtLink to="/reports" class="hover:underline">Reports</NuxtLink>
+    </template>
     <div class="ml-auto flex items-center gap-2">
       <ThemeSwitcher />
       <NuxtLink

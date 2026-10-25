@@ -371,6 +371,22 @@ const sortedTags = computed(() =>
             </label>
           </div>
         </div>
+        <div class="mt-6">
+          <AppFieldLabel as="div">Navigation</AppFieldLabel>
+          <div class="mt-3">
+            <label class="block">
+              <ContainerCard class="flex items-start gap-4" padding="compact" variant="muted">
+                <input v-model="draft.workflow.hideReports" type="checkbox" class="mt-1" />
+                <div>
+                  <div class="font-semibold text-text">Hide reports</div>
+                  <p class="mt-2 text-sm leading-6 text-text-muted">
+                    Hides Reports from the top menu.
+                  </p>
+                </div>
+              </ContainerCard>
+            </label>
+          </div>
+        </div>
       </ContainerCard>
 
       <ContainerCard as="section">

@@ -14,12 +14,17 @@ import { formatSecondsToMinutesSeconds } from '~~/shared/worklog'
 const { isReady, snapshot, addCountupMinutes, cancel, resume, startCountup, stop } =
   useTimerService()
 
+const preloadedMinutes = ref(0)
+
 const dragDeltaMinutes = ref<number | null>(null)
 let dragStartedAtMs: number | null = null
 
 const timerProgress = computed(() => {
-  if (snapshot.value.mode !== 'countup') {
-    return '00:00'
+  if (
+    snapshot.value.mode !== 'countup' ||
+    (snapshot.value.status !== 'running' && snapshot.value.status !== 'paused')
+  ) {
+    return formatSecondsToMinutesSeconds(preloadedMinutes.value * 60)
   }
 
   return dragDeltaMinutes.value === null
@@ -40,6 +45,23 @@ const countupParts = computed(() => {
 
   return { mins, secs }
 })
+
+const adjustCountupMinutes = (minutes: number) => {
+  if (timerIsRunning.value || timerIsPaused.value) {
+    void addCountupMinutes(minutes)
+    return
+  }
+
+  preloadedMinutes.value += minutes
+}
+const handleStart = async () => {
+  await startCountup({}, preloadedMinutes.value * 60)
+  preloadedMinutes.value = 0
+}
+const handleCancel = async () => {
+  preloadedMinutes.value = 0
+  await cancel()
+}
 
 const canAdjustTimer = computed(
   () => isReady.value && (timerIsRunning.value || timerIsPaused.value),
@@ -78,7 +100,7 @@ const handleTimerPointerDown = (event: PointerEvent) => {
   >
     <div class="flex min-w-0 flex-1 items-center gap-3">
       <div :class="TIMER_READOUT_SHELL_CLASSES">
-        <TimerCancelButton @click="cancel" />
+        <TimerCancelButton @click="handleCancel" />
         <div :class="TIMER_READOUT_MAX_SM_CENTER_WRAPPER_CLASSES">
           <div
             class="flex touch-none flex-nowrap items-center"
@@ -93,16 +115,13 @@ const handleTimerPointerDown = (event: PointerEvent) => {
           </div>
         </div>
       </div>
-      <div
-        v-if="isReady && (timerIsRunning || timerIsPaused)"
-        class="flex h-12 shrink-0 flex-col justify-center gap-1 sm:h-14 sm:gap-2"
-      >
+      <div v-if="isReady" class="flex h-12 shrink-0 flex-col justify-center gap-1 sm:h-14 sm:gap-2">
         <AppButton
           data-testid="countup-add-5"
           :class="TIMER_EXTENSION_BUTTON_MAX_SM_CLASSES"
           size="xs"
           variant="secondary"
-          @click="addCountupMinutes(5)"
+          @click="adjustCountupMinutes(5)"
         >
           +5 min
         </AppButton>
@@ -111,7 +130,7 @@ const handleTimerPointerDown = (event: PointerEvent) => {
           :class="TIMER_EXTENSION_BUTTON_MAX_SM_CLASSES"
           size="xs"
           variant="secondary"
-          @click="addCountupMinutes(10)"
+          @click="adjustCountupMinutes(10)"
         >
           +10 min
         </AppButton>
@@ -122,7 +141,7 @@ const handleTimerPointerDown = (event: PointerEvent) => {
       <TimerButton
         v-if="isReady && !timerIsRunning && !timerIsPaused"
         :class="TIMER_PRIMARY_ACTION_MAX_SM_CLASSES"
-        @click="startCountup"
+        @click="handleStart"
       >
         Start
       </TimerButton>

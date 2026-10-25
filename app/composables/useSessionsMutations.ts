@@ -11,7 +11,7 @@ interface SessionChangePayload {
 }
 
 export interface UseSessionsMutationsOptions {
-  markCreatePreviewSaved: (sessionId: string) => void
+  finishCreate: (sessionId: string) => Promise<void>
   openSessionPanel: (
     sessionId: string,
     options?: {
@@ -48,8 +48,7 @@ export function useSessionsMutations(options: UseSessionsMutationsOptions) {
   }
 
   const handlePanelCreated = async (sessionId: string) => {
-    options.markCreatePreviewSaved(sessionId)
-    await options.openSessionPanel(sessionId, { preserveCreatePreview: true })
+    await options.finishCreate(sessionId)
   }
 
   return {

@@ -1,10 +1,24 @@
 import {
   DEFAULT_USER_SETTINGS,
+  USER_SETTINGS_BACKGROUND_PRESETS,
   resolveUserSettings,
   validateUserSettingsInput,
 } from '~~/shared/worklog'
 
 describe('user settings', () => {
+  it.each(USER_SETTINGS_BACKGROUND_PRESETS)(
+    'preserves the %s background when saving and loading',
+    (backgroundPreset) => {
+      const input = {
+        ...DEFAULT_USER_SETTINGS,
+        appearance: { ...DEFAULT_USER_SETTINGS.appearance, backgroundPreset },
+      }
+
+      expect(validateUserSettingsInput(input).appearance.backgroundPreset).toBe(backgroundPreset)
+      expect(resolveUserSettings(input).appearance.backgroundPreset).toBe(backgroundPreset)
+    },
+  )
+
   it('normalizes google fonts imports and trims family names', () => {
     const settings = validateUserSettingsInput({
       appearance: {
@@ -53,6 +67,7 @@ describe('user settings', () => {
       },
       workflow: {
         hideTags: false,
+        hideReports: false,
         countdownDefaultMinutes: DEFAULT_USER_SETTINGS.workflow.countdownDefaultMinutes,
       },
       desktop: {
@@ -70,6 +85,7 @@ describe('user settings', () => {
         },
         workflow: {
           hideTags: false,
+          hideReports: false,
         },
       }),
     ).toThrow('Google Fonts import must use https://fonts.googleapis.com.')

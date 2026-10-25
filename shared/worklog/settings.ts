@@ -1,4 +1,4 @@
-export const USER_SETTINGS_BACKGROUND_PRESETS = ['grid', 'mist', 'dusk', 'aurora'] as const
+export const USER_SETTINGS_BACKGROUND_PRESETS = ['grid', 'mist', 'dusk', 'aurora', 'argon'] as const
 
 export type UserSettingsBackgroundPreset = (typeof USER_SETTINGS_BACKGROUND_PRESETS)[number]
 export const USER_SETTINGS_TRAY_SHORTCUT_TIMER_MODES = ['countup', 'countdown'] as const
@@ -24,6 +24,7 @@ export const DEFAULT_COUNTDOWN_DEFAULT_MINUTES = 30
 
 export interface UserSettingsWorkflow {
   hideTags: boolean
+  hideReports: boolean
   /** Last chosen idle countdown duration for the new time box timer (minutes). */
   countdownDefaultMinutes: number
 }
@@ -64,6 +65,7 @@ export interface PartialUserSettings {
   }
   workflow?: {
     hideTags?: boolean
+    hideReports?: boolean
     countdownDefaultMinutes?: number
   }
   desktop?: {
@@ -82,6 +84,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   },
   workflow: {
     hideTags: false,
+    hideReports: false,
     countdownDefaultMinutes: DEFAULT_COUNTDOWN_DEFAULT_MINUTES,
   },
   desktop: {
@@ -122,6 +125,7 @@ export const cloneUserSettings = (settings: UserSettings): UserSettings => ({
   },
   workflow: {
     hideTags: settings.workflow.hideTags,
+    hideReports: settings.workflow.hideReports,
     countdownDefaultMinutes: settings.workflow.countdownDefaultMinutes,
   },
   desktop: {
@@ -292,6 +296,7 @@ export const validateUserSettings = (input: UserSettings): UserSettings => ({
   },
   workflow: {
     hideTags: Boolean(input.workflow?.hideTags ?? DEFAULT_USER_SETTINGS.workflow.hideTags),
+    hideReports: Boolean(input.workflow?.hideReports ?? DEFAULT_USER_SETTINGS.workflow.hideReports),
     countdownDefaultMinutes: normalizeCountdownDefaultMinutes(
       input.workflow?.countdownDefaultMinutes,
     ),
@@ -328,6 +333,7 @@ export const resolveUserSettings = (
       },
       workflow: {
         hideTags: input.workflow?.hideTags ?? DEFAULT_USER_SETTINGS.workflow.hideTags,
+        hideReports: input.workflow?.hideReports ?? DEFAULT_USER_SETTINGS.workflow.hideReports,
         countdownDefaultMinutes: normalizeCountdownDefaultMinutes(
           input.workflow?.countdownDefaultMinutes,
         ),

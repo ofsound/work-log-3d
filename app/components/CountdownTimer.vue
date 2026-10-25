@@ -153,12 +153,6 @@ const timerIsPaused = computed(
 const timerIsCompleted = computed(
   () => snapshot.value.mode === 'countdown' && snapshot.value.status === 'completed',
 )
-/** Match tray: +5/+10 stay available while countdown is running, paused, or completed. */
-const timerShowsAddTimeButtons = computed(
-  () =>
-    snapshot.value.mode === 'countdown' &&
-    (timerIsRunning.value || timerIsPaused.value || timerIsCompleted.value),
-)
 const timerShowsReadOnlyProgress = computed(
   () => timerIsRunning.value || timerIsPaused.value || timerIsCompleted.value,
 )
@@ -281,12 +275,16 @@ const startTimer = () => {
   void startCountdown(minutes)
 }
 
-const extendCountdownByFiveMinutes = () => {
-  void addCountdownMinutes(5)
-}
+const adjustCountdownMinutes = (minutes: number) => {
+  if (timerShowsReadOnlyProgress.value) {
+    void addCountdownMinutes(minutes)
+    return
+  }
 
-const extendCountdownByTenMinutes = () => {
-  void addCountdownMinutes(10)
+  const next = normalizeCountdownDefaultMinutes(parseBaselineIdleMinutes() + minutes)
+  setDynamicMinutesProgrammatically(String(next))
+  markIdleMinutesAsLocallyEdited(next)
+  schedulePersistFromDynamicInput()
 }
 
 const handleCancel = async () => {
@@ -519,25 +517,24 @@ watch(
           </div>
         </div>
       </div>
-      <div
-        v-if="timerShowsAddTimeButtons"
-        class="flex h-12 shrink-0 flex-col justify-center gap-1 sm:h-14 sm:gap-2"
-      >
+      <div v-if="isReady" class="flex h-12 shrink-0 flex-col justify-center gap-1 sm:h-14 sm:gap-2">
         <AppButton
           data-testid="countdown-add-5"
+          :disabled="hideIdleTimeUntilPrefsLoaded"
           :class="TIMER_EXTENSION_BUTTON_MAX_SM_CLASSES"
           size="xs"
           variant="secondary"
-          @click="extendCountdownByFiveMinutes"
+          @click="adjustCountdownMinutes(5)"
         >
           +5 min
         </AppButton>
         <AppButton
           data-testid="countdown-add-10"
+          :disabled="hideIdleTimeUntilPrefsLoaded"
           :class="TIMER_EXTENSION_BUTTON_MAX_SM_CLASSES"
           size="xs"
           variant="secondary"
-          @click="extendCountdownByTenMinutes"
+          @click="adjustCountdownMinutes(10)"
         >
           +10 min
         </AppButton>

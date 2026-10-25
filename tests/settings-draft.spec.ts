@@ -77,6 +77,7 @@ describe('useSettingsDraft', () => {
     const state = getState()
 
     state.draft.value.workflow.hideTags = true
+    state.draft.value.workflow.hideReports = true
     await state.handleSave()
 
     expect(saveSettings).toHaveBeenCalledWith(state.draft.value)

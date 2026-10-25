@@ -44,6 +44,7 @@ export function useUserSettings() {
     toUserSettings((rawSettings.value as FirebaseUserSettingsDocument | null | undefined) ?? null),
   )
   const activeSettings = computed(() => previewSettings.value ?? savedSettings.value)
+  const hideReports = computed(() => activeSettings.value.workflow.hideReports)
   const hideTags = computed(() => activeSettings.value.workflow.hideTags)
   const isReady = computed(() => currentUser.value !== undefined)
 
@@ -127,6 +128,7 @@ export function useUserSettings() {
     clearPreview,
     defaultSettings: DEFAULT_USER_SETTINGS,
     hideTags,
+    hideReports,
     isReady,
     preferencesDocumentPending,
     rawSettings,

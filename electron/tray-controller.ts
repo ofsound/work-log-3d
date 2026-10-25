@@ -139,17 +139,25 @@ export const createTrayController = ({
   let lastStructuralKey = ''
   let lastCosmeticKey = ''
 
+  let isMenuOpen = false
+  let pendingSync: [TimerSnapshot, readonly UserSettingsTrayShortcut[], number] | null = null
+
   const popUpMenu = () => {
-    tray.popUpContextMenu(currentMenu)
+    if (!isMenuOpen) tray.popUpContextMenu(currentMenu)
   }
 
   tray.setIgnoreDoubleClickEvents(true)
   tray.on('click', popUpMenu)
-  tray.on('right-click', popUpMenu)
+  // macOS uses our explicit popup only; setContextMenu would also open a native menu.
+  if (platform === 'darwin') tray.on('right-click', popUpMenu)
 
-  return {
+  const controller: TrayController = {
     popUpMenu,
     sync(snapshot, shortcuts = [], countdownDefaultMinutes = 30) {
+      if (isMenuOpen) {
+        pendingSync = [snapshot, shortcuts, countdownDefaultMinutes]
+        return
+      }
       const structuralKey = getDesktopTrayStructuralKey(
         snapshot,
         shortcuts,
@@ -179,11 +187,23 @@ export const createTrayController = ({
         trayState.menuItems.map((item) => toMenuItem(item, onAction)),
       )
 
-      tray.setContextMenu(currentMenu)
+      currentMenu.on('menu-will-show', () => {
+        isMenuOpen = true
+      })
+      currentMenu.on('menu-will-close', () => {
+        isMenuOpen = false
+        const pending = pendingSync
+        pendingSync = null
+        if (pending) controller.sync(...pending)
+      })
+
+      if (platform !== 'darwin') tray.setContextMenu(currentMenu)
       applyTrayCosmeticUpdates(tray, currentMenu, trayState, platform)
     },
     destroy() {
       tray.destroy()
     },
   }
+
+  return controller
 }

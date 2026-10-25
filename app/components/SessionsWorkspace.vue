@@ -47,7 +47,7 @@ const panel = useSessionsPanelState({
   updateRouteState: routedState.updateRouteState,
 })
 const mutations = useSessionsMutations({
-  markCreatePreviewSaved: panel.markCreatePreviewSaved,
+  finishCreate: panel.finishCreate,
   openSessionPanel: panel.openSessionPanel,
 })
 clearMutationError = mutations.clearMutationError

@@ -239,14 +239,23 @@ const editorRootBind = computed(() =>
 )
 
 const primarySectionClass = computed(() =>
-  isThinLayout.value
-    ? 'grid min-w-0 grid-cols-[9rem_minmax(0,1fr)] items-start gap-x-8 gap-y-4'
-    : 'flex min-w-0 flex-col gap-5 [@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[9rem_minmax(0,1fr)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-12',
+  isPanelSurface.value
+    ? 'flex min-w-0 flex-col gap-4'
+    : isThinLayout.value
+      ? 'grid min-w-0 grid-cols-[9rem_minmax(0,1fr)] items-start gap-x-8 gap-y-4'
+      : 'flex min-w-0 flex-col gap-5 [@container(min-width:38rem)]:grid [@container(min-width:38rem)]:grid-cols-[9rem_minmax(0,1fr)] [@container(min-width:38rem)]:items-start [@container(min-width:38rem)]:gap-x-12',
 )
 
-const timeControlClass =
-  'flex h-16 items-center rounded-md border border-input-border bg-input px-3 py-3'
-const timeValueClass = 'text-4xl leading-none font-bold tracking-tight tabular-nums'
+const timeControlClass = computed(() =>
+  isPanelSurface.value
+    ? 'flex h-12 items-center rounded-md border border-input-border bg-input px-3 py-2'
+    : 'flex h-16 items-center rounded-md border border-input-border bg-input px-3 py-3',
+)
+const timeValueClass = computed(() =>
+  isPanelSurface.value
+    ? 'text-2xl leading-none font-bold tracking-tight tabular-nums'
+    : 'text-4xl leading-none font-bold tracking-tight tabular-nums',
+)
 
 const projectTagsSectionClass = computed(() => {
   if (hideTags.value) {
@@ -296,8 +305,8 @@ const tagsListClass = computed(() =>
           <section data-testid="timebox-editor-primary-section" :class="primarySectionClass">
             <AppField
               as="div"
-              class="w-36 min-w-0 self-start"
-              density="comfortable"
+              :class="isPanelSurface ? 'w-28 min-w-0 self-start' : 'w-36 min-w-0 self-start'"
+              :density="isPanelSurface ? 'compact' : 'comfortable'"
               label="Duration"
             >
               <div :class="timeControlClass">
@@ -314,8 +323,8 @@ const tagsListClass = computed(() =>
                       v-model="dynamicDuration"
                       inputmode="numeric"
                       placeholder="0"
-                      class="block h-9 w-full min-w-0 bg-transparent p-0 text-right outline-none select-text placeholder:text-text"
-                      :class="timeValueClass"
+                      class="block w-full min-w-0 bg-transparent p-0 text-right outline-none select-text placeholder:text-text"
+                      :class="[timeValueClass, isPanelSurface ? 'h-7' : 'h-9']"
                       @input="mutationErrorMessage = ''"
                     />
                   </div>
@@ -331,8 +340,46 @@ const tagsListClass = computed(() =>
               <div aria-live="polite" class="flex min-w-0 flex-col gap-3">
                 <AppFieldLabel v-if="sessionTimeHero && !isPanelSurface">Start & End</AppFieldLabel>
                 <div class="flex min-w-0 flex-col gap-1">
+                  <div
+                    v-if="isPanelSurface && sessionTimeHero"
+                    class="grid min-w-0 grid-cols-2 gap-3"
+                    data-testid="panel-time-range"
+                  >
+                    <AppField as="div" class="min-w-0" label="Start" density="compact">
+                      <div :class="timeControlClass">
+                        <span
+                          class="touch-none text-lg leading-none font-semibold whitespace-nowrap tabular-nums"
+                          :class="
+                            startTimeMinuteDragActive
+                              ? 'cursor-grabbing select-none'
+                              : 'cursor-ns-resize'
+                          "
+                          data-testid="panel-start-time"
+                          title="Drag up or down to adjust the start time"
+                          @pointerdown="onStartTimeMinutePointerDown"
+                          >{{ formatLocaleTime(new Date(dynamicStartTime)) }}</span
+                        >
+                      </div>
+                    </AppField>
+                    <AppField as="div" class="min-w-0" label="End" density="compact">
+                      <div :class="timeControlClass">
+                        <span
+                          class="touch-none text-lg leading-none font-semibold whitespace-nowrap tabular-nums"
+                          :class="
+                            endTimeMinuteDragActive
+                              ? 'cursor-grabbing select-none'
+                              : 'cursor-ns-resize'
+                          "
+                          data-testid="panel-end-time"
+                          title="Drag up or down to adjust the end time"
+                          @pointerdown="onEndTimeMinutePointerDown"
+                          >{{ formatLocaleTime(new Date(dynamicEndTime)) }}</span
+                        >
+                      </div>
+                    </AppField>
+                  </div>
                   <p
-                    v-if="sessionTimeHero"
+                    v-else-if="sessionTimeHero"
                     class="w-fit max-w-full min-w-0 gap-2"
                     :class="[timeControlClass, timeValueClass]"
                   >

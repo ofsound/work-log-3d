@@ -155,12 +155,20 @@ describe('firestore worklog repositories', () => {
       },
       workflow: {
         hideTags: false,
+        hideReports: false,
         countdownDefaultMinutes: DEFAULT_USER_SETTINGS.workflow.countdownDefaultMinutes,
       },
       desktop: {
         trayShortcuts: [],
       },
     })
+  })
+
+  it('round-trips the hide reports preference', () => {
+    const settings = toUserSettings({ workflow: { hideReports: true } })
+    expect(settings.workflow.hideReports).toBe(true)
+    expect(toUserSettingsPayload(settings).workflow.hideReports).toBe(true)
+    expect(toUserSettings({ workflow: { hideTags: true } }).workflow.hideReports).toBe(false)
   })
 
   it('serializes active timer documents and validates payload shape', () => {

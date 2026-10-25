@@ -356,6 +356,53 @@
         color-mix(in srgb, var(--color-zinc-950) 94%, var(--color-black))
       )
     );
+  --color-shell-argon-line: light-dark(
+    color-mix(in srgb, var(--color-indigo-400) 18%, transparent),
+    color-mix(in srgb, var(--color-indigo-300) 14%, transparent)
+  );
+  --color-shell-argon-arc: light-dark(
+    color-mix(in srgb, var(--color-violet-400) 14%, transparent),
+    color-mix(in srgb, var(--color-violet-300) 12%, transparent)
+  );
+  --color-shell-argon-node: light-dark(
+    color-mix(in srgb, var(--color-blue-400) 16%, transparent),
+    color-mix(in srgb, var(--color-blue-300) 12%, transparent)
+  );
+  --color-shell-argon-mark: light-dark(
+    color-mix(in srgb, var(--color-sky-400) 12%, transparent),
+    color-mix(in srgb, var(--color-sky-300) 10%, transparent)
+  );
+  /** Argon: subtle cool-toned base gradient that pairs with SVG generative line art. */
+  --background-image-shell-argon:
+    radial-gradient(
+      ellipse at 30% 25%,
+      light-dark(
+          color-mix(in srgb, var(--color-indigo-200) 8%, transparent),
+          color-mix(in srgb, var(--color-indigo-500) 8%, transparent)
+        )
+        0,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 75% 70%,
+      light-dark(
+          color-mix(in srgb, var(--color-violet-200) 6%, transparent),
+          color-mix(in srgb, var(--color-violet-500) 6%, transparent)
+        )
+        0,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      light-dark(
+        color-mix(in srgb, var(--color-slate-100) 85%, var(--color-white)),
+        color-mix(in srgb, var(--color-zinc-900) 82%, var(--color-zinc-950))
+      ),
+      light-dark(
+        color-mix(in srgb, var(--color-white) 98%, var(--color-slate-50)),
+        color-mix(in srgb, var(--color-zinc-950) 94%, var(--color-black))
+      )
+    );
   --background-image-auth-grid:
     linear-gradient(
       to right,
@@ -446,13 +493,7 @@
 
 @layer components {
   .daily-scratchpad-editor {
-    height: 100%;
-    min-height: 22rem;
     line-height: 1.65;
-  }
-
-  .daily-scratchpad-editor:focus {
-    border-color: var(--color-link);
   }
 
   .daily-scratchpad-editor p.is-editor-empty:first-child::before {

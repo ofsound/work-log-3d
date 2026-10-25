@@ -180,6 +180,59 @@ describe('TimeBoxEditor layout classes', () => {
     expect(thinWrapper.html()).not.toContain('min-width:44rem')
   })
 
+  it.each(['regular', 'thin'] as const)(
+    'uses a separate compact range for %s panel editors',
+    async (layout) => {
+      const wrapper = mountTimeBoxEditor({ layout, surface: 'panel' })
+      const section = wrapper.get('[data-testid="timebox-editor-primary-section"]')
+      expect(section.classes()).toContain('flex-col')
+      expect(section.classes()).not.toContain('grid-cols-[9rem_minmax(0,1fr)]')
+      const start = wrapper.get('[data-testid="panel-start-time"]')
+      const end = wrapper.get('[data-testid="panel-end-time"]')
+      expect(start.text()).toBe(
+        new Date(dynamicStartTime.value).toLocaleTimeString(undefined, {
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+      )
+      expect(end.text()).toBe(
+        new Date(dynamicEndTime.value).toLocaleTimeString(undefined, {
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+      )
+      expect(start.classes()).toContain('whitespace-nowrap')
+      expect(end.classes()).toContain('whitespace-nowrap')
+      expect(wrapper.text()).toContain('Mon, Mar 23')
+      dynamicStartTime.value = '2026-03-23T12:50'
+      dynamicEndTime.value = '2026-03-23T13:20'
+      await wrapper.vm.$nextTick()
+      expect(start.text()).toBe(
+        new Date(dynamicStartTime.value).toLocaleTimeString(undefined, {
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+      )
+      expect(end.text()).toBe(
+        new Date(dynamicEndTime.value).toLocaleTimeString(undefined, {
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+      )
+      wrapper.unmount()
+    },
+  )
+
+  it('preserves the large single-row time range on the standalone New Session page', () => {
+    const wrapper = mountTimeBoxEditor({ layout: 'regular', surface: 'card' })
+    expect(wrapper.find('[data-testid="panel-time-range"]').exists()).toBe(false)
+    const range = wrapper.findAll('p').find((element) => element.text().includes('–'))!
+    expect(range.classes()).toContain('text-4xl')
+    expect(range.classes()).toContain('h-16')
+    expect(wrapper.text()).toContain('Start & End')
+    wrapper.unmount()
+  })
+
   it('keeps the compact time row when tags are hidden (project-only mode)', () => {
     hideTagsModel.value = true
     const wrapper = mountTimeBoxEditor({ layout: 'regular', surface: 'card' })

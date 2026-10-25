@@ -93,8 +93,13 @@ const getDayNumberClass = (cell: YearHeatmapCell) => {
 
 <template>
   <div class="min-h-0 flex-1 overflow-hidden">
-    <div class="h-full overflow-auto overscroll-contain px-6 py-6">
-      <ContainerCard class="flex flex-col gap-6 md:px-6" padding="compact" variant="gradient">
+    <div class="h-full overflow-auto overscroll-contain">
+      <ContainerCard
+        class="flex min-h-full flex-col gap-6 rounded-none border-0 md:px-6"
+        flat-surface
+        padding="compact"
+        variant="gradient"
+      >
         <div class="flex items-center justify-end gap-3 text-xs font-semibold text-text-subtle">
           <span>Less</span>
           <div class="flex items-center gap-1">

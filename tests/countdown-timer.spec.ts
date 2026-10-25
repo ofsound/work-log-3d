@@ -139,6 +139,28 @@ describe('CountdownTimer', () => {
     saveSettings.mockResolvedValue(undefined)
   })
 
+  it('uses +5/+10 to preload the idle countdown without starting or extending a live timer', async () => {
+    vi.useFakeTimers()
+    const wrapper = mountCountdownTimer()
+    try {
+      await nextTick()
+      await wrapper.get('[data-testid="countdown-add-5"]').trigger('click')
+      await wrapper.get('[data-testid="countdown-add-10"]').trigger('click')
+      expect((wrapper.get('#dynamicMinutes').element as HTMLInputElement).value).toBe('45')
+      expect(snapshot.value.status).toBe('idle')
+      expect(addCountdownMinutes).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(450)
+      expect(saveSettings).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          workflow: expect.objectContaining({ countdownDefaultMinutes: 45 }),
+        }),
+      )
+    } finally {
+      wrapper.unmount()
+      vi.useRealTimers()
+    }
+  })
+
   it('does not reset idle minutes after an idle drag when rawSettings churns with a stale countdown default', async () => {
     const wrapper = mountCountdownTimer()
 
@@ -254,13 +276,13 @@ describe('CountdownTimer', () => {
     expect((wrapper.get('#dynamicMinutes').element as HTMLInputElement).value).toBe('40')
   })
 
-  it('does not show add-time buttons when the timer is idle', async () => {
+  it('keeps add-time buttons visible when the timer is idle', async () => {
     const wrapper = mountCountdownTimer()
     await nextTick()
 
     expect(wrapper.text()).toContain('Start')
-    expect(wrapper.text()).not.toContain('+5 min')
-    expect(wrapper.text()).not.toContain('+10 min')
+    expect(wrapper.text()).toContain('+5 min')
+    expect(wrapper.text()).toContain('+10 min')
   })
 
   it('keeps completed countdowns in a read-only 00:00 state instead of restoring the Firestore default minutes', async () => {

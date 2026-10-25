@@ -168,10 +168,16 @@ export function useTimerService() {
     )
   }
 
-  const startCountup = async (initialDraft: ActiveTimerDraftInput = {}) => {
+  const startCountup = async (
+    initialDraft: ActiveTimerDraftInput = {},
+    initialElapsedSeconds = 0,
+  ) => {
     await applyMutation((_state, nowMs) =>
       applyActiveTimerDraft(
-        replaceActiveTimerState(createIdleActiveTimerState(), startCountupTimer(nowMs)),
+        replaceActiveTimerState(
+          createIdleActiveTimerState(),
+          addCountupSeconds(startCountupTimer(nowMs), Math.max(0, initialElapsedSeconds), nowMs),
+        ),
         initialDraft,
       ),
     )
